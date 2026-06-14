@@ -59,6 +59,7 @@ export function CompanyFormDialog({
   const isEdit = !!initial?.id;
   const [form, setForm] = useState<CompanyRow>(initial ?? { status: "ativo", lifecycle_stage: "lead" });
   const queryClient = useQueryClient();
+  const members = useOrgMembers(organizationId);
 
   const save = useMutation({
     mutationFn: async () => {
