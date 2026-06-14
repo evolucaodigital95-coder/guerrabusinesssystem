@@ -339,46 +339,76 @@ export type Database = {
       }
       companies: {
         Row: {
+          address: string | null
           archived_at: string | null
+          city: string | null
           created_at: string
           created_by: string | null
           document: string | null
+          employees_count: number | null
           id: string
+          instagram: string | null
+          is_favorite: boolean
           legal_name: string
+          lifecycle_stage: string | null
+          notes: string | null
           organization_id: string
           segment: string | null
+          state: string | null
+          status: string | null
           trade_name: string | null
           updated_at: string
           updated_by: string | null
           website: string | null
+          zip: string | null
         }
         Insert: {
+          address?: string | null
           archived_at?: string | null
+          city?: string | null
           created_at?: string
           created_by?: string | null
           document?: string | null
+          employees_count?: number | null
           id?: string
+          instagram?: string | null
+          is_favorite?: boolean
           legal_name: string
+          lifecycle_stage?: string | null
+          notes?: string | null
           organization_id: string
           segment?: string | null
+          state?: string | null
+          status?: string | null
           trade_name?: string | null
           updated_at?: string
           updated_by?: string | null
           website?: string | null
+          zip?: string | null
         }
         Update: {
+          address?: string | null
           archived_at?: string | null
+          city?: string | null
           created_at?: string
           created_by?: string | null
           document?: string | null
+          employees_count?: number | null
           id?: string
+          instagram?: string | null
+          is_favorite?: boolean
           legal_name?: string
+          lifecycle_stage?: string | null
+          notes?: string | null
           organization_id?: string
           segment?: string | null
+          state?: string | null
+          status?: string | null
           trade_name?: string | null
           updated_at?: string
           updated_by?: string | null
           website?: string | null
+          zip?: string | null
         }
         Relationships: [
           {
@@ -393,45 +423,54 @@ export type Database = {
       contacts: {
         Row: {
           archived_at: string | null
+          birthday: string | null
           company_id: string | null
           created_at: string
           created_by: string | null
           email: string | null
           full_name: string
           id: string
+          notes: string | null
           organization_id: string
           phone: string | null
           role: string | null
           updated_at: string
           updated_by: string | null
+          whatsapp: string | null
         }
         Insert: {
           archived_at?: string | null
+          birthday?: string | null
           company_id?: string | null
           created_at?: string
           created_by?: string | null
           email?: string | null
           full_name: string
           id?: string
+          notes?: string | null
           organization_id: string
           phone?: string | null
           role?: string | null
           updated_at?: string
           updated_by?: string | null
+          whatsapp?: string | null
         }
         Update: {
           archived_at?: string | null
+          birthday?: string | null
           company_id?: string | null
           created_at?: string
           created_by?: string | null
           email?: string | null
           full_name?: string
           id?: string
+          notes?: string | null
           organization_id?: string
           phone?: string | null
           role?: string | null
           updated_at?: string
           updated_by?: string | null
+          whatsapp?: string | null
         }
         Relationships: [
           {
@@ -714,8 +753,10 @@ export type Database = {
           created_at: string
           created_by: string | null
           id: string
+          interest: string | null
           notes: string | null
           organization_id: string
+          owner_id: string | null
           season_id: string | null
           source: string | null
           status: string | null
@@ -730,8 +771,10 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           id?: string
+          interest?: string | null
           notes?: string | null
           organization_id: string
+          owner_id?: string | null
           season_id?: string | null
           source?: string | null
           status?: string | null
@@ -746,8 +789,10 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           id?: string
+          interest?: string | null
           notes?: string | null
           organization_id?: string
+          owner_id?: string | null
           season_id?: string | null
           source?: string | null
           status?: string | null
@@ -980,7 +1025,10 @@ export type Database = {
           expected_close: string | null
           id: string
           lead_id: string | null
+          next_step: string | null
+          notes: string | null
           organization_id: string
+          probability: number | null
           stage: string | null
           status: string | null
           title: string
@@ -997,7 +1045,10 @@ export type Database = {
           expected_close?: string | null
           id?: string
           lead_id?: string | null
+          next_step?: string | null
+          notes?: string | null
           organization_id: string
+          probability?: number | null
           stage?: string | null
           status?: string | null
           title: string
@@ -1014,7 +1065,10 @@ export type Database = {
           expected_close?: string | null
           id?: string
           lead_id?: string | null
+          next_step?: string | null
+          notes?: string | null
           organization_id?: string
+          probability?: number | null
           stage?: string | null
           status?: string | null
           title?: string
