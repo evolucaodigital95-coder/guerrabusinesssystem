@@ -1,16 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import {
-  Heart,
-  TrendingUp,
-  Wallet,
-  Mic,
-  PhoneCall,
-  PackageX,
-  AlertCircle,
-  Target,
-  CalendarRange,
-  ArrowUpRight,
-} from "lucide-react";
 import { type ReactNode } from "react";
 
 export const Route = createFileRoute("/app/hoje")({
@@ -30,103 +18,98 @@ function greeting() {
   return "Boa noite";
 }
 
-function StatCard({
-  icon,
-  label,
-  value,
-  hint,
-  tone = "default",
-}: {
-  icon: ReactNode;
-  label: string;
-  value: string;
-  hint?: string;
-  tone?: "default" | "warning" | "good";
-}) {
-  const dot =
-    tone === "warning" ? "bg-amber-500" : tone === "good" ? "bg-emerald-500" : "bg-[var(--gold)]";
+function Stat({ label, value, hint }: { label: string; value: ReactNode; hint?: string }) {
   return (
-    <div className="group rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-elegant)] transition-shadow hover:shadow-md">
-      <div className="flex items-center justify-between">
-        <div className="grid h-10 w-10 place-items-center rounded-xl bg-muted text-foreground/70">
-          {icon}
-        </div>
-        <span className={`h-2 w-2 rounded-full ${dot}`} />
+    <div className="hover-lift group rounded-2xl border border-border bg-card p-7">
+      <div className="text-[10px] font-medium uppercase tracking-[0.22em] text-muted-foreground">
+        {label}
       </div>
-      <div className="mt-5">
-        <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-          {label}
-        </div>
-        <div className="mt-1 text-2xl font-semibold tracking-tight">{value}</div>
-        {hint && <div className="mt-1 text-xs text-muted-foreground">{hint}</div>}
+      <div className="mt-6 font-display text-[2rem] leading-none text-foreground">
+        {value}
       </div>
+      {hint && (
+        <div className="mt-3 text-xs leading-relaxed text-muted-foreground">{hint}</div>
+      )}
     </div>
   );
 }
 
 function HojePage() {
+  const today = new Date().toLocaleDateString("pt-BR", {
+    weekday: "long",
+    day: "2-digit",
+    month: "long",
+  });
+
   return (
-    <div className="mx-auto max-w-7xl">
+    <div className="mx-auto max-w-6xl">
       {/* Hero */}
-      <section className="mb-8">
-        <div className="text-[10px] font-medium uppercase tracking-[0.2em] text-[var(--gold)]">
-          Hoje · {new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long" })}
+      <section className="mb-20">
+        <div className="flex items-center gap-3 text-[10px] uppercase tracking-[0.28em] text-muted-foreground">
+          <span
+            aria-hidden
+            className="h-px w-6"
+            style={{ background: "var(--gold)" }}
+          />
+          Hoje · {today}
         </div>
-        <h1 className="mt-2 text-3xl font-semibold tracking-tight md:text-4xl">
+        <h1 className="mt-6 font-display text-5xl leading-[1.05] md:text-6xl">
           {greeting()}, Gustavo.
         </h1>
-        <p className="mt-2 max-w-2xl text-base text-muted-foreground">
+        <p className="mt-6 max-w-xl text-base leading-relaxed text-muted-foreground">
           Resultados extraordinários começam com pessoas extraordinárias.
         </p>
       </section>
 
-      {/* Hero card — Vidas Impactadas */}
-      <section className="mb-8">
+      {/* Vidas Impactadas — feature card */}
+      <section className="mb-16">
         <div
-          className="relative overflow-hidden rounded-3xl p-8 text-[var(--navy-foreground)] shadow-[var(--shadow-elegant)] md:p-10"
-          style={{ background: "linear-gradient(135deg, var(--navy), oklch(0.34 0.08 254))" }}
+          className="hover-lift relative overflow-hidden rounded-3xl p-10 md:p-14"
+          style={{
+            background: "var(--navy)",
+            color: "var(--navy-foreground)",
+          }}
         >
           <div
             aria-hidden
-            className="pointer-events-none absolute -top-24 -right-16 h-72 w-72 rounded-full opacity-30 blur-3xl"
+            className="pointer-events-none absolute -top-32 -right-24 h-80 w-80 rounded-full opacity-25 blur-3xl"
             style={{ background: "radial-gradient(closest-side, var(--gold), transparent)" }}
           />
-          <div className="relative grid grid-cols-[minmax(0,1fr)_auto] items-end gap-6">
-            <div className="min-w-0">
-              <div className="flex items-center gap-2 text-xs uppercase tracking-[0.2em] opacity-80">
-                <Heart className="h-4 w-4 text-[var(--gold)]" />
-                Vidas Impactadas
-              </div>
-              <div className="mt-3 text-5xl font-semibold tracking-tight md:text-6xl">
-                128.430
-              </div>
-              <p className="mt-2 max-w-md text-sm opacity-80">
-                Pessoas transformadas pelas palestras, mentorias e projetos do Grupo Guerra.
-              </p>
+          <div className="relative">
+            <div className="flex items-center gap-3 text-[10px] uppercase tracking-[0.28em] text-[var(--navy-foreground)]/65">
+              <span aria-hidden className="h-px w-6" style={{ background: "var(--gold)" }} />
+              Vidas Impactadas
             </div>
-            <button className="hidden items-center gap-1.5 rounded-full border border-white/20 px-4 py-2 text-xs font-medium uppercase tracking-wider transition-colors hover:bg-white/10 md:inline-flex">
-              Ver detalhes <ArrowUpRight className="h-3.5 w-3.5" />
-            </button>
+            <div className="mt-8 font-display text-7xl leading-none tracking-tight md:text-[6.5rem]">
+              128.430
+            </div>
+            <p className="mt-6 max-w-md text-sm leading-relaxed text-[var(--navy-foreground)]/70">
+              Pessoas transformadas pelas palestras, mentorias e projetos do Grupo Guerra.
+            </p>
           </div>
         </div>
       </section>
 
-      {/* Stat grid */}
+      {/* Visão do dia */}
       <section>
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-            Visão do dia
-          </h2>
+        <div className="mb-8 flex items-end justify-between">
+          <div>
+            <div className="text-[10px] uppercase tracking-[0.28em] text-muted-foreground">
+              Visão do dia
+            </div>
+            <h2 className="mt-3 font-display text-2xl">Indicadores principais</h2>
+          </div>
         </div>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <StatCard icon={<TrendingUp className="h-5 w-5" />} label="Receita prevista" value="R$ 482.300" hint="Este mês" tone="good" />
-          <StatCard icon={<Wallet className="h-5 w-5" />} label="Lucro líquido" value="R$ 184.920" hint="Após custos" tone="good" />
-          <StatCard icon={<Mic className="h-5 w-5" />} label="Próximas palestras" value="7" hint="Próximos 30 dias" />
-          <StatCard icon={<PhoneCall className="h-5 w-5" />} label="Follow-ups pendentes" value="14" hint="Hoje" tone="warning" />
-          <StatCard icon={<PackageX className="h-5 w-5" />} label="Estoque baixo" value="3 itens" hint="Reposição necessária" tone="warning" />
-          <StatCard icon={<AlertCircle className="h-5 w-5" />} label="Pendências financeiras" value="R$ 38.450" hint="A receber" tone="warning" />
-          <StatCard icon={<Target className="h-5 w-5" />} label="Meta do mês" value="64%" hint="R$ 320k / R$ 500k" />
-          <StatCard icon={<CalendarRange className="h-5 w-5" />} label="Temporada atual" value="2026.1" hint="01 jan – 30 jun" />
+
+        <div className="grid grid-cols-1 gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-2 lg:grid-cols-4">
+          <Stat label="Receita prevista" value="R$ 482.300" hint="Este mês" />
+          <Stat label="Lucro líquido" value="R$ 184.920" hint="Após custos" />
+          <Stat label="Próximas palestras" value="07" hint="Próximos 30 dias" />
+          <Stat label="Follow-ups pendentes" value="14" hint="Para hoje" />
+          <Stat label="Estoque baixo" value="03" hint="Itens em reposição" />
+          <Stat label="Pendências financeiras" value="R$ 38.450" hint="A receber" />
+          <Stat label="Meta do mês" value="64%" hint="R$ 320k de R$ 500k" />
+          <Stat label="Temporada atual" value="2026.1" hint="01 jan – 30 jun" />
         </div>
       </section>
     </div>
