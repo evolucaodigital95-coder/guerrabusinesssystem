@@ -54,14 +54,13 @@ export function LectureFormDialog({
   const [f, setF] = useState<LectureRow>({
     title: "",
     status: "lead",
-    scheduled_at: initialDate,
     ...initial,
     scheduled_at: initialDate,
   });
   const qc = useQueryClient();
 
   useEffect(() => {
-    if (open) setF({ title: "", status: "lead", scheduled_at: initialDate, ...initial, scheduled_at: initialDate });
+    if (open) setF({ title: "", status: "lead", ...initial, scheduled_at: initialDate });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
