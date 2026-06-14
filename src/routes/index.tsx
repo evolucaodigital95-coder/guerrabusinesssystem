@@ -26,51 +26,60 @@ function LoginPage() {
   }
 
   return (
-    <div className="relative grid min-h-screen lg:grid-cols-2">
+    <div className="relative grid min-h-screen lg:grid-cols-[1.1fr_1fr]">
       {/* Brand panel */}
-      <div className="relative hidden overflow-hidden bg-[var(--navy)] lg:flex lg:flex-col lg:justify-between lg:p-12 lg:text-[var(--navy-foreground)]">
+      <div
+        className="relative hidden overflow-hidden lg:flex lg:flex-col lg:justify-between lg:p-16"
+        style={{ background: "var(--navy)", color: "var(--navy-foreground)" }}
+      >
         <div
           aria-hidden
-          className="pointer-events-none absolute -top-40 -right-40 h-96 w-96 rounded-full opacity-30 blur-3xl"
-          style={{ background: "radial-gradient(closest-side, var(--gold), transparent)" }}
-        />
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -bottom-32 -left-24 h-80 w-80 rounded-full opacity-20 blur-3xl"
+          className="pointer-events-none absolute -top-48 -right-32 h-[28rem] w-[28rem] rounded-full opacity-20 blur-3xl"
           style={{ background: "radial-gradient(closest-side, var(--gold), transparent)" }}
         />
         <GbsMark variant="light" />
-        <div className="relative space-y-6">
-          <h2 className="max-w-md text-4xl font-semibold leading-tight tracking-tight">
+
+        <div className="relative max-w-md space-y-8">
+          <div
+            aria-hidden
+            className="h-px w-12"
+            style={{ background: "var(--gold)" }}
+          />
+          <h2 className="font-display text-[2.75rem] leading-[1.1] tracking-tight">
             Resultados extraordinários começam com pessoas extraordinárias.
           </h2>
-          <p className="max-w-md text-sm opacity-80">
-            A plataforma executiva do Grupo Guerra para gerir negócios, palestras, pessoas e legado — em um único lugar.
+          <p className="max-w-sm text-sm leading-relaxed text-[var(--navy-foreground)]/70">
+            A plataforma executiva do Grupo Guerra para gerir negócios, palestras,
+            pessoas e legado — em um único lugar.
           </p>
         </div>
-        <p className="relative text-xs uppercase tracking-[0.2em] opacity-70">
+
+        <p className="relative text-[10px] uppercase tracking-[0.32em] text-[var(--navy-foreground)]/55">
           Powered by Grupo Guerra
         </p>
       </div>
 
       {/* Form panel */}
-      <div className="flex items-center justify-center bg-background px-6 py-12">
-        <div className="w-full max-w-sm space-y-8">
+      <div className="flex items-center justify-center bg-background px-6 py-16">
+        <div className="w-full max-w-sm space-y-12">
           <div className="lg:hidden">
             <GbsMark />
           </div>
-          <div className="space-y-2">
-            <h1 className="text-2xl font-semibold tracking-tight">
+
+          <div className="space-y-3">
+            <h1 className="font-display text-3xl leading-tight">
               Bem-vindo ao Guerra Business System
             </h1>
-            <p className="text-sm text-muted-foreground">
-              Entre com suas credenciais para acessar o painel.
+            <p className="text-sm leading-relaxed text-muted-foreground">
+              Entre com suas credenciais para acessar o painel executivo.
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="email">E-mail</Label>
+              <Label htmlFor="email" className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                E-mail
+              </Label>
               <Input
                 id="email"
                 type="email"
@@ -78,12 +87,15 @@ function LoginPage() {
                 placeholder="voce@grupoguerra.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                className="h-11 rounded-lg border-border bg-card"
               />
             </div>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label htmlFor="password">Senha</Label>
-                <a href="#" className="text-xs text-muted-foreground hover:text-foreground">
+                <Label htmlFor="password" className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                  Senha
+                </Label>
+                <a href="#" className="text-xs text-muted-foreground transition-colors hover:text-foreground">
                   Esqueceu?
                 </a>
               </div>
@@ -94,22 +106,28 @@ function LoginPage() {
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                className="h-11 rounded-lg border-border bg-card"
               />
             </div>
-            <Button type="submit" variant="navy" size="lg" className="w-full">
+            <Button
+              type="submit"
+              variant="navy"
+              className="h-11 w-full rounded-lg text-sm font-medium transition-all duration-300 hover:opacity-95"
+            >
               Entrar
             </Button>
           </form>
 
-          <p className="text-center text-xs uppercase tracking-[0.2em] text-muted-foreground">
-            Powered by Grupo Guerra
-          </p>
-
-          <p className="text-center text-xs text-muted-foreground">
-            <Link to="/app/hoje" className="underline-offset-4 hover:underline">
-              Continuar sem entrar (demo)
-            </Link>
-          </p>
+          <div className="space-y-4">
+            <p className="text-center text-[10px] uppercase tracking-[0.28em] text-muted-foreground">
+              Powered by Grupo Guerra
+            </p>
+            <p className="text-center text-xs text-muted-foreground">
+              <Link to="/app/hoje" className="underline-offset-4 transition-colors hover:text-foreground hover:underline">
+                Continuar sem entrar (demo)
+              </Link>
+            </p>
+          </div>
         </div>
       </div>
     </div>

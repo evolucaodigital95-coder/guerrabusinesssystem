@@ -1,36 +1,31 @@
-import { FileSearch } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageHeader, EmptyState } from "@/components/page-shell";
 import type { ModuleDef } from "@/lib/modules";
 
 export function ModulePage({ module }: { module: ModuleDef }) {
-  const Icon = module.icon;
   return (
-    <div className="mx-auto max-w-7xl">
+    <div className="mx-auto max-w-6xl">
       <PageHeader
         eyebrow={module.section}
         title={module.label}
         description={module.description}
         actions={
-          <Button variant="navy" size="sm">
-            <Icon className="h-4 w-4" />
+          <Button variant="navy" size="sm" className="rounded-full px-5">
             {module.primaryAction}
           </Button>
         }
       />
 
-      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div className="mb-10 grid grid-cols-1 gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-3">
         {["Total", "Ativos", "Este mês"].map((l) => (
-          <div key={l} className="rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-elegant)]">
-            <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{l}</div>
-            <div className="mt-2 text-2xl font-semibold tracking-tight text-muted-foreground/40">—</div>
+          <div key={l} className="bg-card p-7">
+            <div className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">{l}</div>
+            <div className="mt-6 font-display text-[2rem] leading-none text-muted-foreground/40">—</div>
           </div>
         ))}
       </div>
 
       <EmptyState
-        icon={<FileSearch className="h-5 w-5" />}
-        title="Tudo limpo por aqui"
         message={module.emptyMessage}
         actionLabel={module.primaryAction}
         onAction={() => {}}
