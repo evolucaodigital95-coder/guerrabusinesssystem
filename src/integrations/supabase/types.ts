@@ -1179,66 +1179,116 @@ export type Database = {
       }
       lectures: {
         Row: {
+          actual_audience: number | null
+          address: string | null
+          agent_id: string | null
           archived_at: string | null
           audience_size: number | null
+          campaign_id: string | null
+          city: string | null
           closed_at: string | null
           closed_by: string | null
           company_id: string | null
+          contact_id: string | null
           created_at: string
           created_by: string | null
+          expected_audience: number | null
           financial_status: string | null
           gross_revenue: number | null
           id: string
           location: string | null
+          notes: string | null
           organization_id: string
+          project_id: string | null
           scheduled_at: string | null
+          scheduled_time: string | null
           season_id: string | null
+          state: string | null
           status: string | null
+          theme: string | null
           title: string
           updated_at: string
           updated_by: string | null
         }
         Insert: {
+          actual_audience?: number | null
+          address?: string | null
+          agent_id?: string | null
           archived_at?: string | null
           audience_size?: number | null
+          campaign_id?: string | null
+          city?: string | null
           closed_at?: string | null
           closed_by?: string | null
           company_id?: string | null
+          contact_id?: string | null
           created_at?: string
           created_by?: string | null
+          expected_audience?: number | null
           financial_status?: string | null
           gross_revenue?: number | null
           id?: string
           location?: string | null
+          notes?: string | null
           organization_id: string
+          project_id?: string | null
           scheduled_at?: string | null
+          scheduled_time?: string | null
           season_id?: string | null
+          state?: string | null
           status?: string | null
+          theme?: string | null
           title: string
           updated_at?: string
           updated_by?: string | null
         }
         Update: {
+          actual_audience?: number | null
+          address?: string | null
+          agent_id?: string | null
           archived_at?: string | null
           audience_size?: number | null
+          campaign_id?: string | null
+          city?: string | null
           closed_at?: string | null
           closed_by?: string | null
           company_id?: string | null
+          contact_id?: string | null
           created_at?: string
           created_by?: string | null
+          expected_audience?: number | null
           financial_status?: string | null
           gross_revenue?: number | null
           id?: string
           location?: string | null
+          notes?: string | null
           organization_id?: string
+          project_id?: string | null
           scheduled_at?: string | null
+          scheduled_time?: string | null
           season_id?: string | null
+          state?: string | null
           status?: string | null
+          theme?: string | null
           title?: string
           updated_at?: string
           updated_by?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "lectures_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lectures_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "lectures_company_id_fkey"
             columns: ["company_id"]
@@ -1247,10 +1297,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "lectures_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "lectures_organization_id_fkey"
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lectures_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
             referencedColumns: ["id"]
           },
           {
@@ -1712,6 +1776,8 @@ export type Database = {
           created_by: string | null
           direction: string | null
           id: string
+          lecture_id: string | null
+          notes: string | null
           occurs_on: string | null
           organization_id: string
           quantity: number | null
@@ -1727,6 +1793,8 @@ export type Database = {
           created_by?: string | null
           direction?: string | null
           id?: string
+          lecture_id?: string | null
+          notes?: string | null
           occurs_on?: string | null
           organization_id: string
           quantity?: number | null
@@ -1742,6 +1810,8 @@ export type Database = {
           created_by?: string | null
           direction?: string | null
           id?: string
+          lecture_id?: string | null
+          notes?: string | null
           occurs_on?: string | null
           organization_id?: string
           quantity?: number | null
@@ -1756,6 +1826,13 @@ export type Database = {
             columns: ["batch_id"]
             isOneToOne: false
             referencedRelation: "inventory_batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_movements_lecture_id_fkey"
+            columns: ["lecture_id"]
+            isOneToOne: false
+            referencedRelation: "lectures"
             referencedColumns: ["id"]
           },
           {
