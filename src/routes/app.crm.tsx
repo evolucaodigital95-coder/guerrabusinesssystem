@@ -93,7 +93,7 @@ function CrmPage() {
         eyebrow="CRM"
         title="Empresas"
         description="Cadastro central de empresas, contatos, leads e oportunidades."
-        action={
+        actions={
           <Button variant="navy" className="rounded-full" onClick={() => setOpen(true)} disabled={!organizationId}>
             <Plus className="mr-1.5 h-4 w-4" /> Nova empresa
           </Button>
