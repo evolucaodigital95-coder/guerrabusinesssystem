@@ -138,7 +138,7 @@ function AppLayout() {
 
           <div className="hidden min-w-0 flex-1 md:block">
             <p className="text-sm text-muted-foreground">
-              {greeting()}, <span className="text-foreground">Gustavo</span>
+              {greeting()}, <span className="text-foreground">{firstName || "executivo"}</span>
             </p>
           </div>
 
