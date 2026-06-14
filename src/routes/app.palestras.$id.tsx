@@ -208,9 +208,21 @@ function PalestraDetail() {
 
       {/* Cabeçalho com vínculos */}
       <div className="grid gap-3 md:grid-cols-3 xl:grid-cols-6">
-        <RelCard icon={<Building2 className="h-3.5 w-3.5" />} label="Empresa" value={company?.legal_name ?? "—"} to={company?.id ? "/app/crm/$id" : undefined} params={company?.id ? { id: company.id } : undefined} />
+        {company?.id ? (
+          <Link to="/app/crm/$id" params={{ id: company.id }}>
+            <RelCard icon={<Building2 className="h-3.5 w-3.5" />} label="Empresa" value={company?.legal_name ?? "—"} />
+          </Link>
+        ) : (
+          <RelCard icon={<Building2 className="h-3.5 w-3.5" />} label="Empresa" value="—" />
+        )}
         <RelCard icon={<UserCircle2 className="h-3.5 w-3.5" />} label="Contato" value={contact?.full_name ?? "—"} />
-        <RelCard icon={<Users className="h-3.5 w-3.5" />} label="Agendista" value={agent?.full_name ?? "—"} to={agent?.id ? "/app/agendistas/$id" : undefined} params={agent?.id ? { id: agent.id } : undefined} />
+        {agent?.id ? (
+          <Link to="/app/agendistas/$id" params={{ id: agent.id }}>
+            <RelCard icon={<Users className="h-3.5 w-3.5" />} label="Agendista" value={agent?.full_name ?? "—"} />
+          </Link>
+        ) : (
+          <RelCard icon={<Users className="h-3.5 w-3.5" />} label="Agendista" value="—" />
+        )}
         <RelCard icon={<Calendar className="h-3.5 w-3.5" />} label="Temporada" value={season?.name ?? "—"} />
         <RelCard icon={<Activity className="h-3.5 w-3.5" />} label="Campanha" value={campaign?.name ?? "—"} />
         <RelCard icon={<Activity className="h-3.5 w-3.5" />} label="Projeto" value={project?.name ?? "—"} />
