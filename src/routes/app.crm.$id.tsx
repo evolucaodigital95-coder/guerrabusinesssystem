@@ -124,7 +124,15 @@ function CompanyDetailPage() {
                   <Instagram className="h-3 w-3" /> {c.instagram}
                 </span>
               )}
+              {c.owner_id && organizationId && (
+                <OwnerLabel ownerId={c.owner_id} organizationId={organizationId} />
+              )}
             </div>
+            {organizationId && user && (
+              <div className="mt-4">
+                <TagsBar entityType="company" entityId={id} organizationId={organizationId} userId={user.id} />
+              </div>
+            )}
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <Button variant="ghost" size="sm" onClick={() => toggleFavorite.mutate()}>
