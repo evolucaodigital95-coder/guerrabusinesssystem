@@ -535,20 +535,13 @@ function EventDialog({ open, onOpenChange, organizationId, userId, lectureId }: 
   );
 }
 
-function RelCard({ icon, label, value, to, params }: {
-  icon: React.ReactNode; label: string; value: string;
-  to?: string; params?: Record<string, string>;
-}) {
-  const content = (
+function RelCard({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
+  return (
     <div className="h-full rounded-2xl border border-border bg-card/40 p-4 transition-colors hover:bg-card/70">
       <p className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.22em] text-muted-foreground">{icon}{label}</p>
       <p className="mt-2 truncate text-sm text-foreground">{value}</p>
     </div>
   );
-  if (to && params) {
-    return <Link to={to} params={params}>{content}</Link>;
-  }
-  return content;
 }
 
 function KPI({ label, value, icon }: { label: string; value: string; icon?: React.ReactNode }) {
