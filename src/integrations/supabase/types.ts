@@ -23,7 +23,9 @@ export type Database = {
           id: string
           kind: string | null
           name: string
+          notes: string | null
           organization_id: string
+          status: string
           updated_at: string
           updated_by: string | null
         }
@@ -35,7 +37,9 @@ export type Database = {
           id?: string
           kind?: string | null
           name: string
+          notes?: string | null
           organization_id: string
+          status?: string
           updated_at?: string
           updated_by?: string | null
         }
@@ -47,7 +51,9 @@ export type Database = {
           id?: string
           kind?: string | null
           name?: string
+          notes?: string | null
           organization_id?: string
+          status?: string
           updated_at?: string
           updated_by?: string | null
         }
@@ -551,57 +557,81 @@ export type Database = {
       financial_movements: {
         Row: {
           account_id: string | null
+          agent_id: string | null
           amount: number | null
           archived_at: string | null
           category: string | null
+          company_id: string | null
           created_at: string
           created_by: string | null
           currency: string | null
           description: string | null
           direction: string | null
+          expected_amount: number | null
+          expected_date: string | null
           id: string
+          lecture_id: string | null
+          notes: string | null
           occurs_on: string | null
+          occurs_time: string | null
           organization_id: string
           project_id: string | null
           season_id: string | null
+          settled_at: string | null
           status: string | null
           updated_at: string
           updated_by: string | null
         }
         Insert: {
           account_id?: string | null
+          agent_id?: string | null
           amount?: number | null
           archived_at?: string | null
           category?: string | null
+          company_id?: string | null
           created_at?: string
           created_by?: string | null
           currency?: string | null
           description?: string | null
           direction?: string | null
+          expected_amount?: number | null
+          expected_date?: string | null
           id?: string
+          lecture_id?: string | null
+          notes?: string | null
           occurs_on?: string | null
+          occurs_time?: string | null
           organization_id: string
           project_id?: string | null
           season_id?: string | null
+          settled_at?: string | null
           status?: string | null
           updated_at?: string
           updated_by?: string | null
         }
         Update: {
           account_id?: string | null
+          agent_id?: string | null
           amount?: number | null
           archived_at?: string | null
           category?: string | null
+          company_id?: string | null
           created_at?: string
           created_by?: string | null
           currency?: string | null
           description?: string | null
           direction?: string | null
+          expected_amount?: number | null
+          expected_date?: string | null
           id?: string
+          lecture_id?: string | null
+          notes?: string | null
           occurs_on?: string | null
+          occurs_time?: string | null
           organization_id?: string
           project_id?: string | null
           season_id?: string | null
+          settled_at?: string | null
           status?: string | null
           updated_at?: string
           updated_by?: string | null
@@ -612,6 +642,27 @@ export type Database = {
             columns: ["account_id"]
             isOneToOne: false
             referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financial_movements_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financial_movements_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financial_movements_lecture_id_fkey"
+            columns: ["lecture_id"]
+            isOneToOne: false
+            referencedRelation: "lectures"
             referencedColumns: ["id"]
           },
           {
