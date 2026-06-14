@@ -610,13 +610,26 @@ function NotesTab({ companyId, organizationId, userId }: { companyId: string; or
   );
 }
 
+/* ---------------- Owner Label ---------------- */
+
+function OwnerLabel({ ownerId, organizationId }: { ownerId: string; organizationId: string }) {
+  const members = useOrgMembers(organizationId);
+  const m = members.data?.find((x) => x.user_id === ownerId);
+  const label = m?.full_name ?? m?.email ?? "Responsável";
+  return <span className="inline-flex items-center gap-1.5">· Responsável: {label}</span>;
+}
+
 /* ---------------- Timeline Tab ---------------- */
 
-function TimelineTab({ companyId, organizationId, company }: { companyId: string; organizationId: string; company: Record<string, unknown> }) {
+function TimelineTab({
+  companyId, organizationId, userId, company,
+}: { companyId: string; organizationId: string; userId: string; company: Record<string, unknown> }) {
+  const queryClient = useQueryClient();
+  const [open, setOpen] = useState(false);
+
   const events = useQuery({
     queryKey: ["company-timeline", companyId],
     queryFn: async () => {
-      // Aggregate everything related to this company.
       const [te, leads, opps, contacts] = await Promise.all([
         supabase.from("timeline_events").select("id, kind, title, body, occurs_at")
           .eq("organization_id", organizationId).eq("entity_type", "company").eq("entity_id", companyId)
@@ -630,23 +643,106 @@ function TimelineTab({ companyId, organizationId, company }: { companyId: string
       leads.data?.forEach((l) => items.push({ id: `l-${l.id}`, at: l.created_at, title: "Lead registrado", subtitle: l.source ?? undefined }));
       opps.data?.forEach((o) => items.push({ id: `o-${o.id}`, at: o.created_at, title: `Oportunidade: ${o.title}`, subtitle: o.status ?? undefined }));
       contacts.data?.forEach((c) => items.push({ id: `ct-${c.id}`, at: c.created_at, title: "Contato adicionado", subtitle: c.full_name }));
-      te.data?.forEach((e) => items.push({ id: `t-${e.id}`, at: e.occurs_at, title: e.title ?? e.kind ?? "Evento", subtitle: e.body ?? undefined }));
+      te.data?.forEach((e) => items.push({ id: `t-${e.id}`, at: e.occurs_at, title: e.title ?? timelineKindLabel(e.kind), subtitle: e.body ?? undefined }));
       return items.sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime());
     },
   });
-  if (!events.data || events.data.length === 0) {
-    return <EmptyTab icon={<Building2 className="h-6 w-6 text-muted-foreground" />} title="Sem eventos" description="A timeline será preenchida conforme a operação acontece." />;
-  }
+
   return (
-    <ol className="relative space-y-5 border-l border-border pl-6">
-      {events.data.map((e) => (
-        <li key={e.id} className="relative">
-          <span className="absolute -left-[27px] top-1.5 h-2 w-2 rounded-full bg-[var(--navy)]" />
-          <p className="text-sm text-foreground">{e.title}</p>
-          {e.subtitle && <p className="text-xs text-muted-foreground">{e.subtitle}</p>}
-          <p className="mt-1 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">{formatDate(e.at)}</p>
-        </li>
-      ))}
-    </ol>
+    <div className="space-y-5">
+      <div className="flex justify-end">
+        <Button variant="navy" size="sm" className="rounded-full" onClick={() => setOpen(true)}>
+          <Plus className="mr-1.5 h-4 w-4" /> Registrar evento
+        </Button>
+      </div>
+      {!events.data || events.data.length === 0 ? (
+        <EmptyTab icon={<Building2 className="h-6 w-6 text-muted-foreground" />} title="Sem eventos" description="Registre o primeiro evento ou aguarde a operação acontecer." />
+      ) : (
+        <ol className="relative space-y-5 border-l border-border pl-6">
+          {events.data.map((e) => (
+            <li key={e.id} className="relative">
+              <span className="absolute -left-[27px] top-1.5 h-2 w-2 rounded-full bg-[var(--navy)]" />
+              <p className="text-sm text-foreground">{e.title}</p>
+              {e.subtitle && <p className="text-xs text-muted-foreground">{e.subtitle}</p>}
+              <p className="mt-1 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">{formatDate(e.at)}</p>
+            </li>
+          ))}
+        </ol>
+      )}
+      <TimelineEventDialog
+        open={open} onOpenChange={setOpen}
+        companyId={companyId} organizationId={organizationId} userId={userId}
+        onSaved={() => queryClient.invalidateQueries({ queryKey: ["company-timeline", companyId] })}
+      />
+    </div>
+  );
+}
+
+function TimelineEventDialog({
+  open, onOpenChange, companyId, organizationId, userId, onSaved,
+}: {
+  open: boolean; onOpenChange: (v: boolean) => void;
+  companyId: string; organizationId: string; userId: string; onSaved: () => void;
+}) {
+  const [f, setF] = useState({ kind: "meeting", title: "", body: "", occurs_at: new Date().toISOString().slice(0, 16) });
+  const save = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("timeline_events").insert({
+        organization_id: organizationId,
+        entity_type: "company",
+        entity_id: companyId,
+        kind: f.kind,
+        title: f.title.trim() || timelineKindLabel(f.kind),
+        body: f.body.trim() || null,
+        occurs_at: f.occurs_at ? new Date(f.occurs_at).toISOString() : new Date().toISOString(),
+        created_by: userId,
+        updated_by: userId,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Evento registrado");
+      setF({ kind: "meeting", title: "", body: "", occurs_at: new Date().toISOString().slice(0, 16) });
+      onSaved();
+      onOpenChange(false);
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Erro"),
+  });
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle className="font-serif text-2xl">Registrar evento</DialogTitle>
+          <DialogDescription>Adicione um evento à timeline desta empresa.</DialogDescription>
+        </DialogHeader>
+        <form onSubmit={(e) => { e.preventDefault(); save.mutate(); }} className="grid gap-3">
+          <div className="space-y-1.5">
+            <Label>Tipo</Label>
+            <Select value={f.kind} onValueChange={(v) => setF({ ...f, kind: v })}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {TIMELINE_KINDS.map((k) => <SelectItem key={k.key} value={k.key}>{k.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Quando</Label>
+            <Input type="datetime-local" value={f.occurs_at} onChange={(e) => setF({ ...f, occurs_at: e.target.value })} />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Título</Label>
+            <Input value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })} placeholder="Opcional — usa o tipo se vazio" />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Detalhes</Label>
+            <Textarea rows={3} value={f.body} onChange={(e) => setF({ ...f, body: e.target.value })} />
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Cancelar</Button>
+            <Button type="submit" variant="navy" disabled={save.isPending}>{save.isPending ? "Salvando…" : "Registrar"}</Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
