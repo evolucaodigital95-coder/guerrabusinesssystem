@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { COMPANY_STATUS, LIFECYCLE_STAGES } from "@/lib/crm";
+import { useOrgMembers } from "@/hooks/use-org-members";
 
 type CompanyRow = {
   id?: string;
@@ -39,6 +40,7 @@ type CompanyRow = {
   notes?: string | null;
   status?: string | null;
   lifecycle_stage?: string | null;
+  owner_id?: string | null;
 };
 
 export function CompanyFormDialog({
