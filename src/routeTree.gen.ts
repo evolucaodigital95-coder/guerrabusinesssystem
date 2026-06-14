@@ -27,7 +27,6 @@ import { Route as AppCrmRouteImport } from './routes/app.crm'
 import { Route as AppConfiguracoesRouteImport } from './routes/app.configuracoes'
 import { Route as AppBibliotecaRouteImport } from './routes/app.biblioteca'
 import { Route as AppAuditoriaRouteImport } from './routes/app.auditoria'
-import { Route as AppAgendistasRouteImport } from './routes/app.agendistas'
 import { Route as AppCrmIdRouteImport } from './routes/app.crm.$id'
 
 const AppRoute = AppRouteImport.update({
@@ -120,11 +119,6 @@ const AppAuditoriaRoute = AppAuditoriaRouteImport.update({
   path: '/auditoria',
   getParentRoute: () => AppRoute,
 } as any)
-const AppAgendistasRoute = AppAgendistasRouteImport.update({
-  id: '/agendistas',
-  path: '/agendistas',
-  getParentRoute: () => AppRoute,
-} as any)
 const AppCrmIdRoute = AppCrmIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -134,7 +128,6 @@ const AppCrmIdRoute = AppCrmIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
-  '/app/agendistas': typeof AppAgendistasRoute
   '/app/auditoria': typeof AppAuditoriaRoute
   '/app/biblioteca': typeof AppBibliotecaRoute
   '/app/configuracoes': typeof AppConfiguracoesRoute
@@ -155,7 +148,6 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/app/agendistas': typeof AppAgendistasRoute
   '/app/auditoria': typeof AppAuditoriaRoute
   '/app/biblioteca': typeof AppBibliotecaRoute
   '/app/configuracoes': typeof AppConfiguracoesRoute
@@ -178,7 +170,6 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
-  '/app/agendistas': typeof AppAgendistasRoute
   '/app/auditoria': typeof AppAuditoriaRoute
   '/app/biblioteca': typeof AppBibliotecaRoute
   '/app/configuracoes': typeof AppConfiguracoesRoute
@@ -202,7 +193,6 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/app'
-    | '/app/agendistas'
     | '/app/auditoria'
     | '/app/biblioteca'
     | '/app/configuracoes'
@@ -223,7 +213,6 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/app/agendistas'
     | '/app/auditoria'
     | '/app/biblioteca'
     | '/app/configuracoes'
@@ -245,7 +234,6 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/app'
-    | '/app/agendistas'
     | '/app/auditoria'
     | '/app/biblioteca'
     | '/app/configuracoes'
@@ -398,13 +386,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAuditoriaRouteImport
       parentRoute: typeof AppRoute
     }
-    '/app/agendistas': {
-      id: '/app/agendistas'
-      path: '/agendistas'
-      fullPath: '/app/agendistas'
-      preLoaderRoute: typeof AppAgendistasRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/app/crm/$id': {
       id: '/app/crm/$id'
       path: '/$id'
@@ -427,7 +408,6 @@ const AppCrmRouteWithChildren =
   AppCrmRoute._addFileChildren(AppCrmRouteChildren)
 
 interface AppRouteChildren {
-  AppAgendistasRoute: typeof AppAgendistasRoute
   AppAuditoriaRoute: typeof AppAuditoriaRoute
   AppBibliotecaRoute: typeof AppBibliotecaRoute
   AppConfiguracoesRoute: typeof AppConfiguracoesRoute
@@ -447,7 +427,6 @@ interface AppRouteChildren {
 }
 
 const AppRouteChildren: AppRouteChildren = {
-  AppAgendistasRoute: AppAgendistasRoute,
   AppAuditoriaRoute: AppAuditoriaRoute,
   AppBibliotecaRoute: AppBibliotecaRoute,
   AppConfiguracoesRoute: AppConfiguracoesRoute,
@@ -475,3 +454,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
