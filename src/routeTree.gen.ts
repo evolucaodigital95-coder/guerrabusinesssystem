@@ -28,6 +28,7 @@ import { Route as AppConfiguracoesRouteImport } from './routes/app.configuracoes
 import { Route as AppBibliotecaRouteImport } from './routes/app.biblioteca'
 import { Route as AppAuditoriaRouteImport } from './routes/app.auditoria'
 import { Route as AppAgendistasRouteImport } from './routes/app.agendistas'
+import { Route as AppCrmIdRouteImport } from './routes/app.crm.$id'
 
 const AppRoute = AppRouteImport.update({
   id: '/app',
@@ -124,6 +125,11 @@ const AppAgendistasRoute = AppAgendistasRouteImport.update({
   path: '/agendistas',
   getParentRoute: () => AppRoute,
 } as any)
+const AppCrmIdRoute = AppCrmIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AppCrmRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -132,7 +138,7 @@ export interface FileRoutesByFullPath {
   '/app/auditoria': typeof AppAuditoriaRoute
   '/app/biblioteca': typeof AppBibliotecaRoute
   '/app/configuracoes': typeof AppConfiguracoesRoute
-  '/app/crm': typeof AppCrmRoute
+  '/app/crm': typeof AppCrmRouteWithChildren
   '/app/dashboard': typeof AppDashboardRoute
   '/app/estoque': typeof AppEstoqueRoute
   '/app/financeiro': typeof AppFinanceiroRoute
@@ -145,6 +151,7 @@ export interface FileRoutesByFullPath {
   '/app/roadmap': typeof AppRoadmapRoute
   '/app/temporadas': typeof AppTemporadasRoute
   '/app/': typeof AppIndexRoute
+  '/app/crm/$id': typeof AppCrmIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -152,7 +159,7 @@ export interface FileRoutesByTo {
   '/app/auditoria': typeof AppAuditoriaRoute
   '/app/biblioteca': typeof AppBibliotecaRoute
   '/app/configuracoes': typeof AppConfiguracoesRoute
-  '/app/crm': typeof AppCrmRoute
+  '/app/crm': typeof AppCrmRouteWithChildren
   '/app/dashboard': typeof AppDashboardRoute
   '/app/estoque': typeof AppEstoqueRoute
   '/app/financeiro': typeof AppFinanceiroRoute
@@ -165,6 +172,7 @@ export interface FileRoutesByTo {
   '/app/roadmap': typeof AppRoadmapRoute
   '/app/temporadas': typeof AppTemporadasRoute
   '/app': typeof AppIndexRoute
+  '/app/crm/$id': typeof AppCrmIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -174,7 +182,7 @@ export interface FileRoutesById {
   '/app/auditoria': typeof AppAuditoriaRoute
   '/app/biblioteca': typeof AppBibliotecaRoute
   '/app/configuracoes': typeof AppConfiguracoesRoute
-  '/app/crm': typeof AppCrmRoute
+  '/app/crm': typeof AppCrmRouteWithChildren
   '/app/dashboard': typeof AppDashboardRoute
   '/app/estoque': typeof AppEstoqueRoute
   '/app/financeiro': typeof AppFinanceiroRoute
@@ -187,6 +195,7 @@ export interface FileRoutesById {
   '/app/roadmap': typeof AppRoadmapRoute
   '/app/temporadas': typeof AppTemporadasRoute
   '/app/': typeof AppIndexRoute
+  '/app/crm/$id': typeof AppCrmIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -210,6 +219,7 @@ export interface FileRouteTypes {
     | '/app/roadmap'
     | '/app/temporadas'
     | '/app/'
+    | '/app/crm/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -230,6 +240,7 @@ export interface FileRouteTypes {
     | '/app/roadmap'
     | '/app/temporadas'
     | '/app'
+    | '/app/crm/$id'
   id:
     | '__root__'
     | '/'
@@ -251,6 +262,7 @@ export interface FileRouteTypes {
     | '/app/roadmap'
     | '/app/temporadas'
     | '/app/'
+    | '/app/crm/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -393,15 +405,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAgendistasRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/crm/$id': {
+      id: '/app/crm/$id'
+      path: '/$id'
+      fullPath: '/app/crm/$id'
+      preLoaderRoute: typeof AppCrmIdRouteImport
+      parentRoute: typeof AppCrmRoute
+    }
   }
 }
+
+interface AppCrmRouteChildren {
+  AppCrmIdRoute: typeof AppCrmIdRoute
+}
+
+const AppCrmRouteChildren: AppCrmRouteChildren = {
+  AppCrmIdRoute: AppCrmIdRoute,
+}
+
+const AppCrmRouteWithChildren =
+  AppCrmRoute._addFileChildren(AppCrmRouteChildren)
 
 interface AppRouteChildren {
   AppAgendistasRoute: typeof AppAgendistasRoute
   AppAuditoriaRoute: typeof AppAuditoriaRoute
   AppBibliotecaRoute: typeof AppBibliotecaRoute
   AppConfiguracoesRoute: typeof AppConfiguracoesRoute
-  AppCrmRoute: typeof AppCrmRoute
+  AppCrmRoute: typeof AppCrmRouteWithChildren
   AppDashboardRoute: typeof AppDashboardRoute
   AppEstoqueRoute: typeof AppEstoqueRoute
   AppFinanceiroRoute: typeof AppFinanceiroRoute
@@ -421,7 +451,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppAuditoriaRoute: AppAuditoriaRoute,
   AppBibliotecaRoute: AppBibliotecaRoute,
   AppConfiguracoesRoute: AppConfiguracoesRoute,
-  AppCrmRoute: AppCrmRoute,
+  AppCrmRoute: AppCrmRouteWithChildren,
   AppDashboardRoute: AppDashboardRoute,
   AppEstoqueRoute: AppEstoqueRoute,
   AppFinanceiroRoute: AppFinanceiroRoute,
