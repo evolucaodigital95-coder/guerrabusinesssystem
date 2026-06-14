@@ -8,15 +8,23 @@ export function useOrgMembers(organizationId: string | null) {
     queryKey: ["org-members", organizationId],
     enabled: !!organizationId,
     queryFn: async (): Promise<OrgMember[]> => {
-      const { data, error } = await supabase
+      const { data: members, error } = await supabase
         .from("organization_members")
-        .select("user_id, profiles:user_id ( full_name, email )")
+        .select("user_id")
         .eq("organization_id", organizationId!)
         .is("archived_at", null);
       if (error) throw error;
-      return (data ?? []).map((m) => {
-        const p = (m.profiles ?? null) as { full_name: string | null; email: string | null } | null;
-        return { user_id: m.user_id, full_name: p?.full_name ?? null, email: p?.email ?? null };
+      const ids = (members ?? []).map((m) => m.user_id);
+      if (ids.length === 0) return [];
+      const { data: profiles, error: pErr } = await supabase
+        .from("profiles")
+        .select("id, full_name, email")
+        .in("id", ids);
+      if (pErr) throw pErr;
+      const map = new Map(profiles?.map((p) => [p.id, p]));
+      return ids.map((id) => {
+        const p = map.get(id);
+        return { user_id: id, full_name: p?.full_name ?? null, email: p?.email ?? null };
       });
     },
   });
