@@ -71,14 +71,21 @@ export type Database = {
         Row: {
           agent_id: string | null
           amount: number | null
+          amount_amortized: number
           archived_at: string | null
           created_at: string
           created_by: string | null
           currency: string | null
           granted_on: string | null
+          granted_time: string | null
           id: string
+          lecture_id: string | null
           notes: string | null
           organization_id: string
+          paid_by_label: string | null
+          paid_by_user_id: string | null
+          receipt_url: string | null
+          source: string | null
           status: string | null
           updated_at: string
           updated_by: string | null
@@ -86,14 +93,21 @@ export type Database = {
         Insert: {
           agent_id?: string | null
           amount?: number | null
+          amount_amortized?: number
           archived_at?: string | null
           created_at?: string
           created_by?: string | null
           currency?: string | null
           granted_on?: string | null
+          granted_time?: string | null
           id?: string
+          lecture_id?: string | null
           notes?: string | null
           organization_id: string
+          paid_by_label?: string | null
+          paid_by_user_id?: string | null
+          receipt_url?: string | null
+          source?: string | null
           status?: string | null
           updated_at?: string
           updated_by?: string | null
@@ -101,14 +115,21 @@ export type Database = {
         Update: {
           agent_id?: string | null
           amount?: number | null
+          amount_amortized?: number
           archived_at?: string | null
           created_at?: string
           created_by?: string | null
           currency?: string | null
           granted_on?: string | null
+          granted_time?: string | null
           id?: string
+          lecture_id?: string | null
           notes?: string | null
           organization_id?: string
+          paid_by_label?: string | null
+          paid_by_user_id?: string | null
+          receipt_url?: string | null
+          source?: string | null
           status?: string | null
           updated_at?: string
           updated_by?: string | null
@@ -122,6 +143,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "advances_lecture_id_fkey"
+            columns: ["lecture_id"]
+            isOneToOne: false
+            referencedRelation: "lectures"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "advances_organization_id_fkey"
             columns: ["organization_id"]
             isOneToOne: false
@@ -132,42 +160,57 @@ export type Database = {
       }
       agents: {
         Row: {
+          address: string | null
           archived_at: string | null
+          cpf: string | null
           created_at: string
           created_by: string | null
           email: string | null
           full_name: string
           id: string
+          notes: string | null
           organization_id: string
           phone: string | null
+          pix_key: string | null
+          pix_kind: string | null
           status: string | null
           updated_at: string
           updated_by: string | null
           user_id: string | null
         }
         Insert: {
+          address?: string | null
           archived_at?: string | null
+          cpf?: string | null
           created_at?: string
           created_by?: string | null
           email?: string | null
           full_name: string
           id?: string
+          notes?: string | null
           organization_id: string
           phone?: string | null
+          pix_key?: string | null
+          pix_kind?: string | null
           status?: string | null
           updated_at?: string
           updated_by?: string | null
           user_id?: string | null
         }
         Update: {
+          address?: string | null
           archived_at?: string | null
+          cpf?: string | null
           created_at?: string
           created_by?: string | null
           email?: string | null
           full_name?: string
           id?: string
+          notes?: string | null
           organization_id?: string
           phone?: string | null
+          pix_key?: string | null
+          pix_kind?: string | null
           status?: string | null
           updated_at?: string
           updated_by?: string | null
@@ -688,6 +731,94 @@ export type Database = {
           },
         ]
       }
+      financial_rules: {
+        Row: {
+          agent_id: string | null
+          agent_share: number
+          archived_at: string | null
+          created_at: string
+          created_by: string | null
+          effective_from: string
+          effective_to: string | null
+          fee_fixed: number
+          fee_percent: number
+          gustavo_share: number
+          id: string
+          is_default: boolean
+          name: string
+          notes: string | null
+          organization_id: string
+          scope: string
+          season_id: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          agent_id?: string | null
+          agent_share?: number
+          archived_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          effective_from?: string
+          effective_to?: string | null
+          fee_fixed?: number
+          fee_percent?: number
+          gustavo_share?: number
+          id?: string
+          is_default?: boolean
+          name: string
+          notes?: string | null
+          organization_id: string
+          scope?: string
+          season_id?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          agent_id?: string | null
+          agent_share?: number
+          archived_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          effective_from?: string
+          effective_to?: string | null
+          fee_fixed?: number
+          fee_percent?: number
+          gustavo_share?: number
+          id?: string
+          is_default?: boolean
+          name?: string
+          notes?: string | null
+          organization_id?: string
+          scope?: string
+          season_id?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financial_rules_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financial_rules_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financial_rules_season_id_fkey"
+            columns: ["season_id"]
+            isOneToOne: false
+            referencedRelation: "seasons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       history_events: {
         Row: {
           archived_at: string | null
@@ -891,6 +1022,104 @@ export type Database = {
           },
         ]
       }
+      lecture_financial_snapshots: {
+        Row: {
+          agent_amount: number
+          agent_id: string | null
+          archived_at: string | null
+          breakdown: Json
+          closed_at: string
+          closed_by: string | null
+          created_at: string
+          gross_revenue: number
+          gustavo_amount: number
+          id: string
+          inputs: Json
+          lecture_id: string
+          net_profit: number
+          notes: string | null
+          organization_id: string
+          rule_id: string | null
+          rule_snapshot: Json
+          total_advances: number
+          total_expenses: number
+          updated_at: string
+        }
+        Insert: {
+          agent_amount?: number
+          agent_id?: string | null
+          archived_at?: string | null
+          breakdown: Json
+          closed_at?: string
+          closed_by?: string | null
+          created_at?: string
+          gross_revenue?: number
+          gustavo_amount?: number
+          id?: string
+          inputs: Json
+          lecture_id: string
+          net_profit?: number
+          notes?: string | null
+          organization_id: string
+          rule_id?: string | null
+          rule_snapshot: Json
+          total_advances?: number
+          total_expenses?: number
+          updated_at?: string
+        }
+        Update: {
+          agent_amount?: number
+          agent_id?: string | null
+          archived_at?: string | null
+          breakdown?: Json
+          closed_at?: string
+          closed_by?: string | null
+          created_at?: string
+          gross_revenue?: number
+          gustavo_amount?: number
+          id?: string
+          inputs?: Json
+          lecture_id?: string
+          net_profit?: number
+          notes?: string | null
+          organization_id?: string
+          rule_id?: string | null
+          rule_snapshot?: Json
+          total_advances?: number
+          total_expenses?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lecture_financial_snapshots_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lecture_financial_snapshots_lecture_id_fkey"
+            columns: ["lecture_id"]
+            isOneToOne: false
+            referencedRelation: "lectures"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lecture_financial_snapshots_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lecture_financial_snapshots_rule_id_fkey"
+            columns: ["rule_id"]
+            isOneToOne: false
+            referencedRelation: "financial_rules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lecture_topics: {
         Row: {
           archived_at: string | null
@@ -952,9 +1181,13 @@ export type Database = {
         Row: {
           archived_at: string | null
           audience_size: number | null
+          closed_at: string | null
+          closed_by: string | null
           company_id: string | null
           created_at: string
           created_by: string | null
+          financial_status: string | null
+          gross_revenue: number | null
           id: string
           location: string | null
           organization_id: string
@@ -968,9 +1201,13 @@ export type Database = {
         Insert: {
           archived_at?: string | null
           audience_size?: number | null
+          closed_at?: string | null
+          closed_by?: string | null
           company_id?: string | null
           created_at?: string
           created_by?: string | null
+          financial_status?: string | null
+          gross_revenue?: number | null
           id?: string
           location?: string | null
           organization_id: string
@@ -984,9 +1221,13 @@ export type Database = {
         Update: {
           archived_at?: string | null
           audience_size?: number | null
+          closed_at?: string | null
+          closed_by?: string | null
           company_id?: string | null
           created_at?: string
           created_by?: string | null
+          financial_status?: string | null
+          gross_revenue?: number | null
           id?: string
           location?: string | null
           organization_id?: string
