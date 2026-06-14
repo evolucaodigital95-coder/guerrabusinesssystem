@@ -23,6 +23,25 @@ export const LEAD_STATUS = ["novo", "qualificando", "qualificado", "convertido",
 
 export const OPPORTUNITY_STATUS = ["aberta", "ganha", "perdida", "pausada"] as const;
 
+export const TIMELINE_KINDS = [
+  { key: "lead_created", label: "Lead criado" },
+  { key: "first_contact", label: "Primeiro contato" },
+  { key: "call", label: "Ligação" },
+  { key: "meeting", label: "Reunião" },
+  { key: "proposal_sent", label: "Proposta enviada" },
+  { key: "negotiation", label: "Negociação" },
+  { key: "closing", label: "Fechamento" },
+  { key: "lecture_done", label: "Palestra realizada" },
+  { key: "post_sale", label: "Pós-venda" },
+  { key: "new_contract", label: "Nova contratação" },
+  { key: "other", label: "Outro" },
+] as const;
+
+export function timelineKindLabel(key: string | null | undefined) {
+  if (!key) return "Evento";
+  return TIMELINE_KINDS.find((k) => k.key === key)?.label ?? key;
+}
+
 export function formatCurrency(value: number | null | undefined, currency = "BRL") {
   if (value == null) return "—";
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency }).format(value);

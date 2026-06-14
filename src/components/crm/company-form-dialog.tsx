@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { COMPANY_STATUS, LIFECYCLE_STAGES } from "@/lib/crm";
+import { useOrgMembers } from "@/hooks/use-org-members";
 
 type CompanyRow = {
   id?: string;
@@ -39,6 +40,7 @@ type CompanyRow = {
   notes?: string | null;
   status?: string | null;
   lifecycle_stage?: string | null;
+  owner_id?: string | null;
 };
 
 export function CompanyFormDialog({
@@ -57,6 +59,7 @@ export function CompanyFormDialog({
   const isEdit = !!initial?.id;
   const [form, setForm] = useState<CompanyRow>(initial ?? { status: "ativo", lifecycle_stage: "lead" });
   const queryClient = useQueryClient();
+  const members = useOrgMembers(organizationId);
 
   const save = useMutation({
     mutationFn: async () => {
@@ -77,6 +80,7 @@ export function CompanyFormDialog({
         notes: form.notes?.trim() || null,
         status: form.status || "ativo",
         lifecycle_stage: form.lifecycle_stage || "lead",
+        owner_id: form.owner_id || null,
         updated_by: userId,
       };
       if (isEdit) {
@@ -177,6 +181,20 @@ export function CompanyFormDialog({
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 {LIFECYCLE_STAGES.map((s) => <SelectItem key={s.key} value={s.key}>{s.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5 md:col-span-2">
+            <Label>Responsável principal</Label>
+            <Select value={form.owner_id ?? "none"} onValueChange={(v) => set("owner_id", v === "none" ? null : v)}>
+              <SelectTrigger><SelectValue placeholder="Selecionar responsável" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Sem responsável</SelectItem>
+                {(members.data ?? []).map((m) => (
+                  <SelectItem key={m.user_id} value={m.user_id}>
+                    {m.full_name ?? m.email ?? m.user_id}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
