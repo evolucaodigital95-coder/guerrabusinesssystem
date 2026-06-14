@@ -80,6 +80,7 @@ export function CompanyFormDialog({
         notes: form.notes?.trim() || null,
         status: form.status || "ativo",
         lifecycle_stage: form.lifecycle_stage || "lead",
+        owner_id: form.owner_id || null,
         updated_by: userId,
       };
       if (isEdit) {
