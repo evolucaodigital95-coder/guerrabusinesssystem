@@ -184,14 +184,12 @@ function CompanyDetailPage() {
           {organizationId && user && <NotesTab companyId={id} organizationId={organizationId} userId={user.id} />}
         </TabsContent>
         <TabsContent value="attachments">
-          <EmptyTab
-            icon={<Building2 className="h-7 w-7 text-muted-foreground" />}
-            title="Anexos em breve"
-            description="O módulo de arquivos será habilitado quando o armazenamento for ativado."
-          />
+          {organizationId && user && (
+            <AttachmentsTab entityType="company" entityId={id} organizationId={organizationId} userId={user.id} />
+          )}
         </TabsContent>
         <TabsContent value="timeline">
-          {organizationId && <TimelineTab companyId={id} organizationId={organizationId} company={c} />}
+          {organizationId && user && <TimelineTab companyId={id} organizationId={organizationId} userId={user.id} company={c} />}
         </TabsContent>
       </Tabs>
 
