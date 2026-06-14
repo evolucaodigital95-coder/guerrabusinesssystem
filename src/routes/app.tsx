@@ -1,6 +1,6 @@
-import { Link, Outlet, createFileRoute, useRouterState } from "@tanstack/react-router";
+import { Link, Outlet, Navigate, createFileRoute, useRouterState, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { Menu, Moon, Search, Sun, X } from "lucide-react";
+import { LogOut, Menu, Moon, Search, Sun, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -14,6 +14,8 @@ import { GbsMark } from "@/components/gbs-mark";
 import { MODULES } from "@/lib/modules";
 import { useTheme } from "@/components/theme-provider";
 import { cn } from "@/lib/utils";
+import { useSession } from "@/hooks/use-session";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/app")({
   component: AppLayout,
@@ -30,6 +32,21 @@ function AppLayout() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const navigate = useNavigate();
+  const { session, user, loading } = useSession();
+
+  if (loading) {
+    return <div className="grid min-h-screen place-items-center text-sm text-muted-foreground">Carregando…</div>;
+  }
+  if (!session) return <Navigate to="/" />;
+
+  const firstName = (user?.user_metadata?.full_name as string | undefined)?.split(" ")[0] ?? user?.email?.split("@")[0] ?? "";
+  const initials = (firstName || "GG").slice(0, 2).toUpperCase();
+
+  async function handleSignOut() {
+    await supabase.auth.signOut();
+    navigate({ to: "/" });
+  }
 
   const sections = ["principal", "operação", "estratégia", "sistema"] as const;
   const sectionLabel: Record<(typeof sections)[number], string> = {
