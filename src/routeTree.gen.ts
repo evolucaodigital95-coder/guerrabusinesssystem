@@ -28,6 +28,7 @@ import { Route as AppConfiguracoesRouteImport } from './routes/app.configuracoes
 import { Route as AppBibliotecaRouteImport } from './routes/app.biblioteca'
 import { Route as AppAuditoriaRouteImport } from './routes/app.auditoria'
 import { Route as AppAgendistasRouteImport } from './routes/app.agendistas'
+import { Route as AppPalestrasIdRouteImport } from './routes/app.palestras.$id'
 import { Route as AppCrmIdRouteImport } from './routes/app.crm.$id'
 import { Route as AppAgendistasIdRouteImport } from './routes/app.agendistas.$id'
 
@@ -126,6 +127,11 @@ const AppAgendistasRoute = AppAgendistasRouteImport.update({
   path: '/agendistas',
   getParentRoute: () => AppRoute,
 } as any)
+const AppPalestrasIdRoute = AppPalestrasIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AppPalestrasRoute,
+} as any)
 const AppCrmIdRoute = AppCrmIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -152,13 +158,14 @@ export interface FileRoutesByFullPath {
   '/app/hoje': typeof AppHojeRoute
   '/app/ia-guerra': typeof AppIaGuerraRoute
   '/app/legado': typeof AppLegadoRoute
-  '/app/palestras': typeof AppPalestrasRoute
+  '/app/palestras': typeof AppPalestrasRouteWithChildren
   '/app/relatorios': typeof AppRelatoriosRoute
   '/app/roadmap': typeof AppRoadmapRoute
   '/app/temporadas': typeof AppTemporadasRoute
   '/app/': typeof AppIndexRoute
   '/app/agendistas/$id': typeof AppAgendistasIdRoute
   '/app/crm/$id': typeof AppCrmIdRoute
+  '/app/palestras/$id': typeof AppPalestrasIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -174,13 +181,14 @@ export interface FileRoutesByTo {
   '/app/hoje': typeof AppHojeRoute
   '/app/ia-guerra': typeof AppIaGuerraRoute
   '/app/legado': typeof AppLegadoRoute
-  '/app/palestras': typeof AppPalestrasRoute
+  '/app/palestras': typeof AppPalestrasRouteWithChildren
   '/app/relatorios': typeof AppRelatoriosRoute
   '/app/roadmap': typeof AppRoadmapRoute
   '/app/temporadas': typeof AppTemporadasRoute
   '/app': typeof AppIndexRoute
   '/app/agendistas/$id': typeof AppAgendistasIdRoute
   '/app/crm/$id': typeof AppCrmIdRoute
+  '/app/palestras/$id': typeof AppPalestrasIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -198,13 +206,14 @@ export interface FileRoutesById {
   '/app/hoje': typeof AppHojeRoute
   '/app/ia-guerra': typeof AppIaGuerraRoute
   '/app/legado': typeof AppLegadoRoute
-  '/app/palestras': typeof AppPalestrasRoute
+  '/app/palestras': typeof AppPalestrasRouteWithChildren
   '/app/relatorios': typeof AppRelatoriosRoute
   '/app/roadmap': typeof AppRoadmapRoute
   '/app/temporadas': typeof AppTemporadasRoute
   '/app/': typeof AppIndexRoute
   '/app/agendistas/$id': typeof AppAgendistasIdRoute
   '/app/crm/$id': typeof AppCrmIdRoute
+  '/app/palestras/$id': typeof AppPalestrasIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -230,6 +239,7 @@ export interface FileRouteTypes {
     | '/app/'
     | '/app/agendistas/$id'
     | '/app/crm/$id'
+    | '/app/palestras/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -252,6 +262,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/app/agendistas/$id'
     | '/app/crm/$id'
+    | '/app/palestras/$id'
   id:
     | '__root__'
     | '/'
@@ -275,6 +286,7 @@ export interface FileRouteTypes {
     | '/app/'
     | '/app/agendistas/$id'
     | '/app/crm/$id'
+    | '/app/palestras/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -417,6 +429,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAgendistasRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/palestras/$id': {
+      id: '/app/palestras/$id'
+      path: '/$id'
+      fullPath: '/app/palestras/$id'
+      preLoaderRoute: typeof AppPalestrasIdRouteImport
+      parentRoute: typeof AppPalestrasRoute
+    }
     '/app/crm/$id': {
       id: '/app/crm/$id'
       path: '/$id'
@@ -457,6 +476,18 @@ const AppCrmRouteChildren: AppCrmRouteChildren = {
 const AppCrmRouteWithChildren =
   AppCrmRoute._addFileChildren(AppCrmRouteChildren)
 
+interface AppPalestrasRouteChildren {
+  AppPalestrasIdRoute: typeof AppPalestrasIdRoute
+}
+
+const AppPalestrasRouteChildren: AppPalestrasRouteChildren = {
+  AppPalestrasIdRoute: AppPalestrasIdRoute,
+}
+
+const AppPalestrasRouteWithChildren = AppPalestrasRoute._addFileChildren(
+  AppPalestrasRouteChildren,
+)
+
 interface AppRouteChildren {
   AppAgendistasRoute: typeof AppAgendistasRouteWithChildren
   AppAuditoriaRoute: typeof AppAuditoriaRoute
@@ -470,7 +501,7 @@ interface AppRouteChildren {
   AppHojeRoute: typeof AppHojeRoute
   AppIaGuerraRoute: typeof AppIaGuerraRoute
   AppLegadoRoute: typeof AppLegadoRoute
-  AppPalestrasRoute: typeof AppPalestrasRoute
+  AppPalestrasRoute: typeof AppPalestrasRouteWithChildren
   AppRelatoriosRoute: typeof AppRelatoriosRoute
   AppRoadmapRoute: typeof AppRoadmapRoute
   AppTemporadasRoute: typeof AppTemporadasRoute
@@ -490,7 +521,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppHojeRoute: AppHojeRoute,
   AppIaGuerraRoute: AppIaGuerraRoute,
   AppLegadoRoute: AppLegadoRoute,
-  AppPalestrasRoute: AppPalestrasRoute,
+  AppPalestrasRoute: AppPalestrasRouteWithChildren,
   AppRelatoriosRoute: AppRelatoriosRoute,
   AppRoadmapRoute: AppRoadmapRoute,
   AppTemporadasRoute: AppTemporadasRoute,
