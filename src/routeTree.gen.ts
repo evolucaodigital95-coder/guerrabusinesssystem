@@ -12,8 +12,22 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AppRouteImport } from './routes/app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppIndexRouteImport } from './routes/app.index'
+import { Route as AppTemporadasRouteImport } from './routes/app.temporadas'
+import { Route as AppRoadmapRouteImport } from './routes/app.roadmap'
+import { Route as AppRelatoriosRouteImport } from './routes/app.relatorios'
+import { Route as AppPalestrasRouteImport } from './routes/app.palestras'
+import { Route as AppLegadoRouteImport } from './routes/app.legado'
+import { Route as AppIaGuerraRouteImport } from './routes/app.ia-guerra'
 import { Route as AppHojeRouteImport } from './routes/app.hoje'
+import { Route as AppHistoriaRouteImport } from './routes/app.historia'
+import { Route as AppFinanceiroRouteImport } from './routes/app.financeiro'
+import { Route as AppEstoqueRouteImport } from './routes/app.estoque'
 import { Route as AppDashboardRouteImport } from './routes/app.dashboard'
+import { Route as AppCrmRouteImport } from './routes/app.crm'
+import { Route as AppConfiguracoesRouteImport } from './routes/app.configuracoes'
+import { Route as AppBibliotecaRouteImport } from './routes/app.biblioteca'
+import { Route as AppAuditoriaRouteImport } from './routes/app.auditoria'
+import { Route as AppAgendistasRouteImport } from './routes/app.agendistas'
 
 const AppRoute = AppRouteImport.update({
   id: '/app',
@@ -30,9 +44,54 @@ const AppIndexRoute = AppIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppRoute,
 } as any)
+const AppTemporadasRoute = AppTemporadasRouteImport.update({
+  id: '/temporadas',
+  path: '/temporadas',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppRoadmapRoute = AppRoadmapRouteImport.update({
+  id: '/roadmap',
+  path: '/roadmap',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppRelatoriosRoute = AppRelatoriosRouteImport.update({
+  id: '/relatorios',
+  path: '/relatorios',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPalestrasRoute = AppPalestrasRouteImport.update({
+  id: '/palestras',
+  path: '/palestras',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppLegadoRoute = AppLegadoRouteImport.update({
+  id: '/legado',
+  path: '/legado',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppIaGuerraRoute = AppIaGuerraRouteImport.update({
+  id: '/ia-guerra',
+  path: '/ia-guerra',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppHojeRoute = AppHojeRouteImport.update({
   id: '/hoje',
   path: '/hoje',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppHistoriaRoute = AppHistoriaRouteImport.update({
+  id: '/historia',
+  path: '/historia',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppFinanceiroRoute = AppFinanceiroRouteImport.update({
+  id: '/financeiro',
+  path: '/financeiro',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppEstoqueRoute = AppEstoqueRouteImport.update({
+  id: '/estoque',
+  path: '/estoque',
   getParentRoute: () => AppRoute,
 } as any)
 const AppDashboardRoute = AppDashboardRouteImport.update({
@@ -40,34 +99,158 @@ const AppDashboardRoute = AppDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AppRoute,
 } as any)
+const AppCrmRoute = AppCrmRouteImport.update({
+  id: '/crm',
+  path: '/crm',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppConfiguracoesRoute = AppConfiguracoesRouteImport.update({
+  id: '/configuracoes',
+  path: '/configuracoes',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppBibliotecaRoute = AppBibliotecaRouteImport.update({
+  id: '/biblioteca',
+  path: '/biblioteca',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAuditoriaRoute = AppAuditoriaRouteImport.update({
+  id: '/auditoria',
+  path: '/auditoria',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAgendistasRoute = AppAgendistasRouteImport.update({
+  id: '/agendistas',
+  path: '/agendistas',
+  getParentRoute: () => AppRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
+  '/app/agendistas': typeof AppAgendistasRoute
+  '/app/auditoria': typeof AppAuditoriaRoute
+  '/app/biblioteca': typeof AppBibliotecaRoute
+  '/app/configuracoes': typeof AppConfiguracoesRoute
+  '/app/crm': typeof AppCrmRoute
   '/app/dashboard': typeof AppDashboardRoute
+  '/app/estoque': typeof AppEstoqueRoute
+  '/app/financeiro': typeof AppFinanceiroRoute
+  '/app/historia': typeof AppHistoriaRoute
   '/app/hoje': typeof AppHojeRoute
+  '/app/ia-guerra': typeof AppIaGuerraRoute
+  '/app/legado': typeof AppLegadoRoute
+  '/app/palestras': typeof AppPalestrasRoute
+  '/app/relatorios': typeof AppRelatoriosRoute
+  '/app/roadmap': typeof AppRoadmapRoute
+  '/app/temporadas': typeof AppTemporadasRoute
   '/app/': typeof AppIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/app/agendistas': typeof AppAgendistasRoute
+  '/app/auditoria': typeof AppAuditoriaRoute
+  '/app/biblioteca': typeof AppBibliotecaRoute
+  '/app/configuracoes': typeof AppConfiguracoesRoute
+  '/app/crm': typeof AppCrmRoute
   '/app/dashboard': typeof AppDashboardRoute
+  '/app/estoque': typeof AppEstoqueRoute
+  '/app/financeiro': typeof AppFinanceiroRoute
+  '/app/historia': typeof AppHistoriaRoute
   '/app/hoje': typeof AppHojeRoute
+  '/app/ia-guerra': typeof AppIaGuerraRoute
+  '/app/legado': typeof AppLegadoRoute
+  '/app/palestras': typeof AppPalestrasRoute
+  '/app/relatorios': typeof AppRelatoriosRoute
+  '/app/roadmap': typeof AppRoadmapRoute
+  '/app/temporadas': typeof AppTemporadasRoute
   '/app': typeof AppIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
+  '/app/agendistas': typeof AppAgendistasRoute
+  '/app/auditoria': typeof AppAuditoriaRoute
+  '/app/biblioteca': typeof AppBibliotecaRoute
+  '/app/configuracoes': typeof AppConfiguracoesRoute
+  '/app/crm': typeof AppCrmRoute
   '/app/dashboard': typeof AppDashboardRoute
+  '/app/estoque': typeof AppEstoqueRoute
+  '/app/financeiro': typeof AppFinanceiroRoute
+  '/app/historia': typeof AppHistoriaRoute
   '/app/hoje': typeof AppHojeRoute
+  '/app/ia-guerra': typeof AppIaGuerraRoute
+  '/app/legado': typeof AppLegadoRoute
+  '/app/palestras': typeof AppPalestrasRoute
+  '/app/relatorios': typeof AppRelatoriosRoute
+  '/app/roadmap': typeof AppRoadmapRoute
+  '/app/temporadas': typeof AppTemporadasRoute
   '/app/': typeof AppIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/app' | '/app/dashboard' | '/app/hoje' | '/app/'
+  fullPaths:
+    | '/'
+    | '/app'
+    | '/app/agendistas'
+    | '/app/auditoria'
+    | '/app/biblioteca'
+    | '/app/configuracoes'
+    | '/app/crm'
+    | '/app/dashboard'
+    | '/app/estoque'
+    | '/app/financeiro'
+    | '/app/historia'
+    | '/app/hoje'
+    | '/app/ia-guerra'
+    | '/app/legado'
+    | '/app/palestras'
+    | '/app/relatorios'
+    | '/app/roadmap'
+    | '/app/temporadas'
+    | '/app/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/app/dashboard' | '/app/hoje' | '/app'
-  id: '__root__' | '/' | '/app' | '/app/dashboard' | '/app/hoje' | '/app/'
+  to:
+    | '/'
+    | '/app/agendistas'
+    | '/app/auditoria'
+    | '/app/biblioteca'
+    | '/app/configuracoes'
+    | '/app/crm'
+    | '/app/dashboard'
+    | '/app/estoque'
+    | '/app/financeiro'
+    | '/app/historia'
+    | '/app/hoje'
+    | '/app/ia-guerra'
+    | '/app/legado'
+    | '/app/palestras'
+    | '/app/relatorios'
+    | '/app/roadmap'
+    | '/app/temporadas'
+    | '/app'
+  id:
+    | '__root__'
+    | '/'
+    | '/app'
+    | '/app/agendistas'
+    | '/app/auditoria'
+    | '/app/biblioteca'
+    | '/app/configuracoes'
+    | '/app/crm'
+    | '/app/dashboard'
+    | '/app/estoque'
+    | '/app/financeiro'
+    | '/app/historia'
+    | '/app/hoje'
+    | '/app/ia-guerra'
+    | '/app/legado'
+    | '/app/palestras'
+    | '/app/relatorios'
+    | '/app/roadmap'
+    | '/app/temporadas'
+    | '/app/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -98,11 +281,74 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppIndexRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/temporadas': {
+      id: '/app/temporadas'
+      path: '/temporadas'
+      fullPath: '/app/temporadas'
+      preLoaderRoute: typeof AppTemporadasRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/roadmap': {
+      id: '/app/roadmap'
+      path: '/roadmap'
+      fullPath: '/app/roadmap'
+      preLoaderRoute: typeof AppRoadmapRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/relatorios': {
+      id: '/app/relatorios'
+      path: '/relatorios'
+      fullPath: '/app/relatorios'
+      preLoaderRoute: typeof AppRelatoriosRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/palestras': {
+      id: '/app/palestras'
+      path: '/palestras'
+      fullPath: '/app/palestras'
+      preLoaderRoute: typeof AppPalestrasRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/legado': {
+      id: '/app/legado'
+      path: '/legado'
+      fullPath: '/app/legado'
+      preLoaderRoute: typeof AppLegadoRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/ia-guerra': {
+      id: '/app/ia-guerra'
+      path: '/ia-guerra'
+      fullPath: '/app/ia-guerra'
+      preLoaderRoute: typeof AppIaGuerraRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/hoje': {
       id: '/app/hoje'
       path: '/hoje'
       fullPath: '/app/hoje'
       preLoaderRoute: typeof AppHojeRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/historia': {
+      id: '/app/historia'
+      path: '/historia'
+      fullPath: '/app/historia'
+      preLoaderRoute: typeof AppHistoriaRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/financeiro': {
+      id: '/app/financeiro'
+      path: '/financeiro'
+      fullPath: '/app/financeiro'
+      preLoaderRoute: typeof AppFinanceiroRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/estoque': {
+      id: '/app/estoque'
+      path: '/estoque'
+      fullPath: '/app/estoque'
+      preLoaderRoute: typeof AppEstoqueRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/dashboard': {
@@ -112,18 +358,81 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppDashboardRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/crm': {
+      id: '/app/crm'
+      path: '/crm'
+      fullPath: '/app/crm'
+      preLoaderRoute: typeof AppCrmRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/configuracoes': {
+      id: '/app/configuracoes'
+      path: '/configuracoes'
+      fullPath: '/app/configuracoes'
+      preLoaderRoute: typeof AppConfiguracoesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/biblioteca': {
+      id: '/app/biblioteca'
+      path: '/biblioteca'
+      fullPath: '/app/biblioteca'
+      preLoaderRoute: typeof AppBibliotecaRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/auditoria': {
+      id: '/app/auditoria'
+      path: '/auditoria'
+      fullPath: '/app/auditoria'
+      preLoaderRoute: typeof AppAuditoriaRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/agendistas': {
+      id: '/app/agendistas'
+      path: '/agendistas'
+      fullPath: '/app/agendistas'
+      preLoaderRoute: typeof AppAgendistasRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
 interface AppRouteChildren {
+  AppAgendistasRoute: typeof AppAgendistasRoute
+  AppAuditoriaRoute: typeof AppAuditoriaRoute
+  AppBibliotecaRoute: typeof AppBibliotecaRoute
+  AppConfiguracoesRoute: typeof AppConfiguracoesRoute
+  AppCrmRoute: typeof AppCrmRoute
   AppDashboardRoute: typeof AppDashboardRoute
+  AppEstoqueRoute: typeof AppEstoqueRoute
+  AppFinanceiroRoute: typeof AppFinanceiroRoute
+  AppHistoriaRoute: typeof AppHistoriaRoute
   AppHojeRoute: typeof AppHojeRoute
+  AppIaGuerraRoute: typeof AppIaGuerraRoute
+  AppLegadoRoute: typeof AppLegadoRoute
+  AppPalestrasRoute: typeof AppPalestrasRoute
+  AppRelatoriosRoute: typeof AppRelatoriosRoute
+  AppRoadmapRoute: typeof AppRoadmapRoute
+  AppTemporadasRoute: typeof AppTemporadasRoute
   AppIndexRoute: typeof AppIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppAgendistasRoute: AppAgendistasRoute,
+  AppAuditoriaRoute: AppAuditoriaRoute,
+  AppBibliotecaRoute: AppBibliotecaRoute,
+  AppConfiguracoesRoute: AppConfiguracoesRoute,
+  AppCrmRoute: AppCrmRoute,
   AppDashboardRoute: AppDashboardRoute,
+  AppEstoqueRoute: AppEstoqueRoute,
+  AppFinanceiroRoute: AppFinanceiroRoute,
+  AppHistoriaRoute: AppHistoriaRoute,
   AppHojeRoute: AppHojeRoute,
+  AppIaGuerraRoute: AppIaGuerraRoute,
+  AppLegadoRoute: AppLegadoRoute,
+  AppPalestrasRoute: AppPalestrasRoute,
+  AppRelatoriosRoute: AppRelatoriosRoute,
+  AppRoadmapRoute: AppRoadmapRoute,
+  AppTemporadasRoute: AppTemporadasRoute,
   AppIndexRoute: AppIndexRoute,
 }
 
@@ -136,3 +445,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
