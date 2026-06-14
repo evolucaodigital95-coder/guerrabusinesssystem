@@ -178,9 +178,21 @@ function AppLayout() {
             >
               {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </Button>
-            <div className="ml-2 hidden h-9 w-9 shrink-0 place-items-center rounded-full border border-border bg-card text-[11px] font-medium text-foreground md:grid">
-              GG
-            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="ml-2 hidden h-9 w-9 shrink-0 place-items-center rounded-full border border-border bg-card text-[11px] font-medium text-foreground transition-colors hover:bg-muted md:grid" aria-label="Conta">
+                  {initials}
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel className="truncate">{user?.email}</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild><Link to="/app/configuracoes">Configurações</Link></DropdownMenuItem>
+                <DropdownMenuItem onSelect={handleSignOut}>
+                  <LogOut className="mr-2 h-4 w-4" /> Sair
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </header>
 
