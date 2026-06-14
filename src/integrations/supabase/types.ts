@@ -353,6 +353,7 @@ export type Database = {
           lifecycle_stage: string | null
           notes: string | null
           organization_id: string
+          owner_id: string | null
           segment: string | null
           state: string | null
           status: string | null
@@ -377,6 +378,7 @@ export type Database = {
           lifecycle_stage?: string | null
           notes?: string | null
           organization_id: string
+          owner_id?: string | null
           segment?: string | null
           state?: string | null
           status?: string | null
@@ -401,6 +403,7 @@ export type Database = {
           lifecycle_stage?: string | null
           notes?: string | null
           organization_id?: string
+          owner_id?: string | null
           segment?: string | null
           state?: string | null
           status?: string | null
