@@ -19,10 +19,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/hooks/use-session";
 import { useCurrentOrg } from "@/hooks/use-current-org";
 import {
-  formatCurrency, formatDate, LEAD_STATUS, OPPORTUNITY_STATUS,
+  formatCurrency, formatDate, LEAD_STATUS, OPPORTUNITY_STATUS, TIMELINE_KINDS, timelineKindLabel,
 } from "@/lib/crm";
 import { StagePipeline } from "@/components/crm/stage-pipeline";
 import { CompanyFormDialog } from "@/components/crm/company-form-dialog";
+import { TagsBar } from "@/components/crm/tags-bar";
+import { AttachmentsTab } from "@/components/crm/attachments-tab";
+import { useOrgMembers } from "@/hooks/use-org-members";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/app/crm/$id")({
