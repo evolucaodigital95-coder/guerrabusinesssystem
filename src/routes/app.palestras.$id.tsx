@@ -115,9 +115,9 @@ function PalestraDetail() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("timeline_events")
-        .select("id, kind, title, body, occurred_at, created_at, actor_id, profiles:actor_id ( full_name, email )")
+        .select("id, kind, title, body, occurs_at, created_at, created_by, profiles:created_by ( full_name, email )")
         .eq("entity_type", "lecture").eq("entity_id", id)
-        .is("archived_at", null).order("occurred_at", { ascending: false });
+        .is("archived_at", null).order("occurs_at", { ascending: false });
       if (error) throw error;
       return data ?? [];
     },
@@ -267,7 +267,7 @@ function PalestraDetail() {
                     <p className="text-sm text-foreground">{ev.title ?? lectureTimelineLabel(ev.kind)}</p>
                     {ev.body && <p className="mt-1 whitespace-pre-wrap text-xs text-muted-foreground">{ev.body}</p>}
                     <p className="mt-1.5 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-                      {formatDate(ev.occurred_at)} · {lectureTimelineLabel(ev.kind)}{profile ? ` · ${profile.full_name ?? profile.email}` : ""}
+                      {formatDate(ev.occurs_at)} · {lectureTimelineLabel(ev.kind)}{profile ? ` · ${profile.full_name ?? profile.email}` : ""}
                     </p>
                   </li>
                 );
@@ -469,8 +469,8 @@ function EventDialog({ open, onOpenChange, organizationId, userId, lectureId }: 
         entity_type: "lecture", entity_id: lectureId,
         kind, title: title.trim() || lectureTimelineLabel(kind),
         body: body.trim() || null,
-        occurred_at: new Date(`${occurredAt}T12:00:00`).toISOString(),
-        actor_id: userId, created_by: userId, updated_by: userId,
+        occurs_at: new Date(`${occurredAt}T12:00:00`).toISOString(),
+        created_by: userId, updated_by: userId,
       });
       if (error) throw error;
     },
