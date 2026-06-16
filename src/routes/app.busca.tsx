@@ -103,7 +103,7 @@ function BuscaPage() {
           id: `c-${c.id}`,
           kind: "company",
           title: c.legal_name,
-          subtitle: c.trade_name ?? c.cnpj ?? undefined,
+          subtitle: c.trade_name ?? c.document ?? undefined,
           meta: [c.city, c.state].filter(Boolean).join(" / ") || null,
           to: "/app/crm/$id",
           params: { id: c.id },
