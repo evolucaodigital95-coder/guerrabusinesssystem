@@ -166,7 +166,7 @@ function BuscaPage() {
               .filter(Boolean)
               .join(" · ") || undefined,
           meta:
-            [formatCurrency(value), m.occurs_at ? formatDate(m.occurs_at) : null]
+            [formatCurrency(value), m.occurs_on ? formatDate(m.occurs_on) : null]
               .filter(Boolean)
               .join(" · ") || null,
           to: "/app/financeiro",
