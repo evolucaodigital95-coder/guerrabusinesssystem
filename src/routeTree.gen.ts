@@ -25,6 +25,7 @@ import { Route as AppEstoqueRouteImport } from './routes/app.estoque'
 import { Route as AppDashboardRouteImport } from './routes/app.dashboard'
 import { Route as AppCrmRouteImport } from './routes/app.crm'
 import { Route as AppConfiguracoesRouteImport } from './routes/app.configuracoes'
+import { Route as AppBuscaRouteImport } from './routes/app.busca'
 import { Route as AppBibliotecaRouteImport } from './routes/app.biblioteca'
 import { Route as AppAuditoriaRouteImport } from './routes/app.auditoria'
 import { Route as AppAgendistasRouteImport } from './routes/app.agendistas'
@@ -112,6 +113,11 @@ const AppConfiguracoesRoute = AppConfiguracoesRouteImport.update({
   path: '/configuracoes',
   getParentRoute: () => AppRoute,
 } as any)
+const AppBuscaRoute = AppBuscaRouteImport.update({
+  id: '/busca',
+  path: '/busca',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppBibliotecaRoute = AppBibliotecaRouteImport.update({
   id: '/biblioteca',
   path: '/biblioteca',
@@ -149,6 +155,7 @@ export interface FileRoutesByFullPath {
   '/app/agendistas': typeof AppAgendistasRouteWithChildren
   '/app/auditoria': typeof AppAuditoriaRoute
   '/app/biblioteca': typeof AppBibliotecaRoute
+  '/app/busca': typeof AppBuscaRoute
   '/app/configuracoes': typeof AppConfiguracoesRoute
   '/app/crm': typeof AppCrmRouteWithChildren
   '/app/dashboard': typeof AppDashboardRoute
@@ -172,6 +179,7 @@ export interface FileRoutesByTo {
   '/app/agendistas': typeof AppAgendistasRouteWithChildren
   '/app/auditoria': typeof AppAuditoriaRoute
   '/app/biblioteca': typeof AppBibliotecaRoute
+  '/app/busca': typeof AppBuscaRoute
   '/app/configuracoes': typeof AppConfiguracoesRoute
   '/app/crm': typeof AppCrmRouteWithChildren
   '/app/dashboard': typeof AppDashboardRoute
@@ -197,6 +205,7 @@ export interface FileRoutesById {
   '/app/agendistas': typeof AppAgendistasRouteWithChildren
   '/app/auditoria': typeof AppAuditoriaRoute
   '/app/biblioteca': typeof AppBibliotecaRoute
+  '/app/busca': typeof AppBuscaRoute
   '/app/configuracoes': typeof AppConfiguracoesRoute
   '/app/crm': typeof AppCrmRouteWithChildren
   '/app/dashboard': typeof AppDashboardRoute
@@ -223,6 +232,7 @@ export interface FileRouteTypes {
     | '/app/agendistas'
     | '/app/auditoria'
     | '/app/biblioteca'
+    | '/app/busca'
     | '/app/configuracoes'
     | '/app/crm'
     | '/app/dashboard'
@@ -246,6 +256,7 @@ export interface FileRouteTypes {
     | '/app/agendistas'
     | '/app/auditoria'
     | '/app/biblioteca'
+    | '/app/busca'
     | '/app/configuracoes'
     | '/app/crm'
     | '/app/dashboard'
@@ -270,6 +281,7 @@ export interface FileRouteTypes {
     | '/app/agendistas'
     | '/app/auditoria'
     | '/app/biblioteca'
+    | '/app/busca'
     | '/app/configuracoes'
     | '/app/crm'
     | '/app/dashboard'
@@ -408,6 +420,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppConfiguracoesRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/busca': {
+      id: '/app/busca'
+      path: '/busca'
+      fullPath: '/app/busca'
+      preLoaderRoute: typeof AppBuscaRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/biblioteca': {
       id: '/app/biblioteca'
       path: '/biblioteca'
@@ -492,6 +511,7 @@ interface AppRouteChildren {
   AppAgendistasRoute: typeof AppAgendistasRouteWithChildren
   AppAuditoriaRoute: typeof AppAuditoriaRoute
   AppBibliotecaRoute: typeof AppBibliotecaRoute
+  AppBuscaRoute: typeof AppBuscaRoute
   AppConfiguracoesRoute: typeof AppConfiguracoesRoute
   AppCrmRoute: typeof AppCrmRouteWithChildren
   AppDashboardRoute: typeof AppDashboardRoute
@@ -512,6 +532,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppAgendistasRoute: AppAgendistasRouteWithChildren,
   AppAuditoriaRoute: AppAuditoriaRoute,
   AppBibliotecaRoute: AppBibliotecaRoute,
+  AppBuscaRoute: AppBuscaRoute,
   AppConfiguracoesRoute: AppConfiguracoesRoute,
   AppCrmRoute: AppCrmRouteWithChildren,
   AppDashboardRoute: AppDashboardRoute,

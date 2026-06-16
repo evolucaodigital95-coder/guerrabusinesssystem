@@ -15,6 +15,7 @@ import {
   Library,
   ShieldCheck,
   Settings,
+  Search,
   type LucideIcon,
 } from "lucide-react";
 
@@ -37,6 +38,10 @@ export const MODULES: ModuleDef[] = [
     description: "Indicadores e performance em tempo real.",
     emptyMessage: "Conecte fontes de dados para visualizar seus indicadores.",
     primaryAction: "Configurar fontes" },
+  { to: "/app/busca", label: "Pesquisa", icon: Search, section: "principal",
+    description: "Busca única em todo o ecossistema GBS.",
+    emptyMessage: "Digite para buscar empresas, contatos, palestras, agendistas, financeiro e temporadas.",
+    primaryAction: "Buscar" },
 
   { to: "/app/crm", label: "CRM", icon: Users, section: "operação",
     description: "Leads, oportunidades e relacionamento.",
