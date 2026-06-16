@@ -45,11 +45,11 @@ function BuscaPage() {
       const [comp, ctt, lec, ag, mov, sea] = await Promise.all([
         supabase
           .from("companies")
-          .select("id, legal_name, trade_name, cnpj, city, state")
+          .select("id, legal_name, trade_name, document, city, state")
           .eq("organization_id", organizationId!)
           .is("archived_at", null)
           .or(
-            `legal_name.ilike.${like},trade_name.ilike.${like},cnpj.ilike.${like},city.ilike.${like}`,
+            `legal_name.ilike.${like},trade_name.ilike.${like},document.ilike.${like},city.ilike.${like}`,
           )
           .limit(20),
         supabase
@@ -80,7 +80,7 @@ function BuscaPage() {
         supabase
           .from("financial_movements")
           .select(
-            "id, description, category, amount, expected_amount, direction, occurs_at, companies:company_id ( legal_name )",
+            "id, description, category, amount, expected_amount, direction, occurs_on, companies:company_id ( legal_name )",
           )
           .eq("organization_id", organizationId!)
           .is("archived_at", null)
@@ -88,11 +88,12 @@ function BuscaPage() {
           .limit(20),
         supabase
           .from("seasons")
-          .select("id, name, year")
+          .select("id, name, starts_on, ends_on")
           .eq("organization_id", organizationId!)
           .is("archived_at", null)
           .or(`name.ilike.${like}`)
           .limit(10),
+
       ]);
 
       const out: Result[] = [];
