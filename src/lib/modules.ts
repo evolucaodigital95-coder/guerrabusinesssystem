@@ -15,6 +15,7 @@ import {
   Library,
   ShieldCheck,
   Settings,
+  Search,
   type LucideIcon,
 } from "lucide-react";
 
