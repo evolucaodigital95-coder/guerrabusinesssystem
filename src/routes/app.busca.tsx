@@ -178,7 +178,7 @@ function BuscaPage() {
           id: `s-${s.id}`,
           kind: "season",
           title: s.name,
-          subtitle: s.year ? String(s.year) : undefined,
+          subtitle: s.starts_on ? formatDate(s.starts_on) : undefined,
           to: "/app/temporadas",
         }),
       );
