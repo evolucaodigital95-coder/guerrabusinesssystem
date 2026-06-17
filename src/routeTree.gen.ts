@@ -30,6 +30,7 @@ import { Route as AppBibliotecaRouteImport } from './routes/app.biblioteca'
 import { Route as AppAuditoriaRouteImport } from './routes/app.auditoria'
 import { Route as AppAgendistasRouteImport } from './routes/app.agendistas'
 import { Route as AppPalestrasIdRouteImport } from './routes/app.palestras.$id'
+import { Route as AppEstoqueIdRouteImport } from './routes/app.estoque.$id'
 import { Route as AppCrmIdRouteImport } from './routes/app.crm.$id'
 import { Route as AppAgendistasIdRouteImport } from './routes/app.agendistas.$id'
 
@@ -138,6 +139,11 @@ const AppPalestrasIdRoute = AppPalestrasIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => AppPalestrasRoute,
 } as any)
+const AppEstoqueIdRoute = AppEstoqueIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AppEstoqueRoute,
+} as any)
 const AppCrmIdRoute = AppCrmIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -159,7 +165,7 @@ export interface FileRoutesByFullPath {
   '/app/configuracoes': typeof AppConfiguracoesRoute
   '/app/crm': typeof AppCrmRouteWithChildren
   '/app/dashboard': typeof AppDashboardRoute
-  '/app/estoque': typeof AppEstoqueRoute
+  '/app/estoque': typeof AppEstoqueRouteWithChildren
   '/app/financeiro': typeof AppFinanceiroRoute
   '/app/historia': typeof AppHistoriaRoute
   '/app/hoje': typeof AppHojeRoute
@@ -172,6 +178,7 @@ export interface FileRoutesByFullPath {
   '/app/': typeof AppIndexRoute
   '/app/agendistas/$id': typeof AppAgendistasIdRoute
   '/app/crm/$id': typeof AppCrmIdRoute
+  '/app/estoque/$id': typeof AppEstoqueIdRoute
   '/app/palestras/$id': typeof AppPalestrasIdRoute
 }
 export interface FileRoutesByTo {
@@ -183,7 +190,7 @@ export interface FileRoutesByTo {
   '/app/configuracoes': typeof AppConfiguracoesRoute
   '/app/crm': typeof AppCrmRouteWithChildren
   '/app/dashboard': typeof AppDashboardRoute
-  '/app/estoque': typeof AppEstoqueRoute
+  '/app/estoque': typeof AppEstoqueRouteWithChildren
   '/app/financeiro': typeof AppFinanceiroRoute
   '/app/historia': typeof AppHistoriaRoute
   '/app/hoje': typeof AppHojeRoute
@@ -196,6 +203,7 @@ export interface FileRoutesByTo {
   '/app': typeof AppIndexRoute
   '/app/agendistas/$id': typeof AppAgendistasIdRoute
   '/app/crm/$id': typeof AppCrmIdRoute
+  '/app/estoque/$id': typeof AppEstoqueIdRoute
   '/app/palestras/$id': typeof AppPalestrasIdRoute
 }
 export interface FileRoutesById {
@@ -209,7 +217,7 @@ export interface FileRoutesById {
   '/app/configuracoes': typeof AppConfiguracoesRoute
   '/app/crm': typeof AppCrmRouteWithChildren
   '/app/dashboard': typeof AppDashboardRoute
-  '/app/estoque': typeof AppEstoqueRoute
+  '/app/estoque': typeof AppEstoqueRouteWithChildren
   '/app/financeiro': typeof AppFinanceiroRoute
   '/app/historia': typeof AppHistoriaRoute
   '/app/hoje': typeof AppHojeRoute
@@ -222,6 +230,7 @@ export interface FileRoutesById {
   '/app/': typeof AppIndexRoute
   '/app/agendistas/$id': typeof AppAgendistasIdRoute
   '/app/crm/$id': typeof AppCrmIdRoute
+  '/app/estoque/$id': typeof AppEstoqueIdRoute
   '/app/palestras/$id': typeof AppPalestrasIdRoute
 }
 export interface FileRouteTypes {
@@ -249,6 +258,7 @@ export interface FileRouteTypes {
     | '/app/'
     | '/app/agendistas/$id'
     | '/app/crm/$id'
+    | '/app/estoque/$id'
     | '/app/palestras/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -273,6 +283,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/app/agendistas/$id'
     | '/app/crm/$id'
+    | '/app/estoque/$id'
     | '/app/palestras/$id'
   id:
     | '__root__'
@@ -298,6 +309,7 @@ export interface FileRouteTypes {
     | '/app/'
     | '/app/agendistas/$id'
     | '/app/crm/$id'
+    | '/app/estoque/$id'
     | '/app/palestras/$id'
   fileRoutesById: FileRoutesById
 }
@@ -455,6 +467,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppPalestrasIdRouteImport
       parentRoute: typeof AppPalestrasRoute
     }
+    '/app/estoque/$id': {
+      id: '/app/estoque/$id'
+      path: '/$id'
+      fullPath: '/app/estoque/$id'
+      preLoaderRoute: typeof AppEstoqueIdRouteImport
+      parentRoute: typeof AppEstoqueRoute
+    }
     '/app/crm/$id': {
       id: '/app/crm/$id'
       path: '/$id'
@@ -495,6 +514,18 @@ const AppCrmRouteChildren: AppCrmRouteChildren = {
 const AppCrmRouteWithChildren =
   AppCrmRoute._addFileChildren(AppCrmRouteChildren)
 
+interface AppEstoqueRouteChildren {
+  AppEstoqueIdRoute: typeof AppEstoqueIdRoute
+}
+
+const AppEstoqueRouteChildren: AppEstoqueRouteChildren = {
+  AppEstoqueIdRoute: AppEstoqueIdRoute,
+}
+
+const AppEstoqueRouteWithChildren = AppEstoqueRoute._addFileChildren(
+  AppEstoqueRouteChildren,
+)
+
 interface AppPalestrasRouteChildren {
   AppPalestrasIdRoute: typeof AppPalestrasIdRoute
 }
@@ -515,7 +546,7 @@ interface AppRouteChildren {
   AppConfiguracoesRoute: typeof AppConfiguracoesRoute
   AppCrmRoute: typeof AppCrmRouteWithChildren
   AppDashboardRoute: typeof AppDashboardRoute
-  AppEstoqueRoute: typeof AppEstoqueRoute
+  AppEstoqueRoute: typeof AppEstoqueRouteWithChildren
   AppFinanceiroRoute: typeof AppFinanceiroRoute
   AppHistoriaRoute: typeof AppHistoriaRoute
   AppHojeRoute: typeof AppHojeRoute
@@ -536,7 +567,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppConfiguracoesRoute: AppConfiguracoesRoute,
   AppCrmRoute: AppCrmRouteWithChildren,
   AppDashboardRoute: AppDashboardRoute,
-  AppEstoqueRoute: AppEstoqueRoute,
+  AppEstoqueRoute: AppEstoqueRouteWithChildren,
   AppFinanceiroRoute: AppFinanceiroRoute,
   AppHistoriaRoute: AppHistoriaRoute,
   AppHojeRoute: AppHojeRoute,

@@ -877,10 +877,15 @@ export type Database = {
           created_by: string | null
           expires_on: string | null
           id: string
+          initial_quantity: number | null
+          notes: string | null
           organization_id: string
+          proof_url: string | null
           quantity: number | null
           received_on: string | null
           stock_item_id: string | null
+          supplier: string | null
+          unit_cost: number | null
           updated_at: string
           updated_by: string | null
         }
@@ -891,10 +896,15 @@ export type Database = {
           created_by?: string | null
           expires_on?: string | null
           id?: string
+          initial_quantity?: number | null
+          notes?: string | null
           organization_id: string
+          proof_url?: string | null
           quantity?: number | null
           received_on?: string | null
           stock_item_id?: string | null
+          supplier?: string | null
+          unit_cost?: number | null
           updated_at?: string
           updated_by?: string | null
         }
@@ -905,10 +915,15 @@ export type Database = {
           created_by?: string | null
           expires_on?: string | null
           id?: string
+          initial_quantity?: number | null
+          notes?: string | null
           organization_id?: string
+          proof_url?: string | null
           quantity?: number | null
           received_on?: string | null
           stock_item_id?: string | null
+          supplier?: string | null
+          unit_cost?: number | null
           updated_at?: string
           updated_by?: string | null
         }
@@ -1721,39 +1736,66 @@ export type Database = {
       stock_items: {
         Row: {
           archived_at: string | null
+          average_cost: number | null
           category: string | null
           created_at: string
           created_by: string | null
+          description: string | null
           id: string
+          location: string | null
+          min_quantity: number | null
           name: string
+          notes: string | null
           organization_id: string
+          photo_url: string | null
+          purchase_price: number | null
           sku: string | null
+          status: string | null
+          supplier: string | null
           unit: string | null
           updated_at: string
           updated_by: string | null
         }
         Insert: {
           archived_at?: string | null
+          average_cost?: number | null
           category?: string | null
           created_at?: string
           created_by?: string | null
+          description?: string | null
           id?: string
+          location?: string | null
+          min_quantity?: number | null
           name: string
+          notes?: string | null
           organization_id: string
+          photo_url?: string | null
+          purchase_price?: number | null
           sku?: string | null
+          status?: string | null
+          supplier?: string | null
           unit?: string | null
           updated_at?: string
           updated_by?: string | null
         }
         Update: {
           archived_at?: string | null
+          average_cost?: number | null
           category?: string | null
           created_at?: string
           created_by?: string | null
+          description?: string | null
           id?: string
+          location?: string | null
+          min_quantity?: number | null
           name?: string
+          notes?: string | null
           organization_id?: string
+          photo_url?: string | null
+          purchase_price?: number | null
           sku?: string | null
+          status?: string | null
+          supplier?: string | null
           unit?: string | null
           updated_at?: string
           updated_by?: string | null
@@ -1776,13 +1818,20 @@ export type Database = {
           created_by: string | null
           direction: string | null
           id: string
+          kind: string | null
           lecture_id: string | null
           notes: string | null
+          occurs_at: string | null
           occurs_on: string | null
           organization_id: string
+          project_id: string | null
           quantity: number | null
           reason: string | null
+          season_id: string | null
+          status: string | null
           stock_item_id: string | null
+          total_cost: number | null
+          unit_cost: number | null
           updated_at: string
           updated_by: string | null
         }
@@ -1793,13 +1842,20 @@ export type Database = {
           created_by?: string | null
           direction?: string | null
           id?: string
+          kind?: string | null
           lecture_id?: string | null
           notes?: string | null
+          occurs_at?: string | null
           occurs_on?: string | null
           organization_id: string
+          project_id?: string | null
           quantity?: number | null
           reason?: string | null
+          season_id?: string | null
+          status?: string | null
           stock_item_id?: string | null
+          total_cost?: number | null
+          unit_cost?: number | null
           updated_at?: string
           updated_by?: string | null
         }
@@ -1810,13 +1866,20 @@ export type Database = {
           created_by?: string | null
           direction?: string | null
           id?: string
+          kind?: string | null
           lecture_id?: string | null
           notes?: string | null
+          occurs_at?: string | null
           occurs_on?: string | null
           organization_id?: string
+          project_id?: string | null
           quantity?: number | null
           reason?: string | null
+          season_id?: string | null
+          status?: string | null
           stock_item_id?: string | null
+          total_cost?: number | null
+          unit_cost?: number | null
           updated_at?: string
           updated_by?: string | null
         }
@@ -1840,6 +1903,20 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_movements_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_movements_season_id_fkey"
+            columns: ["season_id"]
+            isOneToOne: false
+            referencedRelation: "seasons"
             referencedColumns: ["id"]
           },
           {
