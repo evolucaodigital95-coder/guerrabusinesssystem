@@ -337,7 +337,7 @@ function SeasonDetail() {
 
       {organizationId && user && (
         <SeasonFormDialog open={editOpen} onOpenChange={setEditOpen} organizationId={organizationId} userId={user.id}
-          initial={{ id, ...season.data }} />
+          initial={season.data} />
       )}
     </div>
   );
