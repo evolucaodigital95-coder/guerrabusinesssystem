@@ -15,6 +15,7 @@ import { Route as AppIndexRouteImport } from './routes/app.index'
 import { Route as AppTemporadasRouteImport } from './routes/app.temporadas'
 import { Route as AppRoadmapRouteImport } from './routes/app.roadmap'
 import { Route as AppRelatoriosRouteImport } from './routes/app.relatorios'
+import { Route as AppProjetosRouteImport } from './routes/app.projetos'
 import { Route as AppPalestrasRouteImport } from './routes/app.palestras'
 import { Route as AppLegadoRouteImport } from './routes/app.legado'
 import { Route as AppIaGuerraRouteImport } from './routes/app.ia-guerra'
@@ -25,13 +26,17 @@ import { Route as AppEstoqueRouteImport } from './routes/app.estoque'
 import { Route as AppDashboardRouteImport } from './routes/app.dashboard'
 import { Route as AppCrmRouteImport } from './routes/app.crm'
 import { Route as AppConfiguracoesRouteImport } from './routes/app.configuracoes'
+import { Route as AppCampanhasRouteImport } from './routes/app.campanhas'
 import { Route as AppBuscaRouteImport } from './routes/app.busca'
 import { Route as AppBibliotecaRouteImport } from './routes/app.biblioteca'
 import { Route as AppAuditoriaRouteImport } from './routes/app.auditoria'
 import { Route as AppAgendistasRouteImport } from './routes/app.agendistas'
+import { Route as AppTemporadasIdRouteImport } from './routes/app.temporadas.$id'
+import { Route as AppProjetosIdRouteImport } from './routes/app.projetos.$id'
 import { Route as AppPalestrasIdRouteImport } from './routes/app.palestras.$id'
 import { Route as AppEstoqueIdRouteImport } from './routes/app.estoque.$id'
 import { Route as AppCrmIdRouteImport } from './routes/app.crm.$id'
+import { Route as AppCampanhasIdRouteImport } from './routes/app.campanhas.$id'
 import { Route as AppAgendistasIdRouteImport } from './routes/app.agendistas.$id'
 
 const AppRoute = AppRouteImport.update({
@@ -62,6 +67,11 @@ const AppRoadmapRoute = AppRoadmapRouteImport.update({
 const AppRelatoriosRoute = AppRelatoriosRouteImport.update({
   id: '/relatorios',
   path: '/relatorios',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppProjetosRoute = AppProjetosRouteImport.update({
+  id: '/projetos',
+  path: '/projetos',
   getParentRoute: () => AppRoute,
 } as any)
 const AppPalestrasRoute = AppPalestrasRouteImport.update({
@@ -114,6 +124,11 @@ const AppConfiguracoesRoute = AppConfiguracoesRouteImport.update({
   path: '/configuracoes',
   getParentRoute: () => AppRoute,
 } as any)
+const AppCampanhasRoute = AppCampanhasRouteImport.update({
+  id: '/campanhas',
+  path: '/campanhas',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppBuscaRoute = AppBuscaRouteImport.update({
   id: '/busca',
   path: '/busca',
@@ -134,6 +149,16 @@ const AppAgendistasRoute = AppAgendistasRouteImport.update({
   path: '/agendistas',
   getParentRoute: () => AppRoute,
 } as any)
+const AppTemporadasIdRoute = AppTemporadasIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AppTemporadasRoute,
+} as any)
+const AppProjetosIdRoute = AppProjetosIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AppProjetosRoute,
+} as any)
 const AppPalestrasIdRoute = AppPalestrasIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -149,6 +174,11 @@ const AppCrmIdRoute = AppCrmIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => AppCrmRoute,
 } as any)
+const AppCampanhasIdRoute = AppCampanhasIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AppCampanhasRoute,
+} as any)
 const AppAgendistasIdRoute = AppAgendistasIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -162,6 +192,7 @@ export interface FileRoutesByFullPath {
   '/app/auditoria': typeof AppAuditoriaRoute
   '/app/biblioteca': typeof AppBibliotecaRoute
   '/app/busca': typeof AppBuscaRoute
+  '/app/campanhas': typeof AppCampanhasRouteWithChildren
   '/app/configuracoes': typeof AppConfiguracoesRoute
   '/app/crm': typeof AppCrmRouteWithChildren
   '/app/dashboard': typeof AppDashboardRoute
@@ -172,14 +203,18 @@ export interface FileRoutesByFullPath {
   '/app/ia-guerra': typeof AppIaGuerraRoute
   '/app/legado': typeof AppLegadoRoute
   '/app/palestras': typeof AppPalestrasRouteWithChildren
+  '/app/projetos': typeof AppProjetosRouteWithChildren
   '/app/relatorios': typeof AppRelatoriosRoute
   '/app/roadmap': typeof AppRoadmapRoute
-  '/app/temporadas': typeof AppTemporadasRoute
+  '/app/temporadas': typeof AppTemporadasRouteWithChildren
   '/app/': typeof AppIndexRoute
   '/app/agendistas/$id': typeof AppAgendistasIdRoute
+  '/app/campanhas/$id': typeof AppCampanhasIdRoute
   '/app/crm/$id': typeof AppCrmIdRoute
   '/app/estoque/$id': typeof AppEstoqueIdRoute
   '/app/palestras/$id': typeof AppPalestrasIdRoute
+  '/app/projetos/$id': typeof AppProjetosIdRoute
+  '/app/temporadas/$id': typeof AppTemporadasIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -187,6 +222,7 @@ export interface FileRoutesByTo {
   '/app/auditoria': typeof AppAuditoriaRoute
   '/app/biblioteca': typeof AppBibliotecaRoute
   '/app/busca': typeof AppBuscaRoute
+  '/app/campanhas': typeof AppCampanhasRouteWithChildren
   '/app/configuracoes': typeof AppConfiguracoesRoute
   '/app/crm': typeof AppCrmRouteWithChildren
   '/app/dashboard': typeof AppDashboardRoute
@@ -197,14 +233,18 @@ export interface FileRoutesByTo {
   '/app/ia-guerra': typeof AppIaGuerraRoute
   '/app/legado': typeof AppLegadoRoute
   '/app/palestras': typeof AppPalestrasRouteWithChildren
+  '/app/projetos': typeof AppProjetosRouteWithChildren
   '/app/relatorios': typeof AppRelatoriosRoute
   '/app/roadmap': typeof AppRoadmapRoute
-  '/app/temporadas': typeof AppTemporadasRoute
+  '/app/temporadas': typeof AppTemporadasRouteWithChildren
   '/app': typeof AppIndexRoute
   '/app/agendistas/$id': typeof AppAgendistasIdRoute
+  '/app/campanhas/$id': typeof AppCampanhasIdRoute
   '/app/crm/$id': typeof AppCrmIdRoute
   '/app/estoque/$id': typeof AppEstoqueIdRoute
   '/app/palestras/$id': typeof AppPalestrasIdRoute
+  '/app/projetos/$id': typeof AppProjetosIdRoute
+  '/app/temporadas/$id': typeof AppTemporadasIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -214,6 +254,7 @@ export interface FileRoutesById {
   '/app/auditoria': typeof AppAuditoriaRoute
   '/app/biblioteca': typeof AppBibliotecaRoute
   '/app/busca': typeof AppBuscaRoute
+  '/app/campanhas': typeof AppCampanhasRouteWithChildren
   '/app/configuracoes': typeof AppConfiguracoesRoute
   '/app/crm': typeof AppCrmRouteWithChildren
   '/app/dashboard': typeof AppDashboardRoute
@@ -224,14 +265,18 @@ export interface FileRoutesById {
   '/app/ia-guerra': typeof AppIaGuerraRoute
   '/app/legado': typeof AppLegadoRoute
   '/app/palestras': typeof AppPalestrasRouteWithChildren
+  '/app/projetos': typeof AppProjetosRouteWithChildren
   '/app/relatorios': typeof AppRelatoriosRoute
   '/app/roadmap': typeof AppRoadmapRoute
-  '/app/temporadas': typeof AppTemporadasRoute
+  '/app/temporadas': typeof AppTemporadasRouteWithChildren
   '/app/': typeof AppIndexRoute
   '/app/agendistas/$id': typeof AppAgendistasIdRoute
+  '/app/campanhas/$id': typeof AppCampanhasIdRoute
   '/app/crm/$id': typeof AppCrmIdRoute
   '/app/estoque/$id': typeof AppEstoqueIdRoute
   '/app/palestras/$id': typeof AppPalestrasIdRoute
+  '/app/projetos/$id': typeof AppProjetosIdRoute
+  '/app/temporadas/$id': typeof AppTemporadasIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -242,6 +287,7 @@ export interface FileRouteTypes {
     | '/app/auditoria'
     | '/app/biblioteca'
     | '/app/busca'
+    | '/app/campanhas'
     | '/app/configuracoes'
     | '/app/crm'
     | '/app/dashboard'
@@ -252,14 +298,18 @@ export interface FileRouteTypes {
     | '/app/ia-guerra'
     | '/app/legado'
     | '/app/palestras'
+    | '/app/projetos'
     | '/app/relatorios'
     | '/app/roadmap'
     | '/app/temporadas'
     | '/app/'
     | '/app/agendistas/$id'
+    | '/app/campanhas/$id'
     | '/app/crm/$id'
     | '/app/estoque/$id'
     | '/app/palestras/$id'
+    | '/app/projetos/$id'
+    | '/app/temporadas/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -267,6 +317,7 @@ export interface FileRouteTypes {
     | '/app/auditoria'
     | '/app/biblioteca'
     | '/app/busca'
+    | '/app/campanhas'
     | '/app/configuracoes'
     | '/app/crm'
     | '/app/dashboard'
@@ -277,14 +328,18 @@ export interface FileRouteTypes {
     | '/app/ia-guerra'
     | '/app/legado'
     | '/app/palestras'
+    | '/app/projetos'
     | '/app/relatorios'
     | '/app/roadmap'
     | '/app/temporadas'
     | '/app'
     | '/app/agendistas/$id'
+    | '/app/campanhas/$id'
     | '/app/crm/$id'
     | '/app/estoque/$id'
     | '/app/palestras/$id'
+    | '/app/projetos/$id'
+    | '/app/temporadas/$id'
   id:
     | '__root__'
     | '/'
@@ -293,6 +348,7 @@ export interface FileRouteTypes {
     | '/app/auditoria'
     | '/app/biblioteca'
     | '/app/busca'
+    | '/app/campanhas'
     | '/app/configuracoes'
     | '/app/crm'
     | '/app/dashboard'
@@ -303,14 +359,18 @@ export interface FileRouteTypes {
     | '/app/ia-guerra'
     | '/app/legado'
     | '/app/palestras'
+    | '/app/projetos'
     | '/app/relatorios'
     | '/app/roadmap'
     | '/app/temporadas'
     | '/app/'
     | '/app/agendistas/$id'
+    | '/app/campanhas/$id'
     | '/app/crm/$id'
     | '/app/estoque/$id'
     | '/app/palestras/$id'
+    | '/app/projetos/$id'
+    | '/app/temporadas/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -360,6 +420,13 @@ declare module '@tanstack/react-router' {
       path: '/relatorios'
       fullPath: '/app/relatorios'
       preLoaderRoute: typeof AppRelatoriosRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/projetos': {
+      id: '/app/projetos'
+      path: '/projetos'
+      fullPath: '/app/projetos'
+      preLoaderRoute: typeof AppProjetosRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/palestras': {
@@ -432,6 +499,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppConfiguracoesRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/campanhas': {
+      id: '/app/campanhas'
+      path: '/campanhas'
+      fullPath: '/app/campanhas'
+      preLoaderRoute: typeof AppCampanhasRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/busca': {
       id: '/app/busca'
       path: '/busca'
@@ -460,6 +534,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAgendistasRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/temporadas/$id': {
+      id: '/app/temporadas/$id'
+      path: '/$id'
+      fullPath: '/app/temporadas/$id'
+      preLoaderRoute: typeof AppTemporadasIdRouteImport
+      parentRoute: typeof AppTemporadasRoute
+    }
+    '/app/projetos/$id': {
+      id: '/app/projetos/$id'
+      path: '/$id'
+      fullPath: '/app/projetos/$id'
+      preLoaderRoute: typeof AppProjetosIdRouteImport
+      parentRoute: typeof AppProjetosRoute
+    }
     '/app/palestras/$id': {
       id: '/app/palestras/$id'
       path: '/$id'
@@ -481,6 +569,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppCrmIdRouteImport
       parentRoute: typeof AppCrmRoute
     }
+    '/app/campanhas/$id': {
+      id: '/app/campanhas/$id'
+      path: '/$id'
+      fullPath: '/app/campanhas/$id'
+      preLoaderRoute: typeof AppCampanhasIdRouteImport
+      parentRoute: typeof AppCampanhasRoute
+    }
     '/app/agendistas/$id': {
       id: '/app/agendistas/$id'
       path: '/$id'
@@ -501,6 +596,18 @@ const AppAgendistasRouteChildren: AppAgendistasRouteChildren = {
 
 const AppAgendistasRouteWithChildren = AppAgendistasRoute._addFileChildren(
   AppAgendistasRouteChildren,
+)
+
+interface AppCampanhasRouteChildren {
+  AppCampanhasIdRoute: typeof AppCampanhasIdRoute
+}
+
+const AppCampanhasRouteChildren: AppCampanhasRouteChildren = {
+  AppCampanhasIdRoute: AppCampanhasIdRoute,
+}
+
+const AppCampanhasRouteWithChildren = AppCampanhasRoute._addFileChildren(
+  AppCampanhasRouteChildren,
 )
 
 interface AppCrmRouteChildren {
@@ -538,11 +645,36 @@ const AppPalestrasRouteWithChildren = AppPalestrasRoute._addFileChildren(
   AppPalestrasRouteChildren,
 )
 
+interface AppProjetosRouteChildren {
+  AppProjetosIdRoute: typeof AppProjetosIdRoute
+}
+
+const AppProjetosRouteChildren: AppProjetosRouteChildren = {
+  AppProjetosIdRoute: AppProjetosIdRoute,
+}
+
+const AppProjetosRouteWithChildren = AppProjetosRoute._addFileChildren(
+  AppProjetosRouteChildren,
+)
+
+interface AppTemporadasRouteChildren {
+  AppTemporadasIdRoute: typeof AppTemporadasIdRoute
+}
+
+const AppTemporadasRouteChildren: AppTemporadasRouteChildren = {
+  AppTemporadasIdRoute: AppTemporadasIdRoute,
+}
+
+const AppTemporadasRouteWithChildren = AppTemporadasRoute._addFileChildren(
+  AppTemporadasRouteChildren,
+)
+
 interface AppRouteChildren {
   AppAgendistasRoute: typeof AppAgendistasRouteWithChildren
   AppAuditoriaRoute: typeof AppAuditoriaRoute
   AppBibliotecaRoute: typeof AppBibliotecaRoute
   AppBuscaRoute: typeof AppBuscaRoute
+  AppCampanhasRoute: typeof AppCampanhasRouteWithChildren
   AppConfiguracoesRoute: typeof AppConfiguracoesRoute
   AppCrmRoute: typeof AppCrmRouteWithChildren
   AppDashboardRoute: typeof AppDashboardRoute
@@ -553,9 +685,10 @@ interface AppRouteChildren {
   AppIaGuerraRoute: typeof AppIaGuerraRoute
   AppLegadoRoute: typeof AppLegadoRoute
   AppPalestrasRoute: typeof AppPalestrasRouteWithChildren
+  AppProjetosRoute: typeof AppProjetosRouteWithChildren
   AppRelatoriosRoute: typeof AppRelatoriosRoute
   AppRoadmapRoute: typeof AppRoadmapRoute
-  AppTemporadasRoute: typeof AppTemporadasRoute
+  AppTemporadasRoute: typeof AppTemporadasRouteWithChildren
   AppIndexRoute: typeof AppIndexRoute
 }
 
@@ -564,6 +697,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppAuditoriaRoute: AppAuditoriaRoute,
   AppBibliotecaRoute: AppBibliotecaRoute,
   AppBuscaRoute: AppBuscaRoute,
+  AppCampanhasRoute: AppCampanhasRouteWithChildren,
   AppConfiguracoesRoute: AppConfiguracoesRoute,
   AppCrmRoute: AppCrmRouteWithChildren,
   AppDashboardRoute: AppDashboardRoute,
@@ -574,9 +708,10 @@ const AppRouteChildren: AppRouteChildren = {
   AppIaGuerraRoute: AppIaGuerraRoute,
   AppLegadoRoute: AppLegadoRoute,
   AppPalestrasRoute: AppPalestrasRouteWithChildren,
+  AppProjetosRoute: AppProjetosRouteWithChildren,
   AppRelatoriosRoute: AppRelatoriosRoute,
   AppRoadmapRoute: AppRoadmapRoute,
-  AppTemporadasRoute: AppTemporadasRoute,
+  AppTemporadasRoute: AppTemporadasRouteWithChildren,
   AppIndexRoute: AppIndexRoute,
 }
 
