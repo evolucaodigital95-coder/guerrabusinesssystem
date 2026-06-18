@@ -329,6 +329,7 @@ export type Database = {
           channel: string | null
           created_at: string
           created_by: string | null
+          description: string | null
           ends_on: string | null
           id: string
           name: string
@@ -344,6 +345,7 @@ export type Database = {
           channel?: string | null
           created_at?: string
           created_by?: string | null
+          description?: string | null
           ends_on?: string | null
           id?: string
           name: string
@@ -359,6 +361,7 @@ export type Database = {
           channel?: string | null
           created_at?: string
           created_by?: string | null
+          description?: string | null
           ends_on?: string | null
           id?: string
           name?: string
@@ -1580,6 +1583,7 @@ export type Database = {
       projects: {
         Row: {
           archived_at: string | null
+          campaign_id: string | null
           created_at: string
           created_by: string | null
           description: string | null
@@ -1587,6 +1591,8 @@ export type Database = {
           id: string
           name: string
           organization_id: string
+          owner_id: string | null
+          season_id: string | null
           starts_on: string | null
           status: string | null
           updated_at: string
@@ -1594,6 +1600,7 @@ export type Database = {
         }
         Insert: {
           archived_at?: string | null
+          campaign_id?: string | null
           created_at?: string
           created_by?: string | null
           description?: string | null
@@ -1601,6 +1608,8 @@ export type Database = {
           id?: string
           name: string
           organization_id: string
+          owner_id?: string | null
+          season_id?: string | null
           starts_on?: string | null
           status?: string | null
           updated_at?: string
@@ -1608,6 +1617,7 @@ export type Database = {
         }
         Update: {
           archived_at?: string | null
+          campaign_id?: string | null
           created_at?: string
           created_by?: string | null
           description?: string | null
@@ -1615,6 +1625,8 @@ export type Database = {
           id?: string
           name?: string
           organization_id?: string
+          owner_id?: string | null
+          season_id?: string | null
           starts_on?: string | null
           status?: string | null
           updated_at?: string
@@ -1622,10 +1634,24 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "projects_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "projects_organization_id_fkey"
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "projects_season_id_fkey"
+            columns: ["season_id"]
+            isOneToOne: false
+            referencedRelation: "seasons"
             referencedColumns: ["id"]
           },
         ]
@@ -1683,11 +1709,86 @@ export type Database = {
           },
         ]
       }
+      season_snapshots: {
+        Row: {
+          agents_count: number
+          archived_at: string | null
+          companies_count: number
+          created_at: string
+          created_by: string | null
+          expenses: number
+          id: string
+          lectures_count: number
+          notes: string | null
+          organization_id: string
+          payload: Json | null
+          people_impacted: number
+          profit: number
+          revenue: number
+          season_id: string
+          stock_movements_count: number
+          taken_at: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          agents_count?: number
+          archived_at?: string | null
+          companies_count?: number
+          created_at?: string
+          created_by?: string | null
+          expenses?: number
+          id?: string
+          lectures_count?: number
+          notes?: string | null
+          organization_id: string
+          payload?: Json | null
+          people_impacted?: number
+          profit?: number
+          revenue?: number
+          season_id: string
+          stock_movements_count?: number
+          taken_at?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          agents_count?: number
+          archived_at?: string | null
+          companies_count?: number
+          created_at?: string
+          created_by?: string | null
+          expenses?: number
+          id?: string
+          lectures_count?: number
+          notes?: string | null
+          organization_id?: string
+          payload?: Json | null
+          people_impacted?: number
+          profit?: number
+          revenue?: number
+          season_id?: string
+          stock_movements_count?: number
+          taken_at?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "season_snapshots_season_id_fkey"
+            columns: ["season_id"]
+            isOneToOne: false
+            referencedRelation: "seasons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       seasons: {
         Row: {
           archived_at: string | null
           created_at: string
           created_by: string | null
+          description: string | null
           ends_on: string | null
           id: string
           name: string
@@ -1701,6 +1802,7 @@ export type Database = {
           archived_at?: string | null
           created_at?: string
           created_by?: string | null
+          description?: string | null
           ends_on?: string | null
           id?: string
           name: string
@@ -1714,6 +1816,7 @@ export type Database = {
           archived_at?: string | null
           created_at?: string
           created_by?: string | null
+          description?: string | null
           ends_on?: string | null
           id?: string
           name?: string
