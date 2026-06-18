@@ -67,6 +67,15 @@ export const MODULES: ModuleDef[] = [
     description: "Ciclos comerciais e metas por período.",
     emptyMessage: "Você ainda não criou uma temporada. Crie sua primeira temporada.",
     primaryAction: "Nova Temporada" },
+  { to: "/app/campanhas", label: "Campanhas", icon: Map, section: "operação",
+    description: "Iniciativas comerciais por temporada.",
+    emptyMessage: "Nenhuma campanha cadastrada ainda.",
+    primaryAction: "Nova Campanha" },
+  { to: "/app/projetos", label: "Projetos", icon: LayoutDashboard, section: "operação",
+    description: "Projetos estratégicos por campanha/temporada.",
+    emptyMessage: "Nenhum projeto cadastrado ainda.",
+    primaryAction: "Novo Projeto" },
+
 
   { to: "/app/relatorios", label: "Relatórios", icon: BarChart3, section: "estratégia",
     description: "Análises consolidadas e exportações.",
