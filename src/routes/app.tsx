@@ -144,6 +144,7 @@ function AppLayout() {
 
           <button
             type="button"
+            onClick={() => navigate({ to: "/app/busca" })}
             className="group flex h-9 flex-1 items-center gap-2.5 rounded-full border border-border bg-card/60 px-4 text-left text-sm text-muted-foreground transition-colors duration-200 hover:border-foreground/20 hover:text-foreground md:max-w-sm"
           >
             <Search className="h-3.5 w-3.5" />
