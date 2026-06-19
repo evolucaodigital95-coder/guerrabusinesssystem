@@ -85,6 +85,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:description", content: "Sistema empresarial premium do Grupo Guerra." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
+      { name: "twitter:title", content: "GBS — Guerra Business System" },
+      { name: "twitter:description", content: "Sistema empresarial premium do Grupo Guerra." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/316d23f7-21ef-4504-ab3e-d1e2cb79fd12/id-preview-44bf09f5--2d78be84-cb80-45ac-a0e0-aa46d7561260.lovable.app-1781830946508.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/316d23f7-21ef-4504-ab3e-d1e2cb79fd12/id-preview-44bf09f5--2d78be84-cb80-45ac-a0e0-aa46d7561260.lovable.app-1781830946508.png" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
