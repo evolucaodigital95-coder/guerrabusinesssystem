@@ -1,5 +1,15 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { type ReactNode } from "react";
+import {
+  UserPlus,
+  Building2,
+  Handshake,
+  FileText,
+  Mic,
+  Wallet,
+  Sparkles,
+  ChevronRight,
+} from "lucide-react";
 
 export const Route = createFileRoute("/app/hoje")({
   head: () => ({
@@ -18,19 +28,50 @@ function greeting() {
   return "Boa noite";
 }
 
+const FLOW = [
+  { label: "Lead", to: "/app/crm", icon: UserPlus },
+  { label: "Empresa", to: "/app/crm", icon: Building2 },
+  { label: "Negociação", to: "/app/crm", icon: Handshake },
+  { label: "Proposta", to: "/app/crm", icon: FileText },
+  { label: "Palestra", to: "/app/palestras", icon: Mic },
+  { label: "Financeiro", to: "/app/financeiro", icon: Wallet },
+  { label: "Pós-venda", to: "/app/crm", icon: Sparkles },
+] as const;
+
 function Stat({ label, value, hint }: { label: string; value: ReactNode; hint?: string }) {
   return (
     <div className="hover-lift group rounded-2xl border border-border bg-card p-7">
       <div className="text-[10px] font-medium uppercase tracking-[0.22em] text-muted-foreground">
         {label}
       </div>
-      <div className="mt-6 font-display text-[2rem] leading-none text-foreground">
-        {value}
-      </div>
-      {hint && (
-        <div className="mt-3 text-xs leading-relaxed text-muted-foreground">{hint}</div>
-      )}
+      <div className="mt-6 font-display text-[2rem] leading-none text-foreground">{value}</div>
+      {hint && <div className="mt-3 text-xs leading-relaxed text-muted-foreground">{hint}</div>}
     </div>
+  );
+}
+
+function TodayCard({
+  label,
+  value,
+  hint,
+  to,
+}: {
+  label: string;
+  value: ReactNode;
+  hint?: string;
+  to: string;
+}) {
+  return (
+    <Link
+      to={to}
+      className="hover-lift block rounded-2xl border border-border bg-card p-6 transition-colors hover:border-foreground/20"
+    >
+      <div className="text-[10px] font-medium uppercase tracking-[0.22em] text-muted-foreground">
+        {label}
+      </div>
+      <div className="mt-4 font-display text-2xl leading-none">{value}</div>
+      {hint && <div className="mt-2 text-xs text-muted-foreground">{hint}</div>}
+    </Link>
   );
 }
 
@@ -44,13 +85,9 @@ function HojePage() {
   return (
     <div className="mx-auto max-w-6xl">
       {/* Hero */}
-      <section className="mb-20">
+      <section className="mb-12">
         <div className="flex items-center gap-3 text-[10px] uppercase tracking-[0.28em] text-muted-foreground">
-          <span
-            aria-hidden
-            className="h-px w-6"
-            style={{ background: "var(--gold)" }}
-          />
+          <span aria-hidden className="h-px w-6" style={{ background: "var(--gold)" }} />
           Hoje · {today}
         </div>
         <h1 className="mt-6 font-display text-5xl leading-[1.05] md:text-6xl">
@@ -61,14 +98,71 @@ function HojePage() {
         </p>
       </section>
 
-      {/* Vidas Impactadas — feature card */}
+      {/* Hoje — quick view */}
+      <section className="mb-14">
+        <div className="mb-6 flex items-center gap-3 text-[10px] uppercase tracking-[0.28em] text-muted-foreground">
+          <span aria-hidden className="h-px w-6" style={{ background: "var(--gold)" }} />
+          Hoje
+        </div>
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
+          <TodayCard label="Palestras de hoje" value="—" hint="Próximas 24h" to="/app/palestras" />
+          <TodayCard label="Follow-ups pendentes" value="—" hint="CRM" to="/app/crm" />
+          <TodayCard label="Pagamentos previstos" value="—" hint="A receber/pagar" to="/app/financeiro" />
+          <TodayCard label="Contratos pendentes" value="—" hint="Aguardando assinatura" to="/app/palestras" />
+          <TodayCard label="Meta mensal" value="—" hint="Progresso da temporada" to="/app/temporadas" />
+        </div>
+      </section>
+
+      {/* Fluxo Operacional */}
+      <section className="mb-16">
+        <div className="rounded-3xl border border-border bg-card p-8 md:p-10">
+          <div className="mb-8 flex items-center justify-between gap-6">
+            <div>
+              <div className="text-[10px] uppercase tracking-[0.28em] text-muted-foreground">
+                Fluxo Operacional
+              </div>
+              <h2 className="mt-3 font-display text-2xl">A jornada de uma palestra no GBS</h2>
+            </div>
+          </div>
+
+          <ol className="flex flex-wrap items-stretch gap-3">
+            {FLOW.map((step, i) => {
+              const Icon = step.icon;
+              return (
+                <li key={step.label} className="flex items-stretch gap-3">
+                  <Link
+                    to={step.to}
+                    className="hover-lift group flex min-w-[140px] flex-col items-start justify-between rounded-2xl border border-border bg-background p-4 transition-colors hover:border-foreground/30"
+                  >
+                    <div
+                      className="grid h-9 w-9 place-items-center rounded-full border border-border text-foreground transition-colors group-hover:border-[var(--gold)]"
+                    >
+                      <Icon className="h-4 w-4" />
+                    </div>
+                    <div className="mt-6">
+                      <div className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+                        Etapa {String(i + 1).padStart(2, "0")}
+                      </div>
+                      <div className="mt-1 font-display text-base">{step.label}</div>
+                    </div>
+                  </Link>
+                  {i < FLOW.length - 1 && (
+                    <div className="flex items-center text-muted-foreground/60">
+                      <ChevronRight className="h-4 w-4" />
+                    </div>
+                  )}
+                </li>
+              );
+            })}
+          </ol>
+        </div>
+      </section>
+
+      {/* Vidas Impactadas */}
       <section className="mb-16">
         <div
           className="hover-lift relative overflow-hidden rounded-3xl p-10 md:p-14"
-          style={{
-            background: "var(--navy)",
-            color: "var(--navy-foreground)",
-          }}
+          style={{ background: "var(--navy)", color: "var(--navy-foreground)" }}
         >
           <div
             aria-hidden
