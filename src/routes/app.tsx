@@ -158,15 +158,20 @@ function AppLayout() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="navy" size="sm" className="hidden rounded-full px-4 md:inline-flex">
-                  Novo
+                  + Novo
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-52">
+              <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuLabel>Ações rápidas</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem asChild><Link to="/app/crm">Novo Lead</Link></DropdownMenuItem>
+                <DropdownMenuItem asChild><Link to="/app/crm">Nova Empresa / Lead</Link></DropdownMenuItem>
                 <DropdownMenuItem asChild><Link to="/app/palestras">Nova Palestra</Link></DropdownMenuItem>
                 <DropdownMenuItem asChild><Link to="/app/financeiro">Novo Lançamento</Link></DropdownMenuItem>
+                <DropdownMenuItem asChild><Link to="/app/agendistas">Novo Agendista</Link></DropdownMenuItem>
+                <DropdownMenuItem asChild><Link to="/app/estoque">Novo Item de Estoque</Link></DropdownMenuItem>
+                <DropdownMenuItem asChild><Link to="/app/temporadas">Nova Temporada</Link></DropdownMenuItem>
+                <DropdownMenuItem asChild><Link to="/app/campanhas">Nova Campanha</Link></DropdownMenuItem>
+                <DropdownMenuItem asChild><Link to="/app/projetos">Novo Projeto</Link></DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
 
