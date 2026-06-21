@@ -403,6 +403,12 @@ function PalestraDetail() {
           </div>
         </TabsContent>
 
+        <TabsContent value="notas">
+          {organizationId && user && (
+            <NotesTab entityType="lecture" entityId={id} organizationId={organizationId} userId={user.id} />
+          )}
+        </TabsContent>
+
         <TabsContent value="anexos">
           {organizationId && user && (
             <AttachmentsTab entityType="lecture" entityId={id} organizationId={organizationId} userId={user.id} />
