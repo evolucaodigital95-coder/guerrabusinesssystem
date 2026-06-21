@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.auto_timeline_event() FROM anon;

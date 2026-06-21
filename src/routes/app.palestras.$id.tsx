@@ -26,6 +26,7 @@ import { formatCurrency, formatDate } from "@/lib/crm";
 import { LECTURE_STATUS, LECTURE_TIMELINE_KINDS, lectureStatusLabel, lectureTimelineLabel } from "@/lib/lectures";
 import { LectureFormDialog, type LectureRow } from "@/components/palestras/lecture-form-dialog";
 import { AttachmentsTab } from "@/components/crm/attachments-tab";
+import { NotesTab } from "@/components/shared/notes-tab";
 import { ArchiveButton } from "@/components/shared/archive-button";
 import { cn } from "@/lib/utils";
 
@@ -245,6 +246,7 @@ function PalestraDetail() {
           <TabsTrigger value="financeiro"><Wallet className="mr-1.5 h-3.5 w-3.5" />Financeiro</TabsTrigger>
           <TabsTrigger value="estoque"><Package className="mr-1.5 h-3.5 w-3.5" />Estoque</TabsTrigger>
           <TabsTrigger value="impacto">Pessoas impactadas</TabsTrigger>
+          <TabsTrigger value="notas">Notas</TabsTrigger>
           <TabsTrigger value="anexos"><Paperclip className="mr-1.5 h-3.5 w-3.5" />Anexos</TabsTrigger>
           <TabsTrigger value="auditoria"><ShieldCheck className="mr-1.5 h-3.5 w-3.5" />Auditoria</TabsTrigger>
         </TabsList>
@@ -400,6 +402,12 @@ function PalestraDetail() {
               Estrutura preparada para somar automaticamente por: dia · semana · mês · temporada · ano · histórico.
             </p>
           </div>
+        </TabsContent>
+
+        <TabsContent value="notas">
+          {organizationId && user && (
+            <NotesTab entityType="lecture" entityId={id} organizationId={organizationId} userId={user.id} />
+          )}
         </TabsContent>
 
         <TabsContent value="anexos">

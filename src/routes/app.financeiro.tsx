@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus, Search, ArrowDownRight, ArrowUpRight, Pencil, Trash2, Paperclip } from "lucide-react";
@@ -54,12 +54,16 @@ type Movement = {
   lecture_id: string | null;
   agent_id: string | null;
   season_id: string | null;
+  project_id: string | null;
   notes: string | null;
   created_at: string;
   updated_at: string;
   accounts: { id: string; name: string; kind: string | null } | null;
   companies: { id: string; legal_name: string } | null;
   lectures: { id: string; title: string } | null;
+  agents: { id: string; full_name: string } | null;
+  seasons: { id: string; name: string } | null;
+  projects: { id: string; name: string } | null;
 };
 
 type Account = {
@@ -116,11 +120,14 @@ function FinancePage() {
         .select(`
           id, direction, status, category, description, amount, expected_amount,
           expected_date, settled_at, occurs_on, occurs_time,
-          account_id, company_id, lecture_id, agent_id, season_id, notes,
+          account_id, company_id, lecture_id, agent_id, season_id, project_id, notes,
           created_at, updated_at,
           accounts:account_id ( id, name, kind ),
           companies:company_id ( id, legal_name ),
-          lectures:lecture_id ( id, title )
+          lectures:lecture_id ( id, title ),
+          agents:agent_id ( id, full_name ),
+          seasons:season_id ( id, name ),
+          projects:project_id ( id, name )
         `)
         .eq("organization_id", organizationId!)
         .is("archived_at", null)
@@ -564,8 +571,31 @@ function MovementSheet({
               <Field label="Data efetiva" value={`${formatDate(movement.occurs_on)}${movement.occurs_time ? ` ${movement.occurs_time.slice(0, 5)}` : ""}`} />
               <Field label="Status" value={statusLabel(movement.direction as "in" | "out", movement.status)} />
               <Field label="Conta" value={movement.accounts?.name ?? "—"} />
-              <Field label="Empresa" value={movement.companies?.legal_name ?? "—"} />
-              <Field label="Palestra" value={movement.lectures?.title ?? "—"} />
+              <FieldLink
+                label="Empresa"
+                value={movement.companies?.legal_name ?? "—"}
+                to={movement.companies?.id ? { route: "/app/crm/$id", id: movement.companies.id } : undefined}
+              />
+              <FieldLink
+                label="Palestra"
+                value={movement.lectures?.title ?? "—"}
+                to={movement.lectures?.id ? { route: "/app/palestras/$id", id: movement.lectures.id } : undefined}
+              />
+              <FieldLink
+                label="Agendista"
+                value={movement.agents?.full_name ?? "—"}
+                to={movement.agents?.id ? { route: "/app/agendistas/$id", id: movement.agents.id } : undefined}
+              />
+              <FieldLink
+                label="Temporada"
+                value={movement.seasons?.name ?? "—"}
+                to={movement.seasons?.id ? { route: "/app/temporadas/$id", id: movement.seasons.id } : undefined}
+              />
+              <FieldLink
+                label="Projeto"
+                value={movement.projects?.name ?? "—"}
+                to={movement.projects?.id ? { route: "/app/projetos/$id", id: movement.projects.id } : undefined}
+              />
             </div>
             {movement.notes && (
               <p className="mt-4 whitespace-pre-wrap border-t border-border pt-4 text-sm text-muted-foreground">{movement.notes}</p>
@@ -643,6 +673,28 @@ function Field({ label, value, accent }: { label: string; value: string; accent?
       )}>
         {value}
       </p>
+    </div>
+  );
+}
+
+type LinkTarget =
+  | { route: "/app/crm/$id"; id: string }
+  | { route: "/app/palestras/$id"; id: string }
+  | { route: "/app/agendistas/$id"; id: string }
+  | { route: "/app/temporadas/$id"; id: string }
+  | { route: "/app/projetos/$id"; id: string };
+
+function FieldLink({ label, value, to }: { label: string; value: string; to?: LinkTarget }) {
+  return (
+    <div>
+      <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">{label}</p>
+      {to ? (
+        <Link to={to.route} params={{ id: to.id }} className="mt-1 block text-sm text-foreground underline-offset-2 hover:underline">
+          {value}
+        </Link>
+      ) : (
+        <p className="mt-1 text-sm text-foreground">{value}</p>
+      )}
     </div>
   );
 }

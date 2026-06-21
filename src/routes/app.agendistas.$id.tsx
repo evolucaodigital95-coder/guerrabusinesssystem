@@ -17,6 +17,7 @@ import { AgentFormDialog, type AgentRow } from "@/components/agendistas/agent-fo
 import { AdvanceFormDialog, type AdvanceRow } from "@/components/agendistas/advance-form-dialog";
 import { RuleFormDialog, type RuleRow } from "@/components/agendistas/rule-form-dialog";
 import { AttachmentsTab } from "@/components/crm/attachments-tab";
+import { TimelineTab } from "@/components/shared/timeline-tab";
 import { ArchiveButton } from "@/components/shared/archive-button";
 import { CalcBreakdown } from "@/components/finance/calc-breakdown";
 import {
@@ -327,7 +328,9 @@ function AgentDetail() {
           <TabsTrigger value="statement">Conta corrente</TabsTrigger>
           <TabsTrigger value="advances">Adiantamentos</TabsTrigger>
           <TabsTrigger value="lectures">Palestras</TabsTrigger>
+          <TabsTrigger value="companies">Empresas</TabsTrigger>
           <TabsTrigger value="rules">Regras</TabsTrigger>
+          <TabsTrigger value="timeline">Timeline</TabsTrigger>
           <TabsTrigger value="notes">Notas</TabsTrigger>
           <TabsTrigger value="attachments">Anexos</TabsTrigger>
           <TabsTrigger value="audit">Histórico</TabsTrigger>
@@ -490,6 +493,16 @@ function AgentDetail() {
               </div>
             )}
           </div>
+        </TabsContent>
+
+        <TabsContent value="companies" className="space-y-4">
+          <AgentCompaniesTab agentId={id} />
+        </TabsContent>
+
+        <TabsContent value="timeline">
+          {organizationId && user && (
+            <TimelineTab entityType="agent" entityId={id} organizationId={organizationId} userId={user.id} />
+          )}
         </TabsContent>
 
         <TabsContent value="rules" className="space-y-4">
@@ -681,6 +694,78 @@ function Empty({ title, subtitle }: { title: string; subtitle: string }) {
     <div className="rounded-3xl border border-dashed border-border bg-card/30 px-8 py-12 text-center">
       <h3 className="font-serif text-xl text-foreground">{title}</h3>
       <p className="mt-2 text-sm text-muted-foreground">{subtitle}</p>
+    </div>
+  );
+}
+
+/* ---------------- Empresas atendidas pelo agendista ---------------- */
+
+type AgentLectureRow = {
+  id: string;
+  title: string;
+  scheduled_at: string | null;
+  status: string | null;
+  gross_revenue: number | null;
+  company_id: string | null;
+  companies: { id: string; legal_name: string } | null;
+};
+
+function AgentCompaniesTab({ agentId }: { agentId: string }) {
+  const list = useQuery({
+    queryKey: ["agent-companies", agentId],
+    queryFn: async (): Promise<AgentLectureRow[]> => {
+      const { data, error } = await supabase
+        .from("lectures")
+        .select("id, title, scheduled_at, status, gross_revenue, company_id, companies:company_id ( id, legal_name )")
+        .eq("agent_id", agentId).is("archived_at", null)
+        .order("scheduled_at", { ascending: false, nullsFirst: false });
+      if (error) throw error;
+      return (data ?? []) as unknown as AgentLectureRow[];
+    },
+  });
+
+  const map = new Map<string, { id: string; name: string; lectures: number; revenue: number; lastAt: string | null }>();
+  for (const l of list.data ?? []) {
+    const cid = l.companies?.id ?? l.company_id;
+    if (!cid) continue;
+    const cur = map.get(cid) ?? { id: cid, name: l.companies?.legal_name ?? "Empresa", lectures: 0, revenue: 0, lastAt: null };
+    cur.lectures += 1;
+    cur.revenue += Number(l.gross_revenue ?? 0);
+    if (!cur.lastAt || (l.scheduled_at && l.scheduled_at > cur.lastAt)) cur.lastAt = l.scheduled_at;
+    map.set(cid, cur);
+  }
+  const rows = Array.from(map.values()).sort((a, b) => (b.lastAt ?? "").localeCompare(a.lastAt ?? ""));
+
+  if (list.isLoading) return <div className="text-sm text-muted-foreground">Carregando…</div>;
+  if (rows.length === 0) {
+    return <Empty title="Sem empresas atendidas" subtitle="Quando você vincular palestras deste agendista a empresas, elas aparecerão aqui." />;
+  }
+  return (
+    <div className="overflow-hidden rounded-2xl border border-border bg-card/40">
+      <table className="w-full text-sm">
+        <thead className="bg-muted/40 text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
+          <tr>
+            <th className="px-4 py-3 text-left font-medium">Empresa</th>
+            <th className="px-4 py-3 text-right font-medium">Palestras</th>
+            <th className="px-4 py-3 text-right font-medium">Receita</th>
+            <th className="px-4 py-3 text-left font-medium">Última palestra</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r) => (
+            <tr key={r.id} className="border-t border-border/70 hover:bg-muted/30">
+              <td className="px-4 py-3">
+                <Link to="/app/crm/$id" params={{ id: r.id }} className="font-medium text-foreground hover:underline">
+                  {r.name}
+                </Link>
+              </td>
+              <td className="px-4 py-3 text-right tabular-nums text-muted-foreground">{r.lectures}</td>
+              <td className="px-4 py-3 text-right tabular-nums text-foreground">{formatCurrency(r.revenue)}</td>
+              <td className="px-4 py-3 text-muted-foreground">{formatDate(r.lastAt)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
