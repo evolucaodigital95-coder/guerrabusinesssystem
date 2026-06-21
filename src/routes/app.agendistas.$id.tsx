@@ -710,9 +710,22 @@ type AgentLectureRow = {
   companies: { id: string; legal_name: string } | null;
 };
 
-function AgentCompaniesTab({ lectures }: { lectures: AgentLectureRow[] }) {
+function AgentCompaniesTab({ agentId }: { agentId: string }) {
+  const list = useQuery({
+    queryKey: ["agent-companies", agentId],
+    queryFn: async (): Promise<AgentLectureRow[]> => {
+      const { data, error } = await supabase
+        .from("lectures")
+        .select("id, title, scheduled_at, status, gross_revenue, company_id, companies:company_id ( id, legal_name )")
+        .eq("agent_id", agentId).is("archived_at", null)
+        .order("scheduled_at", { ascending: false, nullsFirst: false });
+      if (error) throw error;
+      return (data ?? []) as unknown as AgentLectureRow[];
+    },
+  });
+
   const map = new Map<string, { id: string; name: string; lectures: number; revenue: number; lastAt: string | null }>();
-  for (const l of lectures) {
+  for (const l of list.data ?? []) {
     const cid = l.companies?.id ?? l.company_id;
     if (!cid) continue;
     const cur = map.get(cid) ?? { id: cid, name: l.companies?.legal_name ?? "Empresa", lectures: 0, revenue: 0, lastAt: null };
@@ -723,6 +736,7 @@ function AgentCompaniesTab({ lectures }: { lectures: AgentLectureRow[] }) {
   }
   const rows = Array.from(map.values()).sort((a, b) => (b.lastAt ?? "").localeCompare(a.lastAt ?? ""));
 
+  if (list.isLoading) return <div className="text-sm text-muted-foreground">Carregando…</div>;
   if (rows.length === 0) {
     return <Empty title="Sem empresas atendidas" subtitle="Quando você vincular palestras deste agendista a empresas, elas aparecerão aqui." />;
   }
