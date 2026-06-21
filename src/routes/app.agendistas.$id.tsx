@@ -698,6 +698,64 @@ function Empty({ title, subtitle }: { title: string; subtitle: string }) {
   );
 }
 
+/* ---------------- Empresas atendidas pelo agendista ---------------- */
+
+type AgentLectureRow = {
+  id: string;
+  title: string;
+  scheduled_at: string | null;
+  status: string | null;
+  gross_revenue: number | null;
+  company_id: string | null;
+  companies: { id: string; legal_name: string } | null;
+};
+
+function AgentCompaniesTab({ lectures }: { lectures: AgentLectureRow[] }) {
+  const map = new Map<string, { id: string; name: string; lectures: number; revenue: number; lastAt: string | null }>();
+  for (const l of lectures) {
+    const cid = l.companies?.id ?? l.company_id;
+    if (!cid) continue;
+    const cur = map.get(cid) ?? { id: cid, name: l.companies?.legal_name ?? "Empresa", lectures: 0, revenue: 0, lastAt: null };
+    cur.lectures += 1;
+    cur.revenue += Number(l.gross_revenue ?? 0);
+    if (!cur.lastAt || (l.scheduled_at && l.scheduled_at > cur.lastAt)) cur.lastAt = l.scheduled_at;
+    map.set(cid, cur);
+  }
+  const rows = Array.from(map.values()).sort((a, b) => (b.lastAt ?? "").localeCompare(a.lastAt ?? ""));
+
+  if (rows.length === 0) {
+    return <Empty title="Sem empresas atendidas" subtitle="Quando você vincular palestras deste agendista a empresas, elas aparecerão aqui." />;
+  }
+  return (
+    <div className="overflow-hidden rounded-2xl border border-border bg-card/40">
+      <table className="w-full text-sm">
+        <thead className="bg-muted/40 text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
+          <tr>
+            <th className="px-4 py-3 text-left font-medium">Empresa</th>
+            <th className="px-4 py-3 text-right font-medium">Palestras</th>
+            <th className="px-4 py-3 text-right font-medium">Receita</th>
+            <th className="px-4 py-3 text-left font-medium">Última palestra</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r) => (
+            <tr key={r.id} className="border-t border-border/70 hover:bg-muted/30">
+              <td className="px-4 py-3">
+                <Link to="/app/crm/$id" params={{ id: r.id }} className="font-medium text-foreground hover:underline">
+                  {r.name}
+                </Link>
+              </td>
+              <td className="px-4 py-3 text-right tabular-nums text-muted-foreground">{r.lectures}</td>
+              <td className="px-4 py-3 text-right tabular-nums text-foreground">{formatCurrency(r.revenue)}</td>
+              <td className="px-4 py-3 text-muted-foreground">{formatDate(r.lastAt)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 function pct(v: number | null | undefined) {
   return `${Math.round((Number(v ?? 0)) * 1000) / 10}%`;
 }
