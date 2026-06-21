@@ -245,6 +245,7 @@ function PalestraDetail() {
           <TabsTrigger value="financeiro"><Wallet className="mr-1.5 h-3.5 w-3.5" />Financeiro</TabsTrigger>
           <TabsTrigger value="estoque"><Package className="mr-1.5 h-3.5 w-3.5" />Estoque</TabsTrigger>
           <TabsTrigger value="impacto">Pessoas impactadas</TabsTrigger>
+          <TabsTrigger value="notas">Notas</TabsTrigger>
           <TabsTrigger value="anexos"><Paperclip className="mr-1.5 h-3.5 w-3.5" />Anexos</TabsTrigger>
           <TabsTrigger value="auditoria"><ShieldCheck className="mr-1.5 h-3.5 w-3.5" />Auditoria</TabsTrigger>
         </TabsList>
