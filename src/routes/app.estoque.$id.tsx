@@ -23,6 +23,7 @@ import { BatchFormDialog } from "@/components/estoque/batch-form-dialog";
 import { MovementFormDialog } from "@/components/estoque/movement-form-dialog";
 import { AttachmentsTab } from "@/components/shared/attachments-tab";
 import { NotesTab } from "@/components/shared/notes-tab";
+import { ArchiveButton } from "@/components/shared/archive-button";
 
 export const Route = createFileRoute("/app/estoque/$id")({
   head: () => ({
