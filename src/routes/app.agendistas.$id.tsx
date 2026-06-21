@@ -327,7 +327,9 @@ function AgentDetail() {
           <TabsTrigger value="statement">Conta corrente</TabsTrigger>
           <TabsTrigger value="advances">Adiantamentos</TabsTrigger>
           <TabsTrigger value="lectures">Palestras</TabsTrigger>
+          <TabsTrigger value="companies">Empresas</TabsTrigger>
           <TabsTrigger value="rules">Regras</TabsTrigger>
+          <TabsTrigger value="timeline">Timeline</TabsTrigger>
           <TabsTrigger value="notes">Notas</TabsTrigger>
           <TabsTrigger value="attachments">Anexos</TabsTrigger>
           <TabsTrigger value="audit">Histórico</TabsTrigger>
