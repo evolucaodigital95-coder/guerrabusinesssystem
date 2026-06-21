@@ -17,6 +17,7 @@ import { AgentFormDialog, type AgentRow } from "@/components/agendistas/agent-fo
 import { AdvanceFormDialog, type AdvanceRow } from "@/components/agendistas/advance-form-dialog";
 import { RuleFormDialog, type RuleRow } from "@/components/agendistas/rule-form-dialog";
 import { AttachmentsTab } from "@/components/crm/attachments-tab";
+import { ArchiveButton } from "@/components/shared/archive-button";
 import { CalcBreakdown } from "@/components/finance/calc-breakdown";
 import {
   buildAgentStatement, calculateLecture, selectRule, advanceStatusLabel,
@@ -288,6 +289,7 @@ function AgentDetail() {
             <Button variant="outline" className="rounded-full" onClick={() => setEditOpen(true)}>
               <Pencil className="mr-1.5 h-4 w-4" /> Editar
             </Button>
+            <ArchiveButton table="agents" id={id} label="este agendista" listQueryKey="agents" backTo="/app/agendistas" />
             <Button variant="navy" className="rounded-full" onClick={() => { setEditingAdv(null); setAdvOpen(true); }}>
               <Plus className="mr-1.5 h-4 w-4" /> Adiantamento
             </Button>

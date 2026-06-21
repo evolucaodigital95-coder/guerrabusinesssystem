@@ -26,6 +26,7 @@ import { formatCurrency, formatDate } from "@/lib/crm";
 import { LECTURE_STATUS, LECTURE_TIMELINE_KINDS, lectureStatusLabel, lectureTimelineLabel } from "@/lib/lectures";
 import { LectureFormDialog, type LectureRow } from "@/components/palestras/lecture-form-dialog";
 import { AttachmentsTab } from "@/components/crm/attachments-tab";
+import { ArchiveButton } from "@/components/shared/archive-button";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/app/palestras/$id")({
@@ -202,6 +203,7 @@ function PalestraDetail() {
             <Button variant="outline" className="rounded-full" onClick={() => setEdit(true)}>
               <Pencil className="mr-1.5 h-4 w-4" /> Editar
             </Button>
+            <ArchiveButton table="lectures" id={id} label="esta palestra" listQueryKey="lectures" backTo="/app/palestras" />
           </div>
         }
       />
