@@ -571,8 +571,31 @@ function MovementSheet({
               <Field label="Data efetiva" value={`${formatDate(movement.occurs_on)}${movement.occurs_time ? ` ${movement.occurs_time.slice(0, 5)}` : ""}`} />
               <Field label="Status" value={statusLabel(movement.direction as "in" | "out", movement.status)} />
               <Field label="Conta" value={movement.accounts?.name ?? "—"} />
-              <Field label="Empresa" value={movement.companies?.legal_name ?? "—"} />
-              <Field label="Palestra" value={movement.lectures?.title ?? "—"} />
+              <FieldLink
+                label="Empresa"
+                value={movement.companies?.legal_name ?? "—"}
+                to={movement.companies?.id ? { route: "/app/crm/$id", id: movement.companies.id } : undefined}
+              />
+              <FieldLink
+                label="Palestra"
+                value={movement.lectures?.title ?? "—"}
+                to={movement.lectures?.id ? { route: "/app/palestras/$id", id: movement.lectures.id } : undefined}
+              />
+              <FieldLink
+                label="Agendista"
+                value={movement.agents?.full_name ?? "—"}
+                to={movement.agents?.id ? { route: "/app/agendistas/$id", id: movement.agents.id } : undefined}
+              />
+              <FieldLink
+                label="Temporada"
+                value={movement.seasons?.name ?? "—"}
+                to={movement.seasons?.id ? { route: "/app/temporadas/$id", id: movement.seasons.id } : undefined}
+              />
+              <FieldLink
+                label="Projeto"
+                value={movement.projects?.name ?? "—"}
+                to={movement.projects?.id ? { route: "/app/projetos/$id", id: movement.projects.id } : undefined}
+              />
             </div>
             {movement.notes && (
               <p className="mt-4 whitespace-pre-wrap border-t border-border pt-4 text-sm text-muted-foreground">{movement.notes}</p>
