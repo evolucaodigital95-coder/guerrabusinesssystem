@@ -17,6 +17,7 @@ import { SeasonFormDialog, type SeasonRow } from "@/components/strategy/season-f
 import { TimelineTab } from "@/components/shared/timeline-tab";
 import { NotesTab } from "@/components/shared/notes-tab";
 import { AttachmentsTab } from "@/components/shared/attachments-tab";
+import { ArchiveButton } from "@/components/shared/archive-button";
 
 export const Route = createFileRoute("/app/temporadas/$id")({
   head: () => ({
