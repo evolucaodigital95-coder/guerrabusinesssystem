@@ -754,3 +754,152 @@ function TimelineEventDialog({
     </Dialog>
   );
 }
+
+/* ---------------- Palestras da empresa ---------------- */
+
+function CompanyLecturesTab({ companyId }: { companyId: string }) {
+  const list = useQuery({
+    queryKey: ["company-lectures", companyId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("lectures")
+        .select("id, title, status, scheduled_at, city, state, gross_revenue, actual_audience")
+        .eq("company_id", companyId).is("archived_at", null)
+        .order("scheduled_at", { ascending: false, nullsFirst: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  if (list.isLoading) return <div className="text-sm text-muted-foreground">Carregando…</div>;
+  if ((list.data ?? []).length === 0) {
+    return (
+      <EmptyTab
+        icon={<Building2 className="h-6 w-6 text-muted-foreground" />}
+        title="Sem palestras"
+        description="Nenhuma palestra vinculada a esta empresa ainda."
+      />
+    );
+  }
+  return (
+    <div className="overflow-hidden rounded-2xl border border-border bg-card/40">
+      <table className="w-full text-sm">
+        <thead className="bg-muted/40 text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
+          <tr>
+            <th className="px-4 py-3 text-left font-medium">Palestra</th>
+            <th className="px-4 py-3 text-left font-medium">Data</th>
+            <th className="px-4 py-3 text-left font-medium">Local</th>
+            <th className="px-4 py-3 text-left font-medium">Status</th>
+            <th className="px-4 py-3 text-right font-medium">Público</th>
+            <th className="px-4 py-3 text-right font-medium">Receita</th>
+          </tr>
+        </thead>
+        <tbody>
+          {(list.data ?? []).map((l) => (
+            <tr key={l.id} className="border-t border-border/70 hover:bg-muted/30">
+              <td className="px-4 py-3">
+                <Link to="/app/palestras/$id" params={{ id: l.id }} className="font-medium text-foreground hover:underline">
+                  {l.title}
+                </Link>
+              </td>
+              <td className="px-4 py-3 text-muted-foreground">{formatDate(l.scheduled_at)}</td>
+              <td className="px-4 py-3 text-muted-foreground">{[l.city, l.state].filter(Boolean).join(" / ") || "—"}</td>
+              <td className="px-4 py-3"><Badge variant="outline" className="font-normal">{l.status ?? "—"}</Badge></td>
+              <td className="px-4 py-3 text-right tabular-nums text-muted-foreground">{l.actual_audience ?? "—"}</td>
+              <td className="px-4 py-3 text-right tabular-nums text-foreground">{formatCurrency(Number(l.gross_revenue ?? 0))}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+/* ---------------- Financeiro da empresa ---------------- */
+
+function CompanyFinanceTab({ companyId }: { companyId: string }) {
+  const list = useQuery({
+    queryKey: ["company-finance", companyId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("financial_movements")
+        .select("id, direction, status, category, description, amount, expected_amount, occurs_on, settled_at")
+        .eq("company_id", companyId).is("archived_at", null)
+        .order("occurs_on", { ascending: false, nullsFirst: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const totals = (list.data ?? []).reduce(
+    (acc, m) => {
+      const v = Number(m.amount ?? m.expected_amount ?? 0);
+      if (m.direction === "in") acc.in += v;
+      else if (m.direction === "out") acc.out += v;
+      return acc;
+    },
+    { in: 0, out: 0 },
+  );
+
+  if (list.isLoading) return <div className="text-sm text-muted-foreground">Carregando…</div>;
+  if ((list.data ?? []).length === 0) {
+    return (
+      <EmptyTab
+        icon={<Building2 className="h-6 w-6 text-muted-foreground" />}
+        title="Sem movimentações"
+        description="Crie um lançamento financeiro vinculado a esta empresa."
+      />
+    );
+  }
+  return (
+    <div className="space-y-4">
+      <div className="grid gap-3 sm:grid-cols-3">
+        <div className="rounded-2xl border border-border bg-card/40 p-4">
+          <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">Entradas</p>
+          <p className="mt-2 font-serif text-xl tabular-nums text-emerald-600">{formatCurrency(totals.in)}</p>
+        </div>
+        <div className="rounded-2xl border border-border bg-card/40 p-4">
+          <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">Saídas</p>
+          <p className="mt-2 font-serif text-xl tabular-nums text-rose-600">{formatCurrency(totals.out)}</p>
+        </div>
+        <div className="rounded-2xl border border-border bg-card/40 p-4">
+          <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">Resultado</p>
+          <p className="mt-2 font-serif text-xl tabular-nums text-foreground">{formatCurrency(totals.in - totals.out)}</p>
+        </div>
+      </div>
+      <div className="overflow-hidden rounded-2xl border border-border bg-card/40">
+        <table className="w-full text-sm">
+          <thead className="bg-muted/40 text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
+            <tr>
+              <th className="px-4 py-3 text-left font-medium">Data</th>
+              <th className="px-4 py-3 text-left font-medium">Descrição</th>
+              <th className="px-4 py-3 text-left font-medium">Categoria</th>
+              <th className="px-4 py-3 text-left font-medium">Status</th>
+              <th className="px-4 py-3 text-right font-medium">Valor</th>
+            </tr>
+          </thead>
+          <tbody>
+            {(list.data ?? []).map((m) => {
+              const isIn = m.direction === "in";
+              const v = m.amount ?? m.expected_amount ?? 0;
+              return (
+                <tr key={m.id} className="border-t border-border/70 hover:bg-muted/30">
+                  <td className="px-4 py-3 text-muted-foreground">{formatDate(m.occurs_on)}</td>
+                  <td className="px-4 py-3 text-foreground">{m.description ?? "—"}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{m.category ?? "—"}</td>
+                  <td className="px-4 py-3"><Badge variant="outline" className="font-normal">{m.status ?? "—"}</Badge></td>
+                  <td className={cn(
+                    "px-4 py-3 text-right font-medium tabular-nums",
+                    isIn ? "text-emerald-600" : "text-rose-600",
+                  )}>
+                    {isIn ? "+" : "−"} {formatCurrency(Number(v))}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
