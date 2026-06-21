@@ -163,6 +163,8 @@ function CompanyDetailPage() {
           <TabsTrigger value="contacts">Contatos</TabsTrigger>
           <TabsTrigger value="leads">Leads</TabsTrigger>
           <TabsTrigger value="opportunities">Oportunidades</TabsTrigger>
+          <TabsTrigger value="lectures">Palestras</TabsTrigger>
+          <TabsTrigger value="finance">Financeiro</TabsTrigger>
           <TabsTrigger value="notes">Notas</TabsTrigger>
           <TabsTrigger value="attachments">Anexos</TabsTrigger>
           <TabsTrigger value="timeline">Timeline</TabsTrigger>
@@ -179,6 +181,12 @@ function CompanyDetailPage() {
         </TabsContent>
         <TabsContent value="opportunities">
           {organizationId && user && <OpportunitiesTab companyId={id} organizationId={organizationId} userId={user.id} />}
+        </TabsContent>
+        <TabsContent value="lectures">
+          <CompanyLecturesTab companyId={id} />
+        </TabsContent>
+        <TabsContent value="finance">
+          <CompanyFinanceTab companyId={id} />
         </TabsContent>
         <TabsContent value="notes">
           {organizationId && user && <NotesTab companyId={id} organizationId={organizationId} userId={user.id} />}
