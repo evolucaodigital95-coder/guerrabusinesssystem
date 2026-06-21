@@ -676,3 +676,25 @@ function Field({ label, value, accent }: { label: string; value: string; accent?
     </div>
   );
 }
+
+type LinkTarget =
+  | { route: "/app/crm/$id"; id: string }
+  | { route: "/app/palestras/$id"; id: string }
+  | { route: "/app/agendistas/$id"; id: string }
+  | { route: "/app/temporadas/$id"; id: string }
+  | { route: "/app/projetos/$id"; id: string };
+
+function FieldLink({ label, value, to }: { label: string; value: string; to?: LinkTarget }) {
+  return (
+    <div>
+      <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">{label}</p>
+      {to ? (
+        <Link to={to.route} params={{ id: to.id }} className="mt-1 block text-sm text-foreground underline-offset-2 hover:underline">
+          {value}
+        </Link>
+      ) : (
+        <p className="mt-1 text-sm text-foreground">{value}</p>
+      )}
+    </div>
+  );
+}
