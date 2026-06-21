@@ -120,11 +120,14 @@ function FinancePage() {
         .select(`
           id, direction, status, category, description, amount, expected_amount,
           expected_date, settled_at, occurs_on, occurs_time,
-          account_id, company_id, lecture_id, agent_id, season_id, notes,
+          account_id, company_id, lecture_id, agent_id, season_id, project_id, notes,
           created_at, updated_at,
           accounts:account_id ( id, name, kind ),
           companies:company_id ( id, legal_name ),
-          lectures:lecture_id ( id, title )
+          lectures:lecture_id ( id, title ),
+          agents:agent_id ( id, full_name ),
+          seasons:season_id ( id, name ),
+          projects:project_id ( id, name )
         `)
         .eq("organization_id", organizationId!)
         .is("archived_at", null)
