@@ -210,6 +210,7 @@ function SeasonDetail() {
             <Button variant="outline" className="rounded-full" onClick={() => setEditOpen(true)}>
               <Pencil className="mr-1.5 h-4 w-4" /> Editar
             </Button>
+            <ArchiveButton table="seasons" id={id} label="esta temporada" listQueryKey="seasons" backTo="/app/temporadas" />
             <Button variant="navy" className="rounded-full" onClick={() => takeSnapshot.mutate()} disabled={takeSnapshot.isPending}>
               <Camera className="mr-1.5 h-4 w-4" /> Capturar snapshot
             </Button>
