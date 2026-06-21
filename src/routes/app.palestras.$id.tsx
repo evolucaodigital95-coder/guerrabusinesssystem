@@ -26,6 +26,7 @@ import { formatCurrency, formatDate } from "@/lib/crm";
 import { LECTURE_STATUS, LECTURE_TIMELINE_KINDS, lectureStatusLabel, lectureTimelineLabel } from "@/lib/lectures";
 import { LectureFormDialog, type LectureRow } from "@/components/palestras/lecture-form-dialog";
 import { AttachmentsTab } from "@/components/crm/attachments-tab";
+import { ArchiveButton } from "@/components/shared/archive-button";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/app/palestras/$id")({
