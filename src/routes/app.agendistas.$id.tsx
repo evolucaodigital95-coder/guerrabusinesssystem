@@ -496,7 +496,7 @@ function AgentDetail() {
         </TabsContent>
 
         <TabsContent value="companies" className="space-y-4">
-          <AgentCompaniesTab lectures={lectures.data ?? []} />
+          <AgentCompaniesTab agentId={id} />
         </TabsContent>
 
         <TabsContent value="timeline">
