@@ -202,6 +202,7 @@ function PalestraDetail() {
             <Button variant="outline" className="rounded-full" onClick={() => setEdit(true)}>
               <Pencil className="mr-1.5 h-4 w-4" /> Editar
             </Button>
+            <ArchiveButton table="lectures" id={id} label="esta palestra" listQueryKey="lectures" backTo="/app/palestras" />
           </div>
         }
       />
