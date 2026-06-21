@@ -172,6 +172,7 @@ function ItemDetail() {
           <Button variant="ghost" size="sm" className="rounded-full" onClick={() => setMvtOpen(true)}>
             <ArrowDownUp className="mr-1.5 h-4 w-4" /> Movimentação
           </Button>
+          <ArchiveButton table="stock_items" id={id} label="este item" listQueryKey="stock-items" backTo="/app/estoque" />
           <Button variant="navy" size="sm" className="rounded-full" onClick={() => setEditOpen(true)}>
             <Pencil className="mr-1.5 h-4 w-4" /> Editar
           </Button>
