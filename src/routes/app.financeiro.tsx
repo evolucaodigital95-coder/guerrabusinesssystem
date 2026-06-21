@@ -54,12 +54,16 @@ type Movement = {
   lecture_id: string | null;
   agent_id: string | null;
   season_id: string | null;
+  project_id: string | null;
   notes: string | null;
   created_at: string;
   updated_at: string;
   accounts: { id: string; name: string; kind: string | null } | null;
   companies: { id: string; legal_name: string } | null;
   lectures: { id: string; title: string } | null;
+  agents: { id: string; full_name: string } | null;
+  seasons: { id: string; name: string } | null;
+  projects: { id: string; name: string } | null;
 };
 
 type Account = {
