@@ -494,6 +494,16 @@ function AgentDetail() {
           </div>
         </TabsContent>
 
+        <TabsContent value="companies" className="space-y-4">
+          <AgentCompaniesTab lectures={lectures.data ?? []} />
+        </TabsContent>
+
+        <TabsContent value="timeline">
+          {organizationId && user && (
+            <TimelineTab entityType="agent" entityId={id} organizationId={organizationId} userId={user.id} />
+          )}
+        </TabsContent>
+
         <TabsContent value="rules" className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
