@@ -349,7 +349,7 @@ function DashboardPage() {
             <ul className="divide-y divide-border">
               {timeline.map((e) => {
                 const type = e.entity_type as EntityType;
-                const route = ENTITY_ROUTE[type]?.(e.entity_id);
+                const route = e.entity_id ? ENTITY_ROUTE[type]?.(e.entity_id) : undefined;
                 const label = ENTITY_LABEL[type] ?? e.entity_type;
                 const row = (
                   <div className="flex items-center justify-between gap-4 px-6 py-4">
