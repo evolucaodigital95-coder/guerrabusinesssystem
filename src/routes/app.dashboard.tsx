@@ -42,8 +42,9 @@ function useDashboard(orgId: string | null) {
       const todayISO = isoDate(now);
       const in30 = isoDate(new Date(now.getTime() + 30 * 86400000));
 
-      const base = (t: string) => supabase.from(t).select("*", { count: "exact", head: true })
-        .eq("organization_id", org).is("archived_at", null);
+      const countOf = (q: { count: number | null }) => q.count ?? 0;
+      const orgEq = <T extends { eq: any; is: any }>(q: T): T =>
+        q.eq("organization_id", org).is("archived_at", null);
 
       const [
         companies, contacts, lectures, agents, seasonsActive, projectsActive,
@@ -52,20 +53,21 @@ function useDashboard(orgId: string | null) {
         audienceHist, audienceYear, audienceMonth, audienceWeek, audienceToday,
         upcoming, recentIn, recentOut, lowStock, projDue, pendFin, timeline,
       ] = await Promise.all([
-        base("companies"),
-        base("contacts"),
-        base("lectures"),
-        base("agents"),
-        base("seasons").eq("status", "ativa"),
-        base("projects").in("status", ["ativo", "em_andamento", "planejamento"]),
+        orgEq(supabase.from("companies").select("id", { count: "exact", head: true })),
+        orgEq(supabase.from("contacts").select("id", { count: "exact", head: true })),
+        orgEq(supabase.from("lectures").select("id", { count: "exact", head: true })),
+        orgEq(supabase.from("agents").select("id", { count: "exact", head: true })),
+        orgEq(supabase.from("seasons").select("id", { count: "exact", head: true })).eq("status", "ativa"),
+        orgEq(supabase.from("projects").select("id", { count: "exact", head: true })).in("status", ["ativo", "em_andamento", "planejamento"]),
         // financeiro
         supabase.from("financial_movements").select("amount").eq("organization_id", org).is("archived_at", null).eq("direction", "in"),
         supabase.from("financial_movements").select("amount").eq("organization_id", org).is("archived_at", null).eq("direction", "out"),
         // palestras
-        base("lectures").eq("status", "realizada"),
-        base("lectures").eq("status", "cancelada"),
-        base("lectures").gte("scheduled_at", weekStart).lte("scheduled_at", todayEnd),
-        base("lectures").gte("scheduled_at", monthStart),
+        orgEq(supabase.from("lectures").select("id", { count: "exact", head: true })).eq("status", "realizada"),
+        orgEq(supabase.from("lectures").select("id", { count: "exact", head: true })).eq("status", "cancelada"),
+        orgEq(supabase.from("lectures").select("id", { count: "exact", head: true })).gte("scheduled_at", weekStart).lte("scheduled_at", todayEnd),
+        orgEq(supabase.from("lectures").select("id", { count: "exact", head: true })).gte("scheduled_at", monthStart),
+
         // vidas
         supabase.from("lectures").select("actual_audience, scheduled_at").eq("organization_id", org).is("archived_at", null).eq("status", "realizada"),
         supabase.from("lectures").select("actual_audience").eq("organization_id", org).is("archived_at", null).eq("status", "realizada").gte("scheduled_at", yearStart),
