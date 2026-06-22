@@ -86,26 +86,28 @@ function AppLayout() {
                 </div>
                 <ul className="space-y-px">
                   {items.map((m) => {
-                    const active = pathname === m.to;
+                    const active = pathname === m.to || pathname.startsWith(m.to + "/");
+                    const Icon = m.icon;
                     return (
-                      <li key={m.to}>
+                      <li key={`${m.to}-${m.label}`}>
                         <Link
                           to={m.to}
                           onClick={() => setMobileOpen(false)}
                           className={cn(
-                            "group relative flex items-center rounded-md px-3 py-2 text-[13.5px] transition-colors duration-200",
+                            "group relative flex items-center gap-3 rounded-md px-3 py-2 text-[13.5px] transition-all duration-200",
                             active
-                              ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                              : "text-sidebar-foreground/70 hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground",
+                              ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                              : "text-sidebar-foreground/70 hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground hover:translate-x-0.5",
                           )}
                         >
                           {active && (
                             <span
                               aria-hidden
-                              className="absolute left-0 top-1/2 h-4 w-px -translate-y-1/2"
+                              className="absolute left-0 top-1/2 h-5 w-[2px] -translate-y-1/2 rounded-r"
                               style={{ background: "var(--gold)" }}
                             />
                           )}
+                          <Icon className={cn("h-4 w-4 shrink-0 transition-colors", active ? "text-foreground" : "text-muted-foreground group-hover:text-foreground")} />
                           <span className="truncate">{m.label}</span>
                         </Link>
                       </li>
@@ -157,20 +159,18 @@ function AppLayout() {
           <div className="ml-auto flex items-center gap-1">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="navy" size="sm" className="hidden rounded-full px-4 md:inline-flex">
-                  + Novo
+                <Button variant="navy" size="sm" className="rounded-full px-3 md:px-4">
+                  <span className="md:hidden">+</span>
+                  <span className="hidden md:inline">+ Novo</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuLabel>Ações rápidas</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem asChild><Link to="/app/crm">Nova Empresa / Lead</Link></DropdownMenuItem>
+                <DropdownMenuItem asChild><Link to="/app/crm">Nova Empresa</Link></DropdownMenuItem>
                 <DropdownMenuItem asChild><Link to="/app/palestras">Nova Palestra</Link></DropdownMenuItem>
                 <DropdownMenuItem asChild><Link to="/app/financeiro">Novo Lançamento</Link></DropdownMenuItem>
                 <DropdownMenuItem asChild><Link to="/app/agendistas">Novo Agendista</Link></DropdownMenuItem>
-                <DropdownMenuItem asChild><Link to="/app/estoque">Novo Item de Estoque</Link></DropdownMenuItem>
-                <DropdownMenuItem asChild><Link to="/app/temporadas">Nova Temporada</Link></DropdownMenuItem>
-                <DropdownMenuItem asChild><Link to="/app/campanhas">Nova Campanha</Link></DropdownMenuItem>
                 <DropdownMenuItem asChild><Link to="/app/projetos">Novo Projeto</Link></DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
