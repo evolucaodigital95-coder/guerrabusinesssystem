@@ -2,6 +2,7 @@ import {
   Home,
   LayoutDashboard,
   Users,
+  Building2,
   Mic,
   Wallet,
   CalendarRange,
@@ -16,6 +17,9 @@ import {
   ShieldCheck,
   Settings,
   Search,
+  UserCog,
+  Briefcase,
+  Megaphone,
   type LucideIcon,
 } from "lucide-react";
 
