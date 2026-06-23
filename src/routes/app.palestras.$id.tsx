@@ -603,3 +603,581 @@ function Empty({ title, subtitle }: { title: string; subtitle: string }) {
     </div>
   );
 }
+
+/* ============================================================
+ * Fechamento Financeiro — motor automático e auditável.
+ * ============================================================ */
+
+const TAX_CATEGORIES = ["Impostos", "Taxa", "Taxas"];
+const COST_CATEGORIES = ["Operacional", "Viagem", "Tecnologia", "Marketing", "Folha"];
+const EXCLUDED_CATEGORIES = ["Adiantamento", "Comissão"]; // tratados separadamente
+const CANCEL_STATUS = ["cancelado", "cancelada"];
+
+function bucketOf(category: string | null | undefined): ExpenseBucket {
+  const c = (category ?? "").trim();
+  if (TAX_CATEGORIES.includes(c)) return "tax";
+  if (COST_CATEGORIES.includes(c)) return "cost";
+  return "expense";
+}
+
+type EnrichedExpense = LectureExpenseInput & {
+  id: string;
+  source: "financial_movement" | "stock_movement";
+  category?: string | null;
+  createdAt?: string | null;
+  createdBy?: string | null;
+  docRoute?: string;
+  docLabel?: string;
+};
+
+function FechamentoFinanceiroTab({
+  lectureId, organizationId, userId, grossRevenueDefault, agentId, seasonId,
+}: {
+  lectureId: string;
+  organizationId: string;
+  userId: string;
+  grossRevenueDefault: number;
+  agentId: string | null;
+  seasonId: string | null;
+}) {
+  const qc = useQueryClient();
+
+  const movements = useQuery({
+    queryKey: ["fechamento-movements", lectureId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("financial_movements")
+        .select("id, direction, status, category, description, amount, expected_amount, occurs_on, occurs_time, created_at, created_by, account_id, accounts:account_id ( id, name )")
+        .eq("lecture_id", lectureId).is("archived_at", null);
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const stockMoves = useQuery({
+    queryKey: ["fechamento-stock", lectureId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("stock_movements")
+        .select("id, direction, quantity, reason, occurs_on, notes, kind, unit_cost, total_cost, created_at, created_by, stock_items:stock_item_id ( id, name, unit, average_cost )")
+        .eq("lecture_id", lectureId).is("archived_at", null);
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const lectureAdvances = useQuery({
+    queryKey: ["fechamento-advances", lectureId, agentId],
+    enabled: !!agentId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("advances")
+        .select("id, amount, amount_amortized, granted_on, granted_time, source, paid_by_label, status, lecture_id, notes, created_at, created_by")
+        .eq("agent_id", agentId!).is("archived_at", null)
+        .neq("status", "cancelado");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const rules = useQuery({
+    queryKey: ["financial_rules", organizationId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("financial_rules")
+        .select("*").eq("organization_id", organizationId)
+        .is("archived_at", null).order("created_at", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const snapshot = useQuery({
+    queryKey: ["fechamento-snapshot", lectureId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("lecture_financial_snapshots")
+        .select("id, agent_id, agent_amount, gustavo_amount, net_profit, gross_revenue, total_expenses, total_advances, rule_snapshot, inputs, breakdown, closed_at, closed_by")
+        .eq("lecture_id", lectureId).is("archived_at", null)
+        .order("closed_at", { ascending: false }).limit(1).maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // Profiles for transparency
+  const actorIds = useMemo(() => {
+    const s = new Set<string>();
+    (movements.data ?? []).forEach((m) => m.created_by && s.add(m.created_by));
+    (stockMoves.data ?? []).forEach((m) => m.created_by && s.add(m.created_by));
+    (lectureAdvances.data ?? []).forEach((m) => m.created_by && s.add(m.created_by));
+    if (snapshot.data?.closed_by) s.add(snapshot.data.closed_by);
+    return Array.from(s);
+  }, [movements.data, stockMoves.data, lectureAdvances.data, snapshot.data]);
+
+  const profiles = useQuery({
+    queryKey: ["profiles-by-ids", actorIds.join(",")],
+    enabled: actorIds.length > 0,
+    queryFn: async () => {
+      const { data, error } = await supabase.from("profiles").select("id, full_name, email").in("id", actorIds);
+      if (error) throw error;
+      const m = new Map<string, { full_name: string | null; email: string | null }>();
+      (data ?? []).forEach((p) => m.set(p.id, { full_name: p.full_name, email: p.email }));
+      return m;
+    },
+  });
+  const actorName = (uid: string | null | undefined) => {
+    if (!uid) return "Sistema";
+    const p = profiles.data?.get(uid);
+    return p?.full_name || p?.email || "Usuário";
+  };
+
+  // Receitas (in)
+  const receitas = useMemo(() => {
+    return (movements.data ?? [])
+      .filter((m) => m.direction === "in" && !CANCEL_STATUS.includes(m.status ?? ""))
+      .map((m) => ({
+        id: m.id,
+        description: m.description ?? "Receita",
+        amount: Number(m.amount ?? m.expected_amount ?? 0),
+        date: m.occurs_on,
+        category: m.category,
+        status: m.status,
+        createdAt: m.created_at,
+        createdBy: m.created_by,
+        docRoute: "/app/financeiro",
+        docLabel: "Abrir financeiro",
+      }));
+  }, [movements.data]);
+
+  const grossRevenue = useMemo(() => {
+    const fromMov = receitas.reduce((s, r) => s + r.amount, 0);
+    return fromMov > 0 ? fromMov : grossRevenueDefault;
+  }, [receitas, grossRevenueDefault]);
+
+  // Expenses (financial out) categorized
+  const expensesFromMovs: EnrichedExpense[] = useMemo(() => {
+    return (movements.data ?? [])
+      .filter((m) =>
+        m.direction === "out"
+        && !CANCEL_STATUS.includes(m.status ?? "")
+        && !EXCLUDED_CATEGORIES.includes(m.category ?? "")
+      )
+      .map((m) => ({
+        id: m.id,
+        source: "financial_movement" as const,
+        description: m.description,
+        amount: Number(m.amount ?? m.expected_amount ?? 0),
+        date: m.occurs_on,
+        category: m.category,
+        bucket: bucketOf(m.category),
+        createdAt: m.created_at,
+        createdBy: m.created_by,
+        docRoute: "/app/financeiro",
+        docLabel: "Abrir financeiro",
+      }));
+  }, [movements.data]);
+
+  // Stock consumed (out)
+  const expensesFromStock: EnrichedExpense[] = useMemo(() => {
+    return (stockMoves.data ?? [])
+      .filter((m) => m.direction === "out")
+      .map((m) => {
+        const item = m.stock_items as { id?: string; name?: string; unit?: string; average_cost?: number | null } | null;
+        const qty = Number(m.quantity ?? 0);
+        const cost =
+          Number(m.total_cost ?? 0)
+          || qty * Number(m.unit_cost ?? 0)
+          || qty * Number(item?.average_cost ?? 0);
+        return {
+          id: m.id,
+          source: "stock_movement" as const,
+          description: `${item?.name ?? "Item"} · ${qty} ${item?.unit ?? ""}`.trim(),
+          amount: cost,
+          date: m.occurs_on,
+          bucket: "stock" as const,
+          createdAt: m.created_at,
+          createdBy: m.created_by,
+          docRoute: item?.id ? `/app/estoque/${item.id}` : "/app/estoque",
+          docLabel: "Abrir item",
+        };
+      })
+      .filter((e) => e.amount > 0);
+  }, [stockMoves.data]);
+
+  const expenses: EnrichedExpense[] = useMemo(
+    () => [...expensesFromMovs, ...expensesFromStock],
+    [expensesFromMovs, expensesFromStock],
+  );
+
+  // Advances: linked to this lecture + open advances of the agent
+  const advancesForCalc = useMemo(() => {
+    return (lectureAdvances.data ?? [])
+      .filter((a) => a.lecture_id === lectureId || (a.status !== "abatido_total" && a.lecture_id === null))
+      .map((a) => ({
+        id: a.id,
+        amount: Math.max(0, Number(a.amount ?? 0) - Number(a.amount_amortized ?? 0)),
+        granted_on: a.granted_on,
+        source: a.source,
+        notes: a.notes,
+        createdAt: a.created_at,
+        createdBy: a.created_by,
+      }))
+      .filter((a) => a.amount > 0);
+  }, [lectureAdvances.data, lectureId]);
+
+  // Rule
+  const activeRule: RuleSnapshot = useMemo(() => selectRule({
+    rules: (rules.data ?? []) as unknown as Parameters<typeof selectRule>[0]["rules"],
+    agentId, seasonId,
+  }), [rules.data, agentId, seasonId]);
+
+  // Snapshot wins when closed (frozen rule + frozen breakdown)
+  const isClosed = !!snapshot.data;
+  const calc = useMemo(() => {
+    if (isClosed && snapshot.data?.breakdown) {
+      return snapshot.data.breakdown as ReturnType<typeof calculateLecture>;
+    }
+    return calculateLecture({
+      grossRevenue,
+      expenses,
+      advances: advancesForCalc,
+      rule: activeRule,
+    });
+  }, [isClosed, snapshot.data, grossRevenue, expenses, advancesForCalc, activeRule]);
+
+  const close = useMutation({
+    mutationFn: async () => {
+      if (!grossRevenue) throw new Error("Defina a receita bruta da palestra antes de fechar.");
+      if (!agentId) throw new Error("Vincule um agendista antes de fechar.");
+
+      const breakdown = calculateLecture({
+        grossRevenue, expenses, advances: advancesForCalc, rule: activeRule,
+      });
+
+      const { error: insErr } = await supabase.from("lecture_financial_snapshots").insert({
+        organization_id: organizationId,
+        lecture_id: lectureId,
+        agent_id: agentId,
+        rule_id: activeRule.id ?? null,
+        rule_snapshot: JSON.parse(JSON.stringify(activeRule)),
+        inputs: JSON.parse(JSON.stringify({ grossRevenue, expenses, advances: advancesForCalc })),
+        breakdown: JSON.parse(JSON.stringify(breakdown)),
+        gross_revenue: grossRevenue,
+        total_expenses: breakdown.totals.totalExpenses,
+        total_advances: breakdown.totals.totalAdvances,
+        net_profit: breakdown.totals.netProfit,
+        gustavo_amount: breakdown.totals.gustavoAmount,
+        agent_amount: breakdown.totals.agentAmount,
+        closed_by: userId,
+      });
+      if (insErr) throw insErr;
+
+      // Amortiza adiantamentos abertos
+      for (const a of advancesForCalc) {
+        const original = (lectureAdvances.data ?? []).find((x) => x.id === a.id);
+        if (!original) continue;
+        const newAmortized = Number(original.amount_amortized ?? 0) + a.amount;
+        const fullyAmortized = newAmortized >= Number(original.amount ?? 0);
+        await supabase.from("advances").update({
+          amount_amortized: newAmortized,
+          status: fullyAmortized ? "abatido_total" : "abatido_parcial",
+          updated_by: userId,
+        }).eq("id", a.id);
+      }
+
+      await supabase.from("lectures").update({
+        financial_status: "closed",
+        closed_at: new Date().toISOString(),
+        closed_by: userId,
+      }).eq("id", lectureId);
+    },
+    onSuccess: () => {
+      toast.success("Fechamento concluído. Snapshot salvo permanentemente.");
+      qc.invalidateQueries({ queryKey: ["fechamento-snapshot", lectureId] });
+      qc.invalidateQueries({ queryKey: ["fechamento-advances", lectureId, agentId] });
+      qc.invalidateQueries({ queryKey: ["lecture-snapshot", lectureId] });
+      qc.invalidateQueries({ queryKey: ["lecture", lectureId] });
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Erro ao fechar"),
+  });
+
+  const loading = movements.isLoading || stockMoves.isLoading || lectureAdvances.isLoading || rules.isLoading || snapshot.isLoading;
+  if (loading) return <p className="text-sm text-muted-foreground">Carregando motor financeiro…</p>;
+
+  const ruleInUse: RuleSnapshot = isClosed
+    ? (snapshot.data!.rule_snapshot as RuleSnapshot)
+    : activeRule;
+
+  return (
+    <div className="space-y-5">
+      {/* Cabeçalho do motor */}
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-card/40 p-5">
+        <div>
+          <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">Motor Financeiro</p>
+          <p className="mt-1 font-serif text-xl text-foreground">
+            {isClosed ? "Fechamento concluído" : "Fechamento em aberto"}
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Regra: <span className="text-foreground">{ruleInUse.name ?? "—"}</span> ·
+            Gustavo {pctStr(ruleInUse.gustavo_share)} · Agendista {pctStr(ruleInUse.agent_share)}
+            {ruleInUse.fee_percent || ruleInUse.fee_fixed ? ` · Taxa ${pctStr(ruleInUse.fee_percent)}${ruleInUse.fee_fixed ? ` + ${formatCurrency(ruleInUse.fee_fixed)}` : ""}` : ""}
+          </p>
+          {isClosed && (
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              <Lock className="mr-1 inline h-3 w-3" /> Snapshot congelado em {formatDate(snapshot.data!.closed_at)} por {actorName(snapshot.data!.closed_by)}.
+            </p>
+          )}
+        </div>
+        <div className="flex items-center gap-2">
+          <CalcBreakdown
+            title="Cálculo do fechamento"
+            subtitle={`Regra: ${ruleInUse.name ?? "—"}`}
+            lines={calc.lines}
+            footer={isClosed
+              ? <>Snapshot permanente — não muda mesmo se a regra for alterada.</>
+              : <>Pré-cálculo dinâmico — torna-se permanente após o fechamento.</>}
+            trigger={
+              <Button variant="outline" size="sm" className="rounded-full">
+                <Calculator className="mr-1.5 h-4 w-4" /> Ver Cálculo
+              </Button>
+            }
+          />
+          {!isClosed && (
+            <Button
+              variant="navy" size="sm" className="rounded-full"
+              disabled={close.isPending || !grossRevenue || !agentId}
+              onClick={() => {
+                if (typeof window !== "undefined" && window.confirm("Fechar palestra e gerar snapshot permanente?")) {
+                  close.mutate();
+                }
+              }}
+            >
+              <Lock className="mr-1.5 h-4 w-4" /> Fechar palestra
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {/* KPIs do cálculo */}
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
+        <CalcKPI label="Receita bruta" value={calc.totals.grossRevenue} accent="positive" />
+        <CalcKPI label="Total saídas" value={-(calc.totals.totalExpenses + calc.totals.totalAdvances + calc.totals.fee)} accent="negative" />
+        <CalcKPI label="Lucro líquido" value={calc.totals.netProfit} accent={calc.totals.netProfit >= 0 ? "positive" : "negative"} />
+        <CalcKPI label="Gustavo" value={calc.totals.gustavoAmount} accent="muted" />
+        <CalcKPI label="Agendista" value={calc.totals.agentAmount} accent="gold" />
+      </div>
+
+      {/* Receitas */}
+      <FechamentoSection
+        title="Receitas"
+        subtitle="Lançamentos de entrada vinculados a esta palestra"
+        emptyText="Nenhuma receita vinculada."
+        rows={receitas.map((r) => ({
+          id: r.id,
+          date: r.date,
+          description: r.description,
+          tag: r.category ?? "Receita",
+          amount: r.amount,
+          positive: true,
+          origin: {
+            actorName: actorName(r.createdBy),
+            createdAt: r.createdAt,
+            reason: r.status ? `Status: ${r.status}` : null,
+            docRoute: r.docRoute, docLabel: r.docLabel,
+          },
+        }))}
+        totalLabel="Total de receitas"
+        total={calc.totals.grossRevenue}
+      />
+
+      {/* Buckets de despesa */}
+      {(["tax", "cost", "stock", "expense"] as ExpenseBucket[]).map((bucket) => {
+        const rows = expenses.filter((e) => (e.bucket ?? "expense") === bucket);
+        const total =
+          bucket === "tax" ? calc.totals.totalTaxes :
+          bucket === "cost" ? calc.totals.totalCosts :
+          bucket === "stock" ? calc.totals.totalStock :
+          calc.totals.totalOtherExpenses;
+        return (
+          <FechamentoSection
+            key={bucket}
+            title={BUCKET_LABEL[bucket]}
+            subtitle={
+              bucket === "tax" ? "Impostos e taxas debitados da receita" :
+              bucket === "cost" ? "Custos operacionais, viagem, tecnologia" :
+              bucket === "stock" ? "Itens consumidos no estoque (custo médio)" :
+              "Demais despesas vinculadas"
+            }
+            emptyText={`Nenhum lançamento em ${BUCKET_LABEL[bucket]}.`}
+            rows={rows.map((e) => ({
+              id: e.id,
+              date: e.date ?? null,
+              description: e.description ?? "—",
+              tag: e.source === "stock_movement" ? "Estoque" : (e.category ?? "Despesa"),
+              amount: e.amount,
+              positive: false,
+              origin: {
+                actorName: actorName(e.createdBy),
+                createdAt: e.createdAt ?? null,
+                reason: e.source === "stock_movement" ? "Consumo registrado no estoque" : (e.category ? `Categoria: ${e.category}` : null),
+                docRoute: e.docRoute, docLabel: e.docLabel,
+              },
+            }))}
+            totalLabel={`Subtotal ${BUCKET_LABEL[bucket]}`}
+            total={total}
+          />
+        );
+      })}
+
+      {/* Adiantamentos */}
+      <FechamentoSection
+        title="Adiantamentos do agendista"
+        subtitle={agentId ? "Adiantamentos em aberto que serão amortizados neste fechamento" : "Vincule um agendista para listar adiantamentos."}
+        emptyText="Nenhum adiantamento aplicável."
+        rows={advancesForCalc.map((a) => ({
+          id: a.id,
+          date: a.granted_on,
+          description: `Adiantamento${a.source ? ` · ${a.source}` : ""}`,
+          tag: "Adiantamento",
+          amount: a.amount,
+          positive: false,
+          origin: {
+            actorName: actorName(a.createdBy),
+            createdAt: a.createdAt,
+            reason: a.notes ?? null,
+            docRoute: agentId ? `/app/agendistas/${agentId}` : undefined,
+            docLabel: agentId ? "Abrir agendista" : undefined,
+          },
+        }))}
+        totalLabel="Subtotal adiantamentos"
+        total={calc.totals.totalAdvances}
+      />
+    </div>
+  );
+}
+
+/* ----- helpers do fechamento ----- */
+
+function pctStr(v: number) {
+  return `${Math.round((v || 0) * 1000) / 10}%`;
+}
+
+type FechRow = {
+  id: string;
+  date: string | null;
+  description: string;
+  tag: string;
+  amount: number;
+  positive: boolean;
+  origin: {
+    actorName: string;
+    createdAt: string | null;
+    reason: string | null;
+    docRoute?: string;
+    docLabel?: string;
+  };
+};
+
+function FechamentoSection({
+  title, subtitle, rows, emptyText, totalLabel, total,
+}: {
+  title: string; subtitle?: string; rows: FechRow[]; emptyText: string;
+  totalLabel: string; total: number;
+}) {
+  return (
+    <div className="overflow-hidden rounded-2xl border border-border bg-card/40">
+      <div className="flex flex-wrap items-end justify-between gap-2 border-b border-border/70 px-5 py-4">
+        <div>
+          <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">{title}</p>
+          {subtitle && <p className="mt-1 text-xs text-muted-foreground">{subtitle}</p>}
+        </div>
+        <p className="font-serif text-lg text-foreground tabular-nums">
+          {formatCurrency(total)}
+        </p>
+      </div>
+      {rows.length === 0 ? (
+        <p className="px-5 py-6 text-sm text-muted-foreground">{emptyText}</p>
+      ) : (
+        <table className="w-full text-sm">
+          <thead className="bg-muted/30 text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
+            <tr>
+              <th className="px-4 py-2.5 text-left font-medium">Data</th>
+              <th className="px-4 py-2.5 text-left font-medium">Descrição</th>
+              <th className="px-4 py-2.5 text-left font-medium">Categoria</th>
+              <th className="px-4 py-2.5 text-right font-medium">Valor</th>
+              <th className="px-4 py-2.5 text-right font-medium">Origem</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r) => (
+              <tr key={r.id} className="border-t border-border/70 hover:bg-muted/20">
+                <td className="px-4 py-2.5 text-muted-foreground whitespace-nowrap">{formatDate(r.date)}</td>
+                <td className="px-4 py-2.5 text-foreground">{r.description}</td>
+                <td className="px-4 py-2.5">
+                  <Badge variant="outline" className="font-normal">{r.tag}</Badge>
+                </td>
+                <td className={cn("px-4 py-2.5 text-right tabular-nums", r.positive ? "text-emerald-600" : "text-rose-600")}>
+                  {r.positive ? "+" : "−"} {formatCurrency(Math.abs(r.amount))}
+                </td>
+                <td className="px-4 py-2.5 text-right">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="ghost" size="sm" className="h-7 rounded-full text-xs">
+                        <Info className="mr-1 h-3.5 w-3.5" /> Ver origem
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent align="end" className="w-80 text-xs">
+                      <p className="mb-2 text-[10px] uppercase tracking-[0.22em] text-muted-foreground">Origem do valor</p>
+                      <dl className="space-y-1.5">
+                        <OriginRow label="Usuário responsável" value={r.origin.actorName} />
+                        <OriginRow label="Lançado em" value={r.origin.createdAt ? `${formatDate(r.origin.createdAt)} · ${new Date(r.origin.createdAt).toTimeString().slice(0, 5)}` : "—"} />
+                        <OriginRow label="Data do movimento" value={r.date ? formatDate(r.date) : "—"} />
+                        {r.origin.reason && <OriginRow label="Motivo" value={r.origin.reason} />}
+                      </dl>
+                      {r.origin.docRoute && (
+                        <Link to={r.origin.docRoute} className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-[var(--gold)] hover:underline">
+                          <ExternalLink className="h-3.5 w-3.5" /> {r.origin.docLabel ?? "Documento"}
+                        </Link>
+                      )}
+                    </PopoverContent>
+                  </Popover>
+                </td>
+              </tr>
+            ))}
+            <tr className="border-t border-border/80 bg-muted/30 font-medium">
+              <td className="px-4 py-2.5 text-muted-foreground" colSpan={3}>{totalLabel}</td>
+              <td className="px-4 py-2.5 text-right tabular-nums text-foreground" colSpan={2}>{formatCurrency(total)}</td>
+            </tr>
+          </tbody>
+        </table>
+      )}
+    </div>
+  );
+}
+
+function OriginRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-start justify-between gap-3">
+      <dt className="text-muted-foreground">{label}</dt>
+      <dd className="text-right text-foreground break-words">{value}</dd>
+    </div>
+  );
+}
+
+function CalcKPI({ label, value, accent }: { label: string; value: number; accent: "positive" | "negative" | "muted" | "gold" }) {
+  return (
+    <div className="rounded-2xl border border-border bg-card/40 p-5">
+      <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">{label}</p>
+      <p className={cn(
+        "mt-3 font-serif text-xl tabular-nums",
+        accent === "positive" && "text-emerald-600",
+        accent === "negative" && "text-rose-600",
+        accent === "muted" && "text-foreground",
+        accent === "gold" && "text-[var(--gold)]",
+      )}>
+        {formatCurrency(value)}
+      </p>
+    </div>
+  );
+}
