@@ -482,40 +482,81 @@ function AgentDetail() {
         </TabsContent>
 
         <TabsContent value="statement">
-          {statement.lines.length === 0 ? (
-            <Empty title="Sem movimentações" subtitle="Adiantamentos e fechamentos aparecerão aqui automaticamente." />
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">Extrato cronológico</p>
+              <p className="mt-1 font-serif text-lg text-foreground">Conta Corrente do Agendista</p>
+            </div>
+            <Button variant="navy" size="sm" className="rounded-full" onClick={() => { setEditingAdv(null); setAdvOpen(true); }}>
+              <Plus className="mr-1.5 h-4 w-4" /> Novo adiantamento
+            </Button>
+          </div>
+          {movementsWithBalance.length === 0 ? (
+            <Empty title="Sem movimentações" subtitle="Adiantamentos, comissões e pagamentos aparecerão aqui automaticamente." />
           ) : (
             <div className="overflow-hidden rounded-2xl border border-border bg-card/40">
               <table className="w-full text-sm">
                 <thead className="bg-muted/40 text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
                   <tr>
                     <th className="px-4 py-3 text-left font-medium">Data</th>
-                    <th className="px-4 py-3 text-left font-medium">Descrição</th>
+                    <th className="px-4 py-3 text-left font-medium">Hora</th>
                     <th className="px-4 py-3 text-left font-medium">Tipo</th>
+                    <th className="px-4 py-3 text-left font-medium">Descrição</th>
                     <th className="px-4 py-3 text-right font-medium">Valor</th>
                     <th className="px-4 py-3 text-right font-medium">Saldo</th>
+                    <th className="px-4 py-3 text-right font-medium">Origem</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {(() => {
-                    // calcula saldo acumulado em ordem cronológica
-                    const asc = [...statement.lines].reverse();
-                    let running = 0;
-                    const withBalance = asc.map((l) => { running += l.amount; return { ...l, balance: running }; }).reverse();
-                    return withBalance.map((l) => (
-                      <tr key={l.id} className="border-t border-border/70">
-                        <td className="px-4 py-3 text-muted-foreground">{formatDate(l.date)}</td>
-                        <td className="px-4 py-3 text-foreground">{l.description}</td>
-                        <td className="px-4 py-3 text-muted-foreground capitalize">{l.kind === "share" ? "Lucro" : l.kind === "advance" ? "Adiantamento" : "Pagamento"}</td>
-                        <td className={cn("px-4 py-3 text-right tabular-nums", l.amount >= 0 ? "text-emerald-600" : "text-rose-600")}>
-                          {l.amount >= 0 ? "+" : "−"} {formatCurrency(Math.abs(l.amount))}
-                        </td>
-                        <td className="px-4 py-3 text-right tabular-nums text-foreground">{formatCurrency(l.balance)}</td>
-                      </tr>
-                    ));
-                  })()}
+                  {movementsWithBalance.map((m) => (
+                    <tr key={m.id} className="border-t border-border/70 hover:bg-muted/20">
+                      <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{formatDate(m.date)}</td>
+                      <td className="px-4 py-3 text-muted-foreground tabular-nums">{m.time ?? "—"}</td>
+                      <td className="px-4 py-3">
+                        <Badge variant="outline" className="font-normal">{m.type}</Badge>
+                      </td>
+                      <td className="px-4 py-3 text-foreground">{m.description}</td>
+                      <td className={cn("px-4 py-3 text-right tabular-nums", m.amount >= 0 ? "text-emerald-600" : "text-rose-600")}>
+                        {m.amount >= 0 ? "+" : "−"} {formatCurrency(Math.abs(m.amount))}
+                      </td>
+                      <td className={cn("px-4 py-3 text-right tabular-nums", m.balance >= 0 ? "text-foreground" : "text-rose-600")}>
+                        {formatCurrency(m.balance)}
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button variant="ghost" size="sm" className="h-7 rounded-full text-xs">
+                              <Info className="mr-1 h-3.5 w-3.5" /> Ver Origem
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent align="end" className="w-80 text-xs">
+                            <p className="mb-2 text-[10px] uppercase tracking-[0.22em] text-muted-foreground">Origem do movimento</p>
+                            <dl className="space-y-1.5">
+                              <Row label="Lançado por" value={actorName(m.origin.actorId)} />
+                              <Row label="Lançado em" value={m.origin.createdAt ? formatDate(m.origin.createdAt) + " · " + new Date(m.origin.createdAt).toTimeString().slice(0, 5) : "—"} />
+                              <Row label="Tipo" value={m.type} />
+                              {m.origin.reason && <Row label="Motivo" value={m.origin.reason} />}
+                              {m.origin.extra?.map((x) => (<Row key={x.label} label={x.label} value={x.value} />))}
+                            </dl>
+                            {m.origin.docRoute && (
+                              <Link to={m.origin.docRoute} className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-[var(--gold)] hover:underline">
+                                <ExternalLink className="h-3.5 w-3.5" /> {m.origin.docLabel ?? "Documento relacionado"}
+                              </Link>
+                            )}
+                          </PopoverContent>
+                        </Popover>
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
+              <p className="border-t border-border/60 bg-muted/20 px-4 py-2 text-[11px] text-muted-foreground">
+                <ShieldCheck className="mr-1 inline h-3 w-3" /> Nenhum movimento é apagado. Alterações ficam registradas na aba Histórico.
+              </p>
+            </div>
+          )}
+        </TabsContent>
+
             </div>
           )}
         </TabsContent>
