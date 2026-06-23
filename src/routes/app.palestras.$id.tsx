@@ -353,6 +353,21 @@ function PalestraDetail() {
           )}
         </TabsContent>
 
+        <TabsContent value="fechamento" className="space-y-4">
+          {organizationId && user && (
+            <FechamentoFinanceiroTab
+              lectureId={id}
+              organizationId={organizationId}
+              userId={user.id}
+              grossRevenueDefault={Number(l.gross_revenue ?? 0)}
+              agentId={agent?.id ?? null}
+              seasonId={season?.id ?? null}
+            />
+          )}
+        </TabsContent>
+
+
+
         <TabsContent value="estoque" className="space-y-4">
           {(stock.data ?? []).length === 0 ? (
             <Empty title="Sem movimentações de estoque" subtitle="Reservas, consumos e baixas vinculadas à palestra aparecem aqui." />
