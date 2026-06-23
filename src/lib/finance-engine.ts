@@ -35,9 +35,24 @@ export type CalcLine = {
   hint?: string;
 };
 
+export type ExpenseBucket = "tax" | "cost" | "stock" | "expense";
+export const BUCKET_LABEL: Record<ExpenseBucket, string> = {
+  tax: "Taxas",
+  cost: "Custos",
+  stock: "Estoque",
+  expense: "Despesas",
+};
+
+export type LectureExpenseInput = {
+  description: string | null;
+  amount: number;
+  date?: string | null;
+  bucket?: ExpenseBucket; // default: "expense"
+};
+
 export type LectureCalcInput = {
   grossRevenue: number;
-  expenses: { description: string | null; amount: number; date?: string | null }[];
+  expenses: LectureExpenseInput[];
   advances: { id: string; amount: number; granted_on?: string | null; source?: string | null }[];
   rule: RuleSnapshot;
 };
@@ -48,6 +63,10 @@ export type LectureCalcResult = {
   totals: {
     grossRevenue: number;
     fee: number;
+    totalTaxes: number;
+    totalCosts: number;
+    totalStock: number;
+    totalOtherExpenses: number;
     totalExpenses: number;
     totalAdvances: number;
     netProfit: number;
@@ -60,8 +79,21 @@ export type LectureCalcResult = {
 export function calculateLecture(input: LectureCalcInput): LectureCalcResult {
   const { grossRevenue, expenses, advances, rule } = input;
 
-  const totalExpenses = expenses.reduce((s, e) => s + Number(e.amount || 0), 0);
-  const totalAdvances = advances.reduce((s, a) => s + Number(a.amount || 0), 0);
+  const byBucket: Record<ExpenseBucket, LectureExpenseInput[]> = {
+    tax: [], cost: [], stock: [], expense: [],
+  };
+  for (const e of expenses) {
+    byBucket[e.bucket ?? "expense"].push(e);
+  }
+  const sumBucket = (b: ExpenseBucket) =>
+    round(byBucket[b].reduce((s, e) => s + Math.abs(Number(e.amount || 0)), 0));
+
+  const totalTaxes = sumBucket("tax");
+  const totalCosts = sumBucket("cost");
+  const totalStock = sumBucket("stock");
+  const totalOtherExpenses = sumBucket("expense");
+  const totalExpenses = round(totalTaxes + totalCosts + totalStock + totalOtherExpenses);
+  const totalAdvances = round(advances.reduce((s, a) => s + Number(a.amount || 0), 0));
   const fee = round(grossRevenue * (rule.fee_percent || 0) + (rule.fee_fixed || 0));
   const netProfit = round(grossRevenue - fee - totalExpenses - totalAdvances);
   const gustavoAmount = round(netProfit * (rule.gustavo_share || 0));
@@ -69,23 +101,27 @@ export function calculateLecture(input: LectureCalcInput): LectureCalcResult {
 
   const lines: CalcLine[] = [
     { label: "Receita bruta", amount: grossRevenue, kind: "in" },
-    {
-      label: `Taxa (${pct(rule.fee_percent)}${rule.fee_fixed ? ` + ${money(rule.fee_fixed)}` : ""})`,
-      amount: -fee,
-      kind: "out",
-    },
-    ...expenses.map<CalcLine>((e) => ({
-      label: e.description || "Despesa",
-      amount: -Math.abs(Number(e.amount || 0)),
-      kind: "out",
-      hint: e.date ?? undefined,
-    })),
-    ...advances.map<CalcLine>((a) => ({
-      label: `Adiantamento${a.source ? ` · ${a.source}` : ""}`,
-      amount: -Math.abs(Number(a.amount || 0)),
-      kind: "out",
-      hint: a.granted_on ?? undefined,
-    })),
+    ...(fee
+      ? [{
+          label: `Taxa de regra (${pct(rule.fee_percent)}${rule.fee_fixed ? ` + ${money(rule.fee_fixed)}` : ""})`,
+          amount: -fee, kind: "out" as const,
+        }]
+      : []),
+    ...bucketLines("tax", byBucket.tax, totalTaxes),
+    ...bucketLines("cost", byBucket.cost, totalCosts),
+    ...bucketLines("stock", byBucket.stock, totalStock),
+    ...bucketLines("expense", byBucket.expense, totalOtherExpenses),
+    ...(advances.length
+      ? [
+          ...advances.map<CalcLine>((a) => ({
+            label: `Adiantamento${a.source ? ` · ${a.source}` : ""}`,
+            amount: -Math.abs(Number(a.amount || 0)),
+            kind: "out",
+            hint: a.granted_on ?? undefined,
+          })),
+          { label: "Subtotal adiantamentos", amount: -totalAdvances, kind: "subtotal" },
+        ]
+      : []),
     { label: "Lucro líquido", amount: netProfit, kind: "subtotal" },
     { label: `Gustavo (${pct(rule.gustavo_share)})`, amount: gustavoAmount, kind: "split" },
     { label: `Agendista (${pct(rule.agent_share)})`, amount: agentAmount, kind: "split" },
@@ -94,9 +130,26 @@ export function calculateLecture(input: LectureCalcInput): LectureCalcResult {
   return {
     rule,
     lines,
-    totals: { grossRevenue, fee, totalExpenses, totalAdvances, netProfit, gustavoAmount, agentAmount },
+    totals: {
+      grossRevenue, fee,
+      totalTaxes, totalCosts, totalStock, totalOtherExpenses,
+      totalExpenses, totalAdvances, netProfit, gustavoAmount, agentAmount,
+    },
   };
 }
+
+function bucketLines(bucket: ExpenseBucket, items: LectureExpenseInput[], subtotal: number): CalcLine[] {
+  if (items.length === 0) return [];
+  const rows: CalcLine[] = items.map((e) => ({
+    label: e.description || BUCKET_LABEL[bucket],
+    amount: -Math.abs(Number(e.amount || 0)),
+    kind: "out",
+    hint: e.date ?? undefined,
+  }));
+  rows.push({ label: `Subtotal ${BUCKET_LABEL[bucket]}`, amount: -subtotal, kind: "subtotal" });
+  return rows;
+}
+
 
 /** Conta corrente do agendista — derivada de snapshots e adiantamentos. */
 export type AgentStatementInput = {
