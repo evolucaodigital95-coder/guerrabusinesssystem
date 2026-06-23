@@ -428,8 +428,8 @@ function AgentDetail() {
         }
       />
 
-      {/* Resumo de conta corrente */}
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      {/* Resumo de conta corrente — estilo extrato bancário */}
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         <BalanceCard
           label="Saldo Atual"
           value={statement.totals.balance}
@@ -437,20 +437,23 @@ function AgentDetail() {
           breakdown={
             <CalcBreakdown
               title="Saldo do agendista"
-              subtitle="Lucros − Adiantamentos − Pagamentos"
+              subtitle="Créditos − Débitos"
               lines={[
-                { label: "Lucros (splits)", amount: statement.totals.earned, kind: "in" },
-                { label: "Adiantamentos entregues", amount: -statement.totals.advancesTotal, kind: "out" },
-                { label: "Pagamentos efetuados", amount: -statement.totals.payoutsTotal, kind: "out" },
+                { label: "Comissões (lucros)", amount: totals.commissions, kind: "in" },
+                { label: "Adiantamentos entregues", amount: -totals.advances, kind: "out" },
+                { label: "Pagamentos efetuados", amount: -totals.payments, kind: "out" },
                 { label: "Saldo", amount: statement.totals.balance, kind: "subtotal" },
               ]}
             />
           }
         />
-        <BalanceCard label="Entradas (lucro)" value={statement.totals.earned} accent="positive" />
-        <BalanceCard label="Adiantamentos abertos" value={statement.totals.advancesOpen} accent="muted" />
-        <BalanceCard label="Pagamentos efetuados" value={statement.totals.payoutsTotal} accent="muted" />
+        <BalanceCard label="Créditos" value={totals.credits} accent="positive" />
+        <BalanceCard label="Débitos" value={totals.debits} accent="negative" />
+        <BalanceCard label="Adiantamentos" value={totals.advances} accent="muted" />
+        <BalanceCard label="Comissões" value={totals.commissions} accent="muted" />
+        <BalanceCard label="Pagamentos realizados" value={totals.payments} accent="muted" />
       </div>
+
 
       <Tabs defaultValue="overview" className="space-y-6">
         <TabsList className="bg-card/40">
