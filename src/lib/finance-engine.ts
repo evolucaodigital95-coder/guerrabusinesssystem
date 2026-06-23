@@ -100,32 +100,37 @@ export function calculateLecture(input: LectureCalcInput): LectureCalcResult {
   const agentAmount = round(netProfit * (rule.agent_share || 0));
 
   const lines: CalcLine[] = [
-    { label: "Receita bruta", amount: grossRevenue, kind: "in" },
-    ...(fee
-      ? [{
-          label: `Taxa de regra (${pct(rule.fee_percent)}${rule.fee_fixed ? ` + ${money(rule.fee_fixed)}` : ""})`,
-          amount: -fee, kind: "out" as const,
-        }]
-      : []),
+    { label: "Receita bruta", amount: grossRevenue, kind: "in" as const },
+  ];
+  if (fee) {
+    lines.push({
+      label: `Taxa de regra (${pct(rule.fee_percent)}${rule.fee_fixed ? ` + ${money(rule.fee_fixed)}` : ""})`,
+      amount: -fee, kind: "out" as const,
+    });
+  }
+  lines.push(
     ...bucketLines("tax", byBucket.tax, totalTaxes),
     ...bucketLines("cost", byBucket.cost, totalCosts),
     ...bucketLines("stock", byBucket.stock, totalStock),
     ...bucketLines("expense", byBucket.expense, totalOtherExpenses),
-    ...(advances.length
-      ? [
-          ...advances.map<CalcLine>((a) => ({
-            label: `Adiantamento${a.source ? ` · ${a.source}` : ""}`,
-            amount: -Math.abs(Number(a.amount || 0)),
-            kind: "out",
-            hint: a.granted_on ?? undefined,
-          })),
-          { label: "Subtotal adiantamentos", amount: -totalAdvances, kind: "subtotal" },
-        ]
-      : []),
-    { label: "Lucro líquido", amount: netProfit, kind: "subtotal" },
-    { label: `Gustavo (${pct(rule.gustavo_share)})`, amount: gustavoAmount, kind: "split" },
-    { label: `Agendista (${pct(rule.agent_share)})`, amount: agentAmount, kind: "split" },
-  ];
+  );
+  if (advances.length) {
+    for (const a of advances) {
+      lines.push({
+        label: `Adiantamento${a.source ? ` · ${a.source}` : ""}`,
+        amount: -Math.abs(Number(a.amount || 0)),
+        kind: "out" as const,
+        hint: a.granted_on ?? undefined,
+      });
+    }
+    lines.push({ label: "Subtotal adiantamentos", amount: -totalAdvances, kind: "subtotal" as const });
+  }
+  lines.push(
+    { label: "Lucro líquido", amount: netProfit, kind: "subtotal" as const },
+    { label: `Gustavo (${pct(rule.gustavo_share)})`, amount: gustavoAmount, kind: "split" as const },
+    { label: `Agendista (${pct(rule.agent_share)})`, amount: agentAmount, kind: "split" as const },
+  );
+
 
   return {
     rule,
