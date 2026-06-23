@@ -169,6 +169,134 @@ function AgentDetail() {
     });
   }, [snapshots.data, advances.data, payouts.data]);
 
+  // Resolve actor names for "Ver Origem"
+  const actorIds = useMemo(() => {
+    const s = new Set<string>();
+    (advances.data ?? []).forEach((a) => { if (a.created_by) s.add(a.created_by); if (a.updated_by) s.add(a.updated_by); });
+    (snapshots.data ?? []).forEach((x) => { if (x.closed_by) s.add(x.closed_by); });
+    (payouts.data ?? []).forEach((p) => { if (p.created_by) s.add(p.created_by); });
+    return Array.from(s);
+  }, [advances.data, snapshots.data, payouts.data]);
+
+  const profilesMap = useQuery({
+    queryKey: ["profiles-by-ids", actorIds.join(",")],
+    enabled: actorIds.length > 0,
+    queryFn: async () => {
+      const { data, error } = await supabase.from("profiles").select("id, full_name, email").in("id", actorIds);
+      if (error) throw error;
+      const m = new Map<string, { full_name: string | null; email: string | null }>();
+      (data ?? []).forEach((p) => m.set(p.id, { full_name: p.full_name, email: p.email }));
+      return m;
+    },
+  });
+  const actorName = (uid: string | null | undefined) => {
+    if (!uid) return "Sistema";
+    const p = profilesMap.data?.get(uid);
+    return p?.full_name || p?.email || "Usuário";
+  };
+
+  // Extrato rico estilo bancário (cronológico, com hora e origem)
+  type Movement = {
+    id: string;
+    date: string | null;     // ISO date
+    time: string | null;     // HH:MM
+    type: "Adiantamento" | "Comissão" | "Pagamento" | "Ajuste" | "Estorno";
+    description: string;
+    amount: number;          // signed
+    origin: {
+      actorId: string | null;
+      createdAt: string | null;
+      reason: string | null;
+      docRoute?: string;
+      docLabel?: string;
+      extra?: { label: string; value: string }[];
+    };
+  };
+  const movements: Movement[] = useMemo(() => {
+    const out: Movement[] = [];
+    (advances.data ?? []).forEach((a) => {
+      out.push({
+        id: `adv-${a.id}`,
+        date: a.granted_on,
+        time: a.granted_time ? String(a.granted_time).slice(0, 5) : (a.created_at ? new Date(a.created_at).toTimeString().slice(0, 5) : null),
+        type: "Adiantamento",
+        description: `Adiantamento${a.source ? ` · ${a.source}` : ""}${a.paid_by_label ? ` · ${a.paid_by_label}` : ""}`,
+        amount: -Math.abs(Number(a.amount ?? 0)),
+        origin: {
+          actorId: a.created_by ?? a.updated_by ?? null,
+          createdAt: a.created_at ?? null,
+          reason: a.notes ?? null,
+          docRoute: a.lecture_id ? `/app/palestras/${a.lecture_id}` : undefined,
+          docLabel: a.lecture_id ? "Palestra vinculada" : undefined,
+          extra: [
+            ...(a.source ? [{ label: "Origem", value: String(a.source) }] : []),
+            ...(a.receipt_url ? [{ label: "Comprovante", value: a.receipt_url }] : []),
+            { label: "Status", value: advanceStatusLabel(a.status) },
+          ],
+        },
+      });
+    });
+    (snapshots.data ?? []).forEach((s) => {
+      const lec = s.lectures as { id?: string; title?: string } | null;
+      out.push({
+        id: `share-${s.id}`,
+        date: s.closed_at ? s.closed_at.slice(0, 10) : null,
+        time: s.closed_at ? new Date(s.closed_at).toTimeString().slice(0, 5) : null,
+        type: "Comissão",
+        description: `Comissão · ${lec?.title ?? "Palestra"}`,
+        amount: Math.abs(Number(s.agent_amount ?? 0)),
+        origin: {
+          actorId: s.closed_by ?? null,
+          createdAt: s.closed_at ?? null,
+          reason: `Fechamento financeiro da palestra · receita ${formatCurrency(Number(s.gross_revenue ?? 0))}`,
+          docRoute: lec?.id ? `/app/palestras/${lec.id}` : undefined,
+          docLabel: lec?.id ? "Abrir palestra" : undefined,
+        },
+      });
+    });
+    (payouts.data ?? []).forEach((p) => {
+      out.push({
+        id: `pay-${p.id}`,
+        date: p.occurs_on,
+        time: p.created_at ? new Date(p.created_at).toTimeString().slice(0, 5) : null,
+        type: "Pagamento",
+        description: p.description ?? "Pagamento ao agendista",
+        amount: -Math.abs(Number(p.amount ?? 0)),
+        origin: {
+          actorId: p.created_by ?? null,
+          createdAt: p.created_at ?? null,
+          reason: p.notes ?? null,
+          docRoute: p.lecture_id ? `/app/palestras/${p.lecture_id}` : `/app/financeiro`,
+          docLabel: p.lecture_id ? "Palestra vinculada" : "Abrir financeiro",
+        },
+      });
+    });
+    // ordem cronológica desc
+    out.sort((a, b) => {
+      const da = a.date ? new Date(`${a.date}T${a.time ?? "00:00"}:00`).getTime() : 0;
+      const db = b.date ? new Date(`${b.date}T${b.time ?? "00:00"}:00`).getTime() : 0;
+      return db - da;
+    });
+    return out;
+  }, [advances.data, snapshots.data, payouts.data]);
+
+  const movementsWithBalance = useMemo(() => {
+    const asc = [...movements].reverse();
+    let running = 0;
+    const withBal = asc.map((m) => { running += m.amount; return { ...m, balance: running }; });
+    return withBal.reverse();
+  }, [movements]);
+
+  const totals = useMemo(() => {
+    const credits = movements.filter((m) => m.amount > 0).reduce((s, m) => s + m.amount, 0);
+    const debits = movements.filter((m) => m.amount < 0).reduce((s, m) => s + Math.abs(m.amount), 0);
+    const advancesSum = movements.filter((m) => m.type === "Adiantamento").reduce((s, m) => s + Math.abs(m.amount), 0);
+    const commissionsSum = movements.filter((m) => m.type === "Comissão").reduce((s, m) => s + m.amount, 0);
+    const paymentsSum = movements.filter((m) => m.type === "Pagamento").reduce((s, m) => s + Math.abs(m.amount), 0);
+    return { credits, debits, advances: advancesSum, commissions: commissionsSum, payments: paymentsSum };
+  }, [movements]);
+
+
   const activeRule: RuleSnapshot = useMemo(() => selectRule({
     rules: (rules.data ?? []) as unknown as Parameters<typeof selectRule>[0]["rules"],
     agentId: id,
