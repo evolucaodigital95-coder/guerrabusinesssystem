@@ -30,7 +30,11 @@ import { LectureFormDialog, type LectureRow } from "@/components/palestras/lectu
 import { AttachmentsTab } from "@/components/crm/attachments-tab";
 import { NotesTab } from "@/components/shared/notes-tab";
 import { ArchiveButton } from "@/components/shared/archive-button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { CalcBreakdown } from "@/components/finance/calc-breakdown";
+import { calculateLecture, selectRule, BUCKET_LABEL, type RuleSnapshot, type ExpenseBucket, type LectureExpenseInput } from "@/lib/finance-engine";
 import { cn } from "@/lib/utils";
+
 
 export const Route = createFileRoute("/app/palestras/$id")({
   head: () => ({
