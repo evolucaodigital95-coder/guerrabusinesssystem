@@ -2,7 +2,8 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ArrowLeft, Pencil, Plus, Calculator, ShieldCheck, FileText, History as HistoryIcon } from "lucide-react";
+import { ArrowLeft, Pencil, Plus, Calculator, ShieldCheck, FileText, History as HistoryIcon, Info, ExternalLink } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -68,7 +69,7 @@ function AgentDetail() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("advances")
-        .select("id, amount, amount_amortized, granted_on, granted_time, source, paid_by_label, receipt_url, status, lecture_id, notes, created_at")
+        .select("id, amount, amount_amortized, granted_on, granted_time, source, paid_by_label, receipt_url, status, lecture_id, notes, created_at, created_by, updated_at, updated_by")
         .eq("agent_id", id).is("archived_at", null)
         .order("granted_on", { ascending: false, nullsFirst: false });
       if (error) throw error;
@@ -82,7 +83,7 @@ function AgentDetail() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("lecture_financial_snapshots")
-        .select("id, lecture_id, agent_amount, gustavo_amount, net_profit, gross_revenue, total_expenses, total_advances, rule_snapshot, inputs, breakdown, closed_at, lectures:lecture_id ( id, title, scheduled_at )")
+        .select("id, lecture_id, agent_amount, gustavo_amount, net_profit, gross_revenue, total_expenses, total_advances, rule_snapshot, inputs, breakdown, closed_at, closed_by, lectures:lecture_id ( id, title, scheduled_at )")
         .eq("agent_id", id).is("archived_at", null)
         .order("closed_at", { ascending: false });
       if (error) throw error;
@@ -97,13 +98,14 @@ function AgentDetail() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("financial_movements")
-        .select("id, amount, occurs_on, description, status, direction")
+        .select("id, amount, occurs_on, description, status, direction, notes, lecture_id, created_at, created_by")
         .eq("agent_id", id).eq("direction", "out").in("status", ["paga", "parcial"])
         .is("archived_at", null);
       if (error) throw error;
       return data ?? [];
     },
   });
+
 
   const lectures = useQuery({
     queryKey: ["agent-lectures", id, organizationId],
@@ -166,6 +168,134 @@ function AgentDetail() {
       })),
     });
   }, [snapshots.data, advances.data, payouts.data]);
+
+  // Resolve actor names for "Ver Origem"
+  const actorIds = useMemo(() => {
+    const s = new Set<string>();
+    (advances.data ?? []).forEach((a) => { if (a.created_by) s.add(a.created_by); if (a.updated_by) s.add(a.updated_by); });
+    (snapshots.data ?? []).forEach((x) => { if (x.closed_by) s.add(x.closed_by); });
+    (payouts.data ?? []).forEach((p) => { if (p.created_by) s.add(p.created_by); });
+    return Array.from(s);
+  }, [advances.data, snapshots.data, payouts.data]);
+
+  const profilesMap = useQuery({
+    queryKey: ["profiles-by-ids", actorIds.join(",")],
+    enabled: actorIds.length > 0,
+    queryFn: async () => {
+      const { data, error } = await supabase.from("profiles").select("id, full_name, email").in("id", actorIds);
+      if (error) throw error;
+      const m = new Map<string, { full_name: string | null; email: string | null }>();
+      (data ?? []).forEach((p) => m.set(p.id, { full_name: p.full_name, email: p.email }));
+      return m;
+    },
+  });
+  const actorName = (uid: string | null | undefined) => {
+    if (!uid) return "Sistema";
+    const p = profilesMap.data?.get(uid);
+    return p?.full_name || p?.email || "Usuário";
+  };
+
+  // Extrato rico estilo bancário (cronológico, com hora e origem)
+  type Movement = {
+    id: string;
+    date: string | null;     // ISO date
+    time: string | null;     // HH:MM
+    type: "Adiantamento" | "Comissão" | "Pagamento" | "Ajuste" | "Estorno";
+    description: string;
+    amount: number;          // signed
+    origin: {
+      actorId: string | null;
+      createdAt: string | null;
+      reason: string | null;
+      docRoute?: string;
+      docLabel?: string;
+      extra?: { label: string; value: string }[];
+    };
+  };
+  const movements: Movement[] = useMemo(() => {
+    const out: Movement[] = [];
+    (advances.data ?? []).forEach((a) => {
+      out.push({
+        id: `adv-${a.id}`,
+        date: a.granted_on,
+        time: a.granted_time ? String(a.granted_time).slice(0, 5) : (a.created_at ? new Date(a.created_at).toTimeString().slice(0, 5) : null),
+        type: "Adiantamento",
+        description: `Adiantamento${a.source ? ` · ${a.source}` : ""}${a.paid_by_label ? ` · ${a.paid_by_label}` : ""}`,
+        amount: -Math.abs(Number(a.amount ?? 0)),
+        origin: {
+          actorId: a.created_by ?? a.updated_by ?? null,
+          createdAt: a.created_at ?? null,
+          reason: a.notes ?? null,
+          docRoute: a.lecture_id ? `/app/palestras/${a.lecture_id}` : undefined,
+          docLabel: a.lecture_id ? "Palestra vinculada" : undefined,
+          extra: [
+            ...(a.source ? [{ label: "Origem", value: String(a.source) }] : []),
+            ...(a.receipt_url ? [{ label: "Comprovante", value: a.receipt_url }] : []),
+            { label: "Status", value: advanceStatusLabel(a.status) },
+          ],
+        },
+      });
+    });
+    (snapshots.data ?? []).forEach((s) => {
+      const lec = s.lectures as { id?: string; title?: string } | null;
+      out.push({
+        id: `share-${s.id}`,
+        date: s.closed_at ? s.closed_at.slice(0, 10) : null,
+        time: s.closed_at ? new Date(s.closed_at).toTimeString().slice(0, 5) : null,
+        type: "Comissão",
+        description: `Comissão · ${lec?.title ?? "Palestra"}`,
+        amount: Math.abs(Number(s.agent_amount ?? 0)),
+        origin: {
+          actorId: s.closed_by ?? null,
+          createdAt: s.closed_at ?? null,
+          reason: `Fechamento financeiro da palestra · receita ${formatCurrency(Number(s.gross_revenue ?? 0))}`,
+          docRoute: lec?.id ? `/app/palestras/${lec.id}` : undefined,
+          docLabel: lec?.id ? "Abrir palestra" : undefined,
+        },
+      });
+    });
+    (payouts.data ?? []).forEach((p) => {
+      out.push({
+        id: `pay-${p.id}`,
+        date: p.occurs_on,
+        time: p.created_at ? new Date(p.created_at).toTimeString().slice(0, 5) : null,
+        type: "Pagamento",
+        description: p.description ?? "Pagamento ao agendista",
+        amount: -Math.abs(Number(p.amount ?? 0)),
+        origin: {
+          actorId: p.created_by ?? null,
+          createdAt: p.created_at ?? null,
+          reason: p.notes ?? null,
+          docRoute: p.lecture_id ? `/app/palestras/${p.lecture_id}` : `/app/financeiro`,
+          docLabel: p.lecture_id ? "Palestra vinculada" : "Abrir financeiro",
+        },
+      });
+    });
+    // ordem cronológica desc
+    out.sort((a, b) => {
+      const da = a.date ? new Date(`${a.date}T${a.time ?? "00:00"}:00`).getTime() : 0;
+      const db = b.date ? new Date(`${b.date}T${b.time ?? "00:00"}:00`).getTime() : 0;
+      return db - da;
+    });
+    return out;
+  }, [advances.data, snapshots.data, payouts.data]);
+
+  const movementsWithBalance = useMemo(() => {
+    const asc = [...movements].reverse();
+    let running = 0;
+    const withBal = asc.map((m) => { running += m.amount; return { ...m, balance: running }; });
+    return withBal.reverse();
+  }, [movements]);
+
+  const totals = useMemo(() => {
+    const credits = movements.filter((m) => m.amount > 0).reduce((s, m) => s + m.amount, 0);
+    const debits = movements.filter((m) => m.amount < 0).reduce((s, m) => s + Math.abs(m.amount), 0);
+    const advancesSum = movements.filter((m) => m.type === "Adiantamento").reduce((s, m) => s + Math.abs(m.amount), 0);
+    const commissionsSum = movements.filter((m) => m.type === "Comissão").reduce((s, m) => s + m.amount, 0);
+    const paymentsSum = movements.filter((m) => m.type === "Pagamento").reduce((s, m) => s + Math.abs(m.amount), 0);
+    return { credits, debits, advances: advancesSum, commissions: commissionsSum, payments: paymentsSum };
+  }, [movements]);
+
 
   const activeRule: RuleSnapshot = useMemo(() => selectRule({
     rules: (rules.data ?? []) as unknown as Parameters<typeof selectRule>[0]["rules"],
@@ -298,8 +428,8 @@ function AgentDetail() {
         }
       />
 
-      {/* Resumo de conta corrente */}
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      {/* Resumo de conta corrente — estilo extrato bancário */}
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         <BalanceCard
           label="Saldo Atual"
           value={statement.totals.balance}
@@ -307,25 +437,28 @@ function AgentDetail() {
           breakdown={
             <CalcBreakdown
               title="Saldo do agendista"
-              subtitle="Lucros − Adiantamentos − Pagamentos"
+              subtitle="Créditos − Débitos"
               lines={[
-                { label: "Lucros (splits)", amount: statement.totals.earned, kind: "in" },
-                { label: "Adiantamentos entregues", amount: -statement.totals.advancesTotal, kind: "out" },
-                { label: "Pagamentos efetuados", amount: -statement.totals.payoutsTotal, kind: "out" },
+                { label: "Comissões (lucros)", amount: totals.commissions, kind: "in" },
+                { label: "Adiantamentos entregues", amount: -totals.advances, kind: "out" },
+                { label: "Pagamentos efetuados", amount: -totals.payments, kind: "out" },
                 { label: "Saldo", amount: statement.totals.balance, kind: "subtotal" },
               ]}
             />
           }
         />
-        <BalanceCard label="Entradas (lucro)" value={statement.totals.earned} accent="positive" />
-        <BalanceCard label="Adiantamentos abertos" value={statement.totals.advancesOpen} accent="muted" />
-        <BalanceCard label="Pagamentos efetuados" value={statement.totals.payoutsTotal} accent="muted" />
+        <BalanceCard label="Créditos" value={totals.credits} accent="positive" />
+        <BalanceCard label="Débitos" value={totals.debits} accent="negative" />
+        <BalanceCard label="Adiantamentos" value={totals.advances} accent="muted" />
+        <BalanceCard label="Comissões" value={totals.commissions} accent="muted" />
+        <BalanceCard label="Pagamentos realizados" value={totals.payments} accent="muted" />
       </div>
+
 
       <Tabs defaultValue="overview" className="space-y-6">
         <TabsList className="bg-card/40">
           <TabsTrigger value="overview">Dados</TabsTrigger>
-          <TabsTrigger value="statement">Conta corrente</TabsTrigger>
+          <TabsTrigger value="statement">Conta Corrente</TabsTrigger>
           <TabsTrigger value="advances">Adiantamentos</TabsTrigger>
           <TabsTrigger value="lectures">Palestras</TabsTrigger>
           <TabsTrigger value="companies">Empresas</TabsTrigger>
@@ -349,43 +482,82 @@ function AgentDetail() {
         </TabsContent>
 
         <TabsContent value="statement">
-          {statement.lines.length === 0 ? (
-            <Empty title="Sem movimentações" subtitle="Adiantamentos e fechamentos aparecerão aqui automaticamente." />
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">Extrato cronológico</p>
+              <p className="mt-1 font-serif text-lg text-foreground">Conta Corrente do Agendista</p>
+            </div>
+            <Button variant="navy" size="sm" className="rounded-full" onClick={() => { setEditingAdv(null); setAdvOpen(true); }}>
+              <Plus className="mr-1.5 h-4 w-4" /> Novo adiantamento
+            </Button>
+          </div>
+          {movementsWithBalance.length === 0 ? (
+            <Empty title="Sem movimentações" subtitle="Adiantamentos, comissões e pagamentos aparecerão aqui automaticamente." />
           ) : (
             <div className="overflow-hidden rounded-2xl border border-border bg-card/40">
               <table className="w-full text-sm">
                 <thead className="bg-muted/40 text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
                   <tr>
                     <th className="px-4 py-3 text-left font-medium">Data</th>
-                    <th className="px-4 py-3 text-left font-medium">Descrição</th>
+                    <th className="px-4 py-3 text-left font-medium">Hora</th>
                     <th className="px-4 py-3 text-left font-medium">Tipo</th>
+                    <th className="px-4 py-3 text-left font-medium">Descrição</th>
                     <th className="px-4 py-3 text-right font-medium">Valor</th>
                     <th className="px-4 py-3 text-right font-medium">Saldo</th>
+                    <th className="px-4 py-3 text-right font-medium">Origem</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {(() => {
-                    // calcula saldo acumulado em ordem cronológica
-                    const asc = [...statement.lines].reverse();
-                    let running = 0;
-                    const withBalance = asc.map((l) => { running += l.amount; return { ...l, balance: running }; }).reverse();
-                    return withBalance.map((l) => (
-                      <tr key={l.id} className="border-t border-border/70">
-                        <td className="px-4 py-3 text-muted-foreground">{formatDate(l.date)}</td>
-                        <td className="px-4 py-3 text-foreground">{l.description}</td>
-                        <td className="px-4 py-3 text-muted-foreground capitalize">{l.kind === "share" ? "Lucro" : l.kind === "advance" ? "Adiantamento" : "Pagamento"}</td>
-                        <td className={cn("px-4 py-3 text-right tabular-nums", l.amount >= 0 ? "text-emerald-600" : "text-rose-600")}>
-                          {l.amount >= 0 ? "+" : "−"} {formatCurrency(Math.abs(l.amount))}
-                        </td>
-                        <td className="px-4 py-3 text-right tabular-nums text-foreground">{formatCurrency(l.balance)}</td>
-                      </tr>
-                    ));
-                  })()}
+                  {movementsWithBalance.map((m) => (
+                    <tr key={m.id} className="border-t border-border/70 hover:bg-muted/20">
+                      <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{formatDate(m.date)}</td>
+                      <td className="px-4 py-3 text-muted-foreground tabular-nums">{m.time ?? "—"}</td>
+                      <td className="px-4 py-3">
+                        <Badge variant="outline" className="font-normal">{m.type}</Badge>
+                      </td>
+                      <td className="px-4 py-3 text-foreground">{m.description}</td>
+                      <td className={cn("px-4 py-3 text-right tabular-nums", m.amount >= 0 ? "text-emerald-600" : "text-rose-600")}>
+                        {m.amount >= 0 ? "+" : "−"} {formatCurrency(Math.abs(m.amount))}
+                      </td>
+                      <td className={cn("px-4 py-3 text-right tabular-nums", m.balance >= 0 ? "text-foreground" : "text-rose-600")}>
+                        {formatCurrency(m.balance)}
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button variant="ghost" size="sm" className="h-7 rounded-full text-xs">
+                              <Info className="mr-1 h-3.5 w-3.5" /> Ver Origem
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent align="end" className="w-80 text-xs">
+                            <p className="mb-2 text-[10px] uppercase tracking-[0.22em] text-muted-foreground">Origem do movimento</p>
+                            <dl className="space-y-1.5">
+                              <Row label="Lançado por" value={actorName(m.origin.actorId)} />
+                              <Row label="Lançado em" value={m.origin.createdAt ? formatDate(m.origin.createdAt) + " · " + new Date(m.origin.createdAt).toTimeString().slice(0, 5) : "—"} />
+                              <Row label="Tipo" value={m.type} />
+                              {m.origin.reason && <Row label="Motivo" value={m.origin.reason} />}
+                              {m.origin.extra?.map((x) => (<Row key={x.label} label={x.label} value={x.value} />))}
+                            </dl>
+                            {m.origin.docRoute && (
+                              <Link to={m.origin.docRoute} className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-[var(--gold)] hover:underline">
+                                <ExternalLink className="h-3.5 w-3.5" /> {m.origin.docLabel ?? "Documento relacionado"}
+                              </Link>
+                            )}
+                          </PopoverContent>
+                        </Popover>
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
+              <p className="border-t border-border/60 bg-muted/20 px-4 py-2 text-[11px] text-muted-foreground">
+                <ShieldCheck className="mr-1 inline h-3 w-3" /> Nenhum movimento é apagado. Alterações ficam registradas na aba Histórico.
+              </p>
             </div>
           )}
         </TabsContent>
+
+
 
         <TabsContent value="advances" className="space-y-4">
           <div className="flex justify-end">
@@ -689,7 +861,22 @@ function InfoCard({ label, value }: { label: string; value: React.ReactNode }) {
   );
 }
 
+function Row({ label, value }: { label: string; value: string }) {
+  const isUrl = /^https?:\/\//i.test(value);
+  return (
+    <div className="flex items-start justify-between gap-3">
+      <dt className="text-muted-foreground">{label}</dt>
+      <dd className="text-right text-foreground break-words">
+        {isUrl ? (
+          <a href={value} target="_blank" rel="noreferrer" className="text-[var(--gold)] hover:underline">abrir</a>
+        ) : value}
+      </dd>
+    </div>
+  );
+}
+
 function Empty({ title, subtitle }: { title: string; subtitle: string }) {
+
   return (
     <div className="rounded-3xl border border-dashed border-border bg-card/30 px-8 py-12 text-center">
       <h3 className="font-serif text-xl text-foreground">{title}</h3>
