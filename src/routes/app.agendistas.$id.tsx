@@ -69,7 +69,7 @@ function AgentDetail() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("advances")
-        .select("id, amount, amount_amortized, granted_on, granted_time, source, paid_by_label, receipt_url, status, lecture_id, notes, created_at")
+        .select("id, amount, amount_amortized, granted_on, granted_time, source, paid_by_label, receipt_url, status, lecture_id, notes, created_at, created_by, updated_at, updated_by")
         .eq("agent_id", id).is("archived_at", null)
         .order("granted_on", { ascending: false, nullsFirst: false });
       if (error) throw error;
@@ -83,7 +83,7 @@ function AgentDetail() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("lecture_financial_snapshots")
-        .select("id, lecture_id, agent_amount, gustavo_amount, net_profit, gross_revenue, total_expenses, total_advances, rule_snapshot, inputs, breakdown, closed_at, lectures:lecture_id ( id, title, scheduled_at )")
+        .select("id, lecture_id, agent_amount, gustavo_amount, net_profit, gross_revenue, total_expenses, total_advances, rule_snapshot, inputs, breakdown, closed_at, closed_by, lectures:lecture_id ( id, title, scheduled_at )")
         .eq("agent_id", id).is("archived_at", null)
         .order("closed_at", { ascending: false });
       if (error) throw error;
@@ -98,13 +98,14 @@ function AgentDetail() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("financial_movements")
-        .select("id, amount, occurs_on, description, status, direction")
+        .select("id, amount, occurs_on, description, status, direction, notes, lecture_id, created_at, created_by")
         .eq("agent_id", id).eq("direction", "out").in("status", ["paga", "parcial"])
         .is("archived_at", null);
       if (error) throw error;
       return data ?? [];
     },
   });
+
 
   const lectures = useQuery({
     queryKey: ["agent-lectures", id, organizationId],
