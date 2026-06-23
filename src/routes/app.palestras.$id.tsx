@@ -250,6 +250,8 @@ function PalestraDetail() {
           <TabsTrigger value="overview">Visão geral</TabsTrigger>
           <TabsTrigger value="timeline">Timeline</TabsTrigger>
           <TabsTrigger value="financeiro"><Wallet className="mr-1.5 h-3.5 w-3.5" />Financeiro</TabsTrigger>
+          <TabsTrigger value="fechamento"><Calculator className="mr-1.5 h-3.5 w-3.5" />Fechamento Financeiro</TabsTrigger>
+
           <TabsTrigger value="estoque"><Package className="mr-1.5 h-3.5 w-3.5" />Estoque</TabsTrigger>
           <TabsTrigger value="impacto">Pessoas impactadas</TabsTrigger>
           <TabsTrigger value="notas">Notas</TabsTrigger>
