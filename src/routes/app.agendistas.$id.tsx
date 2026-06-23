@@ -861,7 +861,22 @@ function InfoCard({ label, value }: { label: string; value: React.ReactNode }) {
   );
 }
 
+function Row({ label, value }: { label: string; value: string }) {
+  const isUrl = /^https?:\/\//i.test(value);
+  return (
+    <div className="flex items-start justify-between gap-3">
+      <dt className="text-muted-foreground">{label}</dt>
+      <dd className="text-right text-foreground break-words">
+        {isUrl ? (
+          <a href={value} target="_blank" rel="noreferrer" className="text-[var(--gold)] hover:underline">abrir</a>
+        ) : value}
+      </dd>
+    </div>
+  );
+}
+
 function Empty({ title, subtitle }: { title: string; subtitle: string }) {
+
   return (
     <div className="rounded-3xl border border-dashed border-border bg-card/30 px-8 py-12 text-center">
       <h3 className="font-serif text-xl text-foreground">{title}</h3>
