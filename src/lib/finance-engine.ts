@@ -143,12 +143,13 @@ function bucketLines(bucket: ExpenseBucket, items: LectureExpenseInput[], subtot
   const rows: CalcLine[] = items.map((e) => ({
     label: e.description || BUCKET_LABEL[bucket],
     amount: -Math.abs(Number(e.amount || 0)),
-    kind: "out",
+    kind: "out" as const,
     hint: e.date ?? undefined,
   }));
-  rows.push({ label: `Subtotal ${BUCKET_LABEL[bucket]}`, amount: -subtotal, kind: "subtotal" });
+  rows.push({ label: `Subtotal ${BUCKET_LABEL[bucket]}`, amount: -subtotal, kind: "subtotal" as const });
   return rows;
 }
+
 
 
 /** Conta corrente do agendista — derivada de snapshots e adiantamentos. */
