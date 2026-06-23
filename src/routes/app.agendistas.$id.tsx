@@ -458,7 +458,7 @@ function AgentDetail() {
       <Tabs defaultValue="overview" className="space-y-6">
         <TabsList className="bg-card/40">
           <TabsTrigger value="overview">Dados</TabsTrigger>
-          <TabsTrigger value="statement">Conta corrente</TabsTrigger>
+          <TabsTrigger value="statement">Conta Corrente</TabsTrigger>
           <TabsTrigger value="advances">Adiantamentos</TabsTrigger>
           <TabsTrigger value="lectures">Palestras</TabsTrigger>
           <TabsTrigger value="companies">Empresas</TabsTrigger>
