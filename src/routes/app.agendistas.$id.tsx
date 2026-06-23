@@ -557,9 +557,7 @@ function AgentDetail() {
           )}
         </TabsContent>
 
-            </div>
-          )}
-        </TabsContent>
+
 
         <TabsContent value="advances" className="space-y-4">
           <div className="flex justify-end">
