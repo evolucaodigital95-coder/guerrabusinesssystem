@@ -5,7 +5,9 @@ import { toast } from "sonner";
 import {
   ArrowLeft, Pencil, Plus, MapPin, Users, Calendar, Building2, UserCircle2,
   ShieldCheck, History as HistoryIcon, Paperclip, Package, Wallet, Activity,
+  Calculator, Info, ExternalLink, Lock,
 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
