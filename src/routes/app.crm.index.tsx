@@ -14,7 +14,7 @@ import { useCurrentOrg } from "@/hooks/use-current-org";
 import { LIFECYCLE_STAGES, formatDate } from "@/lib/crm";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/app/crm")({
+export const Route = createFileRoute("/app/crm/")({
   head: () => ({
     meta: [
       { title: "CRM — GBS" },

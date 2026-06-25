@@ -11,17 +11,17 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/hooks/use-session";
 import { useCurrentOrg } from "@/hooks/use-current-org";
 import { formatDate } from "@/lib/crm";
-import { PROJECT_STATUS, projectStatusLabel } from "@/lib/strategy";
-import { ProjectFormDialog } from "@/components/strategy/project-form-dialog";
+import { CAMPAIGN_STATUS, campaignStatusLabel } from "@/lib/strategy";
+import { CampaignFormDialog } from "@/components/strategy/campaign-form-dialog";
 
-export const Route = createFileRoute("/app/projetos")({
+export const Route = createFileRoute("/app/campanhas/")({
   head: () => ({
     meta: [
-      { title: "Projetos — GBS" },
-      { name: "description", content: "Projetos vinculados a campanhas e temporadas, com responsáveis e prazos." },
+      { title: "Campanhas — GBS" },
+      { name: "description", content: "Campanhas estratégicas vinculadas a temporadas, projetos e palestras." },
     ],
   }),
-  component: ProjetosPage,
+  component: CampanhasPage,
 });
 
 const ALL = "__all__";
@@ -30,10 +30,9 @@ type Row = {
   id: string; name: string; description: string | null; status: string | null;
   starts_on: string | null; ends_on: string | null;
   seasons: { id: string; name: string } | null;
-  campaigns: { id: string; name: string } | null;
 };
 
-function ProjetosPage() {
+function CampanhasPage() {
   const { user } = useSession();
   const { organizationId, loading } = useCurrentOrg();
   const [open, setOpen] = useState(false);
@@ -53,13 +52,13 @@ function ProjetosPage() {
     },
   });
 
-  const projects = useQuery({
-    queryKey: ["projects", organizationId],
+  const campaigns = useQuery({
+    queryKey: ["campaigns", organizationId],
     enabled: !!organizationId,
     queryFn: async (): Promise<Row[]> => {
       const { data, error } = await supabase
-        .from("projects")
-        .select("id, name, description, status, starts_on, ends_on, seasons:season_id(id,name), campaigns:campaign_id(id,name)")
+        .from("campaigns")
+        .select("id, name, description, status, starts_on, ends_on, seasons:season_id(id, name)")
         .eq("organization_id", organizationId!).is("archived_at", null)
         .order("created_at", { ascending: false });
       if (error) throw error;
@@ -68,23 +67,23 @@ function ProjetosPage() {
   });
 
   const filtered = useMemo(() => {
-    let list = projects.data ?? [];
-    if (fStatus !== ALL) list = list.filter((p) => p.status === fStatus);
-    if (fSeason !== ALL) list = list.filter((p) => p.seasons?.id === fSeason);
+    let list = campaigns.data ?? [];
+    if (fStatus !== ALL) list = list.filter((c) => c.status === fStatus);
+    if (fSeason !== ALL) list = list.filter((c) => c.seasons?.id === fSeason);
     const q = search.trim().toLowerCase();
-    if (q) list = list.filter((p) => [p.name, p.description, p.seasons?.name, p.campaigns?.name].filter(Boolean).some((v) => String(v).toLowerCase().includes(q)));
+    if (q) list = list.filter((c) => [c.name, c.description, c.seasons?.name].filter(Boolean).some((v) => String(v).toLowerCase().includes(q)));
     return list;
-  }, [projects.data, search, fStatus, fSeason]);
+  }, [campaigns.data, search, fStatus, fSeason]);
 
   return (
     <div className="space-y-8">
       <PageHeader
-        eyebrow="Projetos"
-        title="Iniciativas estratégicas"
-        description="Projetos conectam empresas, palestras, agendistas, financeiro e estoque dentro de uma campanha/temporada."
+        eyebrow="Campanhas"
+        title="Iniciativas comerciais"
+        description="Cada campanha pertence a uma temporada e pode reunir empresas, palestras, projetos e financeiro."
         actions={
           <Button variant="navy" className="rounded-full" onClick={() => setOpen(true)} disabled={!organizationId}>
-            <Plus className="mr-1.5 h-4 w-4" /> Novo projeto
+            <Plus className="mr-1.5 h-4 w-4" /> Nova campanha
           </Button>
         }
       />
@@ -93,7 +92,7 @@ function ProjetosPage() {
         <div className="grid gap-3 md:grid-cols-12">
           <div className="relative md:col-span-6">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-            <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar projeto…" className="rounded-full pl-9" />
+            <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar campanha…" className="rounded-full pl-9" />
           </div>
           <div className="md:col-span-3">
             <Select value={fSeason} onValueChange={setFSeason}>
@@ -109,44 +108,42 @@ function ProjetosPage() {
               <SelectTrigger className="rounded-full"><SelectValue placeholder="Status" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value={ALL}>Todos os status</SelectItem>
-                {PROJECT_STATUS.map((s) => <SelectItem key={s.key} value={s.key}>{s.label}</SelectItem>)}
+                {CAMPAIGN_STATUS.map((s) => <SelectItem key={s.key} value={s.key}>{s.label}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
         </div>
       </div>
 
-      {loading || projects.isLoading ? (
+      {loading || campaigns.isLoading ? (
         <div className="text-sm text-muted-foreground">Carregando…</div>
       ) : filtered.length === 0 ? (
         <div className="rounded-3xl border border-dashed border-border bg-card/30 px-8 py-16 text-center">
-          <h3 className="font-serif text-2xl text-foreground">Nenhum projeto</h3>
+          <h3 className="font-serif text-2xl text-foreground">Nenhuma campanha</h3>
           <p className="mt-2 text-sm text-muted-foreground">
-            {(projects.data?.length ?? 0) > 0 ? "Ajuste os filtros." : "Crie o primeiro projeto."}
+            {(campaigns.data?.length ?? 0) > 0 ? "Ajuste os filtros." : "Crie a primeira campanha."}
           </p>
           <Button variant="navy" className="mt-6 rounded-full" onClick={() => setOpen(true)} disabled={!organizationId}>
-            <Plus className="mr-1.5 h-4 w-4" /> Novo projeto
+            <Plus className="mr-1.5 h-4 w-4" /> Nova campanha
           </Button>
         </div>
       ) : (
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-          {filtered.map((p) => (
-            <Link key={p.id} to="/app/projetos/$id" params={{ id: p.id }}
+          {filtered.map((c) => (
+            <Link key={c.id} to="/app/campanhas/$id" params={{ id: c.id }}
               className="group rounded-2xl border border-border bg-card/40 p-5 transition-all duration-300 hover:-translate-y-0.5 hover:border-foreground/20 hover:bg-card/70 hover:shadow-lg"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
-                    {[p.seasons?.name, p.campaigns?.name].filter(Boolean).join(" · ") || "Sem vínculo"}
-                  </p>
-                  <p className="mt-1 truncate font-serif text-lg text-foreground">{p.name}</p>
-                  {p.description && <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{p.description}</p>}
+                  <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">{c.seasons?.name ?? "Sem temporada"}</p>
+                  <p className="mt-1 truncate font-serif text-lg text-foreground">{c.name}</p>
+                  {c.description && <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{c.description}</p>}
                 </div>
-                <Badge variant="outline" className="font-normal">{projectStatusLabel(p.status)}</Badge>
+                <Badge variant="outline" className="font-normal">{campaignStatusLabel(c.status)}</Badge>
               </div>
               <div className="mt-5 flex items-center gap-3 text-[11px] text-muted-foreground">
-                <span className="flex items-center gap-1.5"><Calendar className="h-3 w-3" /> {formatDate(p.starts_on)}</span>
-                <span>→</span><span>{formatDate(p.ends_on)}</span>
+                <span className="flex items-center gap-1.5"><Calendar className="h-3 w-3" /> {formatDate(c.starts_on)}</span>
+                <span>→</span><span>{formatDate(c.ends_on)}</span>
               </div>
             </Link>
           ))}
@@ -154,7 +151,7 @@ function ProjetosPage() {
       )}
 
       {organizationId && user && (
-        <ProjectFormDialog open={open} onOpenChange={setOpen} organizationId={organizationId} userId={user.id} />
+        <CampaignFormDialog open={open} onOpenChange={setOpen} organizationId={organizationId} userId={user.id} />
       )}
     </div>
   );

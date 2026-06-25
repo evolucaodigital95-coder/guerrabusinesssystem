@@ -14,7 +14,7 @@ import { formatDate } from "@/lib/crm";
 import { SEASON_STATUS, seasonStatusLabel } from "@/lib/strategy";
 import { SeasonFormDialog } from "@/components/strategy/season-form-dialog";
 
-export const Route = createFileRoute("/app/temporadas")({
+export const Route = createFileRoute("/app/temporadas/")({
   head: () => ({
     meta: [
       { title: "Temporadas — GBS" },

@@ -11,7 +11,7 @@ import { useSession } from "@/hooks/use-session";
 import { useCurrentOrg } from "@/hooks/use-current-org";
 import { AgentFormDialog, type AgentRow } from "@/components/agendistas/agent-form-dialog";
 
-export const Route = createFileRoute("/app/agendistas")({
+export const Route = createFileRoute("/app/agendistas/")({
   head: () => ({
     meta: [
       { title: "Agendistas — GBS" },
