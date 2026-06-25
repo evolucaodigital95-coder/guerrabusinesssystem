@@ -14,7 +14,7 @@ import { formatDate } from "@/lib/crm";
 import { PROJECT_STATUS, projectStatusLabel } from "@/lib/strategy";
 import { ProjectFormDialog } from "@/components/strategy/project-form-dialog";
 
-export const Route = createFileRoute("/app/projetos")({
+export const Route = createFileRoute("/app/projetos/")({
   head: () => ({
     meta: [
       { title: "Projetos — GBS" },

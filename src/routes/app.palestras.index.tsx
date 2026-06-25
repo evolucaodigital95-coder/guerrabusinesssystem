@@ -14,7 +14,7 @@ import { formatDate } from "@/lib/crm";
 import { LECTURE_STATUS, lectureStatusLabel } from "@/lib/lectures";
 import { LectureFormDialog } from "@/components/palestras/lecture-form-dialog";
 
-export const Route = createFileRoute("/app/palestras")({
+export const Route = createFileRoute("/app/palestras/")({
   head: () => ({
     meta: [
       { title: "Palestras — GBS" },

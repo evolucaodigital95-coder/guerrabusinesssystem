@@ -14,7 +14,7 @@ import { formatDate } from "@/lib/crm";
 import { CAMPAIGN_STATUS, campaignStatusLabel } from "@/lib/strategy";
 import { CampaignFormDialog } from "@/components/strategy/campaign-form-dialog";
 
-export const Route = createFileRoute("/app/campanhas")({
+export const Route = createFileRoute("/app/campanhas/")({
   head: () => ({
     meta: [
       { title: "Campanhas — GBS" },

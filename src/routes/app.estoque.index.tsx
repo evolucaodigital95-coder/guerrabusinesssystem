@@ -21,7 +21,7 @@ import {
 import { ItemFormDialog } from "@/components/estoque/item-form-dialog";
 import { MovementFormDialog } from "@/components/estoque/movement-form-dialog";
 
-export const Route = createFileRoute("/app/estoque")({
+export const Route = createFileRoute("/app/estoque/")({
   head: () => ({
     meta: [
       { title: "Estoque — GBS" },

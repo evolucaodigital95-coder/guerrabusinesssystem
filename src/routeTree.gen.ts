@@ -12,25 +12,25 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AppRouteImport } from './routes/app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppIndexRouteImport } from './routes/app.index'
-import { Route as AppTemporadasRouteImport } from './routes/app.temporadas'
 import { Route as AppRoadmapRouteImport } from './routes/app.roadmap'
 import { Route as AppRelatoriosRouteImport } from './routes/app.relatorios'
-import { Route as AppProjetosRouteImport } from './routes/app.projetos'
-import { Route as AppPalestrasRouteImport } from './routes/app.palestras'
 import { Route as AppLegadoRouteImport } from './routes/app.legado'
 import { Route as AppIaGuerraRouteImport } from './routes/app.ia-guerra'
 import { Route as AppHojeRouteImport } from './routes/app.hoje'
 import { Route as AppHistoriaRouteImport } from './routes/app.historia'
 import { Route as AppFinanceiroRouteImport } from './routes/app.financeiro'
-import { Route as AppEstoqueRouteImport } from './routes/app.estoque'
 import { Route as AppDashboardRouteImport } from './routes/app.dashboard'
-import { Route as AppCrmRouteImport } from './routes/app.crm'
 import { Route as AppConfiguracoesRouteImport } from './routes/app.configuracoes'
-import { Route as AppCampanhasRouteImport } from './routes/app.campanhas'
 import { Route as AppBuscaRouteImport } from './routes/app.busca'
 import { Route as AppBibliotecaRouteImport } from './routes/app.biblioteca'
 import { Route as AppAuditoriaRouteImport } from './routes/app.auditoria'
-import { Route as AppAgendistasRouteImport } from './routes/app.agendistas'
+import { Route as AppTemporadasIndexRouteImport } from './routes/app.temporadas.index'
+import { Route as AppProjetosIndexRouteImport } from './routes/app.projetos.index'
+import { Route as AppPalestrasIndexRouteImport } from './routes/app.palestras.index'
+import { Route as AppEstoqueIndexRouteImport } from './routes/app.estoque.index'
+import { Route as AppCrmIndexRouteImport } from './routes/app.crm.index'
+import { Route as AppCampanhasIndexRouteImport } from './routes/app.campanhas.index'
+import { Route as AppAgendistasIndexRouteImport } from './routes/app.agendistas.index'
 import { Route as AppTemporadasIdRouteImport } from './routes/app.temporadas.$id'
 import { Route as AppProjetosIdRouteImport } from './routes/app.projetos.$id'
 import { Route as AppPalestrasIdRouteImport } from './routes/app.palestras.$id'
@@ -54,11 +54,6 @@ const AppIndexRoute = AppIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppRoute,
 } as any)
-const AppTemporadasRoute = AppTemporadasRouteImport.update({
-  id: '/temporadas',
-  path: '/temporadas',
-  getParentRoute: () => AppRoute,
-} as any)
 const AppRoadmapRoute = AppRoadmapRouteImport.update({
   id: '/roadmap',
   path: '/roadmap',
@@ -67,16 +62,6 @@ const AppRoadmapRoute = AppRoadmapRouteImport.update({
 const AppRelatoriosRoute = AppRelatoriosRouteImport.update({
   id: '/relatorios',
   path: '/relatorios',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppProjetosRoute = AppProjetosRouteImport.update({
-  id: '/projetos',
-  path: '/projetos',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppPalestrasRoute = AppPalestrasRouteImport.update({
-  id: '/palestras',
-  path: '/palestras',
   getParentRoute: () => AppRoute,
 } as any)
 const AppLegadoRoute = AppLegadoRouteImport.update({
@@ -104,29 +89,14 @@ const AppFinanceiroRoute = AppFinanceiroRouteImport.update({
   path: '/financeiro',
   getParentRoute: () => AppRoute,
 } as any)
-const AppEstoqueRoute = AppEstoqueRouteImport.update({
-  id: '/estoque',
-  path: '/estoque',
-  getParentRoute: () => AppRoute,
-} as any)
 const AppDashboardRoute = AppDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
   getParentRoute: () => AppRoute,
 } as any)
-const AppCrmRoute = AppCrmRouteImport.update({
-  id: '/crm',
-  path: '/crm',
-  getParentRoute: () => AppRoute,
-} as any)
 const AppConfiguracoesRoute = AppConfiguracoesRouteImport.update({
   id: '/configuracoes',
   path: '/configuracoes',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppCampanhasRoute = AppCampanhasRouteImport.update({
-  id: '/campanhas',
-  path: '/campanhas',
   getParentRoute: () => AppRoute,
 } as any)
 const AppBuscaRoute = AppBuscaRouteImport.update({
@@ -144,69 +114,92 @@ const AppAuditoriaRoute = AppAuditoriaRouteImport.update({
   path: '/auditoria',
   getParentRoute: () => AppRoute,
 } as any)
-const AppAgendistasRoute = AppAgendistasRouteImport.update({
-  id: '/agendistas',
-  path: '/agendistas',
+const AppTemporadasIndexRoute = AppTemporadasIndexRouteImport.update({
+  id: '/temporadas/',
+  path: '/temporadas/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppProjetosIndexRoute = AppProjetosIndexRouteImport.update({
+  id: '/projetos/',
+  path: '/projetos/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPalestrasIndexRoute = AppPalestrasIndexRouteImport.update({
+  id: '/palestras/',
+  path: '/palestras/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppEstoqueIndexRoute = AppEstoqueIndexRouteImport.update({
+  id: '/estoque/',
+  path: '/estoque/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppCrmIndexRoute = AppCrmIndexRouteImport.update({
+  id: '/crm/',
+  path: '/crm/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppCampanhasIndexRoute = AppCampanhasIndexRouteImport.update({
+  id: '/campanhas/',
+  path: '/campanhas/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAgendistasIndexRoute = AppAgendistasIndexRouteImport.update({
+  id: '/agendistas/',
+  path: '/agendistas/',
   getParentRoute: () => AppRoute,
 } as any)
 const AppTemporadasIdRoute = AppTemporadasIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => AppTemporadasRoute,
+  id: '/temporadas/$id',
+  path: '/temporadas/$id',
+  getParentRoute: () => AppRoute,
 } as any)
 const AppProjetosIdRoute = AppProjetosIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => AppProjetosRoute,
+  id: '/projetos/$id',
+  path: '/projetos/$id',
+  getParentRoute: () => AppRoute,
 } as any)
 const AppPalestrasIdRoute = AppPalestrasIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => AppPalestrasRoute,
+  id: '/palestras/$id',
+  path: '/palestras/$id',
+  getParentRoute: () => AppRoute,
 } as any)
 const AppEstoqueIdRoute = AppEstoqueIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => AppEstoqueRoute,
+  id: '/estoque/$id',
+  path: '/estoque/$id',
+  getParentRoute: () => AppRoute,
 } as any)
 const AppCrmIdRoute = AppCrmIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => AppCrmRoute,
+  id: '/crm/$id',
+  path: '/crm/$id',
+  getParentRoute: () => AppRoute,
 } as any)
 const AppCampanhasIdRoute = AppCampanhasIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => AppCampanhasRoute,
+  id: '/campanhas/$id',
+  path: '/campanhas/$id',
+  getParentRoute: () => AppRoute,
 } as any)
 const AppAgendistasIdRoute = AppAgendistasIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => AppAgendistasRoute,
+  id: '/agendistas/$id',
+  path: '/agendistas/$id',
+  getParentRoute: () => AppRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
-  '/app/agendistas': typeof AppAgendistasRouteWithChildren
   '/app/auditoria': typeof AppAuditoriaRoute
   '/app/biblioteca': typeof AppBibliotecaRoute
   '/app/busca': typeof AppBuscaRoute
-  '/app/campanhas': typeof AppCampanhasRouteWithChildren
   '/app/configuracoes': typeof AppConfiguracoesRoute
-  '/app/crm': typeof AppCrmRouteWithChildren
   '/app/dashboard': typeof AppDashboardRoute
-  '/app/estoque': typeof AppEstoqueRouteWithChildren
   '/app/financeiro': typeof AppFinanceiroRoute
   '/app/historia': typeof AppHistoriaRoute
   '/app/hoje': typeof AppHojeRoute
   '/app/ia-guerra': typeof AppIaGuerraRoute
   '/app/legado': typeof AppLegadoRoute
-  '/app/palestras': typeof AppPalestrasRouteWithChildren
-  '/app/projetos': typeof AppProjetosRouteWithChildren
   '/app/relatorios': typeof AppRelatoriosRoute
   '/app/roadmap': typeof AppRoadmapRoute
-  '/app/temporadas': typeof AppTemporadasRouteWithChildren
   '/app/': typeof AppIndexRoute
   '/app/agendistas/$id': typeof AppAgendistasIdRoute
   '/app/campanhas/$id': typeof AppCampanhasIdRoute
@@ -215,28 +208,28 @@ export interface FileRoutesByFullPath {
   '/app/palestras/$id': typeof AppPalestrasIdRoute
   '/app/projetos/$id': typeof AppProjetosIdRoute
   '/app/temporadas/$id': typeof AppTemporadasIdRoute
+  '/app/agendistas/': typeof AppAgendistasIndexRoute
+  '/app/campanhas/': typeof AppCampanhasIndexRoute
+  '/app/crm/': typeof AppCrmIndexRoute
+  '/app/estoque/': typeof AppEstoqueIndexRoute
+  '/app/palestras/': typeof AppPalestrasIndexRoute
+  '/app/projetos/': typeof AppProjetosIndexRoute
+  '/app/temporadas/': typeof AppTemporadasIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/app/agendistas': typeof AppAgendistasRouteWithChildren
   '/app/auditoria': typeof AppAuditoriaRoute
   '/app/biblioteca': typeof AppBibliotecaRoute
   '/app/busca': typeof AppBuscaRoute
-  '/app/campanhas': typeof AppCampanhasRouteWithChildren
   '/app/configuracoes': typeof AppConfiguracoesRoute
-  '/app/crm': typeof AppCrmRouteWithChildren
   '/app/dashboard': typeof AppDashboardRoute
-  '/app/estoque': typeof AppEstoqueRouteWithChildren
   '/app/financeiro': typeof AppFinanceiroRoute
   '/app/historia': typeof AppHistoriaRoute
   '/app/hoje': typeof AppHojeRoute
   '/app/ia-guerra': typeof AppIaGuerraRoute
   '/app/legado': typeof AppLegadoRoute
-  '/app/palestras': typeof AppPalestrasRouteWithChildren
-  '/app/projetos': typeof AppProjetosRouteWithChildren
   '/app/relatorios': typeof AppRelatoriosRoute
   '/app/roadmap': typeof AppRoadmapRoute
-  '/app/temporadas': typeof AppTemporadasRouteWithChildren
   '/app': typeof AppIndexRoute
   '/app/agendistas/$id': typeof AppAgendistasIdRoute
   '/app/campanhas/$id': typeof AppCampanhasIdRoute
@@ -245,30 +238,30 @@ export interface FileRoutesByTo {
   '/app/palestras/$id': typeof AppPalestrasIdRoute
   '/app/projetos/$id': typeof AppProjetosIdRoute
   '/app/temporadas/$id': typeof AppTemporadasIdRoute
+  '/app/agendistas': typeof AppAgendistasIndexRoute
+  '/app/campanhas': typeof AppCampanhasIndexRoute
+  '/app/crm': typeof AppCrmIndexRoute
+  '/app/estoque': typeof AppEstoqueIndexRoute
+  '/app/palestras': typeof AppPalestrasIndexRoute
+  '/app/projetos': typeof AppProjetosIndexRoute
+  '/app/temporadas': typeof AppTemporadasIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
-  '/app/agendistas': typeof AppAgendistasRouteWithChildren
   '/app/auditoria': typeof AppAuditoriaRoute
   '/app/biblioteca': typeof AppBibliotecaRoute
   '/app/busca': typeof AppBuscaRoute
-  '/app/campanhas': typeof AppCampanhasRouteWithChildren
   '/app/configuracoes': typeof AppConfiguracoesRoute
-  '/app/crm': typeof AppCrmRouteWithChildren
   '/app/dashboard': typeof AppDashboardRoute
-  '/app/estoque': typeof AppEstoqueRouteWithChildren
   '/app/financeiro': typeof AppFinanceiroRoute
   '/app/historia': typeof AppHistoriaRoute
   '/app/hoje': typeof AppHojeRoute
   '/app/ia-guerra': typeof AppIaGuerraRoute
   '/app/legado': typeof AppLegadoRoute
-  '/app/palestras': typeof AppPalestrasRouteWithChildren
-  '/app/projetos': typeof AppProjetosRouteWithChildren
   '/app/relatorios': typeof AppRelatoriosRoute
   '/app/roadmap': typeof AppRoadmapRoute
-  '/app/temporadas': typeof AppTemporadasRouteWithChildren
   '/app/': typeof AppIndexRoute
   '/app/agendistas/$id': typeof AppAgendistasIdRoute
   '/app/campanhas/$id': typeof AppCampanhasIdRoute
@@ -277,31 +270,31 @@ export interface FileRoutesById {
   '/app/palestras/$id': typeof AppPalestrasIdRoute
   '/app/projetos/$id': typeof AppProjetosIdRoute
   '/app/temporadas/$id': typeof AppTemporadasIdRoute
+  '/app/agendistas/': typeof AppAgendistasIndexRoute
+  '/app/campanhas/': typeof AppCampanhasIndexRoute
+  '/app/crm/': typeof AppCrmIndexRoute
+  '/app/estoque/': typeof AppEstoqueIndexRoute
+  '/app/palestras/': typeof AppPalestrasIndexRoute
+  '/app/projetos/': typeof AppProjetosIndexRoute
+  '/app/temporadas/': typeof AppTemporadasIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/app'
-    | '/app/agendistas'
     | '/app/auditoria'
     | '/app/biblioteca'
     | '/app/busca'
-    | '/app/campanhas'
     | '/app/configuracoes'
-    | '/app/crm'
     | '/app/dashboard'
-    | '/app/estoque'
     | '/app/financeiro'
     | '/app/historia'
     | '/app/hoje'
     | '/app/ia-guerra'
     | '/app/legado'
-    | '/app/palestras'
-    | '/app/projetos'
     | '/app/relatorios'
     | '/app/roadmap'
-    | '/app/temporadas'
     | '/app/'
     | '/app/agendistas/$id'
     | '/app/campanhas/$id'
@@ -310,28 +303,28 @@ export interface FileRouteTypes {
     | '/app/palestras/$id'
     | '/app/projetos/$id'
     | '/app/temporadas/$id'
+    | '/app/agendistas/'
+    | '/app/campanhas/'
+    | '/app/crm/'
+    | '/app/estoque/'
+    | '/app/palestras/'
+    | '/app/projetos/'
+    | '/app/temporadas/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/app/agendistas'
     | '/app/auditoria'
     | '/app/biblioteca'
     | '/app/busca'
-    | '/app/campanhas'
     | '/app/configuracoes'
-    | '/app/crm'
     | '/app/dashboard'
-    | '/app/estoque'
     | '/app/financeiro'
     | '/app/historia'
     | '/app/hoje'
     | '/app/ia-guerra'
     | '/app/legado'
-    | '/app/palestras'
-    | '/app/projetos'
     | '/app/relatorios'
     | '/app/roadmap'
-    | '/app/temporadas'
     | '/app'
     | '/app/agendistas/$id'
     | '/app/campanhas/$id'
@@ -340,29 +333,29 @@ export interface FileRouteTypes {
     | '/app/palestras/$id'
     | '/app/projetos/$id'
     | '/app/temporadas/$id'
+    | '/app/agendistas'
+    | '/app/campanhas'
+    | '/app/crm'
+    | '/app/estoque'
+    | '/app/palestras'
+    | '/app/projetos'
+    | '/app/temporadas'
   id:
     | '__root__'
     | '/'
     | '/app'
-    | '/app/agendistas'
     | '/app/auditoria'
     | '/app/biblioteca'
     | '/app/busca'
-    | '/app/campanhas'
     | '/app/configuracoes'
-    | '/app/crm'
     | '/app/dashboard'
-    | '/app/estoque'
     | '/app/financeiro'
     | '/app/historia'
     | '/app/hoje'
     | '/app/ia-guerra'
     | '/app/legado'
-    | '/app/palestras'
-    | '/app/projetos'
     | '/app/relatorios'
     | '/app/roadmap'
-    | '/app/temporadas'
     | '/app/'
     | '/app/agendistas/$id'
     | '/app/campanhas/$id'
@@ -371,6 +364,13 @@ export interface FileRouteTypes {
     | '/app/palestras/$id'
     | '/app/projetos/$id'
     | '/app/temporadas/$id'
+    | '/app/agendistas/'
+    | '/app/campanhas/'
+    | '/app/crm/'
+    | '/app/estoque/'
+    | '/app/palestras/'
+    | '/app/projetos/'
+    | '/app/temporadas/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -401,13 +401,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppIndexRouteImport
       parentRoute: typeof AppRoute
     }
-    '/app/temporadas': {
-      id: '/app/temporadas'
-      path: '/temporadas'
-      fullPath: '/app/temporadas'
-      preLoaderRoute: typeof AppTemporadasRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/app/roadmap': {
       id: '/app/roadmap'
       path: '/roadmap'
@@ -420,20 +413,6 @@ declare module '@tanstack/react-router' {
       path: '/relatorios'
       fullPath: '/app/relatorios'
       preLoaderRoute: typeof AppRelatoriosRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/projetos': {
-      id: '/app/projetos'
-      path: '/projetos'
-      fullPath: '/app/projetos'
-      preLoaderRoute: typeof AppProjetosRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/palestras': {
-      id: '/app/palestras'
-      path: '/palestras'
-      fullPath: '/app/palestras'
-      preLoaderRoute: typeof AppPalestrasRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/legado': {
@@ -471,13 +450,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppFinanceiroRouteImport
       parentRoute: typeof AppRoute
     }
-    '/app/estoque': {
-      id: '/app/estoque'
-      path: '/estoque'
-      fullPath: '/app/estoque'
-      preLoaderRoute: typeof AppEstoqueRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/app/dashboard': {
       id: '/app/dashboard'
       path: '/dashboard'
@@ -485,25 +457,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppDashboardRouteImport
       parentRoute: typeof AppRoute
     }
-    '/app/crm': {
-      id: '/app/crm'
-      path: '/crm'
-      fullPath: '/app/crm'
-      preLoaderRoute: typeof AppCrmRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/app/configuracoes': {
       id: '/app/configuracoes'
       path: '/configuracoes'
       fullPath: '/app/configuracoes'
       preLoaderRoute: typeof AppConfiguracoesRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/campanhas': {
-      id: '/app/campanhas'
-      path: '/campanhas'
-      fullPath: '/app/campanhas'
-      preLoaderRoute: typeof AppCampanhasRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/busca': {
@@ -527,192 +485,165 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAuditoriaRouteImport
       parentRoute: typeof AppRoute
     }
-    '/app/agendistas': {
-      id: '/app/agendistas'
+    '/app/temporadas/': {
+      id: '/app/temporadas/'
+      path: '/temporadas'
+      fullPath: '/app/temporadas/'
+      preLoaderRoute: typeof AppTemporadasIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/projetos/': {
+      id: '/app/projetos/'
+      path: '/projetos'
+      fullPath: '/app/projetos/'
+      preLoaderRoute: typeof AppProjetosIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/palestras/': {
+      id: '/app/palestras/'
+      path: '/palestras'
+      fullPath: '/app/palestras/'
+      preLoaderRoute: typeof AppPalestrasIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/estoque/': {
+      id: '/app/estoque/'
+      path: '/estoque'
+      fullPath: '/app/estoque/'
+      preLoaderRoute: typeof AppEstoqueIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/crm/': {
+      id: '/app/crm/'
+      path: '/crm'
+      fullPath: '/app/crm/'
+      preLoaderRoute: typeof AppCrmIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/campanhas/': {
+      id: '/app/campanhas/'
+      path: '/campanhas'
+      fullPath: '/app/campanhas/'
+      preLoaderRoute: typeof AppCampanhasIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/agendistas/': {
+      id: '/app/agendistas/'
       path: '/agendistas'
-      fullPath: '/app/agendistas'
-      preLoaderRoute: typeof AppAgendistasRouteImport
+      fullPath: '/app/agendistas/'
+      preLoaderRoute: typeof AppAgendistasIndexRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/temporadas/$id': {
       id: '/app/temporadas/$id'
-      path: '/$id'
+      path: '/temporadas/$id'
       fullPath: '/app/temporadas/$id'
       preLoaderRoute: typeof AppTemporadasIdRouteImport
-      parentRoute: typeof AppTemporadasRoute
+      parentRoute: typeof AppRoute
     }
     '/app/projetos/$id': {
       id: '/app/projetos/$id'
-      path: '/$id'
+      path: '/projetos/$id'
       fullPath: '/app/projetos/$id'
       preLoaderRoute: typeof AppProjetosIdRouteImport
-      parentRoute: typeof AppProjetosRoute
+      parentRoute: typeof AppRoute
     }
     '/app/palestras/$id': {
       id: '/app/palestras/$id'
-      path: '/$id'
+      path: '/palestras/$id'
       fullPath: '/app/palestras/$id'
       preLoaderRoute: typeof AppPalestrasIdRouteImport
-      parentRoute: typeof AppPalestrasRoute
+      parentRoute: typeof AppRoute
     }
     '/app/estoque/$id': {
       id: '/app/estoque/$id'
-      path: '/$id'
+      path: '/estoque/$id'
       fullPath: '/app/estoque/$id'
       preLoaderRoute: typeof AppEstoqueIdRouteImport
-      parentRoute: typeof AppEstoqueRoute
+      parentRoute: typeof AppRoute
     }
     '/app/crm/$id': {
       id: '/app/crm/$id'
-      path: '/$id'
+      path: '/crm/$id'
       fullPath: '/app/crm/$id'
       preLoaderRoute: typeof AppCrmIdRouteImport
-      parentRoute: typeof AppCrmRoute
+      parentRoute: typeof AppRoute
     }
     '/app/campanhas/$id': {
       id: '/app/campanhas/$id'
-      path: '/$id'
+      path: '/campanhas/$id'
       fullPath: '/app/campanhas/$id'
       preLoaderRoute: typeof AppCampanhasIdRouteImport
-      parentRoute: typeof AppCampanhasRoute
+      parentRoute: typeof AppRoute
     }
     '/app/agendistas/$id': {
       id: '/app/agendistas/$id'
-      path: '/$id'
+      path: '/agendistas/$id'
       fullPath: '/app/agendistas/$id'
       preLoaderRoute: typeof AppAgendistasIdRouteImport
-      parentRoute: typeof AppAgendistasRoute
+      parentRoute: typeof AppRoute
     }
   }
 }
 
-interface AppAgendistasRouteChildren {
-  AppAgendistasIdRoute: typeof AppAgendistasIdRoute
-}
-
-const AppAgendistasRouteChildren: AppAgendistasRouteChildren = {
-  AppAgendistasIdRoute: AppAgendistasIdRoute,
-}
-
-const AppAgendistasRouteWithChildren = AppAgendistasRoute._addFileChildren(
-  AppAgendistasRouteChildren,
-)
-
-interface AppCampanhasRouteChildren {
-  AppCampanhasIdRoute: typeof AppCampanhasIdRoute
-}
-
-const AppCampanhasRouteChildren: AppCampanhasRouteChildren = {
-  AppCampanhasIdRoute: AppCampanhasIdRoute,
-}
-
-const AppCampanhasRouteWithChildren = AppCampanhasRoute._addFileChildren(
-  AppCampanhasRouteChildren,
-)
-
-interface AppCrmRouteChildren {
-  AppCrmIdRoute: typeof AppCrmIdRoute
-}
-
-const AppCrmRouteChildren: AppCrmRouteChildren = {
-  AppCrmIdRoute: AppCrmIdRoute,
-}
-
-const AppCrmRouteWithChildren =
-  AppCrmRoute._addFileChildren(AppCrmRouteChildren)
-
-interface AppEstoqueRouteChildren {
-  AppEstoqueIdRoute: typeof AppEstoqueIdRoute
-}
-
-const AppEstoqueRouteChildren: AppEstoqueRouteChildren = {
-  AppEstoqueIdRoute: AppEstoqueIdRoute,
-}
-
-const AppEstoqueRouteWithChildren = AppEstoqueRoute._addFileChildren(
-  AppEstoqueRouteChildren,
-)
-
-interface AppPalestrasRouteChildren {
-  AppPalestrasIdRoute: typeof AppPalestrasIdRoute
-}
-
-const AppPalestrasRouteChildren: AppPalestrasRouteChildren = {
-  AppPalestrasIdRoute: AppPalestrasIdRoute,
-}
-
-const AppPalestrasRouteWithChildren = AppPalestrasRoute._addFileChildren(
-  AppPalestrasRouteChildren,
-)
-
-interface AppProjetosRouteChildren {
-  AppProjetosIdRoute: typeof AppProjetosIdRoute
-}
-
-const AppProjetosRouteChildren: AppProjetosRouteChildren = {
-  AppProjetosIdRoute: AppProjetosIdRoute,
-}
-
-const AppProjetosRouteWithChildren = AppProjetosRoute._addFileChildren(
-  AppProjetosRouteChildren,
-)
-
-interface AppTemporadasRouteChildren {
-  AppTemporadasIdRoute: typeof AppTemporadasIdRoute
-}
-
-const AppTemporadasRouteChildren: AppTemporadasRouteChildren = {
-  AppTemporadasIdRoute: AppTemporadasIdRoute,
-}
-
-const AppTemporadasRouteWithChildren = AppTemporadasRoute._addFileChildren(
-  AppTemporadasRouteChildren,
-)
-
 interface AppRouteChildren {
-  AppAgendistasRoute: typeof AppAgendistasRouteWithChildren
   AppAuditoriaRoute: typeof AppAuditoriaRoute
   AppBibliotecaRoute: typeof AppBibliotecaRoute
   AppBuscaRoute: typeof AppBuscaRoute
-  AppCampanhasRoute: typeof AppCampanhasRouteWithChildren
   AppConfiguracoesRoute: typeof AppConfiguracoesRoute
-  AppCrmRoute: typeof AppCrmRouteWithChildren
   AppDashboardRoute: typeof AppDashboardRoute
-  AppEstoqueRoute: typeof AppEstoqueRouteWithChildren
   AppFinanceiroRoute: typeof AppFinanceiroRoute
   AppHistoriaRoute: typeof AppHistoriaRoute
   AppHojeRoute: typeof AppHojeRoute
   AppIaGuerraRoute: typeof AppIaGuerraRoute
   AppLegadoRoute: typeof AppLegadoRoute
-  AppPalestrasRoute: typeof AppPalestrasRouteWithChildren
-  AppProjetosRoute: typeof AppProjetosRouteWithChildren
   AppRelatoriosRoute: typeof AppRelatoriosRoute
   AppRoadmapRoute: typeof AppRoadmapRoute
-  AppTemporadasRoute: typeof AppTemporadasRouteWithChildren
   AppIndexRoute: typeof AppIndexRoute
+  AppAgendistasIdRoute: typeof AppAgendistasIdRoute
+  AppCampanhasIdRoute: typeof AppCampanhasIdRoute
+  AppCrmIdRoute: typeof AppCrmIdRoute
+  AppEstoqueIdRoute: typeof AppEstoqueIdRoute
+  AppPalestrasIdRoute: typeof AppPalestrasIdRoute
+  AppProjetosIdRoute: typeof AppProjetosIdRoute
+  AppTemporadasIdRoute: typeof AppTemporadasIdRoute
+  AppAgendistasIndexRoute: typeof AppAgendistasIndexRoute
+  AppCampanhasIndexRoute: typeof AppCampanhasIndexRoute
+  AppCrmIndexRoute: typeof AppCrmIndexRoute
+  AppEstoqueIndexRoute: typeof AppEstoqueIndexRoute
+  AppPalestrasIndexRoute: typeof AppPalestrasIndexRoute
+  AppProjetosIndexRoute: typeof AppProjetosIndexRoute
+  AppTemporadasIndexRoute: typeof AppTemporadasIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
-  AppAgendistasRoute: AppAgendistasRouteWithChildren,
   AppAuditoriaRoute: AppAuditoriaRoute,
   AppBibliotecaRoute: AppBibliotecaRoute,
   AppBuscaRoute: AppBuscaRoute,
-  AppCampanhasRoute: AppCampanhasRouteWithChildren,
   AppConfiguracoesRoute: AppConfiguracoesRoute,
-  AppCrmRoute: AppCrmRouteWithChildren,
   AppDashboardRoute: AppDashboardRoute,
-  AppEstoqueRoute: AppEstoqueRouteWithChildren,
   AppFinanceiroRoute: AppFinanceiroRoute,
   AppHistoriaRoute: AppHistoriaRoute,
   AppHojeRoute: AppHojeRoute,
   AppIaGuerraRoute: AppIaGuerraRoute,
   AppLegadoRoute: AppLegadoRoute,
-  AppPalestrasRoute: AppPalestrasRouteWithChildren,
-  AppProjetosRoute: AppProjetosRouteWithChildren,
   AppRelatoriosRoute: AppRelatoriosRoute,
   AppRoadmapRoute: AppRoadmapRoute,
-  AppTemporadasRoute: AppTemporadasRouteWithChildren,
   AppIndexRoute: AppIndexRoute,
+  AppAgendistasIdRoute: AppAgendistasIdRoute,
+  AppCampanhasIdRoute: AppCampanhasIdRoute,
+  AppCrmIdRoute: AppCrmIdRoute,
+  AppEstoqueIdRoute: AppEstoqueIdRoute,
+  AppPalestrasIdRoute: AppPalestrasIdRoute,
+  AppProjetosIdRoute: AppProjetosIdRoute,
+  AppTemporadasIdRoute: AppTemporadasIdRoute,
+  AppAgendistasIndexRoute: AppAgendistasIndexRoute,
+  AppCampanhasIndexRoute: AppCampanhasIndexRoute,
+  AppCrmIndexRoute: AppCrmIndexRoute,
+  AppEstoqueIndexRoute: AppEstoqueIndexRoute,
+  AppPalestrasIndexRoute: AppPalestrasIndexRoute,
+  AppProjetosIndexRoute: AppProjetosIndexRoute,
+  AppTemporadasIndexRoute: AppTemporadasIndexRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
@@ -724,13 +655,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
