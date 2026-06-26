@@ -14,6 +14,7 @@ import {
   Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle,
 } from "@/components/ui/sheet";
 import { PageHeader } from "@/components/page-shell";
+import { ListSkeleton } from "@/components/shared/list-skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/hooks/use-session";
 import { useCurrentOrg } from "@/hooks/use-current-org";
@@ -269,7 +270,7 @@ function FinancePage() {
 
           {/* Table */}
           {orgLoading || movements.isLoading ? (
-            <div className="text-sm text-muted-foreground">Carregando…</div>
+            <ListSkeleton />
           ) : filtered.length === 0 ? (
             <div className="rounded-3xl border border-dashed border-border bg-card/30 px-8 py-16 text-center">
               <h3 className="font-serif text-2xl text-foreground">Nenhum lançamento</h3>
@@ -409,7 +410,7 @@ function SummaryCard({ label, value, accent, muted }: { label: string; value: st
 function AccountsTab({
   accounts, loading, onEdit, onNew,
 }: { accounts: Account[]; loading: boolean; onEdit: (a: Account) => void; onNew: () => void }) {
-  if (loading) return <div className="text-sm text-muted-foreground">Carregando…</div>;
+  if (loading) return <ListSkeleton />;
   if (accounts.length === 0) {
     return (
       <div className="rounded-3xl border border-dashed border-border bg-card/30 px-8 py-16 text-center">

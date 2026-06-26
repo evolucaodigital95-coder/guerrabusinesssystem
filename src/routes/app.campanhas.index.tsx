@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PageHeader } from "@/components/page-shell";
+import { ListSkeleton } from "@/components/shared/list-skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/hooks/use-session";
 import { useCurrentOrg } from "@/hooks/use-current-org";
@@ -116,7 +117,7 @@ function CampanhasPage() {
       </div>
 
       {loading || campaigns.isLoading ? (
-        <div className="text-sm text-muted-foreground">Carregando…</div>
+        <ListSkeleton />
       ) : filtered.length === 0 ? (
         <div className="rounded-3xl border border-dashed border-border bg-card/30 px-8 py-16 text-center">
           <h3 className="font-serif text-2xl text-foreground">Nenhuma campanha</h3>
