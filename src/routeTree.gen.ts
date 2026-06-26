@@ -15,6 +15,7 @@ import { Route as AppIndexRouteImport } from './routes/app.index'
 import { Route as AppRoadmapRouteImport } from './routes/app.roadmap'
 import { Route as AppRelatoriosRouteImport } from './routes/app.relatorios'
 import { Route as AppLegadoRouteImport } from './routes/app.legado'
+import { Route as AppInteligenciaRouteImport } from './routes/app.inteligencia'
 import { Route as AppIaGuerraRouteImport } from './routes/app.ia-guerra'
 import { Route as AppHojeRouteImport } from './routes/app.hoje'
 import { Route as AppHistoriaRouteImport } from './routes/app.historia'
@@ -67,6 +68,11 @@ const AppRelatoriosRoute = AppRelatoriosRouteImport.update({
 const AppLegadoRoute = AppLegadoRouteImport.update({
   id: '/legado',
   path: '/legado',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppInteligenciaRoute = AppInteligenciaRouteImport.update({
+  id: '/inteligencia',
+  path: '/inteligencia',
   getParentRoute: () => AppRoute,
 } as any)
 const AppIaGuerraRoute = AppIaGuerraRouteImport.update({
@@ -197,6 +203,7 @@ export interface FileRoutesByFullPath {
   '/app/historia': typeof AppHistoriaRoute
   '/app/hoje': typeof AppHojeRoute
   '/app/ia-guerra': typeof AppIaGuerraRoute
+  '/app/inteligencia': typeof AppInteligenciaRoute
   '/app/legado': typeof AppLegadoRoute
   '/app/relatorios': typeof AppRelatoriosRoute
   '/app/roadmap': typeof AppRoadmapRoute
@@ -227,6 +234,7 @@ export interface FileRoutesByTo {
   '/app/historia': typeof AppHistoriaRoute
   '/app/hoje': typeof AppHojeRoute
   '/app/ia-guerra': typeof AppIaGuerraRoute
+  '/app/inteligencia': typeof AppInteligenciaRoute
   '/app/legado': typeof AppLegadoRoute
   '/app/relatorios': typeof AppRelatoriosRoute
   '/app/roadmap': typeof AppRoadmapRoute
@@ -259,6 +267,7 @@ export interface FileRoutesById {
   '/app/historia': typeof AppHistoriaRoute
   '/app/hoje': typeof AppHojeRoute
   '/app/ia-guerra': typeof AppIaGuerraRoute
+  '/app/inteligencia': typeof AppInteligenciaRoute
   '/app/legado': typeof AppLegadoRoute
   '/app/relatorios': typeof AppRelatoriosRoute
   '/app/roadmap': typeof AppRoadmapRoute
@@ -292,6 +301,7 @@ export interface FileRouteTypes {
     | '/app/historia'
     | '/app/hoje'
     | '/app/ia-guerra'
+    | '/app/inteligencia'
     | '/app/legado'
     | '/app/relatorios'
     | '/app/roadmap'
@@ -322,6 +332,7 @@ export interface FileRouteTypes {
     | '/app/historia'
     | '/app/hoje'
     | '/app/ia-guerra'
+    | '/app/inteligencia'
     | '/app/legado'
     | '/app/relatorios'
     | '/app/roadmap'
@@ -353,6 +364,7 @@ export interface FileRouteTypes {
     | '/app/historia'
     | '/app/hoje'
     | '/app/ia-guerra'
+    | '/app/inteligencia'
     | '/app/legado'
     | '/app/relatorios'
     | '/app/roadmap'
@@ -420,6 +432,13 @@ declare module '@tanstack/react-router' {
       path: '/legado'
       fullPath: '/app/legado'
       preLoaderRoute: typeof AppLegadoRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/inteligencia': {
+      id: '/app/inteligencia'
+      path: '/inteligencia'
+      fullPath: '/app/inteligencia'
+      preLoaderRoute: typeof AppInteligenciaRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/ia-guerra': {
@@ -596,6 +615,7 @@ interface AppRouteChildren {
   AppHistoriaRoute: typeof AppHistoriaRoute
   AppHojeRoute: typeof AppHojeRoute
   AppIaGuerraRoute: typeof AppIaGuerraRoute
+  AppInteligenciaRoute: typeof AppInteligenciaRoute
   AppLegadoRoute: typeof AppLegadoRoute
   AppRelatoriosRoute: typeof AppRelatoriosRoute
   AppRoadmapRoute: typeof AppRoadmapRoute
@@ -626,6 +646,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppHistoriaRoute: AppHistoriaRoute,
   AppHojeRoute: AppHojeRoute,
   AppIaGuerraRoute: AppIaGuerraRoute,
+  AppInteligenciaRoute: AppInteligenciaRoute,
   AppLegadoRoute: AppLegadoRoute,
   AppRelatoriosRoute: AppRelatoriosRoute,
   AppRoadmapRoute: AppRoadmapRoute,
