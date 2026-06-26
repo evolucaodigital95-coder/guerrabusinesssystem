@@ -20,6 +20,7 @@ import {
   UserCog,
   Briefcase,
   Megaphone,
+  BrainCircuit,
   type LucideIcon,
 } from "lucide-react";
 
