@@ -20,6 +20,7 @@ import {
   UserCog,
   Briefcase,
   Megaphone,
+  BrainCircuit,
   type LucideIcon,
 } from "lucide-react";
 
@@ -80,6 +81,10 @@ export const MODULES: ModuleDef[] = [
     primaryAction: "Novo Projeto" },
 
 
+  { to: "/app/inteligencia", label: "Centro de Inteligência", icon: BrainCircuit, section: "estratégia",
+    description: "BI executivo — indicadores, rankings e gráficos em tempo real.",
+    emptyMessage: "Cadastre dados operacionais para alimentar a inteligência.",
+    primaryAction: "Atualizar" },
   { to: "/app/relatorios", label: "Relatórios", icon: BarChart3, section: "estratégia",
     description: "Análises consolidadas e exportações.",
     emptyMessage: "Nenhum relatório gerado ainda.",
