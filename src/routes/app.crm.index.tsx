@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/page-shell";
+import { ListSkeleton } from "@/components/shared/list-skeleton";
 import { CompanyFormDialog } from "@/components/crm/company-form-dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/hooks/use-session";
@@ -133,7 +134,7 @@ function CrmPage() {
       </div>
 
       {orgLoading || companies.isLoading ? (
-        <div className="text-sm text-muted-foreground">Carregando…</div>
+        <ListSkeleton />
       ) : filtered.length === 0 ? (
         <div className="rounded-3xl border border-dashed border-border bg-card/30 px-8 py-16 text-center">
           <Building2 className="mx-auto h-8 w-8 text-muted-foreground" />
