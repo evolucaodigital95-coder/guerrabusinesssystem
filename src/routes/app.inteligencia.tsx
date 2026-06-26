@@ -291,6 +291,7 @@ function IntelligencePage() {
   const stockItemMap = new Map(data.stockItems.map((i) => [i.id, i]));
   const stockUsage = new Map<string, { qty: number; cost: number }>();
   for (const m of data.stockMov.filter((m) => m.direction === "out")) {
+    if (!m.stock_item_id) continue;
     const s = stockUsage.get(m.stock_item_id) ?? { qty: 0, cost: 0 };
     s.qty += Number(m.quantity ?? 0);
     s.cost += Number(m.total_cost ?? (Number(m.unit_cost ?? 0) * Number(m.quantity ?? 0)));
