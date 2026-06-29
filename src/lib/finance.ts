@@ -1,3 +1,27 @@
+export const PAYMENT_METHODS = [
+  { key: "pix", label: "PIX" },
+  { key: "dinheiro", label: "Dinheiro" },
+  { key: "credito", label: "Cartão de Crédito", isCard: true },
+  { key: "debito", label: "Cartão de Débito", isCard: true },
+  { key: "cheque", label: "Cheque" },
+  { key: "transferencia", label: "Transferência" },
+  { key: "boleto", label: "Boleto" },
+  { key: "outro", label: "Outro" },
+] as const;
+
+export type PaymentMethod = (typeof PAYMENT_METHODS)[number]["key"];
+
+export function paymentMethodLabel(key: string | null | undefined) {
+  if (!key) return "—";
+  return PAYMENT_METHODS.find((p) => p.key === key)?.label ?? key;
+}
+
+export function isCardPayment(key: string | null | undefined) {
+  if (!key) return false;
+  const m = PAYMENT_METHODS.find((p) => p.key === key);
+  return !!(m as { isCard?: boolean } | undefined)?.isCard;
+}
+
 export const MOVEMENT_DIRECTIONS = [
   { key: "in", label: "Entrada" },
   { key: "out", label: "Saída" },
