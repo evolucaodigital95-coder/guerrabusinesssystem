@@ -12,9 +12,28 @@ import { useSession } from "@/hooks/use-session";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Entrar — GBS Guerra Business System" },
-      { name: "description", content: "Acesse o Guerra Business System." },
+      { title: "GBS — Sistema de gestão para palestrantes e grupos empresariais" },
+      {
+        name: "description",
+        content:
+          "GBS é o sistema do Grupo Guerra para gestão de palestras, CRM, financeiro, estoque e inteligência operacional. Acesse sua conta para continuar.",
+      },
+      { property: "og:title", content: "GBS — Sistema de gestão para palestrantes e grupos empresariais" },
+      {
+        property: "og:description",
+        content:
+          "Plataforma premium do Grupo Guerra que unifica operação, estratégia e inteligência em um único ambiente.",
+      },
+      { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://guerrabusinesssystem.lovable.app/" },
+      { name: "twitter:title", content: "GBS — Sistema de gestão para palestrantes e grupos empresariais" },
+      {
+        name: "twitter:description",
+        content:
+          "Plataforma premium do Grupo Guerra para palestras, CRM, financeiro e inteligência operacional.",
+      },
     ],
+    links: [{ rel: "canonical", href: "https://guerrabusinesssystem.lovable.app/" }],
   }),
   component: LoginPage,
 });
@@ -88,7 +107,7 @@ function LoginPage() {
         <div className="relative max-w-md">
           <p className="text-[10px] uppercase tracking-[0.32em] opacity-60">Guerra Business System</p>
           <h1 className="mt-6 font-serif text-5xl leading-tight">
-            Um sistema à altura do seu legado.
+            GBS — Sistema de gestão para palestrantes e grupos empresariais
           </h1>
           <p className="mt-6 text-sm leading-relaxed opacity-80">
             Operação, estratégia e inteligência reunidas num único ambiente premium para o Grupo Guerra.
@@ -99,7 +118,7 @@ function LoginPage() {
         </p>
       </div>
 
-      <div className="flex items-center justify-center px-6 py-12 md:px-12">
+      <main className="flex items-center justify-center px-6 py-12 md:px-12">
         <div className="w-full max-w-sm">
           <div className="mb-10 lg:hidden">
             <GbsMark />
@@ -154,7 +173,7 @@ function LoginPage() {
             )}
           </p>
         </div>
-      </div>
+      </main>
     </div>
   );
 }
