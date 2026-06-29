@@ -118,7 +118,7 @@ function LoginPage() {
         </p>
       </div>
 
-      <div className="flex items-center justify-center px-6 py-12 md:px-12">
+      <main className="flex items-center justify-center px-6 py-12 md:px-12">
         <div className="w-full max-w-sm">
           <div className="mb-10 lg:hidden">
             <GbsMark />
