@@ -50,8 +50,19 @@ export type LectureExpenseInput = {
   bucket?: ExpenseBucket; // default: "expense"
 };
 
+export type CardFeeLine = {
+  movement_id?: string;
+  description?: string | null;
+  brand?: string | null;
+  installments?: number | null;
+  percent?: number | null;
+  amount: number;          // valor da taxa (positivo)
+  date?: string | null;
+};
+
 export type LectureCalcInput = {
   grossRevenue: number;
+  cardFees?: CardFeeLine[];   // taxa do cartão por movimento (automática)
   expenses: LectureExpenseInput[];
   advances: { id: string; amount: number; granted_on?: string | null; source?: string | null }[];
   rule: RuleSnapshot;
@@ -63,6 +74,7 @@ export type LectureCalcResult = {
   totals: {
     grossRevenue: number;
     fee: number;
+    totalCardFees: number;
     totalTaxes: number;
     totalCosts: number;
     totalStock: number;
@@ -75,9 +87,15 @@ export type LectureCalcResult = {
   };
 };
 
-/** Cálculo transparente de fechamento de uma palestra. */
+/**
+ * Cálculo transparente de fechamento de uma palestra.
+ * Ordem fixa e auditável:
+ *   Receita Bruta − Taxa do Cartão − Taxa da regra − Despesas − Custos de Estoque − Custos operacionais
+ *   = Lucro Líquido → divisão conforme regra vigente.
+ */
 export function calculateLecture(input: LectureCalcInput): LectureCalcResult {
   const { grossRevenue, expenses, advances, rule } = input;
+  const cardFees = input.cardFees ?? [];
 
   const byBucket: Record<ExpenseBucket, LectureExpenseInput[]> = {
     tax: [], cost: [], stock: [], expense: [],
@@ -88,6 +106,7 @@ export function calculateLecture(input: LectureCalcInput): LectureCalcResult {
   const sumBucket = (b: ExpenseBucket) =>
     round(byBucket[b].reduce((s, e) => s + Math.abs(Number(e.amount || 0)), 0));
 
+  const totalCardFees = round(cardFees.reduce((s, f) => s + Math.abs(Number(f.amount || 0)), 0));
   const totalTaxes = sumBucket("tax");
   const totalCosts = sumBucket("cost");
   const totalStock = sumBucket("stock");
@@ -95,13 +114,29 @@ export function calculateLecture(input: LectureCalcInput): LectureCalcResult {
   const totalExpenses = round(totalTaxes + totalCosts + totalStock + totalOtherExpenses);
   const totalAdvances = round(advances.reduce((s, a) => s + Number(a.amount || 0), 0));
   const fee = round(grossRevenue * (rule.fee_percent || 0) + (rule.fee_fixed || 0));
-  const netProfit = round(grossRevenue - fee - totalExpenses - totalAdvances);
+  const netProfit = round(grossRevenue - totalCardFees - fee - totalExpenses - totalAdvances);
   const gustavoAmount = round(netProfit * (rule.gustavo_share || 0));
   const agentAmount = round(netProfit * (rule.agent_share || 0));
 
   const lines: CalcLine[] = [
     { label: "Receita bruta", amount: grossRevenue, kind: "in" as const },
   ];
+  if (totalCardFees) {
+    for (const f of cardFees) {
+      const parts = [
+        f.brand ?? "Cartão",
+        f.installments && f.installments > 1 ? `${f.installments}x` : null,
+        f.percent != null ? `${pct((f.percent || 0) / 100)}` : null,
+      ].filter(Boolean).join(" · ");
+      lines.push({
+        label: `Taxa do cartão · ${parts}`,
+        amount: -Math.abs(Number(f.amount || 0)),
+        kind: "out" as const,
+        hint: f.date ?? undefined,
+      });
+    }
+    lines.push({ label: "Subtotal taxa do cartão", amount: -totalCardFees, kind: "subtotal" as const });
+  }
   if (fee) {
     lines.push({
       label: `Taxa de regra (${pct(rule.fee_percent)}${rule.fee_fixed ? ` + ${money(rule.fee_fixed)}` : ""})`,
@@ -136,7 +171,7 @@ export function calculateLecture(input: LectureCalcInput): LectureCalcResult {
     rule,
     lines,
     totals: {
-      grossRevenue, fee,
+      grossRevenue, fee, totalCardFees,
       totalTaxes, totalCosts, totalStock, totalOtherExpenses,
       totalExpenses, totalAdvances, netProfit, gustavoAmount, agentAmount,
     },
@@ -242,6 +277,15 @@ export function buildAgentStatement(input: AgentStatementInput): AgentStatement 
     },
   };
 }
+
+/**
+ * Conta corrente do palestrante — usa o MESMO builder de extrato.
+ * Hoje há um único palestrante (Gustavo) e o `closedShares` é alimentado
+ * com `gustavo_amount` dos snapshots; no futuro basta filtrar por `speaker_id`.
+ */
+export const buildSpeakerStatement = buildAgentStatement;
+export type SpeakerStatementInput = AgentStatementInput;
+export type SpeakerStatement = AgentStatement;
 
 /** Encontra a regra vigente para um agendista numa data — sem nada fixo no código. */
 export function selectRule(opts: {
