@@ -91,8 +91,9 @@ function HojePage() {
           Hoje · {today}
         </div>
         <h1 className="mt-6 font-display text-5xl leading-[1.05] md:text-6xl">
-          {greeting()}, Gustavo.
+          Visão Geral do Dia
         </h1>
+        <p className="mt-3 text-sm text-muted-foreground">{greeting()}, Gustavo.</p>
         <p className="mt-6 max-w-xl text-base leading-relaxed text-muted-foreground">
           Resultados extraordinários começam com pessoas extraordinárias.
         </p>
