@@ -171,7 +171,7 @@ export function calculateLecture(input: LectureCalcInput): LectureCalcResult {
     rule,
     lines,
     totals: {
-      grossRevenue, fee,
+      grossRevenue, fee, totalCardFees,
       totalTaxes, totalCosts, totalStock, totalOtherExpenses,
       totalExpenses, totalAdvances, netProfit, gustavoAmount, agentAmount,
     },
