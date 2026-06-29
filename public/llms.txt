@@ -1,0 +1,9 @@
+# GBS — Guerra Business System
+
+> Sistema empresarial privado do Grupo Guerra para gestão de palestras, CRM, financeiro, estoque e inteligência operacional. Acesso restrito a usuários autenticados.
+
+O GBS unifica operação, estratégia e inteligência em um único ambiente premium. Toda a aplicação está atrás de autenticação; apenas a página de acesso é pública.
+
+## Pages
+
+- [Acessar GBS](/): Página de login e criação de conta para usuários autorizados do Grupo Guerra.
