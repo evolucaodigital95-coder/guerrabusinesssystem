@@ -278,6 +278,15 @@ export function buildAgentStatement(input: AgentStatementInput): AgentStatement 
   };
 }
 
+/**
+ * Conta corrente do palestrante — usa o MESMO builder de extrato.
+ * Hoje há um único palestrante (Gustavo) e o `closedShares` é alimentado
+ * com `gustavo_amount` dos snapshots; no futuro basta filtrar por `speaker_id`.
+ */
+export const buildSpeakerStatement = buildAgentStatement;
+export type SpeakerStatementInput = AgentStatementInput;
+export type SpeakerStatement = AgentStatement;
+
 /** Encontra a regra vigente para um agendista numa data — sem nada fixo no código. */
 export function selectRule(opts: {
   rules: Array<RuleSnapshot & { agent_id?: string | null; season_id?: string | null; is_default?: boolean | null; archived_at?: string | null }>;
