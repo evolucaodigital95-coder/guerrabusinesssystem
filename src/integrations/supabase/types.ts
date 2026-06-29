@@ -389,6 +389,122 @@ export type Database = {
           },
         ]
       }
+      card_brands: {
+        Row: {
+          active: boolean
+          archived_at: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          kind: string
+          name: string
+          notes: string | null
+          organization_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          active?: boolean
+          archived_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kind?: string
+          name: string
+          notes?: string | null
+          organization_id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          active?: boolean
+          archived_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kind?: string
+          name?: string
+          notes?: string | null
+          organization_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "card_brands_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      card_fee_tiers: {
+        Row: {
+          archived_at: string | null
+          card_brand_id: string
+          created_at: string
+          created_by: string | null
+          days_to_receive: number
+          effective_from: string | null
+          effective_to: string | null
+          fee_percent: number
+          id: string
+          installments: number
+          notes: string | null
+          organization_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          archived_at?: string | null
+          card_brand_id: string
+          created_at?: string
+          created_by?: string | null
+          days_to_receive?: number
+          effective_from?: string | null
+          effective_to?: string | null
+          fee_percent?: number
+          id?: string
+          installments?: number
+          notes?: string | null
+          organization_id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          archived_at?: string | null
+          card_brand_id?: string
+          created_at?: string
+          created_by?: string | null
+          days_to_receive?: number
+          effective_from?: string | null
+          effective_to?: string | null
+          fee_percent?: number
+          id?: string
+          installments?: number
+          notes?: string | null
+          organization_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "card_fee_tiers_card_brand_id_fkey"
+            columns: ["card_brand_id"]
+            isOneToOne: false
+            referencedRelation: "card_brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "card_fee_tiers_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       companies: {
         Row: {
           address: string | null
@@ -606,6 +722,10 @@ export type Database = {
           agent_id: string | null
           amount: number | null
           archived_at: string | null
+          card_brand_id: string | null
+          card_fee_amount: number | null
+          card_fee_percent: number | null
+          card_installments: number | null
           category: string | null
           company_id: string | null
           created_at: string
@@ -617,10 +737,12 @@ export type Database = {
           expected_date: string | null
           id: string
           lecture_id: string | null
+          net_amount: number | null
           notes: string | null
           occurs_on: string | null
           occurs_time: string | null
           organization_id: string
+          payment_method: string | null
           project_id: string | null
           season_id: string | null
           settled_at: string | null
@@ -633,6 +755,10 @@ export type Database = {
           agent_id?: string | null
           amount?: number | null
           archived_at?: string | null
+          card_brand_id?: string | null
+          card_fee_amount?: number | null
+          card_fee_percent?: number | null
+          card_installments?: number | null
           category?: string | null
           company_id?: string | null
           created_at?: string
@@ -644,10 +770,12 @@ export type Database = {
           expected_date?: string | null
           id?: string
           lecture_id?: string | null
+          net_amount?: number | null
           notes?: string | null
           occurs_on?: string | null
           occurs_time?: string | null
           organization_id: string
+          payment_method?: string | null
           project_id?: string | null
           season_id?: string | null
           settled_at?: string | null
@@ -660,6 +788,10 @@ export type Database = {
           agent_id?: string | null
           amount?: number | null
           archived_at?: string | null
+          card_brand_id?: string | null
+          card_fee_amount?: number | null
+          card_fee_percent?: number | null
+          card_installments?: number | null
           category?: string | null
           company_id?: string | null
           created_at?: string
@@ -671,10 +803,12 @@ export type Database = {
           expected_date?: string | null
           id?: string
           lecture_id?: string | null
+          net_amount?: number | null
           notes?: string | null
           occurs_on?: string | null
           occurs_time?: string | null
           organization_id?: string
+          payment_method?: string | null
           project_id?: string | null
           season_id?: string | null
           settled_at?: string | null
@@ -695,6 +829,13 @@ export type Database = {
             columns: ["agent_id"]
             isOneToOne: false
             referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financial_movements_card_brand_id_fkey"
+            columns: ["card_brand_id"]
+            isOneToOne: false
+            referencedRelation: "card_brands"
             referencedColumns: ["id"]
           },
           {
@@ -942,6 +1083,13 @@ export type Database = {
             foreignKeyName: "inventory_batches_stock_item_id_fkey"
             columns: ["stock_item_id"]
             isOneToOne: false
+            referencedRelation: "stock_item_metrics"
+            referencedColumns: ["stock_item_id"]
+          },
+          {
+            foreignKeyName: "inventory_batches_stock_item_id_fkey"
+            columns: ["stock_item_id"]
+            isOneToOne: false
             referencedRelation: "stock_items"
             referencedColumns: ["id"]
           },
@@ -1059,8 +1207,11 @@ export type Database = {
           organization_id: string
           rule_id: string | null
           rule_snapshot: Json
+          speaker_id: string | null
           total_advances: number
+          total_card_fees: number
           total_expenses: number
+          total_stock_cost: number
           updated_at: string
         }
         Insert: {
@@ -1081,8 +1232,11 @@ export type Database = {
           organization_id: string
           rule_id?: string | null
           rule_snapshot: Json
+          speaker_id?: string | null
           total_advances?: number
+          total_card_fees?: number
           total_expenses?: number
+          total_stock_cost?: number
           updated_at?: string
         }
         Update: {
@@ -1103,8 +1257,11 @@ export type Database = {
           organization_id?: string
           rule_id?: string | null
           rule_snapshot?: Json
+          speaker_id?: string | null
           total_advances?: number
+          total_card_fees?: number
           total_expenses?: number
+          total_stock_cost?: number
           updated_at?: string
         }
         Relationships: [
@@ -1221,6 +1378,7 @@ export type Database = {
           scheduled_at: string | null
           scheduled_time: string | null
           season_id: string | null
+          speaker_id: string | null
           state: string | null
           status: string | null
           theme: string | null
@@ -1253,6 +1411,7 @@ export type Database = {
           scheduled_at?: string | null
           scheduled_time?: string | null
           season_id?: string | null
+          speaker_id?: string | null
           state?: string | null
           status?: string | null
           theme?: string | null
@@ -1285,6 +1444,7 @@ export type Database = {
           scheduled_at?: string | null
           scheduled_time?: string | null
           season_id?: string | null
+          speaker_id?: string | null
           state?: string | null
           status?: string | null
           theme?: string | null
@@ -2026,6 +2186,13 @@ export type Database = {
             foreignKeyName: "stock_movements_stock_item_id_fkey"
             columns: ["stock_item_id"]
             isOneToOne: false
+            referencedRelation: "stock_item_metrics"
+            referencedColumns: ["stock_item_id"]
+          },
+          {
+            foreignKeyName: "stock_movements_stock_item_id_fkey"
+            columns: ["stock_item_id"]
+            isOneToOne: false
             referencedRelation: "stock_items"
             referencedColumns: ["id"]
           },
@@ -2217,10 +2384,28 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      stock_item_metrics: {
+        Row: {
+          last_movement_at: string | null
+          organization_id: string | null
+          stock_item_id: string | null
+          total_purchased: number | null
+          total_used: number | null
+          total_used_cost: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_items_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
-      [_ in never]: never
+      compute_stock_avg_cost: { Args: { p_item: string }; Returns: number }
     }
     Enums: {
       org_role: "owner" | "admin" | "member" | "viewer"
