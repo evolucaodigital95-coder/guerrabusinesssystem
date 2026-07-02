@@ -67,6 +67,13 @@ type Batch = {
   created_at: string;
 };
 
+type StockMetrics = {
+  total_purchased: number | null;
+  total_used: number | null;
+  total_used_cost: number | null;
+  last_movement_at: string | null;
+};
+
 function ItemDetail() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
@@ -120,6 +127,20 @@ function ItemDetail() {
         .order("received_on", { ascending: false, nullsFirst: false });
       if (error) throw error;
       return (data ?? []) as Batch[];
+    },
+  });
+
+  const metrics = useQuery({
+    queryKey: ["stock-item-metrics", id],
+    enabled: !!id,
+    queryFn: async (): Promise<StockMetrics | null> => {
+      const { data, error } = await supabase
+        .from("stock_item_metrics")
+        .select("total_purchased, total_used, total_used_cost, last_movement_at")
+        .eq("stock_item_id", id)
+        .maybeSingle();
+      if (error) throw error;
+      return data as StockMetrics | null;
     },
   });
 
@@ -211,6 +232,9 @@ function ItemDetail() {
           <BigStat label="Em estoque" value={`${balance.onHand}${it.unit ? ` ${it.unit}` : ""}`} highlight={low} />
           <BigStat label="Reservado" value={String(balance.reserved)} muted />
           <BigStat label="Disponível" value={String(balance.available)} />
+          <BigStat label="Total comprado" value={`${Number(metrics.data?.total_purchased ?? 0)}${it.unit ? ` ${it.unit}` : ""}`} />
+          <BigStat label="Total utilizado" value={`${Number(metrics.data?.total_used ?? 0)}${it.unit ? ` ${it.unit}` : ""}`} />
+          <BigStat label="Última movimentação" value={metrics.data?.last_movement_at ? formatDate(metrics.data.last_movement_at) : "—"} muted />
           <BigStat label="Lotes ativos" value={String((batches.data ?? []).length)} muted />
           <BigStat label="Movimentações" value={String((movements.data ?? []).length)} muted />
           <BigStat label="Valor em estoque" value={formatCurrency(stockValue)} />
