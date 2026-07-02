@@ -71,6 +71,19 @@ export function MovementFormDialog({
     },
   });
 
+  const currentItem = useQuery({
+    queryKey: ["stock-item-cost", f.stock_item_id],
+    enabled: !!f.stock_item_id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("stock_items")
+        .select("id, name, unit, average_cost, purchase_price")
+        .eq("id", f.stock_item_id!).maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+
   const batches = useQuery({
     queryKey: ["stock-batches-select", f.stock_item_id],
     enabled: !!f.stock_item_id,
@@ -126,7 +139,7 @@ export function MovementFormDialog({
       const qty = Number(f.quantity);
       if (!qty || qty <= 0) throw new Error("Informe a quantidade.");
       const kind = (f.kind ?? "saida") as MovementKind;
-      const unitCost = f.unit_cost ? Number(f.unit_cost) : null;
+      const unitCost = f.unit_cost !== "" && f.unit_cost != null ? Number(f.unit_cost) : null;
       const status =
         kind === "reserva" ? (f.status ?? "reservado") :
         kind === "cancelamento" ? "cancelado" :
@@ -158,6 +171,7 @@ export function MovementFormDialog({
       toast.success("Movimentação registrada");
       qc.invalidateQueries({ queryKey: ["stock-movements"] });
       qc.invalidateQueries({ queryKey: ["stock-items"] });
+      if (f.stock_item_id) qc.invalidateQueries({ queryKey: ["stock-item", f.stock_item_id] });
       onOpenChange(false);
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Erro"),
@@ -168,6 +182,11 @@ export function MovementFormDialog({
 
   const kind = (f.kind ?? "saida") as MovementKind;
   const isReserva = kind === "reserva";
+  const selectedBatch = (batches.data ?? []).find((b) => b.id === f.batch_id);
+  const estimatedUnitCost = Number(
+    f.unit_cost || selectedBatch?.unit_cost || currentItem.data?.average_cost || currentItem.data?.purchase_price || 0,
+  );
+  const estimatedTotal = estimatedUnitCost * Number(f.quantity || 0);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -217,7 +236,18 @@ export function MovementFormDialog({
 
           <div className="space-y-1.5">
             <Label>Valor unitário</Label>
-            <Input type="number" step="0.01" value={f.unit_cost ?? ""} onChange={(e) => set("unit_cost", e.target.value)} />
+            <Input
+              type="number"
+              step="0.01"
+              value={f.unit_cost ?? ""}
+              onChange={(e) => set("unit_cost", e.target.value)}
+              placeholder={estimatedUnitCost ? `Auto: ${money(estimatedUnitCost)}` : "Auto pelo lote/item"}
+            />
+            {kind !== "entrada" && estimatedTotal > 0 && (
+              <p className="text-[11px] text-muted-foreground">
+                Custo estimado que entrará no fechamento: {money(estimatedTotal)}
+              </p>
+            )}
           </div>
 
           <div className="space-y-1.5">
@@ -249,7 +279,7 @@ export function MovementFormDialog({
                 <SelectItem value={NONE}>Sem lote</SelectItem>
                 {(batches.data ?? []).map((b) => (
                   <SelectItem key={b.id} value={b.id}>
-                    {b.code ?? b.id.slice(0, 6)} · {b.received_on ?? "—"} · {b.quantity ?? 0}
+                    {b.code ?? b.id.slice(0, 6)} · {b.received_on ?? "—"} · {b.quantity ?? 0}{b.unit_cost ? ` · ${money(Number(b.unit_cost))}` : ""}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -306,4 +336,8 @@ export function MovementFormDialog({
       </DialogContent>
     </Dialog>
   );
+}
+
+function money(v: number) {
+  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v);
 }

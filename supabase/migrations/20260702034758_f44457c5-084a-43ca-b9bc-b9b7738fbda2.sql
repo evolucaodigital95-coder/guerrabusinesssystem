@@ -1,0 +1,1 @@
+ALTER VIEW public.stock_item_metrics SET (security_invoker = true);
