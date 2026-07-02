@@ -13,7 +13,8 @@ import {
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  MOVEMENT_DIRECTIONS, MOVEMENT_CATEGORIES, statusOptions, type MovementDirection,
+  MOVEMENT_DIRECTIONS, MOVEMENT_CATEGORIES, PAYMENT_METHODS,
+  isCardPayment, statusOptions, type MovementDirection,
 } from "@/lib/finance";
 
 export type MovementRow = {
@@ -33,6 +34,12 @@ export type MovementRow = {
   lecture_id?: string | null;
   agent_id?: string | null;
   season_id?: string | null;
+  payment_method?: string | null;
+  card_brand_id?: string | null;
+  card_installments?: number | string | null;
+  card_fee_percent?: number | string | null;
+  card_fee_amount?: number | string | null;
+  net_amount?: number | string | null;
   notes?: string | null;
 };
 
@@ -62,6 +69,8 @@ export function MovementFormDialog({
       settled_at: "",
       occurs_on: today,
       occurs_time: now,
+      payment_method: "pix",
+      card_installments: 1,
     },
   );
   const queryClient = useQueryClient();
@@ -117,8 +126,22 @@ export function MovementFormDialog({
     },
   });
 
+  const cardBrands = useQuery({
+    queryKey: ["card-brands-select", organizationId],
+    enabled: !!organizationId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("card_brands").select("id, name, kind")
+        .eq("organization_id", organizationId).eq("active", true)
+        .is("archived_at", null).order("name");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
   const direction = (f.direction ?? "in") as MovementDirection;
   const statuses = statusOptions(direction);
+  const cardPayment = direction === "in" && isCardPayment(f.payment_method);
 
   const save = useMutation({
     mutationFn: async () => {
@@ -140,6 +163,10 @@ export function MovementFormDialog({
         lecture_id: f.lecture_id || null,
         agent_id: f.agent_id || null,
         season_id: f.season_id || null,
+        payment_method: direction === "in" ? (f.payment_method || null) : null,
+        card_brand_id: cardPayment ? (f.card_brand_id || null) : null,
+        card_installments: cardPayment ? Number(f.card_installments || 1) : null,
+        card_fee_percent: cardPayment && f.card_fee_percent !== "" && f.card_fee_percent != null ? Number(f.card_fee_percent) : null,
         notes: f.notes?.trim() || null,
         updated_by: userId,
       };
@@ -238,6 +265,44 @@ export function MovementFormDialog({
               </SelectContent>
             </Select>
           </div>
+
+          {direction === "in" && (
+            <>
+              <div className="space-y-1.5">
+                <Label>Forma de recebimento</Label>
+                <Select value={f.payment_method ?? "pix"} onValueChange={(v) => set("payment_method", v)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {PAYMENT_METHODS.map((m) => <SelectItem key={m.key} value={m.key}>{m.label}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              {cardPayment && (
+                <>
+                  <div className="space-y-1.5">
+                    <Label>Bandeira</Label>
+                    <Select value={f.card_brand_id ?? NONE} onValueChange={(v) => set("card_brand_id", v === NONE ? null : v)}>
+                      <SelectTrigger><SelectValue placeholder="Selecionar" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={NONE}>Sem bandeira</SelectItem>
+                        {(cardBrands.data ?? []).map((b) => (
+                          <SelectItem key={b.id} value={b.id}>{b.name}{b.kind ? ` · ${b.kind}` : ""}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Parcelas</Label>
+                    <Input type="number" min="1" step="1" value={f.card_installments ?? 1} onChange={(e) => set("card_installments", e.target.value)} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Juros / taxa do cartão (%)</Label>
+                    <Input type="number" step="0.01" value={f.card_fee_percent ?? ""} onChange={(e) => set("card_fee_percent", e.target.value)} placeholder="Auto pela bandeira" />
+                  </div>
+                </>
+              )}
+            </>
+          )}
 
           <div className="space-y-1.5">
             <Label>Data prevista</Label>
