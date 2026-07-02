@@ -83,6 +83,8 @@ export function BatchFormDialog({
       toast.success("Entrada registrada");
       qc.invalidateQueries({ queryKey: ["stock-batches", stockItemId] });
       qc.invalidateQueries({ queryKey: ["stock-movements", stockItemId] });
+      qc.invalidateQueries({ queryKey: ["stock-item", stockItemId] });
+      qc.invalidateQueries({ queryKey: ["stock-item-metrics", stockItemId] });
       qc.invalidateQueries({ queryKey: ["stock-items"] });
       onOpenChange(false);
     },
