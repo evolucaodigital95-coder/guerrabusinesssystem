@@ -33,6 +33,7 @@ import { ArchiveButton } from "@/components/shared/archive-button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CalcBreakdown } from "@/components/finance/calc-breakdown";
 import { calculateLecture, selectRule, BUCKET_LABEL, type RuleSnapshot, type ExpenseBucket, type LectureExpenseInput } from "@/lib/finance-engine";
+import { paymentMethodLabel } from "@/lib/finance";
 import { cn } from "@/lib/utils";
 
 
@@ -82,7 +83,7 @@ function PalestraDetail() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("financial_movements")
-        .select("id, direction, status, category, description, amount, expected_amount, occurs_on")
+        .select("id, direction, status, category, description, amount, expected_amount, occurs_on, payment_method, card_fee_amount, net_amount")
         .eq("lecture_id", id).is("archived_at", null)
         .order("occurs_on", { ascending: false, nullsFirst: false });
       if (error) throw error;
@@ -96,7 +97,7 @@ function PalestraDetail() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("stock_movements")
-        .select("id, direction, quantity, reason, occurs_on, notes, stock_items:stock_item_id ( id, name, unit )")
+        .select("id, direction, kind, status, quantity, unit_cost, total_cost, reason, occurs_on, notes, stock_items:stock_item_id ( id, name, unit )")
         .eq("lecture_id", id).is("archived_at", null)
         .order("occurs_on", { ascending: false, nullsFirst: false });
       if (error) throw error;
@@ -110,7 +111,7 @@ function PalestraDetail() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("lecture_financial_snapshots")
-        .select("id, agent_amount, gustavo_amount, net_profit, gross_revenue, total_expenses, total_advances, closed_at")
+        .select("id, agent_amount, gustavo_amount, net_profit, gross_revenue, total_expenses, total_advances, total_card_fees, total_stock_cost, closed_at")
         .eq("lecture_id", id).is("archived_at", null).order("closed_at", { ascending: false }).limit(1).maybeSingle();
       if (error) throw error;
       return data;
@@ -311,6 +312,8 @@ function PalestraDetail() {
               <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">Snapshot de fechamento</p>
               <div className="mt-3 grid gap-3 md:grid-cols-4 text-sm">
                 <Field label="Lucro líquido" value={formatCurrency(Number(snapshot.data.net_profit))} />
+                <Field label="Taxas cartão" value={formatCurrency(Number(snapshot.data.total_card_fees ?? 0))} />
+                <Field label="Materiais" value={formatCurrency(Number(snapshot.data.total_stock_cost ?? 0))} />
                 <Field label="Gustavo" value={formatCurrency(Number(snapshot.data.gustavo_amount))} />
                 <Field label="Agendista" value={formatCurrency(Number(snapshot.data.agent_amount))} accent="gold" />
                 <Field label="Fechada em" value={formatDate(snapshot.data.closed_at)} />
@@ -380,6 +383,7 @@ function PalestraDetail() {
                     <th className="px-4 py-3 text-left font-medium">Item</th>
                     <th className="px-4 py-3 text-left font-medium">Motivo</th>
                     <th className="px-4 py-3 text-right font-medium">Quantidade</th>
+                    <th className="px-4 py-3 text-right font-medium">Custo</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -392,6 +396,9 @@ function PalestraDetail() {
                         <td className="px-4 py-3 text-muted-foreground">{s.reason ?? "—"}</td>
                         <td className={cn("px-4 py-3 text-right tabular-nums", s.direction === "in" ? "text-emerald-600" : "text-rose-600")}>
                           {s.direction === "in" ? "+" : "−"} {Number(s.quantity ?? 0)} {item?.unit ?? ""}
+                        </td>
+                        <td className="px-4 py-3 text-right tabular-nums text-muted-foreground">
+                          {s.direction === "out" ? formatCurrency(Number(s.total_cost ?? 0)) : "—"}
                         </td>
                       </tr>
                     );
@@ -647,7 +654,7 @@ function FechamentoFinanceiroTab({
     queryFn: async () => {
       const { data, error } = await supabase
         .from("financial_movements")
-        .select("id, direction, status, category, description, amount, expected_amount, occurs_on, occurs_time, created_at, created_by, account_id, accounts:account_id ( id, name )")
+        .select("id, direction, status, category, description, amount, expected_amount, occurs_on, occurs_time, created_at, created_by, account_id, payment_method, card_brand_id, card_installments, card_fee_percent, card_fee_amount, net_amount, accounts:account_id ( id, name ), card_brands:card_brand_id ( id, name, kind )")
         .eq("lecture_id", lectureId).is("archived_at", null);
       if (error) throw error;
       return data ?? [];
@@ -697,7 +704,7 @@ function FechamentoFinanceiroTab({
     queryFn: async () => {
       const { data, error } = await supabase
         .from("lecture_financial_snapshots")
-        .select("id, agent_id, agent_amount, gustavo_amount, net_profit, gross_revenue, total_expenses, total_advances, rule_snapshot, inputs, breakdown, closed_at, closed_by")
+        .select("id, agent_id, agent_amount, gustavo_amount, net_profit, gross_revenue, total_expenses, total_advances, total_card_fees, total_stock_cost, rule_snapshot, inputs, breakdown, closed_at, closed_by")
         .eq("lecture_id", lectureId).is("archived_at", null)
         .order("closed_at", { ascending: false }).limit(1).maybeSingle();
       if (error) throw error;
@@ -740,6 +747,12 @@ function FechamentoFinanceiroTab({
         id: m.id,
         description: m.description ?? "Receita",
         amount: Number(m.amount ?? m.expected_amount ?? 0),
+        cardFeeAmount: Number(m.card_fee_amount ?? 0),
+        cardFeePercent: Number(m.card_fee_percent ?? 0),
+        netAmount: Number(m.net_amount ?? m.amount ?? m.expected_amount ?? 0),
+        paymentMethod: m.payment_method,
+        cardBrand: (m.card_brands as { name?: string } | null)?.name ?? null,
+        installments: m.card_installments,
         date: m.occurs_on,
         category: m.category,
         status: m.status,
@@ -749,6 +762,20 @@ function FechamentoFinanceiroTab({
         docLabel: "Abrir financeiro",
       }));
   }, [movements.data]);
+
+  const cardFees = useMemo(() => {
+    return receitas
+      .filter((r) => r.cardFeeAmount > 0)
+      .map((r) => ({
+        movement_id: r.id,
+        description: r.description,
+        brand: r.cardBrand ?? paymentMethodLabel(r.paymentMethod),
+        installments: r.installments,
+        percent: r.cardFeePercent,
+        amount: r.cardFeeAmount,
+        date: r.date,
+      }));
+  }, [receitas]);
 
   const grossRevenue = useMemo(() => {
     const fromMov = receitas.reduce((s, r) => s + r.amount, 0);
@@ -840,11 +867,12 @@ function FechamentoFinanceiroTab({
     }
     return calculateLecture({
       grossRevenue,
+        cardFees,
       expenses,
       advances: advancesForCalc,
       rule: activeRule,
     });
-  }, [isClosed, snapshot.data, grossRevenue, expenses, advancesForCalc, activeRule]);
+  }, [isClosed, snapshot.data, grossRevenue, cardFees, expenses, advancesForCalc, activeRule]);
 
   const close = useMutation({
     mutationFn: async () => {
@@ -852,7 +880,7 @@ function FechamentoFinanceiroTab({
       if (!agentId) throw new Error("Vincule um agendista antes de fechar.");
 
       const breakdown = calculateLecture({
-        grossRevenue, expenses, advances: advancesForCalc, rule: activeRule,
+        grossRevenue, cardFees, expenses, advances: advancesForCalc, rule: activeRule,
       });
 
       const { error: insErr } = await supabase.from("lecture_financial_snapshots").insert({
@@ -861,11 +889,13 @@ function FechamentoFinanceiroTab({
         agent_id: agentId,
         rule_id: activeRule.id ?? null,
         rule_snapshot: JSON.parse(JSON.stringify(activeRule)),
-        inputs: JSON.parse(JSON.stringify({ grossRevenue, expenses, advances: advancesForCalc })),
+        inputs: JSON.parse(JSON.stringify({ grossRevenue, cardFees, expenses, advances: advancesForCalc })),
         breakdown: JSON.parse(JSON.stringify(breakdown)),
         gross_revenue: grossRevenue,
         total_expenses: breakdown.totals.totalExpenses,
         total_advances: breakdown.totals.totalAdvances,
+        total_card_fees: breakdown.totals.totalCardFees,
+        total_stock_cost: breakdown.totals.totalStock,
         net_profit: breakdown.totals.netProfit,
         gustavo_amount: breakdown.totals.gustavoAmount,
         agent_amount: breakdown.totals.agentAmount,
@@ -960,9 +990,11 @@ function FechamentoFinanceiroTab({
       </div>
 
       {/* KPIs do cálculo */}
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
         <CalcKPI label="Receita bruta" value={calc.totals.grossRevenue} accent="positive" />
-        <CalcKPI label="Total saídas" value={-(calc.totals.totalExpenses + calc.totals.totalAdvances + calc.totals.fee)} accent="negative" />
+        <CalcKPI label="Taxas cartão" value={-calc.totals.totalCardFees} accent="negative" />
+        <CalcKPI label="Materiais" value={-calc.totals.totalStock} accent="negative" />
+        <CalcKPI label="Total saídas" value={-(calc.totals.totalExpenses + calc.totals.totalAdvances + calc.totals.fee + calc.totals.totalCardFees)} accent="negative" />
         <CalcKPI label="Lucro líquido" value={calc.totals.netProfit} accent={calc.totals.netProfit >= 0 ? "positive" : "negative"} />
         <CalcKPI label="Gustavo" value={calc.totals.gustavoAmount} accent="muted" />
         <CalcKPI label="Agendista" value={calc.totals.agentAmount} accent="gold" />
@@ -983,7 +1015,11 @@ function FechamentoFinanceiroTab({
           origin: {
             actorName: actorName(r.createdBy),
             createdAt: r.createdAt,
-            reason: r.status ? `Status: ${r.status}` : null,
+              reason: [
+                r.status ? `Status: ${r.status}` : null,
+                r.paymentMethod ? `Forma: ${paymentMethodLabel(r.paymentMethod)}` : null,
+                r.cardFeeAmount > 0 ? `Taxa cartão: ${formatCurrency(r.cardFeeAmount)} · líquido ${formatCurrency(r.netAmount)}` : null,
+              ].filter(Boolean).join(" · ") || null,
             docRoute: r.docRoute, docLabel: r.docLabel,
           },
         }))}
