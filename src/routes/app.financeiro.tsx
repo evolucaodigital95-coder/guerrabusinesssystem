@@ -21,7 +21,7 @@ import { useCurrentOrg } from "@/hooks/use-current-org";
 import { formatCurrency, formatDate } from "@/lib/crm";
 import {
   MOVEMENT_DIRECTIONS, MOVEMENT_CATEGORIES, statusLabel, isSettled,
-  FINANCE_TIMELINE_KINDS, ACCOUNT_KINDS,
+  FINANCE_TIMELINE_KINDS, ACCOUNT_KINDS, paymentMethodLabel,
 } from "@/lib/finance";
 import { MovementFormDialog, type MovementRow } from "@/components/finance/movement-form-dialog";
 import { AccountFormDialog, type AccountRow } from "@/components/finance/account-form-dialog";
@@ -56,6 +56,12 @@ type Movement = {
   agent_id: string | null;
   season_id: string | null;
   project_id: string | null;
+  payment_method: string | null;
+  card_brand_id: string | null;
+  card_installments: number | null;
+  card_fee_percent: number | null;
+  card_fee_amount: number | null;
+  net_amount: number | null;
   notes: string | null;
   created_at: string;
   updated_at: string;
@@ -65,6 +71,7 @@ type Movement = {
   agents: { id: string; full_name: string } | null;
   seasons: { id: string; name: string } | null;
   projects: { id: string; name: string } | null;
+  card_brands: { id: string; name: string; kind: string | null } | null;
 };
 
 type Account = {
@@ -121,14 +128,16 @@ function FinancePage() {
         .select(`
           id, direction, status, category, description, amount, expected_amount,
           expected_date, settled_at, occurs_on, occurs_time,
-          account_id, company_id, lecture_id, agent_id, season_id, project_id, notes,
+          account_id, company_id, lecture_id, agent_id, season_id, project_id,
+          payment_method, card_brand_id, card_installments, card_fee_percent, card_fee_amount, net_amount, notes,
           created_at, updated_at,
           accounts:account_id ( id, name, kind ),
           companies:company_id ( id, legal_name ),
           lectures:lecture_id ( id, title ),
           agents:agent_id ( id, full_name ),
           seasons:season_id ( id, name ),
-          projects:project_id ( id, name )
+          projects:project_id ( id, name ),
+          card_brands:card_brand_id ( id, name, kind )
         `)
         .eq("organization_id", organizationId!)
         .is("archived_at", null)
@@ -152,6 +161,7 @@ function FinancePage() {
       list = list.filter((m) =>
         [
           m.description, m.category, m.notes,
+          paymentMethodLabel(m.payment_method), m.card_brands?.name,
           m.accounts?.name, m.companies?.legal_name, m.lectures?.title,
           m.amount != null ? String(m.amount) : "",
           m.expected_amount != null ? String(m.expected_amount) : "",
@@ -325,11 +335,16 @@ function FinancePage() {
                         <td className="px-4 py-3 align-top text-muted-foreground">{m.category ?? "—"}</td>
                         <td className="px-4 py-3 align-top text-muted-foreground">{m.accounts?.name ?? "—"}</td>
                         <td className="px-4 py-3 align-top text-muted-foreground">{m.companies?.legal_name ?? "—"}</td>
-                        <td className={cn(
+        <td className={cn(
                           "px-4 py-3 align-top text-right font-medium tabular-nums",
                           isIn ? "text-emerald-600" : "text-rose-600",
                         )}>
-                          {isIn ? "+" : "−"} {formatCurrency(Number(value ?? 0))}
+          <div>{isIn ? "+" : "−"} {formatCurrency(Number(value ?? 0))}</div>
+          {isIn && Number(m.card_fee_amount ?? 0) > 0 && (
+            <div className="text-[10px] font-normal text-muted-foreground">
+              líquido {formatCurrency(Number(m.net_amount ?? 0))}
+            </div>
+          )}
                         </td>
                         <td className="px-4 py-3 align-top">
                           <Badge variant="outline" className="font-normal">
@@ -572,6 +587,16 @@ function MovementSheet({
               <Field label="Data efetiva" value={`${formatDate(movement.occurs_on)}${movement.occurs_time ? ` ${movement.occurs_time.slice(0, 5)}` : ""}`} />
               <Field label="Status" value={statusLabel(movement.direction as "in" | "out", movement.status)} />
               <Field label="Conta" value={movement.accounts?.name ?? "—"} />
+              <Field label="Forma" value={paymentMethodLabel(movement.payment_method)} />
+              {isIn && Number(movement.card_fee_amount ?? 0) > 0 && (
+                <>
+                  <Field label="Bandeira" value={movement.card_brands?.name ?? "—"} />
+                  <Field label="Parcelas" value={`${movement.card_installments ?? 1}x`} />
+                  <Field label="Juros cartão" value={`${Number(movement.card_fee_percent ?? 0).toLocaleString("pt-BR")}%`} accent="negative" />
+                  <Field label="Taxa descontada" value={formatCurrency(Number(movement.card_fee_amount ?? 0))} accent="negative" />
+                  <Field label="Valor líquido" value={formatCurrency(Number(movement.net_amount ?? 0))} accent="positive" />
+                </>
+              )}
               <FieldLink
                 label="Empresa"
                 value={movement.companies?.legal_name ?? "—"}
