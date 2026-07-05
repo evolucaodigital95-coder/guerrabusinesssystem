@@ -52,7 +52,16 @@ function AgentDetail() {
   const [editingAdv, setEditingAdv] = useState<AdvanceRow | null>(null);
   const [ruleOpen, setRuleOpen] = useState(false);
   const [editingRule, setEditingRule] = useState<RuleRow | null>(null);
+  const [payoutOpen, setPayoutOpen] = useState(false);
   const [notesDraft, setNotesDraft] = useState<string | null>(null);
+  // Filtros do extrato
+  const [fStart, setFStart] = useState<string>("");
+  const [fEnd, setFEnd] = useState<string>("");
+  const [fType, setFType] = useState<string>("__all__");
+  const [fFlow, setFFlow] = useState<"all" | "in" | "out">("all");
+  const [fCompany, setFCompany] = useState<string>("__all__");
+  const [fSeason, setFSeason] = useState<string>("__all__");
+  const [fSearch, setFSearch] = useState<string>("");
   const qc = useQueryClient();
 
   const agent = useQuery({
