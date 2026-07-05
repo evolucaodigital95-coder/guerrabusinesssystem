@@ -545,7 +545,7 @@ function AgentDetail() {
       />
 
       {/* Resumo de conta corrente — estilo extrato bancário */}
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
         <BalanceCard
           label="Saldo Atual"
           value={statement.totals.balance}
@@ -565,9 +565,15 @@ function AgentDetail() {
         />
         <BalanceCard label="Créditos" value={totals.credits} accent="positive" />
         <BalanceCard label="Débitos" value={totals.debits} accent="negative" />
-        <BalanceCard label="Adiantamentos" value={totals.advances} accent="muted" />
         <BalanceCard label="Comissões" value={totals.commissions} accent="muted" />
-        <BalanceCard label="Pagamentos realizados" value={totals.payments} accent="muted" />
+        <BalanceCard label="Adiantamentos" value={totals.advances} accent="muted" />
+        <BalanceCard label="Pagamentos" value={totals.payments} accent="muted" />
+        <BalanceCard
+          label="Dízimo sugerido acumulado"
+          value={statement.totals.titheAccumulated}
+          accent="muted"
+          hint="10% sobre comissões — informativo, não abate saldo."
+        />
       </div>
 
 
