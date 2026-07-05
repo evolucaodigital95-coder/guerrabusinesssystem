@@ -2,13 +2,16 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ArrowLeft, Pencil, Plus, Calculator, ShieldCheck, FileText, History as HistoryIcon, Info, ExternalLink } from "lucide-react";
+import { ArrowLeft, Pencil, Plus, Calculator, ShieldCheck, FileText, History as HistoryIcon, Info, ExternalLink, Download, Filter, Wallet } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { PageHeader } from "@/components/page-shell";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/hooks/use-session";
@@ -17,6 +20,7 @@ import { formatCurrency, formatDate } from "@/lib/crm";
 import { AgentFormDialog, type AgentRow } from "@/components/agendistas/agent-form-dialog";
 import { AdvanceFormDialog, type AdvanceRow } from "@/components/agendistas/advance-form-dialog";
 import { RuleFormDialog, type RuleRow } from "@/components/agendistas/rule-form-dialog";
+import { AgentPayoutDialog } from "@/components/agendistas/agent-payout-dialog";
 import { AttachmentsTab } from "@/components/crm/attachments-tab";
 import { TimelineTab } from "@/components/shared/timeline-tab";
 import { ArchiveButton } from "@/components/shared/archive-button";
@@ -25,6 +29,7 @@ import {
   buildAgentStatement, calculateLecture, selectRule, advanceStatusLabel,
   type RuleSnapshot,
 } from "@/lib/finance-engine";
+import { exportStatementCSV, exportStatementXLSX, exportStatementPDF, type ExportMovement } from "@/lib/agent-statement-export";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/app/agendistas/$id")({
@@ -47,7 +52,16 @@ function AgentDetail() {
   const [editingAdv, setEditingAdv] = useState<AdvanceRow | null>(null);
   const [ruleOpen, setRuleOpen] = useState(false);
   const [editingRule, setEditingRule] = useState<RuleRow | null>(null);
+  const [payoutOpen, setPayoutOpen] = useState(false);
   const [notesDraft, setNotesDraft] = useState<string | null>(null);
+  // Filtros do extrato
+  const [fStart, setFStart] = useState<string>("");
+  const [fEnd, setFEnd] = useState<string>("");
+  const [fType, setFType] = useState<string>("__all__");
+  const [fFlow, setFFlow] = useState<"all" | "in" | "out">("all");
+  const [fCompany, setFCompany] = useState<string>("__all__");
+  const [fSeason, setFSeason] = useState<string>("__all__");
+  const [fSearch, setFSearch] = useState<string>("");
   const qc = useQueryClient();
 
   const agent = useQuery({
@@ -69,7 +83,7 @@ function AgentDetail() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("advances")
-        .select("id, amount, amount_amortized, granted_on, granted_time, source, paid_by_label, receipt_url, status, lecture_id, notes, created_at, created_by, updated_at, updated_by")
+        .select("id, amount, amount_amortized, granted_on, granted_time, source, paid_by_label, receipt_url, status, lecture_id, notes, created_at, created_by, updated_at, updated_by, lectures:lecture_id ( id, title, company_id, season_id, companies:company_id ( id, legal_name ), seasons:season_id ( id, name ) )")
         .eq("agent_id", id).is("archived_at", null)
         .order("granted_on", { ascending: false, nullsFirst: false });
       if (error) throw error;
@@ -83,7 +97,7 @@ function AgentDetail() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("lecture_financial_snapshots")
-        .select("id, lecture_id, agent_amount, gustavo_amount, net_profit, gross_revenue, total_expenses, total_advances, rule_snapshot, inputs, breakdown, closed_at, closed_by, lectures:lecture_id ( id, title, scheduled_at )")
+        .select("id, lecture_id, agent_amount, gustavo_amount, net_profit, gross_revenue, total_expenses, total_advances, rule_snapshot, inputs, breakdown, closed_at, closed_by, lectures:lecture_id ( id, title, scheduled_at, company_id, season_id, companies:company_id ( id, legal_name ), seasons:season_id ( id, name ) )")
         .eq("agent_id", id).is("archived_at", null)
         .order("closed_at", { ascending: false });
       if (error) throw error;
@@ -98,7 +112,7 @@ function AgentDetail() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("financial_movements")
-        .select("id, amount, occurs_on, description, status, direction, notes, lecture_id, created_at, created_by")
+        .select("id, amount, occurs_on, occurs_time, description, status, direction, notes, lecture_id, company_id, payment_method, created_at, created_by, lectures:lecture_id ( id, title, company_id, season_id, companies:company_id ( id, legal_name ), seasons:season_id ( id, name ) ), companies:company_id ( id, legal_name )")
         .eq("agent_id", id).eq("direction", "out").in("status", ["paga", "parcial"])
         .is("archived_at", null);
       if (error) throw error;
@@ -203,6 +217,12 @@ function AgentDetail() {
     type: "Adiantamento" | "Comissão" | "Pagamento" | "Ajuste" | "Estorno";
     description: string;
     amount: number;          // signed
+    companyId?: string | null;
+    companyName?: string | null;
+    lectureId?: string | null;
+    lectureTitle?: string | null;
+    seasonId?: string | null;
+    seasonName?: string | null;
     origin: {
       actorId: string | null;
       createdAt: string | null;
@@ -212,9 +232,18 @@ function AgentDetail() {
       extra?: { label: string; value: string }[];
     };
   };
+  type LectureExpansion = {
+    id?: string;
+    title?: string;
+    company_id?: string | null;
+    season_id?: string | null;
+    companies?: { id?: string; legal_name?: string } | null;
+    seasons?: { id?: string; name?: string } | null;
+  };
   const movements: Movement[] = useMemo(() => {
     const out: Movement[] = [];
     (advances.data ?? []).forEach((a) => {
+      const lec = a.lectures as LectureExpansion | null;
       out.push({
         id: `adv-${a.id}`,
         date: a.granted_on,
@@ -222,6 +251,12 @@ function AgentDetail() {
         type: "Adiantamento",
         description: `Adiantamento${a.source ? ` · ${a.source}` : ""}${a.paid_by_label ? ` · ${a.paid_by_label}` : ""}`,
         amount: -Math.abs(Number(a.amount ?? 0)),
+        companyId: lec?.companies?.id ?? lec?.company_id ?? null,
+        companyName: lec?.companies?.legal_name ?? null,
+        lectureId: a.lecture_id ?? lec?.id ?? null,
+        lectureTitle: lec?.title ?? null,
+        seasonId: lec?.seasons?.id ?? lec?.season_id ?? null,
+        seasonName: lec?.seasons?.name ?? null,
         origin: {
           actorId: a.created_by ?? a.updated_by ?? null,
           createdAt: a.created_at ?? null,
@@ -237,7 +272,7 @@ function AgentDetail() {
       });
     });
     (snapshots.data ?? []).forEach((s) => {
-      const lec = s.lectures as { id?: string; title?: string } | null;
+      const lec = s.lectures as LectureExpansion | null;
       out.push({
         id: `share-${s.id}`,
         date: s.closed_at ? s.closed_at.slice(0, 10) : null,
@@ -245,47 +280,125 @@ function AgentDetail() {
         type: "Comissão",
         description: `Comissão · ${lec?.title ?? "Palestra"}`,
         amount: Math.abs(Number(s.agent_amount ?? 0)),
+        companyId: lec?.companies?.id ?? lec?.company_id ?? null,
+        companyName: lec?.companies?.legal_name ?? null,
+        lectureId: s.lecture_id ?? lec?.id ?? null,
+        lectureTitle: lec?.title ?? null,
+        seasonId: lec?.seasons?.id ?? lec?.season_id ?? null,
+        seasonName: lec?.seasons?.name ?? null,
         origin: {
           actorId: s.closed_by ?? null,
           createdAt: s.closed_at ?? null,
           reason: `Fechamento financeiro da palestra · receita ${formatCurrency(Number(s.gross_revenue ?? 0))}`,
           docRoute: lec?.id ? `/app/palestras/${lec.id}` : undefined,
           docLabel: lec?.id ? "Abrir palestra" : undefined,
+          extra: [
+            { label: "Snapshot", value: s.id },
+            { label: "Receita bruta", value: formatCurrency(Number(s.gross_revenue ?? 0)) },
+            { label: "Lucro líquido", value: formatCurrency(Number(s.net_profit ?? 0)) },
+          ],
         },
       });
     });
     (payouts.data ?? []).forEach((p) => {
+      const lec = p.lectures as LectureExpansion | null;
+      const co = p.companies as { id?: string; legal_name?: string } | null;
       out.push({
         id: `pay-${p.id}`,
         date: p.occurs_on,
-        time: p.created_at ? new Date(p.created_at).toTimeString().slice(0, 5) : null,
+        time: p.occurs_time ? String(p.occurs_time).slice(0, 5) : (p.created_at ? new Date(p.created_at).toTimeString().slice(0, 5) : null),
         type: "Pagamento",
         description: p.description ?? "Pagamento ao agendista",
         amount: -Math.abs(Number(p.amount ?? 0)),
+        companyId: lec?.companies?.id ?? lec?.company_id ?? co?.id ?? null,
+        companyName: lec?.companies?.legal_name ?? co?.legal_name ?? null,
+        lectureId: p.lecture_id ?? lec?.id ?? null,
+        lectureTitle: lec?.title ?? null,
+        seasonId: lec?.seasons?.id ?? lec?.season_id ?? null,
+        seasonName: lec?.seasons?.name ?? null,
         origin: {
           actorId: p.created_by ?? null,
           createdAt: p.created_at ?? null,
           reason: p.notes ?? null,
           docRoute: p.lecture_id ? `/app/palestras/${p.lecture_id}` : `/app/financeiro`,
           docLabel: p.lecture_id ? "Palestra vinculada" : "Abrir financeiro",
+          extra: p.payment_method ? [{ label: "Forma", value: String(p.payment_method) }] : undefined,
         },
       });
     });
-    // ordem cronológica desc
+    // ordem cronológica ASC estável (data,hora,id) — determinística
     out.sort((a, b) => {
       const da = a.date ? new Date(`${a.date}T${a.time ?? "00:00"}:00`).getTime() : 0;
       const db = b.date ? new Date(`${b.date}T${b.time ?? "00:00"}:00`).getTime() : 0;
-      return db - da;
+      if (da !== db) return da - db;
+      return a.id.localeCompare(b.id);
     });
     return out;
   }, [advances.data, snapshots.data, payouts.data]);
 
-  const movementsWithBalance = useMemo(() => {
-    const asc = [...movements].reverse();
-    let running = 0;
-    const withBal = asc.map((m) => { running += m.amount; return { ...m, balance: running }; });
-    return withBal.reverse();
+  // Opções de filtro derivadas dos dados
+  const companyOptions = useMemo(() => {
+    const m = new Map<string, string>();
+    movements.forEach((mv) => { if (mv.companyId && mv.companyName) m.set(mv.companyId, mv.companyName); });
+    return Array.from(m.entries()).map(([id, name]) => ({ id, name }));
   }, [movements]);
+  const seasonOptions = useMemo(() => {
+    const m = new Map<string, string>();
+    movements.forEach((mv) => { if (mv.seasonId && mv.seasonName) m.set(mv.seasonId, mv.seasonName); });
+    return Array.from(m.entries()).map(([id, name]) => ({ id, name }));
+  }, [movements]);
+
+  const isInPeriod = (d: string | null) => {
+    if (!d) return !fStart && !fEnd;
+    if (fStart && d < fStart) return false;
+    if (fEnd && d > fEnd) return false;
+    return true;
+  };
+  const passesFilters = (mv: Movement) => {
+    if (fType !== "__all__" && mv.type !== fType) return false;
+    if (fFlow === "in" && mv.amount <= 0) return false;
+    if (fFlow === "out" && mv.amount >= 0) return false;
+    if (fCompany !== "__all__" && mv.companyId !== fCompany) return false;
+    if (fSeason !== "__all__" && mv.seasonId !== fSeason) return false;
+    if (fSearch.trim()) {
+      const q = fSearch.trim().toLowerCase();
+      const hay = [mv.description, mv.companyName, mv.lectureTitle, mv.type].filter(Boolean).join(" ").toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  };
+
+  // Saldo com base em TODOS os movimentos (ordem cronológica ASC)
+  const movementsWithBalanceAsc = useMemo(() => {
+    let running = 0;
+    return movements.map((m) => { running += m.amount; return { ...m, balance: running }; });
+  }, [movements]);
+
+  // Saldo inicial do período = soma dos movimentos anteriores ao filtro
+  const openingBalance = useMemo(() => {
+    if (!fStart) return 0;
+    return movementsWithBalanceAsc
+      .filter((m) => (m.date ?? "") < fStart)
+      .reduce((s, m) => s + m.amount, 0);
+  }, [movementsWithBalanceAsc, fStart]);
+
+  // Movimentos filtrados (mantém ordem ASC para cálculo do saldo acumulado do período)
+  const filteredAsc = useMemo(() => {
+    const asc = movementsWithBalanceAsc.filter((m) => isInPeriod(m.date) && passesFilters(m));
+    let running = openingBalance;
+    return asc.map((m) => { running += m.amount; return { ...m, balance: running }; });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [movementsWithBalanceAsc, openingBalance, fStart, fEnd, fType, fFlow, fCompany, fSeason, fSearch]);
+
+  // Para exibir na tela em ordem DESC
+  const movementsWithBalance = useMemo(() => [...filteredAsc].reverse(), [filteredAsc]);
+
+  // Totais do período filtrado
+  const periodTotals = useMemo(() => {
+    const credits = filteredAsc.filter((m) => m.amount > 0).reduce((s, m) => s + m.amount, 0);
+    const debits = filteredAsc.filter((m) => m.amount < 0).reduce((s, m) => s + Math.abs(m.amount), 0);
+    return { credits, debits, closing: openingBalance + credits - debits };
+  }, [filteredAsc, openingBalance]);
 
   const totals = useMemo(() => {
     const credits = movements.filter((m) => m.amount > 0).reduce((s, m) => s + m.amount, 0);
@@ -391,6 +504,33 @@ function AgentDetail() {
     onError: (e) => toast.error(e instanceof Error ? e.message : "Erro"),
   });
 
+  const downloadStatement = (fmt: "pdf" | "xlsx" | "csv") => {
+    const agentName = agent.data?.full_name ?? "Agendista";
+    const periodLabel = fStart || fEnd ? `${fStart || "início"} → ${fEnd || "hoje"}` : "Completo";
+    const rows: ExportMovement[] = filteredAsc.map((m) => ({
+      date: m.date, time: m.time, type: m.type, description: m.description,
+      company: m.companyName ?? null, lecture: m.lectureTitle ?? null,
+      credit: m.amount > 0 ? m.amount : 0, debit: m.amount < 0 ? Math.abs(m.amount) : 0,
+      balance: m.balance,
+    }));
+    const ctx = {
+      agentName, periodLabel,
+      emittedAt: new Date().toLocaleString("pt-BR"),
+      openingBalance, totalCredits: periodTotals.credits,
+      totalDebits: periodTotals.debits, closingBalance: periodTotals.closing,
+      titheAccumulated: statement.totals.titheAccumulated,
+      movements: rows,
+    };
+    try {
+      if (fmt === "csv") exportStatementCSV(ctx);
+      else if (fmt === "xlsx") exportStatementXLSX(ctx);
+      else exportStatementPDF(ctx);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Falha ao exportar");
+    }
+  };
+
+
   if (agent.isLoading) return <div className="text-sm text-muted-foreground">Carregando…</div>;
   if (!agent.data) {
     return (
@@ -416,20 +556,23 @@ function AgentDetail() {
         title={a.full_name}
         description={[a.email, a.phone].filter(Boolean).join(" · ")}
         actions={
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button variant="outline" className="rounded-full" onClick={() => setEditOpen(true)}>
               <Pencil className="mr-1.5 h-4 w-4" /> Editar
             </Button>
             <ArchiveButton table="agents" id={id} label="este agendista" listQueryKey="agents" backTo="/app/agendistas" />
-            <Button variant="navy" className="rounded-full" onClick={() => { setEditingAdv(null); setAdvOpen(true); }}>
+            <Button variant="outline" className="rounded-full" onClick={() => { setEditingAdv(null); setAdvOpen(true); }}>
               <Plus className="mr-1.5 h-4 w-4" /> Adiantamento
+            </Button>
+            <Button variant="navy" className="rounded-full" onClick={() => setPayoutOpen(true)}>
+              <Wallet className="mr-1.5 h-4 w-4" /> Registrar pagamento
             </Button>
           </div>
         }
       />
 
       {/* Resumo de conta corrente — estilo extrato bancário */}
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
         <BalanceCard
           label="Saldo Atual"
           value={statement.totals.balance}
@@ -449,9 +592,15 @@ function AgentDetail() {
         />
         <BalanceCard label="Créditos" value={totals.credits} accent="positive" />
         <BalanceCard label="Débitos" value={totals.debits} accent="negative" />
-        <BalanceCard label="Adiantamentos" value={totals.advances} accent="muted" />
         <BalanceCard label="Comissões" value={totals.commissions} accent="muted" />
-        <BalanceCard label="Pagamentos realizados" value={totals.payments} accent="muted" />
+        <BalanceCard label="Adiantamentos" value={totals.advances} accent="muted" />
+        <BalanceCard label="Pagamentos" value={totals.payments} accent="muted" />
+        <BalanceCard
+          label="Dízimo sugerido acumulado"
+          value={statement.totals.titheAccumulated}
+          accent="muted"
+          hint="10% sobre comissões — informativo, não abate saldo."
+        />
       </div>
 
 
@@ -481,18 +630,108 @@ function AgentDetail() {
           </div>
         </TabsContent>
 
-        <TabsContent value="statement">
-          <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+        <TabsContent value="statement" className="space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">Extrato cronológico</p>
               <p className="mt-1 font-serif text-lg text-foreground">Conta Corrente do Agendista</p>
             </div>
-            <Button variant="navy" size="sm" className="rounded-full" onClick={() => { setEditingAdv(null); setAdvOpen(true); }}>
-              <Plus className="mr-1.5 h-4 w-4" /> Novo adiantamento
-            </Button>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button variant="outline" size="sm" className="rounded-full" onClick={() => { setEditingAdv(null); setAdvOpen(true); }}>
+                <Plus className="mr-1.5 h-4 w-4" /> Adiantamento
+              </Button>
+              <Button variant="outline" size="sm" className="rounded-full" onClick={() => setPayoutOpen(true)}>
+                <Wallet className="mr-1.5 h-4 w-4" /> Registrar pagamento
+              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="navy" size="sm" className="rounded-full">
+                    <Download className="mr-1.5 h-4 w-4" /> Baixar extrato
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => downloadStatement("pdf")}>PDF</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => downloadStatement("xlsx")}>Excel (.xlsx)</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => downloadStatement("csv")}>CSV</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
+
+          {/* Filtros */}
+          <div className="rounded-2xl border border-border bg-card/40 p-4">
+            <div className="mb-3 flex items-center gap-2 text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+              <Filter className="h-3.5 w-3.5" /> Filtros
+            </div>
+            <div className="grid gap-2 md:grid-cols-3 lg:grid-cols-7">
+              <div><Label className="text-[10px] uppercase">De</Label><Input type="date" value={fStart} onChange={(e) => setFStart(e.target.value)} /></div>
+              <div><Label className="text-[10px] uppercase">Até</Label><Input type="date" value={fEnd} onChange={(e) => setFEnd(e.target.value)} /></div>
+              <div>
+                <Label className="text-[10px] uppercase">Tipo</Label>
+                <Select value={fType} onValueChange={setFType}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__all__">Todos</SelectItem>
+                    <SelectItem value="Comissão">Comissão</SelectItem>
+                    <SelectItem value="Adiantamento">Adiantamento</SelectItem>
+                    <SelectItem value="Pagamento">Pagamento</SelectItem>
+                    <SelectItem value="Ajuste">Ajuste</SelectItem>
+                    <SelectItem value="Estorno">Estorno</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-[10px] uppercase">Fluxo</Label>
+                <Select value={fFlow} onValueChange={(v) => setFFlow(v as "all" | "in" | "out")}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos</SelectItem>
+                    <SelectItem value="in">Créditos</SelectItem>
+                    <SelectItem value="out">Débitos</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-[10px] uppercase">Empresa</Label>
+                <Select value={fCompany} onValueChange={setFCompany}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__all__">Todas</SelectItem>
+                    {companyOptions.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-[10px] uppercase">Temporada</Label>
+                <Select value={fSeason} onValueChange={setFSeason}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__all__">Todas</SelectItem>
+                    {seasonOptions.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div><Label className="text-[10px] uppercase">Buscar</Label><Input placeholder="Descrição, palestra…" value={fSearch} onChange={(e) => setFSearch(e.target.value)} /></div>
+            </div>
+            <div className="mt-3 flex justify-between text-[11px] text-muted-foreground">
+              <div>
+                Saldo inicial: <strong className="text-foreground tabular-nums">{formatCurrency(openingBalance)}</strong> ·
+                Créditos período: <strong className="text-emerald-600 tabular-nums">{formatCurrency(periodTotals.credits)}</strong> ·
+                Débitos período: <strong className="text-rose-600 tabular-nums">{formatCurrency(periodTotals.debits)}</strong> ·
+                Saldo final: <strong className="text-foreground tabular-nums">{formatCurrency(periodTotals.closing)}</strong>
+              </div>
+              <button
+                type="button"
+                className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground hover:text-foreground"
+                onClick={() => { setFStart(""); setFEnd(""); setFType("__all__"); setFFlow("all"); setFCompany("__all__"); setFSeason("__all__"); setFSearch(""); }}
+              >
+                Limpar filtros
+              </button>
+            </div>
+          </div>
+
           {movementsWithBalance.length === 0 ? (
-            <Empty title="Sem movimentações" subtitle="Adiantamentos, comissões e pagamentos aparecerão aqui automaticamente." />
+            <Empty title="Sem movimentações no período" subtitle="Ajuste os filtros ou registre adiantamentos, comissões e pagamentos." />
           ) : (
             <div className="overflow-hidden rounded-2xl border border-border bg-card/40">
               <table className="w-full text-sm">
@@ -502,7 +741,10 @@ function AgentDetail() {
                     <th className="px-4 py-3 text-left font-medium">Hora</th>
                     <th className="px-4 py-3 text-left font-medium">Tipo</th>
                     <th className="px-4 py-3 text-left font-medium">Descrição</th>
-                    <th className="px-4 py-3 text-right font-medium">Valor</th>
+                    <th className="px-4 py-3 text-left font-medium">Empresa</th>
+                    <th className="px-4 py-3 text-left font-medium">Palestra</th>
+                    <th className="px-4 py-3 text-right font-medium">Crédito</th>
+                    <th className="px-4 py-3 text-right font-medium">Débito</th>
                     <th className="px-4 py-3 text-right font-medium">Saldo</th>
                     <th className="px-4 py-3 text-right font-medium">Origem</th>
                   </tr>
@@ -512,16 +754,13 @@ function AgentDetail() {
                     <tr key={m.id} className="border-t border-border/70 hover:bg-muted/20">
                       <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{formatDate(m.date)}</td>
                       <td className="px-4 py-3 text-muted-foreground tabular-nums">{m.time ?? "—"}</td>
-                      <td className="px-4 py-3">
-                        <Badge variant="outline" className="font-normal">{m.type}</Badge>
-                      </td>
+                      <td className="px-4 py-3"><Badge variant="outline" className="font-normal">{m.type}</Badge></td>
                       <td className="px-4 py-3 text-foreground">{m.description}</td>
-                      <td className={cn("px-4 py-3 text-right tabular-nums", m.amount >= 0 ? "text-emerald-600" : "text-rose-600")}>
-                        {m.amount >= 0 ? "+" : "−"} {formatCurrency(Math.abs(m.amount))}
-                      </td>
-                      <td className={cn("px-4 py-3 text-right tabular-nums", m.balance >= 0 ? "text-foreground" : "text-rose-600")}>
-                        {formatCurrency(m.balance)}
-                      </td>
+                      <td className="px-4 py-3 text-muted-foreground">{m.companyName ?? "—"}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{m.lectureTitle ?? "—"}</td>
+                      <td className="px-4 py-3 text-right tabular-nums text-emerald-600">{m.amount > 0 ? formatCurrency(m.amount) : ""}</td>
+                      <td className="px-4 py-3 text-right tabular-nums text-rose-600">{m.amount < 0 ? formatCurrency(Math.abs(m.amount)) : ""}</td>
+                      <td className={cn("px-4 py-3 text-right tabular-nums", m.balance >= 0 ? "text-foreground" : "text-rose-600")}>{formatCurrency(m.balance)}</td>
                       <td className="px-4 py-3 text-right">
                         <Popover>
                           <PopoverTrigger asChild>
@@ -535,6 +774,8 @@ function AgentDetail() {
                               <Row label="Lançado por" value={actorName(m.origin.actorId)} />
                               <Row label="Lançado em" value={m.origin.createdAt ? formatDate(m.origin.createdAt) + " · " + new Date(m.origin.createdAt).toTimeString().slice(0, 5) : "—"} />
                               <Row label="Tipo" value={m.type} />
+                              {m.companyName && <Row label="Empresa" value={m.companyName} />}
+                              {m.lectureTitle && <Row label="Palestra" value={m.lectureTitle} />}
                               {m.origin.reason && <Row label="Motivo" value={m.origin.reason} />}
                               {m.origin.extra?.map((x) => (<Row key={x.label} label={x.label} value={x.value} />))}
                             </dl>
@@ -827,13 +1068,20 @@ function AgentDetail() {
             organizationId={organizationId} userId={user.id} agentId={id}
             initial={editingRule ?? undefined}
           />
+          <AgentPayoutDialog
+            open={payoutOpen} onOpenChange={setPayoutOpen}
+            organizationId={organizationId} userId={user.id}
+            agentId={id} agentName={a.full_name}
+            maxAmount={Math.max(0, statement.totals.balance)}
+          />
+
         </>
       )}
     </div>
   );
 }
 
-function BalanceCard({ label, value, accent, breakdown }: { label: string; value: number; accent?: "positive" | "negative" | "muted"; breakdown?: React.ReactNode }) {
+function BalanceCard({ label, value, accent, breakdown, hint }: { label: string; value: number; accent?: "positive" | "negative" | "muted"; breakdown?: React.ReactNode; hint?: string }) {
   return (
     <div className="rounded-2xl border border-border bg-card/40 p-5">
       <div className="flex items-center justify-between gap-2">
@@ -848,6 +1096,7 @@ function BalanceCard({ label, value, accent, breakdown }: { label: string; value
       )}>
         {formatCurrency(value)}
       </p>
+      {hint && <p className="mt-2 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">{hint}</p>}
     </div>
   );
 }
