@@ -504,6 +504,33 @@ function AgentDetail() {
     onError: (e) => toast.error(e instanceof Error ? e.message : "Erro"),
   });
 
+  const downloadStatement = (fmt: "pdf" | "xlsx" | "csv") => {
+    const agentName = agent.data?.full_name ?? "Agendista";
+    const periodLabel = fStart || fEnd ? `${fStart || "início"} → ${fEnd || "hoje"}` : "Completo";
+    const rows: ExportMovement[] = filteredAsc.map((m) => ({
+      date: m.date, time: m.time, type: m.type, description: m.description,
+      company: m.companyName ?? null, lecture: m.lectureTitle ?? null,
+      credit: m.amount > 0 ? m.amount : 0, debit: m.amount < 0 ? Math.abs(m.amount) : 0,
+      balance: m.balance,
+    }));
+    const ctx = {
+      agentName, periodLabel,
+      emittedAt: new Date().toLocaleString("pt-BR"),
+      openingBalance, totalCredits: periodTotals.credits,
+      totalDebits: periodTotals.debits, closingBalance: periodTotals.closing,
+      titheAccumulated: statement.totals.titheAccumulated,
+      movements: rows,
+    };
+    try {
+      if (fmt === "csv") exportStatementCSV(ctx);
+      else if (fmt === "xlsx") exportStatementXLSX(ctx);
+      else exportStatementPDF(ctx);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Falha ao exportar");
+    }
+  };
+
+
   if (agent.isLoading) return <div className="text-sm text-muted-foreground">Carregando…</div>;
   if (!agent.data) {
     return (
