@@ -217,6 +217,12 @@ function AgentDetail() {
     type: "Adiantamento" | "Comissão" | "Pagamento" | "Ajuste" | "Estorno";
     description: string;
     amount: number;          // signed
+    companyId?: string | null;
+    companyName?: string | null;
+    lectureId?: string | null;
+    lectureTitle?: string | null;
+    seasonId?: string | null;
+    seasonName?: string | null;
     origin: {
       actorId: string | null;
       createdAt: string | null;
@@ -226,9 +232,18 @@ function AgentDetail() {
       extra?: { label: string; value: string }[];
     };
   };
+  type LectureExpansion = {
+    id?: string;
+    title?: string;
+    company_id?: string | null;
+    season_id?: string | null;
+    companies?: { id?: string; legal_name?: string } | null;
+    seasons?: { id?: string; name?: string } | null;
+  };
   const movements: Movement[] = useMemo(() => {
     const out: Movement[] = [];
     (advances.data ?? []).forEach((a) => {
+      const lec = a.lectures as LectureExpansion | null;
       out.push({
         id: `adv-${a.id}`,
         date: a.granted_on,
@@ -236,6 +251,12 @@ function AgentDetail() {
         type: "Adiantamento",
         description: `Adiantamento${a.source ? ` · ${a.source}` : ""}${a.paid_by_label ? ` · ${a.paid_by_label}` : ""}`,
         amount: -Math.abs(Number(a.amount ?? 0)),
+        companyId: lec?.companies?.id ?? lec?.company_id ?? null,
+        companyName: lec?.companies?.legal_name ?? null,
+        lectureId: a.lecture_id ?? lec?.id ?? null,
+        lectureTitle: lec?.title ?? null,
+        seasonId: lec?.seasons?.id ?? lec?.season_id ?? null,
+        seasonName: lec?.seasons?.name ?? null,
         origin: {
           actorId: a.created_by ?? a.updated_by ?? null,
           createdAt: a.created_at ?? null,
@@ -251,7 +272,7 @@ function AgentDetail() {
       });
     });
     (snapshots.data ?? []).forEach((s) => {
-      const lec = s.lectures as { id?: string; title?: string } | null;
+      const lec = s.lectures as LectureExpansion | null;
       out.push({
         id: `share-${s.id}`,
         date: s.closed_at ? s.closed_at.slice(0, 10) : null,
@@ -259,47 +280,125 @@ function AgentDetail() {
         type: "Comissão",
         description: `Comissão · ${lec?.title ?? "Palestra"}`,
         amount: Math.abs(Number(s.agent_amount ?? 0)),
+        companyId: lec?.companies?.id ?? lec?.company_id ?? null,
+        companyName: lec?.companies?.legal_name ?? null,
+        lectureId: s.lecture_id ?? lec?.id ?? null,
+        lectureTitle: lec?.title ?? null,
+        seasonId: lec?.seasons?.id ?? lec?.season_id ?? null,
+        seasonName: lec?.seasons?.name ?? null,
         origin: {
           actorId: s.closed_by ?? null,
           createdAt: s.closed_at ?? null,
           reason: `Fechamento financeiro da palestra · receita ${formatCurrency(Number(s.gross_revenue ?? 0))}`,
           docRoute: lec?.id ? `/app/palestras/${lec.id}` : undefined,
           docLabel: lec?.id ? "Abrir palestra" : undefined,
+          extra: [
+            { label: "Snapshot", value: s.id },
+            { label: "Receita bruta", value: formatCurrency(Number(s.gross_revenue ?? 0)) },
+            { label: "Lucro líquido", value: formatCurrency(Number(s.net_profit ?? 0)) },
+          ],
         },
       });
     });
     (payouts.data ?? []).forEach((p) => {
+      const lec = p.lectures as LectureExpansion | null;
+      const co = p.companies as { id?: string; legal_name?: string } | null;
       out.push({
         id: `pay-${p.id}`,
         date: p.occurs_on,
-        time: p.created_at ? new Date(p.created_at).toTimeString().slice(0, 5) : null,
+        time: p.occurs_time ? String(p.occurs_time).slice(0, 5) : (p.created_at ? new Date(p.created_at).toTimeString().slice(0, 5) : null),
         type: "Pagamento",
         description: p.description ?? "Pagamento ao agendista",
         amount: -Math.abs(Number(p.amount ?? 0)),
+        companyId: lec?.companies?.id ?? lec?.company_id ?? co?.id ?? null,
+        companyName: lec?.companies?.legal_name ?? co?.legal_name ?? null,
+        lectureId: p.lecture_id ?? lec?.id ?? null,
+        lectureTitle: lec?.title ?? null,
+        seasonId: lec?.seasons?.id ?? lec?.season_id ?? null,
+        seasonName: lec?.seasons?.name ?? null,
         origin: {
           actorId: p.created_by ?? null,
           createdAt: p.created_at ?? null,
           reason: p.notes ?? null,
           docRoute: p.lecture_id ? `/app/palestras/${p.lecture_id}` : `/app/financeiro`,
           docLabel: p.lecture_id ? "Palestra vinculada" : "Abrir financeiro",
+          extra: p.payment_method ? [{ label: "Forma", value: String(p.payment_method) }] : undefined,
         },
       });
     });
-    // ordem cronológica desc
+    // ordem cronológica ASC estável (data,hora,id) — determinística
     out.sort((a, b) => {
       const da = a.date ? new Date(`${a.date}T${a.time ?? "00:00"}:00`).getTime() : 0;
       const db = b.date ? new Date(`${b.date}T${b.time ?? "00:00"}:00`).getTime() : 0;
-      return db - da;
+      if (da !== db) return da - db;
+      return a.id.localeCompare(b.id);
     });
     return out;
   }, [advances.data, snapshots.data, payouts.data]);
 
-  const movementsWithBalance = useMemo(() => {
-    const asc = [...movements].reverse();
-    let running = 0;
-    const withBal = asc.map((m) => { running += m.amount; return { ...m, balance: running }; });
-    return withBal.reverse();
+  // Opções de filtro derivadas dos dados
+  const companyOptions = useMemo(() => {
+    const m = new Map<string, string>();
+    movements.forEach((mv) => { if (mv.companyId && mv.companyName) m.set(mv.companyId, mv.companyName); });
+    return Array.from(m.entries()).map(([id, name]) => ({ id, name }));
   }, [movements]);
+  const seasonOptions = useMemo(() => {
+    const m = new Map<string, string>();
+    movements.forEach((mv) => { if (mv.seasonId && mv.seasonName) m.set(mv.seasonId, mv.seasonName); });
+    return Array.from(m.entries()).map(([id, name]) => ({ id, name }));
+  }, [movements]);
+
+  const isInPeriod = (d: string | null) => {
+    if (!d) return !fStart && !fEnd;
+    if (fStart && d < fStart) return false;
+    if (fEnd && d > fEnd) return false;
+    return true;
+  };
+  const passesFilters = (mv: Movement) => {
+    if (fType !== "__all__" && mv.type !== fType) return false;
+    if (fFlow === "in" && mv.amount <= 0) return false;
+    if (fFlow === "out" && mv.amount >= 0) return false;
+    if (fCompany !== "__all__" && mv.companyId !== fCompany) return false;
+    if (fSeason !== "__all__" && mv.seasonId !== fSeason) return false;
+    if (fSearch.trim()) {
+      const q = fSearch.trim().toLowerCase();
+      const hay = [mv.description, mv.companyName, mv.lectureTitle, mv.type].filter(Boolean).join(" ").toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  };
+
+  // Saldo com base em TODOS os movimentos (ordem cronológica ASC)
+  const movementsWithBalanceAsc = useMemo(() => {
+    let running = 0;
+    return movements.map((m) => { running += m.amount; return { ...m, balance: running }; });
+  }, [movements]);
+
+  // Saldo inicial do período = soma dos movimentos anteriores ao filtro
+  const openingBalance = useMemo(() => {
+    if (!fStart) return 0;
+    return movementsWithBalanceAsc
+      .filter((m) => (m.date ?? "") < fStart)
+      .reduce((s, m) => s + m.amount, 0);
+  }, [movementsWithBalanceAsc, fStart]);
+
+  // Movimentos filtrados (mantém ordem ASC para cálculo do saldo acumulado do período)
+  const filteredAsc = useMemo(() => {
+    const asc = movementsWithBalanceAsc.filter((m) => isInPeriod(m.date) && passesFilters(m));
+    let running = openingBalance;
+    return asc.map((m) => { running += m.amount; return { ...m, balance: running }; });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [movementsWithBalanceAsc, openingBalance, fStart, fEnd, fType, fFlow, fCompany, fSeason, fSearch]);
+
+  // Para exibir na tela em ordem DESC
+  const movementsWithBalance = useMemo(() => [...filteredAsc].reverse(), [filteredAsc]);
+
+  // Totais do período filtrado
+  const periodTotals = useMemo(() => {
+    const credits = filteredAsc.filter((m) => m.amount > 0).reduce((s, m) => s + m.amount, 0);
+    const debits = filteredAsc.filter((m) => m.amount < 0).reduce((s, m) => s + Math.abs(m.amount), 0);
+    return { credits, debits, closing: openingBalance + credits - debits };
+  }, [filteredAsc, openingBalance]);
 
   const totals = useMemo(() => {
     const credits = movements.filter((m) => m.amount > 0).reduce((s, m) => s + m.amount, 0);
