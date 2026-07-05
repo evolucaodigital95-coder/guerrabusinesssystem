@@ -529,13 +529,16 @@ function AgentDetail() {
         title={a.full_name}
         description={[a.email, a.phone].filter(Boolean).join(" · ")}
         actions={
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button variant="outline" className="rounded-full" onClick={() => setEditOpen(true)}>
               <Pencil className="mr-1.5 h-4 w-4" /> Editar
             </Button>
             <ArchiveButton table="agents" id={id} label="este agendista" listQueryKey="agents" backTo="/app/agendistas" />
-            <Button variant="navy" className="rounded-full" onClick={() => { setEditingAdv(null); setAdvOpen(true); }}>
+            <Button variant="outline" className="rounded-full" onClick={() => { setEditingAdv(null); setAdvOpen(true); }}>
               <Plus className="mr-1.5 h-4 w-4" /> Adiantamento
+            </Button>
+            <Button variant="navy" className="rounded-full" onClick={() => setPayoutOpen(true)}>
+              <Wallet className="mr-1.5 h-4 w-4" /> Registrar pagamento
             </Button>
           </div>
         }
