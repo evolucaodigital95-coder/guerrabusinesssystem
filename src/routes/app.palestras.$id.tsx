@@ -992,13 +992,17 @@ function FechamentoFinanceiroTab({
       {/* KPIs do cálculo */}
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
         <CalcKPI label="Receita bruta" value={calc.totals.grossRevenue} accent="positive" />
-        <CalcKPI label="Taxas cartão" value={-calc.totals.totalCardFees} accent="negative" />
         <CalcKPI label="Materiais" value={-calc.totals.totalStock} accent="negative" />
-        <CalcKPI label="Total saídas" value={-(calc.totals.totalExpenses + calc.totals.totalAdvances + calc.totals.fee + calc.totals.totalCardFees)} accent="negative" />
-        <CalcKPI label="Lucro líquido" value={calc.totals.netProfit} accent={calc.totals.netProfit >= 0 ? "positive" : "negative"} />
-        <CalcKPI label="Gustavo" value={calc.totals.gustavoAmount} accent="muted" />
-        <CalcKPI label="Agendista" value={calc.totals.agentAmount} accent="gold" />
+        <CalcKPI label="Juros / taxa cartão" value={-calc.totals.totalCardFees} accent="negative" />
+        <CalcKPI label="Lucro líquido operacional" value={calc.totals.netProfit} accent={calc.totals.netProfit >= 0 ? "positive" : "negative"} />
+        <CalcKPI label="Palestrante (50%)" value={calc.totals.gustavoAmount} accent="muted" />
+        <CalcKPI label="Agendista (50%)" value={calc.totals.agentAmount} accent="gold" />
+        <CalcKPI label="Dízimo sugerido (10%)" value={(calc.totals.gustavoTithe ?? 0) + (calc.totals.agentTithe ?? 0)} accent="muted" />
       </div>
+      <p className="text-[11px] text-muted-foreground">
+        Dízimo é apenas informativo — 10% sobre a parte individual de cada um, não deduzido do saldo.
+        Palestrante {formatCurrency(calc.totals.gustavoTithe ?? 0)} · Agendista {formatCurrency(calc.totals.agentTithe ?? 0)}.
+      </p>
 
       {/* Receitas */}
       <FechamentoSection
