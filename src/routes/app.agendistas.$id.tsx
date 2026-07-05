@@ -955,7 +955,7 @@ function AgentDetail() {
   );
 }
 
-function BalanceCard({ label, value, accent, breakdown }: { label: string; value: number; accent?: "positive" | "negative" | "muted"; breakdown?: React.ReactNode }) {
+function BalanceCard({ label, value, accent, breakdown, hint }: { label: string; value: number; accent?: "positive" | "negative" | "muted"; breakdown?: React.ReactNode; hint?: string }) {
   return (
     <div className="rounded-2xl border border-border bg-card/40 p-5">
       <div className="flex items-center justify-between gap-2">
@@ -970,6 +970,7 @@ function BalanceCard({ label, value, accent, breakdown }: { label: string; value
       )}>
         {formatCurrency(value)}
       </p>
+      {hint && <p className="mt-2 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">{hint}</p>}
     </div>
   );
 }
