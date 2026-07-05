@@ -66,6 +66,7 @@ export type LectureCalcInput = {
   expenses: LectureExpenseInput[];
   advances: { id: string; amount: number; granted_on?: string | null; source?: string | null }[];
   rule: RuleSnapshot;
+  titheRate?: number; // padrão 10% — apenas informativo (não deduz do saldo)
 };
 
 export type LectureCalcResult = {
@@ -84,6 +85,10 @@ export type LectureCalcResult = {
     netProfit: number;
     gustavoAmount: number;
     agentAmount: number;
+    titheRate: number;
+    gustavoTithe: number;
+    agentTithe: number;
+    agentAfterAdvances: number;
   };
 };
 
