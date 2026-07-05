@@ -234,10 +234,12 @@ export type AgentStatement = {
     advancesTotal: number; // total já entregue como adiantamento
     payoutsTotal: number;  // pagamentos efetuados ao agendista
     balance: number;       // earned - advancesTotal - payoutsTotal
+    titheAccumulated: number; // 10% acumulado sobre comissões fechadas (informativo)
   };
 };
 
-export function buildAgentStatement(input: AgentStatementInput): AgentStatement {
+export function buildAgentStatement(input: AgentStatementInput & { titheRate?: number }): AgentStatement {
+  const titheRate = input.titheRate ?? 0.1;
   const lines: AgentStatementLine[] = [];
 
   for (const s of input.closedShares) {
@@ -283,6 +285,7 @@ export function buildAgentStatement(input: AgentStatementInput): AgentStatement 
     .filter((a) => a.status !== "abatido_total" && a.status !== "cancelado")
     .reduce((s, a) => s + Math.max(0, Number(a.amount || 0) - Number(a.amount_amortized || 0)), 0);
   const payoutsTotal = input.payouts.reduce((s, p) => s + Number(p.amount || 0), 0);
+  const titheAccumulated = round(earned * titheRate);
 
   return {
     lines,
@@ -292,6 +295,7 @@ export function buildAgentStatement(input: AgentStatementInput): AgentStatement 
       advancesTotal: round(advancesTotal),
       payoutsTotal: round(payoutsTotal),
       balance: round(earned - advancesTotal - payoutsTotal),
+      titheAccumulated,
     },
   };
 }
