@@ -98,7 +98,7 @@ function AgentDetail() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("financial_movements")
-        .select("id, amount, occurs_on, description, status, direction, notes, lecture_id, created_at, created_by")
+        .select("id, amount, occurs_on, occurs_time, description, status, direction, notes, lecture_id, company_id, payment_method, created_at, created_by, lectures:lecture_id ( id, title, company_id, season_id, companies:company_id ( id, legal_name ), seasons:season_id ( id, name ) ), companies:company_id ( id, legal_name )")
         .eq("agent_id", id).eq("direction", "out").in("status", ["paga", "parcial"])
         .is("archived_at", null);
       if (error) throw error;
