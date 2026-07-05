@@ -603,18 +603,108 @@ function AgentDetail() {
           </div>
         </TabsContent>
 
-        <TabsContent value="statement">
-          <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+        <TabsContent value="statement" className="space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">Extrato cronológico</p>
               <p className="mt-1 font-serif text-lg text-foreground">Conta Corrente do Agendista</p>
             </div>
-            <Button variant="navy" size="sm" className="rounded-full" onClick={() => { setEditingAdv(null); setAdvOpen(true); }}>
-              <Plus className="mr-1.5 h-4 w-4" /> Novo adiantamento
-            </Button>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button variant="outline" size="sm" className="rounded-full" onClick={() => { setEditingAdv(null); setAdvOpen(true); }}>
+                <Plus className="mr-1.5 h-4 w-4" /> Adiantamento
+              </Button>
+              <Button variant="outline" size="sm" className="rounded-full" onClick={() => setPayoutOpen(true)}>
+                <Wallet className="mr-1.5 h-4 w-4" /> Registrar pagamento
+              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="navy" size="sm" className="rounded-full">
+                    <Download className="mr-1.5 h-4 w-4" /> Baixar extrato
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => downloadStatement("pdf")}>PDF</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => downloadStatement("xlsx")}>Excel (.xlsx)</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => downloadStatement("csv")}>CSV</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
+
+          {/* Filtros */}
+          <div className="rounded-2xl border border-border bg-card/40 p-4">
+            <div className="mb-3 flex items-center gap-2 text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+              <Filter className="h-3.5 w-3.5" /> Filtros
+            </div>
+            <div className="grid gap-2 md:grid-cols-3 lg:grid-cols-7">
+              <div><Label className="text-[10px] uppercase">De</Label><Input type="date" value={fStart} onChange={(e) => setFStart(e.target.value)} /></div>
+              <div><Label className="text-[10px] uppercase">Até</Label><Input type="date" value={fEnd} onChange={(e) => setFEnd(e.target.value)} /></div>
+              <div>
+                <Label className="text-[10px] uppercase">Tipo</Label>
+                <Select value={fType} onValueChange={setFType}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__all__">Todos</SelectItem>
+                    <SelectItem value="Comissão">Comissão</SelectItem>
+                    <SelectItem value="Adiantamento">Adiantamento</SelectItem>
+                    <SelectItem value="Pagamento">Pagamento</SelectItem>
+                    <SelectItem value="Ajuste">Ajuste</SelectItem>
+                    <SelectItem value="Estorno">Estorno</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-[10px] uppercase">Fluxo</Label>
+                <Select value={fFlow} onValueChange={(v) => setFFlow(v as "all" | "in" | "out")}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos</SelectItem>
+                    <SelectItem value="in">Créditos</SelectItem>
+                    <SelectItem value="out">Débitos</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-[10px] uppercase">Empresa</Label>
+                <Select value={fCompany} onValueChange={setFCompany}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__all__">Todas</SelectItem>
+                    {companyOptions.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-[10px] uppercase">Temporada</Label>
+                <Select value={fSeason} onValueChange={setFSeason}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__all__">Todas</SelectItem>
+                    {seasonOptions.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div><Label className="text-[10px] uppercase">Buscar</Label><Input placeholder="Descrição, palestra…" value={fSearch} onChange={(e) => setFSearch(e.target.value)} /></div>
+            </div>
+            <div className="mt-3 flex justify-between text-[11px] text-muted-foreground">
+              <div>
+                Saldo inicial: <strong className="text-foreground tabular-nums">{formatCurrency(openingBalance)}</strong> ·
+                Créditos período: <strong className="text-emerald-600 tabular-nums">{formatCurrency(periodTotals.credits)}</strong> ·
+                Débitos período: <strong className="text-rose-600 tabular-nums">{formatCurrency(periodTotals.debits)}</strong> ·
+                Saldo final: <strong className="text-foreground tabular-nums">{formatCurrency(periodTotals.closing)}</strong>
+              </div>
+              <button
+                type="button"
+                className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground hover:text-foreground"
+                onClick={() => { setFStart(""); setFEnd(""); setFType("__all__"); setFFlow("all"); setFCompany("__all__"); setFSeason("__all__"); setFSearch(""); }}
+              >
+                Limpar filtros
+              </button>
+            </div>
+          </div>
+
           {movementsWithBalance.length === 0 ? (
-            <Empty title="Sem movimentações" subtitle="Adiantamentos, comissões e pagamentos aparecerão aqui automaticamente." />
+            <Empty title="Sem movimentações no período" subtitle="Ajuste os filtros ou registre adiantamentos, comissões e pagamentos." />
           ) : (
             <div className="overflow-hidden rounded-2xl border border-border bg-card/40">
               <table className="w-full text-sm">
@@ -624,7 +714,10 @@ function AgentDetail() {
                     <th className="px-4 py-3 text-left font-medium">Hora</th>
                     <th className="px-4 py-3 text-left font-medium">Tipo</th>
                     <th className="px-4 py-3 text-left font-medium">Descrição</th>
-                    <th className="px-4 py-3 text-right font-medium">Valor</th>
+                    <th className="px-4 py-3 text-left font-medium">Empresa</th>
+                    <th className="px-4 py-3 text-left font-medium">Palestra</th>
+                    <th className="px-4 py-3 text-right font-medium">Crédito</th>
+                    <th className="px-4 py-3 text-right font-medium">Débito</th>
                     <th className="px-4 py-3 text-right font-medium">Saldo</th>
                     <th className="px-4 py-3 text-right font-medium">Origem</th>
                   </tr>
@@ -634,16 +727,13 @@ function AgentDetail() {
                     <tr key={m.id} className="border-t border-border/70 hover:bg-muted/20">
                       <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{formatDate(m.date)}</td>
                       <td className="px-4 py-3 text-muted-foreground tabular-nums">{m.time ?? "—"}</td>
-                      <td className="px-4 py-3">
-                        <Badge variant="outline" className="font-normal">{m.type}</Badge>
-                      </td>
+                      <td className="px-4 py-3"><Badge variant="outline" className="font-normal">{m.type}</Badge></td>
                       <td className="px-4 py-3 text-foreground">{m.description}</td>
-                      <td className={cn("px-4 py-3 text-right tabular-nums", m.amount >= 0 ? "text-emerald-600" : "text-rose-600")}>
-                        {m.amount >= 0 ? "+" : "−"} {formatCurrency(Math.abs(m.amount))}
-                      </td>
-                      <td className={cn("px-4 py-3 text-right tabular-nums", m.balance >= 0 ? "text-foreground" : "text-rose-600")}>
-                        {formatCurrency(m.balance)}
-                      </td>
+                      <td className="px-4 py-3 text-muted-foreground">{m.companyName ?? "—"}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{m.lectureTitle ?? "—"}</td>
+                      <td className="px-4 py-3 text-right tabular-nums text-emerald-600">{m.amount > 0 ? formatCurrency(m.amount) : ""}</td>
+                      <td className="px-4 py-3 text-right tabular-nums text-rose-600">{m.amount < 0 ? formatCurrency(Math.abs(m.amount)) : ""}</td>
+                      <td className={cn("px-4 py-3 text-right tabular-nums", m.balance >= 0 ? "text-foreground" : "text-rose-600")}>{formatCurrency(m.balance)}</td>
                       <td className="px-4 py-3 text-right">
                         <Popover>
                           <PopoverTrigger asChild>
@@ -657,6 +747,8 @@ function AgentDetail() {
                               <Row label="Lançado por" value={actorName(m.origin.actorId)} />
                               <Row label="Lançado em" value={m.origin.createdAt ? formatDate(m.origin.createdAt) + " · " + new Date(m.origin.createdAt).toTimeString().slice(0, 5) : "—"} />
                               <Row label="Tipo" value={m.type} />
+                              {m.companyName && <Row label="Empresa" value={m.companyName} />}
+                              {m.lectureTitle && <Row label="Palestra" value={m.lectureTitle} />}
                               {m.origin.reason && <Row label="Motivo" value={m.origin.reason} />}
                               {m.origin.extra?.map((x) => (<Row key={x.label} label={x.label} value={x.value} />))}
                             </dl>
