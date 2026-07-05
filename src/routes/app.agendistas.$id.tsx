@@ -2,13 +2,16 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ArrowLeft, Pencil, Plus, Calculator, ShieldCheck, FileText, History as HistoryIcon, Info, ExternalLink } from "lucide-react";
+import { ArrowLeft, Pencil, Plus, Calculator, ShieldCheck, FileText, History as HistoryIcon, Info, ExternalLink, Download, Filter, Wallet } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { PageHeader } from "@/components/page-shell";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/hooks/use-session";
@@ -17,6 +20,7 @@ import { formatCurrency, formatDate } from "@/lib/crm";
 import { AgentFormDialog, type AgentRow } from "@/components/agendistas/agent-form-dialog";
 import { AdvanceFormDialog, type AdvanceRow } from "@/components/agendistas/advance-form-dialog";
 import { RuleFormDialog, type RuleRow } from "@/components/agendistas/rule-form-dialog";
+import { AgentPayoutDialog } from "@/components/agendistas/agent-payout-dialog";
 import { AttachmentsTab } from "@/components/crm/attachments-tab";
 import { TimelineTab } from "@/components/shared/timeline-tab";
 import { ArchiveButton } from "@/components/shared/archive-button";
@@ -25,6 +29,7 @@ import {
   buildAgentStatement, calculateLecture, selectRule, advanceStatusLabel,
   type RuleSnapshot,
 } from "@/lib/finance-engine";
+import { exportStatementCSV, exportStatementXLSX, exportStatementPDF, type ExportMovement } from "@/lib/agent-statement-export";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/app/agendistas/$id")({
