@@ -1068,6 +1068,13 @@ function AgentDetail() {
             organizationId={organizationId} userId={user.id} agentId={id}
             initial={editingRule ?? undefined}
           />
+          <AgentPayoutDialog
+            open={payoutOpen} onOpenChange={setPayoutOpen}
+            organizationId={organizationId} userId={user.id}
+            agentId={id} agentName={a.full_name}
+            maxAmount={Math.max(0, statement.totals.balance)}
+          />
+
         </>
       )}
     </div>
