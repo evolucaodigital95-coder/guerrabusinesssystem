@@ -83,7 +83,7 @@ function AgentDetail() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("lecture_financial_snapshots")
-        .select("id, lecture_id, agent_amount, gustavo_amount, net_profit, gross_revenue, total_expenses, total_advances, rule_snapshot, inputs, breakdown, closed_at, closed_by, lectures:lecture_id ( id, title, scheduled_at )")
+        .select("id, lecture_id, agent_amount, gustavo_amount, net_profit, gross_revenue, total_expenses, total_advances, rule_snapshot, inputs, breakdown, closed_at, closed_by, lectures:lecture_id ( id, title, scheduled_at, company_id, season_id, companies:company_id ( id, legal_name ), seasons:season_id ( id, name ) )")
         .eq("agent_id", id).is("archived_at", null)
         .order("closed_at", { ascending: false });
       if (error) throw error;
