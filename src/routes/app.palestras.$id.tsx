@@ -859,20 +859,30 @@ function FechamentoFinanceiroTab({
     agentId, seasonId,
   }), [rules.data, agentId, seasonId]);
 
-  // Snapshot wins when closed (frozen rule + frozen breakdown)
+  // Snapshot is the audit record; DISPLAY totals are ALWAYS derived live so that
+  // subtotal-per-row always matches the rows shown. Snapshot preserves the rule
+  // + inputs frozen at close time for auditability.
   const isClosed = !!snapshot.data;
   const calc = useMemo(() => {
-    if (isClosed && snapshot.data?.breakdown) {
-      return snapshot.data.breakdown as ReturnType<typeof calculateLecture>;
-    }
     return calculateLecture({
       grossRevenue,
-        cardFees,
+      cardFees,
       expenses,
       advances: advancesForCalc,
       rule: activeRule,
     });
-  }, [isClosed, snapshot.data, grossRevenue, cardFees, expenses, advancesForCalc, activeRule]);
+  }, [grossRevenue, cardFees, expenses, advancesForCalc, activeRule]);
+
+  // Divergence check: warn if the frozen snapshot differs from live totals.
+  const snapshotDivergent = useMemo(() => {
+    if (!snapshot.data) return false;
+    const eps = 0.01;
+    return (
+      Math.abs(Number(snapshot.data.total_stock_cost ?? 0) - calc.totals.totalStock) > eps ||
+      Math.abs(Number(snapshot.data.total_card_fees ?? 0) - calc.totals.totalCardFees) > eps ||
+      Math.abs(Number(snapshot.data.net_profit ?? 0) - calc.totals.netProfit) > eps
+    );
+  }, [snapshot.data, calc.totals]);
 
   const close = useMutation({
     mutationFn: async () => {
