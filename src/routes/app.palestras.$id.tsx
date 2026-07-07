@@ -942,6 +942,48 @@ function FechamentoFinanceiroTab({
     onError: (e) => toast.error(e instanceof Error ? e.message : "Erro ao fechar"),
   });
 
+  const recalc = useMutation({
+    mutationFn: async () => {
+      if (!snapshot.data?.id) throw new Error("Sem snapshot para recalcular.");
+      if (!agentId) throw new Error("Vincule um agendista antes de recalcular.");
+      // Archive old snapshot (nada é apagado).
+      const { error: archErr } = await supabase
+        .from("lecture_financial_snapshots")
+        .update({ archived_at: new Date().toISOString(), updated_by: userId })
+        .eq("id", snapshot.data.id);
+      if (archErr) throw archErr;
+
+      const breakdown = calculateLecture({
+        grossRevenue, cardFees, expenses, advances: advancesForCalc, rule: activeRule,
+      });
+      const { error: insErr } = await supabase.from("lecture_financial_snapshots").insert({
+        organization_id: organizationId,
+        lecture_id: lectureId,
+        agent_id: agentId,
+        rule_id: activeRule.id ?? null,
+        rule_snapshot: JSON.parse(JSON.stringify(activeRule)),
+        inputs: JSON.parse(JSON.stringify({ grossRevenue, cardFees, expenses, advances: advancesForCalc })),
+        breakdown: JSON.parse(JSON.stringify(breakdown)),
+        gross_revenue: grossRevenue,
+        total_expenses: breakdown.totals.totalExpenses,
+        total_advances: breakdown.totals.totalAdvances,
+        total_card_fees: breakdown.totals.totalCardFees,
+        total_stock_cost: breakdown.totals.totalStock,
+        net_profit: breakdown.totals.netProfit,
+        gustavo_amount: breakdown.totals.gustavoAmount,
+        agent_amount: breakdown.totals.agentAmount,
+        closed_by: userId,
+      });
+      if (insErr) throw insErr;
+    },
+    onSuccess: () => {
+      toast.success("Fechamento recalculado. Snapshot atualizado.");
+      qc.invalidateQueries({ queryKey: ["fechamento-snapshot", lectureId] });
+      qc.invalidateQueries({ queryKey: ["lecture-snapshot", lectureId] });
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Erro ao recalcular"),
+  });
+
   const loading = movements.isLoading || stockMoves.isLoading || lectureAdvances.isLoading || rules.isLoading || snapshot.isLoading;
   if (loading) return <p className="text-sm text-muted-foreground">Carregando motor financeiro…</p>;
 
