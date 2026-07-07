@@ -859,20 +859,30 @@ function FechamentoFinanceiroTab({
     agentId, seasonId,
   }), [rules.data, agentId, seasonId]);
 
-  // Snapshot wins when closed (frozen rule + frozen breakdown)
+  // Snapshot is the audit record; DISPLAY totals are ALWAYS derived live so that
+  // subtotal-per-row always matches the rows shown. Snapshot preserves the rule
+  // + inputs frozen at close time for auditability.
   const isClosed = !!snapshot.data;
   const calc = useMemo(() => {
-    if (isClosed && snapshot.data?.breakdown) {
-      return snapshot.data.breakdown as ReturnType<typeof calculateLecture>;
-    }
     return calculateLecture({
       grossRevenue,
-        cardFees,
+      cardFees,
       expenses,
       advances: advancesForCalc,
       rule: activeRule,
     });
-  }, [isClosed, snapshot.data, grossRevenue, cardFees, expenses, advancesForCalc, activeRule]);
+  }, [grossRevenue, cardFees, expenses, advancesForCalc, activeRule]);
+
+  // Divergence check: warn if the frozen snapshot differs from live totals.
+  const snapshotDivergent = useMemo(() => {
+    if (!snapshot.data) return false;
+    const eps = 0.01;
+    return (
+      Math.abs(Number(snapshot.data.total_stock_cost ?? 0) - calc.totals.totalStock) > eps ||
+      Math.abs(Number(snapshot.data.total_card_fees ?? 0) - calc.totals.totalCardFees) > eps ||
+      Math.abs(Number(snapshot.data.net_profit ?? 0) - calc.totals.netProfit) > eps
+    );
+  }, [snapshot.data, calc.totals]);
 
   const close = useMutation({
     mutationFn: async () => {
@@ -932,6 +942,48 @@ function FechamentoFinanceiroTab({
     onError: (e) => toast.error(e instanceof Error ? e.message : "Erro ao fechar"),
   });
 
+  const recalc = useMutation({
+    mutationFn: async () => {
+      if (!snapshot.data?.id) throw new Error("Sem snapshot para recalcular.");
+      if (!agentId) throw new Error("Vincule um agendista antes de recalcular.");
+      // Archive old snapshot (nada é apagado).
+      const { error: archErr } = await supabase
+        .from("lecture_financial_snapshots")
+        .update({ archived_at: new Date().toISOString() })
+        .eq("id", snapshot.data.id);
+      if (archErr) throw archErr;
+
+      const breakdown = calculateLecture({
+        grossRevenue, cardFees, expenses, advances: advancesForCalc, rule: activeRule,
+      });
+      const { error: insErr } = await supabase.from("lecture_financial_snapshots").insert({
+        organization_id: organizationId,
+        lecture_id: lectureId,
+        agent_id: agentId,
+        rule_id: activeRule.id ?? null,
+        rule_snapshot: JSON.parse(JSON.stringify(activeRule)),
+        inputs: JSON.parse(JSON.stringify({ grossRevenue, cardFees, expenses, advances: advancesForCalc })),
+        breakdown: JSON.parse(JSON.stringify(breakdown)),
+        gross_revenue: grossRevenue,
+        total_expenses: breakdown.totals.totalExpenses,
+        total_advances: breakdown.totals.totalAdvances,
+        total_card_fees: breakdown.totals.totalCardFees,
+        total_stock_cost: breakdown.totals.totalStock,
+        net_profit: breakdown.totals.netProfit,
+        gustavo_amount: breakdown.totals.gustavoAmount,
+        agent_amount: breakdown.totals.agentAmount,
+        closed_by: userId,
+      });
+      if (insErr) throw insErr;
+    },
+    onSuccess: () => {
+      toast.success("Fechamento recalculado. Snapshot atualizado.");
+      qc.invalidateQueries({ queryKey: ["fechamento-snapshot", lectureId] });
+      qc.invalidateQueries({ queryKey: ["lecture-snapshot", lectureId] });
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Erro ao recalcular"),
+  });
+
   const loading = movements.isLoading || stockMoves.isLoading || lectureAdvances.isLoading || rules.isLoading || snapshot.isLoading;
   if (loading) return <p className="text-sm text-muted-foreground">Carregando motor financeiro…</p>;
 
@@ -986,8 +1038,32 @@ function FechamentoFinanceiroTab({
               <Lock className="mr-1.5 h-4 w-4" /> Fechar palestra
             </Button>
           )}
+          {isClosed && snapshotDivergent && (
+            <Button
+              variant="outline" size="sm" className="rounded-full"
+              disabled={recalc.isPending}
+              onClick={() => {
+                if (typeof window !== "undefined" && window.confirm("Recalcular o fechamento com os dados atuais? O snapshot anterior será arquivado (não apagado).")) {
+                  recalc.mutate();
+                }
+              }}
+            >
+              <Calculator className="mr-1.5 h-4 w-4" /> Recalcular fechamento
+            </Button>
+          )}
         </div>
       </div>
+
+      {isClosed && snapshotDivergent && (
+        <div className="rounded-2xl border border-amber-500/40 bg-amber-500/10 px-5 py-3 text-[13px] text-amber-900 dark:text-amber-100">
+          <p className="font-medium">Divergência detectada entre o snapshot congelado e os dados atuais.</p>
+          <p className="mt-0.5 text-xs opacity-80">
+            Snapshot: Materiais {formatCurrency(Number(snapshot.data!.total_stock_cost ?? 0))} · Taxas cartão {formatCurrency(Number(snapshot.data!.total_card_fees ?? 0))} · Lucro {formatCurrency(Number(snapshot.data!.net_profit ?? 0))}.
+            Atual: Materiais {formatCurrency(calc.totals.totalStock)} · Taxas cartão {formatCurrency(calc.totals.totalCardFees)} · Lucro {formatCurrency(calc.totals.netProfit)}.
+            Use "Recalcular fechamento" para regravar o snapshot preservando o histórico.
+          </p>
+        </div>
+      )}
 
       {/* KPIs do cálculo */}
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">

@@ -1,6 +1,7 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { AlertTriangle, CheckCircle2 } from "lucide-react";
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
@@ -12,55 +13,63 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  MOVEMENT_KINDS, RESERVATION_STATUS, movementDirection, type MovementKind,
-} from "@/lib/stock";
+import { calcOnHand, movementDirection, type MovementKind } from "@/lib/stock";
 
-const NONE = "__none__";
+/**
+ * Fluxo simplificado por tipo de operação. Uma única seleção define o formulário mínimo.
+ * O sistema calcula automaticamente o custo em saídas (custo médio / lote), não pede duas vezes.
+ */
+type SimpleType = "entrada" | "saida_palestra" | "ajuste" | "perda" | "devolucao";
 
-export type MovementRow = {
-  id?: string;
-  stock_item_id?: string | null;
-  batch_id?: string | null;
-  kind?: string | null;
-  status?: string | null;
-  quantity?: number | string | null;
-  unit_cost?: number | string | null;
-  occurs_on?: string | null;
-  occurs_at?: string | null;
-  lecture_id?: string | null;
-  season_id?: string | null;
-  project_id?: string | null;
-  reason?: string | null;
-  notes?: string | null;
-};
+const TYPE_OPTIONS: { key: SimpleType; label: string; help: string; kind: MovementKind; direction: "in" | "out"; status: string }[] = [
+  { key: "entrada",         label: "Entrada",           help: "Compra ou reposição — registra custo e atualiza custo médio.", kind: "entrada",     direction: "in",  status: "utilizado" },
+  { key: "saida_palestra",  label: "Saída para Palestra", help: "Consumo vinculado a uma palestra — custo automático pelo estoque.", kind: "saida",     direction: "out", status: "utilizado" },
+  { key: "ajuste",          label: "Ajuste",            help: "Correção de inventário (positiva ou negativa).", kind: "ajuste",      direction: "in",  status: "utilizado" },
+  { key: "perda",           label: "Perda / Avaria",    help: "Baixa por perda, dano ou vencimento.", kind: "baixa",       direction: "out", status: "utilizado" },
+  { key: "devolucao",       label: "Devolução",         help: "Retorno de material ao estoque.", kind: "devolucao",   direction: "in",  status: "utilizado" },
+];
 
 export function MovementFormDialog({
-  open, onOpenChange, organizationId, userId, stockItemId, lockedItem,
+  open, onOpenChange, organizationId, userId, stockItemId, lockedItem, defaultLectureId,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   organizationId: string;
   userId: string;
-  /** Quando aberto a partir do detalhe, o item vem fixado. */
   stockItemId?: string;
   lockedItem?: boolean;
+  defaultLectureId?: string;
 }) {
   const today = new Date().toISOString().slice(0, 10);
-  const nowTime = new Date().toTimeString().slice(0, 5);
-  const [f, setF] = useState<MovementRow>({
-    stock_item_id: stockItemId ?? null,
-    kind: "saida",
-    status: "utilizado",
-    quantity: "",
-    occurs_on: today,
-    occurs_at: `${today}T${nowTime}`,
-  });
+
+  const [type, setType] = useState<SimpleType>("saida_palestra");
+  const [itemId, setItemId] = useState<string | null>(stockItemId ?? null);
+  const [qty, setQty] = useState<string>("");
+  const [unitCost, setUnitCost] = useState<string>("");
+  const [supplier, setSupplier] = useState<string>("");
+  const [lectureId, setLectureId] = useState<string | null>(defaultLectureId ?? null);
+  const [occursOn, setOccursOn] = useState<string>(today);
+  const [notes, setNotes] = useState<string>("");
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [forceSubmit, setForceSubmit] = useState(false);
+
+  useEffect(() => {
+    if (open) {
+      setType("saida_palestra");
+      setItemId(stockItemId ?? null);
+      setQty(""); setUnitCost(""); setSupplier("");
+      setLectureId(defaultLectureId ?? null);
+      setOccursOn(today); setNotes("");
+      setForceSubmit(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
+
   const qc = useQueryClient();
 
   const items = useQuery({
     queryKey: ["stock-items-select", organizationId],
-    enabled: !lockedItem,
+    enabled: !lockedItem && !!organizationId,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("stock_items").select("id, name, unit")
@@ -72,28 +81,27 @@ export function MovementFormDialog({
   });
 
   const currentItem = useQuery({
-    queryKey: ["stock-item-cost", f.stock_item_id],
-    enabled: !!f.stock_item_id,
+    queryKey: ["stock-item-cost", itemId],
+    enabled: !!itemId,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("stock_items")
         .select("id, name, unit, average_cost, purchase_price")
-        .eq("id", f.stock_item_id!).maybeSingle();
+        .eq("id", itemId!).maybeSingle();
       if (error) throw error;
       return data;
     },
   });
 
-  const batches = useQuery({
-    queryKey: ["stock-batches-select", f.stock_item_id],
-    enabled: !!f.stock_item_id,
+  // Estoque disponível (para validação de saída)
+  const itemMovements = useQuery({
+    queryKey: ["stock-item-movements-form", itemId],
+    enabled: !!itemId,
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("inventory_batches")
-        .select("id, code, received_on, quantity, unit_cost")
-        .eq("stock_item_id", f.stock_item_id!)
-        .is("archived_at", null)
-        .order("received_on", { ascending: false, nullsFirst: false });
+        .from("stock_movements")
+        .select("kind, direction, quantity, status")
+        .eq("stock_item_id", itemId!).is("archived_at", null);
       if (error) throw error;
       return data ?? [];
     },
@@ -101,67 +109,83 @@ export function MovementFormDialog({
 
   const lectures = useQuery({
     queryKey: ["stock-lectures-select", organizationId],
+    enabled: !!organizationId,
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("lectures").select("id, title")
+        .from("lectures").select("id, title, scheduled_at, company_id, agent_id, season_id, campaign_id, project_id")
         .eq("organization_id", organizationId).is("archived_at", null)
         .order("scheduled_at", { ascending: false, nullsFirst: false });
       if (error) throw error;
       return data ?? [];
     },
   });
-  const seasons = useQuery({
-    queryKey: ["stock-seasons-select", organizationId],
+
+  const onHand = useMemo(() => calcOnHand(itemMovements.data ?? []).available, [itemMovements.data]);
+  const autoUnitCost = Number(currentItem.data?.average_cost ?? currentItem.data?.purchase_price ?? 0);
+  const numQty = Number(qty || 0);
+  const isSaidaPalestra = type === "saida_palestra";
+  const isEntrada = type === "entrada";
+  const effectiveUnitCost = isEntrada ? Number(unitCost || 0) : autoUnitCost;
+  const totalCost = effectiveUnitCost * numQty;
+  const selectedLecture = (lectures.data ?? []).find((l) => l.id === lectureId);
+
+  // Detecta possível duplicata (mesmo item/qty/palestra/data já registrado nos últimos minutos).
+  const dupCheck = useQuery({
+    queryKey: ["stock-dup-check", itemId, numQty, lectureId, occursOn, type],
+    enabled: open && !!itemId && numQty > 0 && (isSaidaPalestra ? !!lectureId : true),
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("seasons").select("id, name")
-        .eq("organization_id", organizationId).is("archived_at", null)
-        .order("starts_on", { ascending: false, nullsFirst: false });
+      const opt = TYPE_OPTIONS.find((t) => t.key === type)!;
+      const q = supabase
+        .from("stock_movements")
+        .select("id, occurs_on, created_at, quantity")
+        .eq("stock_item_id", itemId!)
+        .eq("kind", opt.kind)
+        .eq("quantity", numQty)
+        .eq("occurs_on", occursOn)
+        .is("archived_at", null)
+        .limit(1);
+      const query = lectureId ? q.eq("lecture_id", lectureId) : q.is("lecture_id", null);
+      const { data, error } = await query;
       if (error) throw error;
       return data ?? [];
     },
   });
-  const projects = useQuery({
-    queryKey: ["stock-projects-select", organizationId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("projects").select("id, name")
-        .eq("organization_id", organizationId).is("archived_at", null)
-        .order("name");
-      if (error) throw error;
-      return data ?? [];
-    },
-  });
+  const hasDuplicate = (dupCheck.data ?? []).length > 0;
 
   const save = useMutation({
     mutationFn: async () => {
-      if (!f.stock_item_id) throw new Error("Selecione o item.");
-      const qty = Number(f.quantity);
-      if (!qty || qty <= 0) throw new Error("Informe a quantidade.");
-      const kind = (f.kind ?? "saida") as MovementKind;
-      const unitCost = f.unit_cost !== "" && f.unit_cost != null ? Number(f.unit_cost) : null;
-      const status =
-        kind === "reserva" ? (f.status ?? "reservado") :
-        kind === "cancelamento" ? "cancelado" :
-        f.status || null;
+      if (!itemId) throw new Error("Selecione o item.");
+      if (!numQty || numQty <= 0) throw new Error("Informe a quantidade.");
+      const opt = TYPE_OPTIONS.find((t) => t.key === type)!;
 
+      if (opt.direction === "out" && numQty > onHand) {
+        throw new Error(`Não foi possível concluir: existem ${onHand} ${currentItem.data?.unit ?? "un"} disponíveis e você tentou retirar ${numQty}.`);
+      }
+      if (isSaidaPalestra && !lectureId) {
+        throw new Error("Selecione a palestra vinculada à saída.");
+      }
+      if (isEntrada && Number(unitCost || 0) <= 0) {
+        throw new Error("Informe o custo unitário da entrada.");
+      }
+      if (hasDuplicate && !forceSubmit) {
+        throw new Error("__DUPLICATE__");
+      }
+
+      const insertUnitCost = isEntrada ? Number(unitCost) : null; // Trigger stock_mov_autocost preenche saída via lote/média.
       const { error } = await supabase.from("stock_movements").insert({
         organization_id: organizationId,
-        stock_item_id: f.stock_item_id,
-        batch_id: f.batch_id || null,
-        kind,
-        direction: movementDirection(kind),
-        status,
-        quantity: qty,
-        unit_cost: unitCost,
-        total_cost: unitCost != null ? unitCost * qty : null,
-        occurs_on: f.occurs_on || today,
-        occurs_at: f.occurs_at ? new Date(f.occurs_at).toISOString() : new Date().toISOString(),
-        lecture_id: f.lecture_id || null,
-        season_id: f.season_id || null,
-        project_id: f.project_id || null,
-        reason: f.reason?.trim() || null,
-        notes: f.notes?.trim() || null,
+        stock_item_id: itemId,
+        kind: opt.kind,
+        direction: opt.direction,
+        status: opt.status,
+        quantity: numQty,
+        unit_cost: insertUnitCost,
+        total_cost: insertUnitCost != null ? insertUnitCost * numQty : null,
+        occurs_on: occursOn,
+        occurs_at: new Date().toISOString(),
+        lecture_id: isSaidaPalestra ? lectureId : null,
+        reason: isEntrada ? (supplier.trim() || null) : null,
+        notes: notes.trim() || null,
         created_by: userId,
         updated_by: userId,
       });
@@ -171,37 +195,53 @@ export function MovementFormDialog({
       toast.success("Movimentação registrada");
       qc.invalidateQueries({ queryKey: ["stock-movements"] });
       qc.invalidateQueries({ queryKey: ["stock-items"] });
-      if (f.stock_item_id) qc.invalidateQueries({ queryKey: ["stock-item", f.stock_item_id] });
+      qc.invalidateQueries({ queryKey: ["stock-item-movements-form"] });
+      if (itemId) qc.invalidateQueries({ queryKey: ["stock-item", itemId] });
+      if (lectureId) {
+        qc.invalidateQueries({ queryKey: ["fechamento-stock", lectureId] });
+        qc.invalidateQueries({ queryKey: ["lecture-stock", lectureId] });
+      }
       onOpenChange(false);
     },
-    onError: (e) => toast.error(e instanceof Error ? e.message : "Erro"),
+    onError: (e) => {
+      const msg = e instanceof Error ? e.message : "Erro";
+      if (msg === "__DUPLICATE__") {
+        setConfirmOpen(true);
+        return;
+      }
+      toast.error(msg);
+    },
   });
 
-  function set<K extends keyof MovementRow>(k: K, v: MovementRow[K]) { setF((p) => ({ ...p, [k]: v })); }
-  function submit(e: FormEvent) { e.preventDefault(); save.mutate(); }
-
-  const kind = (f.kind ?? "saida") as MovementKind;
-  const isReserva = kind === "reserva";
-  const selectedBatch = (batches.data ?? []).find((b) => b.id === f.batch_id);
-  const estimatedUnitCost = Number(
-    f.unit_cost || selectedBatch?.unit_cost || currentItem.data?.average_cost || currentItem.data?.purchase_price || 0,
-  );
-  const estimatedTotal = estimatedUnitCost * Number(f.quantity || 0);
+  function submit(e: FormEvent) {
+    e.preventDefault();
+    save.mutate();
+  }
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl">
+      <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle className="font-serif text-2xl">Nova movimentação</DialogTitle>
-          <DialogDescription>
-            Entrada, saída, reserva, baixa, devolução, ajuste ou cancelamento. Tudo fica registrado.
-          </DialogDescription>
+          <DialogDescription>{TYPE_OPTIONS.find((t) => t.key === type)!.help}</DialogDescription>
         </DialogHeader>
-        <form onSubmit={submit} className="grid grid-cols-1 gap-3 md:grid-cols-3">
+
+        <form onSubmit={submit} className="space-y-4">
+          <div className="space-y-1.5">
+            <Label>Tipo *</Label>
+            <Select value={type} onValueChange={(v) => setType(v as SimpleType)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {TYPE_OPTIONS.map((t) => <SelectItem key={t.key} value={t.key}>{t.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+
           {!lockedItem && (
-            <div className="space-y-1.5 md:col-span-3">
+            <div className="space-y-1.5">
               <Label>Item *</Label>
-              <Select value={f.stock_item_id ?? ""} onValueChange={(v) => { set("stock_item_id", v); set("batch_id", null); }}>
+              <Select value={itemId ?? ""} onValueChange={(v) => setItemId(v)}>
                 <SelectTrigger><SelectValue placeholder="Selecionar item" /></SelectTrigger>
                 <SelectContent>
                   {(items.data ?? []).map((i) => (
@@ -212,129 +252,123 @@ export function MovementFormDialog({
             </div>
           )}
 
-          <div className="space-y-1.5">
-            <Label>Tipo *</Label>
-            <Select value={kind} onValueChange={(v) => {
-              const next = v as MovementKind;
-              setF((p) => ({
-                ...p,
-                kind: next,
-                status: next === "reserva" ? "reservado" : next === "cancelamento" ? "cancelado" : "utilizado",
-              }));
-            }}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {MOVEMENT_KINDS.map((k) => <SelectItem key={k.key} value={k.key}>{k.label}</SelectItem>)}
-              </SelectContent>
-            </Select>
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label>Quantidade *</Label>
+              <Input
+                type="number" step="0.001" min="0" value={qty}
+                onChange={(e) => setQty(e.target.value)}
+                required
+              />
+              {itemId && (
+                <p className="text-[11px] text-muted-foreground">
+                  Disponível em estoque: <span className="tabular-nums text-foreground">{onHand}</span> {currentItem.data?.unit ?? "un"}
+                </p>
+              )}
+            </div>
+            <div className="space-y-1.5">
+              <Label>Data *</Label>
+              <Input type="date" value={occursOn} onChange={(e) => setOccursOn(e.target.value)} required />
+            </div>
           </div>
 
-          <div className="space-y-1.5">
-            <Label>Quantidade *</Label>
-            <Input type="number" step="0.001" min="0" value={f.quantity ?? ""} onChange={(e) => set("quantity", e.target.value)} required />
-          </div>
+          {isEntrada && (
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label>Custo unitário *</Label>
+                <Input type="number" step="0.01" min="0" value={unitCost}
+                  onChange={(e) => setUnitCost(e.target.value)} required />
+                {numQty > 0 && Number(unitCost) > 0 && (
+                  <p className="text-[11px] text-muted-foreground">
+                    Custo total: <span className="tabular-nums text-foreground">{money(Number(unitCost) * numQty)}</span>
+                  </p>
+                )}
+              </div>
+              <div className="space-y-1.5">
+                <Label>Fornecedor</Label>
+                <Input value={supplier} onChange={(e) => setSupplier(e.target.value)} placeholder="Opcional" />
+              </div>
+            </div>
+          )}
 
-          <div className="space-y-1.5">
-            <Label>Valor unitário</Label>
-            <Input
-              type="number"
-              step="0.01"
-              value={f.unit_cost ?? ""}
-              onChange={(e) => set("unit_cost", e.target.value)}
-              placeholder={estimatedUnitCost ? `Auto: ${money(estimatedUnitCost)}` : "Auto pelo lote/item"}
-            />
-            {kind !== "entrada" && estimatedTotal > 0 && (
-              <p className="text-[11px] text-muted-foreground">
-                Custo estimado que entrará no fechamento: {money(estimatedTotal)}
-              </p>
-            )}
-          </div>
-
-          <div className="space-y-1.5">
-            <Label>Data</Label>
-            <Input type="date" value={f.occurs_on ?? ""} onChange={(e) => set("occurs_on", e.target.value)} />
-          </div>
-          <div className="space-y-1.5 md:col-span-2">
-            <Label>Data/hora exata</Label>
-            <Input type="datetime-local" value={f.occurs_at ?? ""} onChange={(e) => set("occurs_at", e.target.value)} />
-          </div>
-
-          {isReserva && (
-            <div className="space-y-1.5 md:col-span-3">
-              <Label>Status da reserva</Label>
-              <Select value={f.status ?? "reservado"} onValueChange={(v) => set("status", v)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+          {isSaidaPalestra && (
+            <div className="space-y-1.5">
+              <Label>Palestra *</Label>
+              <Select value={lectureId ?? ""} onValueChange={(v) => setLectureId(v)}>
+                <SelectTrigger><SelectValue placeholder="Selecionar palestra" /></SelectTrigger>
                 <SelectContent>
-                  {RESERVATION_STATUS.map((s) => <SelectItem key={s.key} value={s.key}>{s.label}</SelectItem>)}
+                  {(lectures.data ?? []).map((l) => (
+                    <SelectItem key={l.id} value={l.id}>{l.title}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
+              {selectedLecture && numQty > 0 && (
+                <div className="mt-2 rounded-xl border border-border/70 bg-background/40 p-3 text-[13px]">
+                  <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Resumo</p>
+                  <div className="mt-1.5 grid grid-cols-2 gap-x-4 gap-y-1">
+                    <span className="text-muted-foreground">Item</span>
+                    <span className="tabular-nums text-foreground">{currentItem.data?.name ?? "—"}</span>
+                    <span className="text-muted-foreground">Quantidade</span>
+                    <span className="tabular-nums text-foreground">{numQty} {currentItem.data?.unit ?? "un"}</span>
+                    <span className="text-muted-foreground">Custo médio unitário</span>
+                    <span className="tabular-nums text-foreground">{money(autoUnitCost)}</span>
+                    <span className="text-muted-foreground">Custo total</span>
+                    <span className="tabular-nums text-foreground">{money(totalCost)}</span>
+                    <span className="text-muted-foreground">Palestra</span>
+                    <span className="text-foreground">{selectedLecture.title}</span>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
           <div className="space-y-1.5">
-            <Label>Lote</Label>
-            <Select value={f.batch_id ?? NONE} onValueChange={(v) => set("batch_id", v === NONE ? null : v)}>
-              <SelectTrigger><SelectValue placeholder="Sem lote" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value={NONE}>Sem lote</SelectItem>
-                {(batches.data ?? []).map((b) => (
-                  <SelectItem key={b.id} value={b.id}>
-                    {b.code ?? b.id.slice(0, 6)} · {b.received_on ?? "—"} · {b.quantity ?? 0}{b.unit_cost ? ` · ${money(Number(b.unit_cost))}` : ""}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1.5">
-            <Label>Palestra</Label>
-            <Select value={f.lecture_id ?? NONE} onValueChange={(v) => set("lecture_id", v === NONE ? null : v)}>
-              <SelectTrigger><SelectValue placeholder="Nenhuma" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value={NONE}>Nenhuma</SelectItem>
-                {(lectures.data ?? []).map((l) => <SelectItem key={l.id} value={l.id}>{l.title}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1.5">
-            <Label>Temporada</Label>
-            <Select value={f.season_id ?? NONE} onValueChange={(v) => set("season_id", v === NONE ? null : v)}>
-              <SelectTrigger><SelectValue placeholder="Nenhuma" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value={NONE}>Nenhuma</SelectItem>
-                {(seasons.data ?? []).map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            <Label>Observação</Label>
+            <Textarea rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Opcional" />
           </div>
 
-          <div className="space-y-1.5 md:col-span-3">
-            <Label>Projeto</Label>
-            <Select value={f.project_id ?? NONE} onValueChange={(v) => set("project_id", v === NONE ? null : v)}>
-              <SelectTrigger><SelectValue placeholder="Nenhum" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value={NONE}>Nenhum</SelectItem>
-                {(projects.data ?? []).map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
+          {hasDuplicate && (
+            <div className="flex items-start gap-2 rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-[12px] text-amber-900 dark:text-amber-100">
+              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+              <span>Já existe uma movimentação idêntica (mesmo item, quantidade, data e vínculo). Se for intencional, confirme mesmo assim.</span>
+            </div>
+          )}
 
-          <div className="space-y-1.5 md:col-span-3">
-            <Label>Motivo</Label>
-            <Input value={f.reason ?? ""} onChange={(e) => set("reason", e.target.value)} />
-          </div>
-          <div className="space-y-1.5 md:col-span-3">
-            <Label>Observações</Label>
-            <Textarea rows={2} value={f.notes ?? ""} onChange={(e) => set("notes", e.target.value)} />
-          </div>
-
-          <DialogFooter className="md:col-span-3">
+          <DialogFooter>
             <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Cancelar</Button>
             <Button type="submit" variant="navy" disabled={save.isPending}>
-              {save.isPending ? "Salvando…" : "Registrar"}
+              {save.isPending ? "Salvando…" : isSaidaPalestra ? "Confirmar saída" : "Registrar"}
             </Button>
           </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>
+
+    <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle className="font-serif text-xl">Registrar mesmo assim?</DialogTitle>
+          <DialogDescription>
+            Já existe uma movimentação idêntica para este item, quantidade, data e vínculo. Isso pode ser duplicata.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button variant="ghost" onClick={() => setConfirmOpen(false)}>Cancelar</Button>
+          <Button
+            variant="navy"
+            onClick={() => {
+              setForceSubmit(true);
+              setConfirmOpen(false);
+              setTimeout(() => save.mutate(), 0);
+            }}
+            disabled={save.isPending}
+          >
+            <CheckCircle2 className="mr-1.5 h-4 w-4" /> Confirmar duplicata
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }
 
