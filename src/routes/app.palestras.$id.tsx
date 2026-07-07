@@ -1038,8 +1038,32 @@ function FechamentoFinanceiroTab({
               <Lock className="mr-1.5 h-4 w-4" /> Fechar palestra
             </Button>
           )}
+          {isClosed && snapshotDivergent && (
+            <Button
+              variant="outline" size="sm" className="rounded-full"
+              disabled={recalc.isPending}
+              onClick={() => {
+                if (typeof window !== "undefined" && window.confirm("Recalcular o fechamento com os dados atuais? O snapshot anterior será arquivado (não apagado).")) {
+                  recalc.mutate();
+                }
+              }}
+            >
+              <Calculator className="mr-1.5 h-4 w-4" /> Recalcular fechamento
+            </Button>
+          )}
         </div>
       </div>
+
+      {isClosed && snapshotDivergent && (
+        <div className="rounded-2xl border border-amber-500/40 bg-amber-500/10 px-5 py-3 text-[13px] text-amber-900 dark:text-amber-100">
+          <p className="font-medium">Divergência detectada entre o snapshot congelado e os dados atuais.</p>
+          <p className="mt-0.5 text-xs opacity-80">
+            Snapshot: Materiais {formatCurrency(Number(snapshot.data!.total_stock_cost ?? 0))} · Taxas cartão {formatCurrency(Number(snapshot.data!.total_card_fees ?? 0))} · Lucro {formatCurrency(Number(snapshot.data!.net_profit ?? 0))}.
+            Atual: Materiais {formatCurrency(calc.totals.totalStock)} · Taxas cartão {formatCurrency(calc.totals.totalCardFees)} · Lucro {formatCurrency(calc.totals.netProfit)}.
+            Use "Recalcular fechamento" para regravar o snapshot preservando o histórico.
+          </p>
+        </div>
+      )}
 
       {/* KPIs do cálculo */}
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
