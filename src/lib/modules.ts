@@ -31,10 +31,11 @@ export interface ModuleDef {
   description: string;
   emptyMessage: string;
   primaryAction: string;
-  section: "principal" | "operação" | "estratégia" | "sistema";
+  section: "principal" | "preparação" | "comercial" | "operação" | "financeiro" | "estratégia" | "sistema";
 }
 
 export const MODULES: ModuleDef[] = [
+  // PRINCIPAL
   { to: "/app/hoje", label: "Hoje", icon: Home, section: "principal",
     description: "Sua visão executiva do dia.",
     emptyMessage: "Nada por aqui ainda. Comece adicionando suas primeiras informações.",
@@ -43,52 +44,60 @@ export const MODULES: ModuleDef[] = [
     description: "Indicadores e performance em tempo real.",
     emptyMessage: "Conecte fontes de dados para visualizar seus indicadores.",
     primaryAction: "Configurar fontes" },
-  { to: "/app/crm", label: "CRM", icon: Users, section: "operação",
+
+  // PREPARAÇÃO
+  { to: "/app/temporadas", label: "Temporadas", icon: CalendarRange, section: "preparação",
+    description: "Ciclos comerciais e metas por período.",
+    emptyMessage: "Você ainda não criou uma temporada. Crie sua primeira temporada.",
+    primaryAction: "Nova Temporada" },
+  { to: "/app/campanhas", label: "Campanhas", icon: Megaphone, section: "preparação",
+    description: "Iniciativas comerciais por temporada.",
+    emptyMessage: "Nenhuma campanha cadastrada ainda.",
+    primaryAction: "Nova Campanha" },
+  { to: "/app/projetos", label: "Projetos", icon: Briefcase, section: "preparação",
+    description: "Projetos estratégicos por campanha/temporada.",
+    emptyMessage: "Nenhum projeto cadastrado ainda.",
+    primaryAction: "Novo Projeto" },
+  { to: "/app/agendistas", label: "Agendistas", icon: UserCog, section: "preparação",
+    description: "Equipe de prospecção e agendamentos.",
+    emptyMessage: "Nenhum agendista cadastrado ainda.",
+    primaryAction: "Novo Agendista" },
+  { to: "/app/estoque", label: "Estoque", icon: Package, section: "preparação",
+    description: "Materiais, kits e itens em movimento.",
+    emptyMessage: "Seu estoque está vazio. Cadastre o primeiro item.",
+    primaryAction: "Novo Item" },
+
+  // COMERCIAL
+  { to: "/app/crm", label: "CRM", icon: Users, section: "comercial",
     description: "Leads, oportunidades e relacionamento.",
     emptyMessage: "Você ainda não cadastrou nenhum lead. Clique em Novo Lead para começar.",
     primaryAction: "Novo Lead" },
-  { to: "/app/crm", label: "Empresas", icon: Building2, section: "operação",
+  { to: "/app/crm", label: "Empresas", icon: Building2, section: "comercial",
     description: "Empresas cadastradas no CRM.",
     emptyMessage: "Nenhuma empresa cadastrada.",
     primaryAction: "Nova Empresa" },
+
+  // OPERAÇÃO
   { to: "/app/palestras", label: "Palestras", icon: Mic, section: "operação",
     description: "Agenda, propostas e produção das palestras.",
     emptyMessage: "Você ainda não cadastrou nenhuma palestra nesta temporada. Clique em Nova Palestra para começar.",
     primaryAction: "Nova Palestra" },
-  { to: "/app/financeiro", label: "Financeiro", icon: Wallet, section: "operação",
+
+  // FINANCEIRO
+  { to: "/app/financeiro", label: "Financeiro", icon: Wallet, section: "financeiro",
     description: "Lançamentos, recebimentos e fluxo de caixa.",
     emptyMessage: "Nenhum lançamento por aqui. Crie um novo lançamento para iniciar.",
     primaryAction: "Novo Lançamento" },
-  { to: "/app/agendistas", label: "Agendistas", icon: UserCog, section: "operação",
-    description: "Equipe de prospecção e agendamentos.",
-    emptyMessage: "Nenhum agendista cadastrado ainda.",
-    primaryAction: "Novo Agendista" },
-  { to: "/app/estoque", label: "Estoque", icon: Package, section: "operação",
-    description: "Materiais, kits e itens em movimento.",
-    emptyMessage: "Seu estoque está vazio. Cadastre o primeiro item.",
-    primaryAction: "Novo Item" },
-  { to: "/app/temporadas", label: "Temporadas", icon: CalendarRange, section: "operação",
-    description: "Ciclos comerciais e metas por período.",
-    emptyMessage: "Você ainda não criou uma temporada. Crie sua primeira temporada.",
-    primaryAction: "Nova Temporada" },
-  { to: "/app/campanhas", label: "Campanhas", icon: Megaphone, section: "operação",
-    description: "Iniciativas comerciais por temporada.",
-    emptyMessage: "Nenhuma campanha cadastrada ainda.",
-    primaryAction: "Nova Campanha" },
-  { to: "/app/projetos", label: "Projetos", icon: Briefcase, section: "operação",
-    description: "Projetos estratégicos por campanha/temporada.",
-    emptyMessage: "Nenhum projeto cadastrado ainda.",
-    primaryAction: "Novo Projeto" },
+  { to: "/app/relatorios", label: "Relatórios", icon: BarChart3, section: "financeiro",
+    description: "Análises consolidadas e exportações.",
+    emptyMessage: "Nenhum relatório gerado ainda.",
+    primaryAction: "Gerar Relatório" },
 
-
+  // ESTRATÉGIA
   { to: "/app/inteligencia", label: "Centro de Inteligência", icon: BrainCircuit, section: "estratégia",
     description: "BI executivo — indicadores, rankings e gráficos em tempo real.",
     emptyMessage: "Cadastre dados operacionais para alimentar a inteligência.",
     primaryAction: "Atualizar" },
-  { to: "/app/relatorios", label: "Relatórios", icon: BarChart3, section: "estratégia",
-    description: "Análises consolidadas e exportações.",
-    emptyMessage: "Nenhum relatório gerado ainda.",
-    primaryAction: "Gerar Relatório" },
   { to: "/app/roadmap", label: "Roadmap", icon: Map, section: "estratégia",
     description: "Plano de evolução e iniciativas estratégicas.",
     emptyMessage: "Comece desenhando seu roadmap.",
@@ -97,7 +106,6 @@ export const MODULES: ModuleDef[] = [
     description: "Inteligência aplicada aos negócios do Grupo.",
     emptyMessage: "A IA Guerra está pronta para começar. Faça sua primeira pergunta.",
     primaryAction: "Nova conversa" },
-
   { to: "/app/historia", label: "História", icon: BookOpen, section: "estratégia",
     description: "Linha do tempo e marcos da jornada.",
     emptyMessage: "Sua história está esperando para ser contada.",
@@ -111,6 +119,7 @@ export const MODULES: ModuleDef[] = [
     emptyMessage: "Sua biblioteca está vazia. Adicione o primeiro conteúdo.",
     primaryAction: "Novo conteúdo" },
 
+  // SISTEMA
   { to: "/app/auditoria", label: "Auditoria", icon: ShieldCheck, section: "sistema",
     description: "Trilha de eventos e segurança.",
     emptyMessage: "Nenhum evento registrado.",
