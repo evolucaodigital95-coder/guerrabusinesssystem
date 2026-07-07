@@ -949,7 +949,7 @@ function FechamentoFinanceiroTab({
       // Archive old snapshot (nada é apagado).
       const { error: archErr } = await supabase
         .from("lecture_financial_snapshots")
-        .update({ archived_at: new Date().toISOString(), updated_by: userId })
+        .update({ archived_at: new Date().toISOString() })
         .eq("id", snapshot.data.id);
       if (archErr) throw archErr;
 
