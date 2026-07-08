@@ -350,7 +350,7 @@ export function MovementFormDialog({
                   agent_id: p.agent_id ?? l?.agent_id ?? null,
                   season_id: p.season_id ?? l?.season_id ?? null,
                   project_id: p.project_id ?? l?.project_id ?? null,
-                  campaign_id: p.campaign_id ?? l?.campaign_id ?? null,
+
                 }));
               }}
             >
