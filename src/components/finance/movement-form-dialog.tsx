@@ -34,6 +34,9 @@ export type MovementRow = {
   lecture_id?: string | null;
   agent_id?: string | null;
   season_id?: string | null;
+  project_id?: string | null;
+
+
   payment_method?: string | null;
   card_brand_id?: string | null;
   card_installments?: number | string | null;
@@ -99,12 +102,13 @@ export function MovementFormDialog({
     queryKey: ["finance-lectures-select", organizationId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("lectures").select("id, title")
+        .from("lectures").select("id, title, company_id, agent_id, season_id, project_id, campaign_id")
         .eq("organization_id", organizationId).is("archived_at", null).order("created_at", { ascending: false });
       if (error) throw error;
       return data ?? [];
     },
   });
+
   const agents = useQuery({
     queryKey: ["finance-agents-select", organizationId],
     queryFn: async () => {
@@ -163,6 +167,9 @@ export function MovementFormDialog({
         lecture_id: f.lecture_id || null,
         agent_id: f.agent_id || null,
         season_id: f.season_id || null,
+        project_id: f.project_id || null,
+
+
         payment_method: direction === "in" ? (f.payment_method || null) : null,
         card_brand_id: cardPayment ? (f.card_brand_id || null) : null,
         card_installments: cardPayment ? Number(f.card_installments || 1) : null,
@@ -331,7 +338,22 @@ export function MovementFormDialog({
           </div>
           <div className="space-y-1.5">
             <Label>Palestra</Label>
-            <Select value={f.lecture_id ?? NONE} onValueChange={(v) => set("lecture_id", v === NONE ? null : v)}>
+            <Select
+              value={f.lecture_id ?? NONE}
+              onValueChange={(v) => {
+                if (v === NONE) { set("lecture_id", null); return; }
+                const l = (lectures.data ?? []).find((x) => x.id === v);
+                setF((p) => ({
+                  ...p,
+                  lecture_id: v,
+                  company_id: p.company_id ?? l?.company_id ?? null,
+                  agent_id: p.agent_id ?? l?.agent_id ?? null,
+                  season_id: p.season_id ?? l?.season_id ?? null,
+                  project_id: p.project_id ?? l?.project_id ?? null,
+
+                }));
+              }}
+            >
               <SelectTrigger><SelectValue placeholder="Selecionar" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value={NONE}>Nenhuma</SelectItem>
@@ -340,7 +362,9 @@ export function MovementFormDialog({
                 ))}
               </SelectContent>
             </Select>
+            <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Empresa, agendista e temporada são preenchidos automaticamente pela palestra.</p>
           </div>
+
           <div className="space-y-1.5">
             <Label>Agendista</Label>
             <Select value={f.agent_id ?? NONE} onValueChange={(v) => set("agent_id", v === NONE ? null : v)}>
