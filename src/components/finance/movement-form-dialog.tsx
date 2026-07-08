@@ -35,7 +35,7 @@ export type MovementRow = {
   agent_id?: string | null;
   season_id?: string | null;
   project_id?: string | null;
-  campaign_id?: string | null;
+
 
   payment_method?: string | null;
   card_brand_id?: string | null;
