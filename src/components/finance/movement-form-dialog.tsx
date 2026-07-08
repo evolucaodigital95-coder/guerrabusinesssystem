@@ -99,12 +99,13 @@ export function MovementFormDialog({
     queryKey: ["finance-lectures-select", organizationId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("lectures").select("id, title")
+        .from("lectures").select("id, title, company_id, agent_id, season_id, project_id, campaign_id")
         .eq("organization_id", organizationId).is("archived_at", null).order("created_at", { ascending: false });
       if (error) throw error;
       return data ?? [];
     },
   });
+
   const agents = useQuery({
     queryKey: ["finance-agents-select", organizationId],
     queryFn: async () => {
