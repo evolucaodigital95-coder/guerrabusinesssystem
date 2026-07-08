@@ -34,6 +34,9 @@ export type MovementRow = {
   lecture_id?: string | null;
   agent_id?: string | null;
   season_id?: string | null;
+  project_id?: string | null;
+  campaign_id?: string | null;
+
   payment_method?: string | null;
   card_brand_id?: string | null;
   card_installments?: number | string | null;
