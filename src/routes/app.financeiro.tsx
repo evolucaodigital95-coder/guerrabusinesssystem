@@ -599,29 +599,35 @@ function MovementSheet({
               )}
               <FieldLink
                 label="Empresa"
-                value={movement.companies?.legal_name ?? "—"}
+                value={movement.companies?.legal_name ?? (movement.company_id ? "Registro arquivado" : "—")}
                 to={movement.companies?.id ? { route: "/app/crm/$id", id: movement.companies.id } : undefined}
+                onNavigate={onClose}
               />
               <FieldLink
                 label="Palestra"
-                value={movement.lectures?.title ?? "—"}
+                value={movement.lectures?.title ?? (movement.lecture_id ? "Registro arquivado" : "—")}
                 to={movement.lectures?.id ? { route: "/app/palestras/$id", id: movement.lectures.id } : undefined}
+                onNavigate={onClose}
               />
               <FieldLink
                 label="Agendista"
-                value={movement.agents?.full_name ?? "—"}
+                value={movement.agents?.full_name ?? (movement.agent_id ? "Registro arquivado" : "—")}
                 to={movement.agents?.id ? { route: "/app/agendistas/$id", id: movement.agents.id } : undefined}
+                onNavigate={onClose}
               />
               <FieldLink
                 label="Temporada"
-                value={movement.seasons?.name ?? "—"}
+                value={movement.seasons?.name ?? (movement.season_id ? "Registro arquivado" : "—")}
                 to={movement.seasons?.id ? { route: "/app/temporadas/$id", id: movement.seasons.id } : undefined}
+                onNavigate={onClose}
               />
               <FieldLink
                 label="Projeto"
-                value={movement.projects?.name ?? "—"}
+                value={movement.projects?.name ?? (movement.project_id ? "Registro arquivado" : "—")}
                 to={movement.projects?.id ? { route: "/app/projetos/$id", id: movement.projects.id } : undefined}
+                onNavigate={onClose}
               />
+
             </div>
             {movement.notes && (
               <p className="mt-4 whitespace-pre-wrap border-t border-border pt-4 text-sm text-muted-foreground">{movement.notes}</p>
