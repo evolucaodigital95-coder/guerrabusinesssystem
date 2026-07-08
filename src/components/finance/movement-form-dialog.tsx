@@ -167,6 +167,9 @@ export function MovementFormDialog({
         lecture_id: f.lecture_id || null,
         agent_id: f.agent_id || null,
         season_id: f.season_id || null,
+        project_id: f.project_id || null,
+        campaign_id: f.campaign_id || null,
+
         payment_method: direction === "in" ? (f.payment_method || null) : null,
         card_brand_id: cardPayment ? (f.card_brand_id || null) : null,
         card_installments: cardPayment ? Number(f.card_installments || 1) : null,
