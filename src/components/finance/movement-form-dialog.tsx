@@ -335,7 +335,22 @@ export function MovementFormDialog({
           </div>
           <div className="space-y-1.5">
             <Label>Palestra</Label>
-            <Select value={f.lecture_id ?? NONE} onValueChange={(v) => set("lecture_id", v === NONE ? null : v)}>
+            <Select
+              value={f.lecture_id ?? NONE}
+              onValueChange={(v) => {
+                if (v === NONE) { set("lecture_id", null); return; }
+                const l = (lectures.data ?? []).find((x) => x.id === v);
+                setF((p) => ({
+                  ...p,
+                  lecture_id: v,
+                  company_id: p.company_id ?? l?.company_id ?? null,
+                  agent_id: p.agent_id ?? l?.agent_id ?? null,
+                  season_id: p.season_id ?? l?.season_id ?? null,
+                  project_id: p.project_id ?? l?.project_id ?? null,
+                  campaign_id: p.campaign_id ?? l?.campaign_id ?? null,
+                }));
+              }}
+            >
               <SelectTrigger><SelectValue placeholder="Selecionar" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value={NONE}>Nenhuma</SelectItem>
@@ -344,7 +359,9 @@ export function MovementFormDialog({
                 ))}
               </SelectContent>
             </Select>
+            <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Empresa, agendista e temporada são preenchidos automaticamente pela palestra.</p>
           </div>
+
           <div className="space-y-1.5">
             <Label>Agendista</Label>
             <Select value={f.agent_id ?? NONE} onValueChange={(v) => set("agent_id", v === NONE ? null : v)}>
