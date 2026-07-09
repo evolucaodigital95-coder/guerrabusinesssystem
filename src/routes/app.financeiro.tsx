@@ -347,9 +347,15 @@ function FinancePage() {
           )}
                         </td>
                         <td className="px-4 py-3 align-top">
-                          <Badge variant="outline" className="font-normal">
-                            {statusLabel(m.direction as "in" | "out", m.status)}
-                          </Badge>
+                          <span
+                            onClick={(e) => e.stopPropagation()}
+                            className="inline-block cursor-default"
+                            aria-label="Status (indicador visual)"
+                          >
+                            <Badge variant="outline" className="font-normal pointer-events-none select-none">
+                              {statusLabel(m.direction as "in" | "out", m.status)}
+                            </Badge>
+                          </span>
                         </td>
                       </tr>
                     );
