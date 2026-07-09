@@ -513,14 +513,118 @@ function AgentDetail() {
       credit: m.amount > 0 ? m.amount : 0, debit: m.amount < 0 ? Math.abs(m.amount) : 0,
       balance: m.balance,
     }));
+
+    // Resultado por empresa (créditos do período)
+    const companyMap = new Map<string, number>();
+    filteredAsc.forEach((m) => {
+      if (m.amount > 0) {
+        const key = m.companyName ?? "Sem empresa";
+        companyMap.set(key, (companyMap.get(key) ?? 0) + m.amount);
+      }
+    });
+    const companySummary = Array.from(companyMap.entries())
+      .map(([company, amount]) => ({ company, amount }))
+      .sort((a, b) => b.amount - a.amount);
+
+    // Composição dos créditos — via snapshots reais
+    const creditsComposition = (snapshots.data ?? [])
+      .filter((s) => {
+        if (!fStart && !fEnd) return true;
+        const d = s.closed_at ? s.closed_at.slice(0, 10) : null;
+        if (fStart && (!d || d < fStart)) return false;
+        if (fEnd && (!d || d > fEnd)) return false;
+        return true;
+      })
+      .map((s) => {
+        const lec = s.lectures as { title?: string; companies?: { legal_name?: string } } | null;
+        const bd = (s.breakdown ?? {}) as {
+          totals?: { totalMaterials?: number; totalFees?: number; totalOtherExpenses?: number };
+        };
+        const agentShare = Number(s.agent_amount ?? 0);
+        return {
+          company: lec?.companies?.legal_name ?? "—",
+          lecture: lec?.title ?? "Palestra",
+          grossRevenue: Number(s.gross_revenue ?? 0),
+          materials: bd.totals?.totalMaterials ?? null,
+          fees: bd.totals?.totalFees ?? null,
+          otherCosts: bd.totals?.totalOtherExpenses ?? null,
+          netProfit: Number(s.net_profit ?? 0),
+          agentShare,
+          tithe: Math.round(agentShare * 10) / 100,
+        };
+      });
+
+    const advancesRows = (advances.data ?? [])
+      .filter((a) => {
+        if (!fStart && !fEnd) return true;
+        const d = a.granted_on;
+        if (fStart && (!d || d < fStart)) return false;
+        if (fEnd && (!d || d > fEnd)) return false;
+        return true;
+      })
+      .map((a) => ({
+        date: a.granted_on,
+        amount: Number(a.amount ?? 0),
+        source: a.source ?? null,
+        lecture: (a.lectures as { title?: string } | null)?.title ?? null,
+        notes: a.notes ?? null,
+      }));
+
+    const payoutsRows = (payouts.data ?? [])
+      .filter((p) => {
+        if (!fStart && !fEnd) return true;
+        const d = p.occurs_on;
+        if (fStart && (!d || d < fStart)) return false;
+        if (fEnd && (!d || d > fEnd)) return false;
+        return true;
+      })
+      .map((p) => ({
+        date: p.occurs_on,
+        amount: Number(p.amount ?? 0),
+        method: p.payment_method ?? null,
+        description: p.description ?? null,
+      }));
+
+    const filters: { label: string; value: string }[] = [];
+    if (fStart || fEnd) filters.push({ label: "Período", value: `${fStart || "início"} → ${fEnd || "hoje"}` });
+    if (fType !== "__all__") filters.push({ label: "Tipo", value: fType });
+    if (fFlow !== "all") filters.push({ label: "Fluxo", value: fFlow === "in" ? "Créditos" : "Débitos" });
+    if (fCompany !== "__all__") {
+      const c = companyOptions.find((x) => x.id === fCompany);
+      if (c) filters.push({ label: "Empresa", value: c.name });
+    }
+    if (fSeason !== "__all__") {
+      const s = seasonOptions.find((x) => x.id === fSeason);
+      if (s) filters.push({ label: "Temporada", value: s.name });
+    }
+    if (fSearch.trim()) filters.push({ label: "Busca", value: fSearch.trim() });
+
     const ctx = {
-      agentName, periodLabel,
+      agentName,
+      teamName: null as string | null,
+      periodLabel,
       emittedAt: new Date().toLocaleString("pt-BR"),
-      openingBalance, totalCredits: periodTotals.credits,
-      totalDebits: periodTotals.debits, closingBalance: periodTotals.closing,
+      documentId: `GBS-${new Date().toISOString().slice(0, 10).replace(/-/g, "")}-${agentName.slice(0, 3).toUpperCase()}`,
+      openingBalance,
+      totalCredits: periodTotals.credits,
+      totalDebits: periodTotals.debits,
+      closingBalance: periodTotals.closing,
       titheAccumulated: statement.totals.titheAccumulated,
       movements: rows,
+      companySummary,
+      creditsComposition,
+      advances: advancesRows,
+      payouts: payoutsRows,
+      filters: filters.length ? filters : undefined,
     };
+
+    // Validação matemática — não mascarar divergência
+    const expectedClosing = ctx.openingBalance + ctx.totalCredits - ctx.totalDebits;
+    if (Math.abs(expectedClosing - ctx.closingBalance) > 0.01) {
+      toast.error(`Divergência: saldo final calculado ${formatCurrency(expectedClosing)} ≠ exibido ${formatCurrency(ctx.closingBalance)}`);
+      return;
+    }
+
     try {
       if (fmt === "csv") exportStatementCSV(ctx);
       else if (fmt === "xlsx") exportStatementXLSX(ctx);
@@ -529,6 +633,7 @@ function AgentDetail() {
       toast.error(e instanceof Error ? e.message : "Falha ao exportar");
     }
   };
+
 
 
   if (agent.isLoading) return <div className="text-sm text-muted-foreground">Carregando…</div>;
