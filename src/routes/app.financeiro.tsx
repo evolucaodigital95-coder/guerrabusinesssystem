@@ -26,6 +26,7 @@ import {
 import { MovementFormDialog, type MovementRow } from "@/components/finance/movement-form-dialog";
 import { AccountFormDialog, type AccountRow } from "@/components/finance/account-form-dialog";
 import { AttachmentsTab } from "@/components/crm/attachments-tab";
+import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/app/financeiro")({
