@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { formatDate } from "@/lib/crm";
+import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 
 const BUCKET = "crm-attachments";
 
