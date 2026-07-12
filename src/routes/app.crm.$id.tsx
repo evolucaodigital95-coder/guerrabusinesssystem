@@ -142,15 +142,18 @@ function CompanyDetailPage() {
             <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
               <Pencil className="mr-1.5 h-4 w-4" /> Editar
             </Button>
-            <Button
-              variant="ghost" size="sm"
-              onClick={() => {
-                if (confirm("Arquivar esta empresa?")) remove.mutate();
-              }}
-              className="text-muted-foreground"
-            >
-              <Trash2 className="mr-1.5 h-4 w-4" /> Arquivar
-            </Button>
+            <ConfirmDialog
+              title="Arquivar esta empresa?"
+              description="A empresa deixará de aparecer nas listagens, mas será preservada para auditoria."
+              confirmLabel="Arquivar"
+              pending={remove.isPending}
+              onConfirm={() => remove.mutate()}
+              trigger={
+                <Button variant="ghost" size="sm" className="text-muted-foreground">
+                  <Trash2 className="mr-1.5 h-4 w-4" /> Arquivar
+                </Button>
+              }
+            />
           </div>
         </div>
       </div>
