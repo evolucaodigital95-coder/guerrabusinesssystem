@@ -25,6 +25,7 @@ import { StagePipeline } from "@/components/crm/stage-pipeline";
 import { CompanyFormDialog } from "@/components/crm/company-form-dialog";
 import { TagsBar } from "@/components/crm/tags-bar";
 import { AttachmentsTab } from "@/components/crm/attachments-tab";
+import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { useOrgMembers } from "@/hooks/use-org-members";
 import { cn } from "@/lib/utils";
 
