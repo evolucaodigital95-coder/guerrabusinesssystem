@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { formatDate } from "@/lib/crm";
+import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 
 const BUCKET = "crm-attachments";
 
@@ -154,16 +155,19 @@ export function AttachmentsTab({
                 <Button variant="ghost" size="sm" onClick={() => download(row)}>
                   <Download className="mr-1.5 h-4 w-4" /> Baixar
                 </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-muted-foreground"
-                  onClick={() => {
-                    if (confirm("Excluir este anexo?")) remove.mutate(row);
-                  }}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+                <ConfirmDialog
+                  title="Excluir este anexo?"
+                  description="O arquivo será removido do storage e não poderá ser recuperado."
+                  confirmLabel="Excluir"
+                  destructive
+                  pending={remove.isPending}
+                  onConfirm={() => remove.mutate(row)}
+                  trigger={
+                    <Button variant="ghost" size="sm" className="text-muted-foreground">
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  }
+                />
               </div>
             </li>
           ))}
