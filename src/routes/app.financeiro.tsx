@@ -649,12 +649,18 @@ function MovementSheet({
                 {isIn ? "Marcar como recebido" : "Marcar como pago"}
               </Button>
             )}
-            <Button
-              variant="ghost" size="sm" className="text-muted-foreground"
-              onClick={() => { if (confirm("Arquivar este lançamento? Ele não será apagado.")) archive.mutate(); }}
-            >
-              <Trash2 className="mr-1.5 h-4 w-4" /> Arquivar
-            </Button>
+            <ConfirmDialog
+              title="Arquivar este lançamento?"
+              description="O registro deixará de aparecer nas listagens, mas será preservado para auditoria."
+              confirmLabel="Arquivar"
+              pending={archive.isPending}
+              onConfirm={() => archive.mutate()}
+              trigger={
+                <Button variant="ghost" size="sm" className="text-muted-foreground">
+                  <Trash2 className="mr-1.5 h-4 w-4" /> Arquivar
+                </Button>
+              }
+            />
           </div>
 
           <Tabs defaultValue="attachments">
