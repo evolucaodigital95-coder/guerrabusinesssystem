@@ -1026,30 +1026,35 @@ function FechamentoFinanceiroTab({
             }
           />
           {!isClosed && (
-            <Button
-              variant="navy" size="sm" className="rounded-full"
-              disabled={close.isPending || !grossRevenue || !agentId}
-              onClick={() => {
-                if (typeof window !== "undefined" && window.confirm("Fechar palestra e gerar snapshot permanente?")) {
-                  close.mutate();
-                }
-              }}
-            >
-              <Lock className="mr-1.5 h-4 w-4" /> Fechar palestra
-            </Button>
+            <ConfirmDialog
+              title="Fechar palestra?"
+              description="Um snapshot financeiro permanente será gerado. Ele preservará a regra e os valores atuais mesmo que sejam alterados depois."
+              confirmLabel="Fechar palestra"
+              pending={close.isPending}
+              onConfirm={() => close.mutate()}
+              trigger={
+                <Button
+                  variant="navy" size="sm" className="rounded-full"
+                  disabled={close.isPending || !grossRevenue || !agentId}
+                >
+                  <Lock className="mr-1.5 h-4 w-4" /> Fechar palestra
+                </Button>
+              }
+            />
           )}
           {isClosed && snapshotDivergent && (
-            <Button
-              variant="outline" size="sm" className="rounded-full"
-              disabled={recalc.isPending}
-              onClick={() => {
-                if (typeof window !== "undefined" && window.confirm("Recalcular o fechamento com os dados atuais? O snapshot anterior será arquivado (não apagado).")) {
-                  recalc.mutate();
-                }
-              }}
-            >
-              <Calculator className="mr-1.5 h-4 w-4" /> Recalcular fechamento
-            </Button>
+            <ConfirmDialog
+              title="Recalcular o fechamento?"
+              description="O snapshot anterior será arquivado (não apagado) e um novo snapshot será gerado com os dados atuais."
+              confirmLabel="Recalcular"
+              pending={recalc.isPending}
+              onConfirm={() => recalc.mutate()}
+              trigger={
+                <Button variant="outline" size="sm" className="rounded-full" disabled={recalc.isPending}>
+                  <Calculator className="mr-1.5 h-4 w-4" /> Recalcular fechamento
+                </Button>
+              }
+            />
           )}
         </div>
       </div>
