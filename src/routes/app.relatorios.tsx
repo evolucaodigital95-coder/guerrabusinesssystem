@@ -428,15 +428,14 @@ function StockReport({ orgId, search }: { orgId: string | null; search: string }
 
   return (
     <div className="space-y-4">
-      <div className="grid gap-3 md:grid-cols-2">
-        <SummaryCard label="Itens" value={String(rows.length)} accent="navy" />
-        <SummaryCard label="Valor em estoque (custo médio)" value={formatCurrency(totalValue)} accent="gold" />
+      <div className="grid gap-3 md:grid-cols-1">
+        <SummaryCard label="Itens cadastrados" value={String(rows.length)} accent="navy" />
       </div>
       <ExportBar
         name="Relatorio de Estoque"
         rows={rows}
         cols={cols}
-        subtitle={`${rows.length} itens · Valor em estoque ${formatCurrency(totalValue)}`}
+        subtitle={`${rows.length} itens cadastrados`}
       />
       <ReportTable cols={cols} rows={rows} />
     </div>
