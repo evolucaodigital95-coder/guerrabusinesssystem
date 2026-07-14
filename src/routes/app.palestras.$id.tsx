@@ -1208,6 +1208,7 @@ function FechamentoSection({
   title: string; subtitle?: string; rows: FechRow[]; emptyText: string;
   totalLabel: string; total: number;
 }) {
+  const navigate = useNavigate();
   return (
     <div className="overflow-hidden rounded-2xl border border-border bg-card/40">
       <div className="flex flex-wrap items-end justify-between gap-2 border-b border-border/70 px-5 py-4">
@@ -1261,7 +1262,7 @@ function FechamentoSection({
                       {r.origin.docRoute && (
                         <button
                           type="button"
-                          onClick={() => openDoc(r.origin.navigate, r.origin.docRoute)}
+                          onClick={() => openDoc(navigate, r.origin.docRoute)}
                           className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-[var(--gold)] hover:underline"
                         >
                           <ExternalLink className="h-3.5 w-3.5" /> {r.origin.docLabel ?? "Documento"}
