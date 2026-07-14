@@ -298,7 +298,7 @@ function CompaniesReport({ orgId, search }: { orgId: string | null; search: stri
     queryFn: async () => {
       const { data, error } = await supabase
         .from("companies")
-        .select("id, name, trade_name, city, uf, segment, stage, created_at")
+        .select("id, legal_name, trade_name, city, state, segment, lifecycle_stage, status, created_at")
         .eq("organization_id", orgId!)
         .is("archived_at", null)
         .order("created_at", { ascending: false });
@@ -311,18 +311,19 @@ function CompaniesReport({ orgId, search }: { orgId: string | null; search: stri
     const list = q.data ?? [];
     const term = search.trim().toLowerCase();
     return term ? list.filter((r) =>
-      (r.name ?? "").toLowerCase().includes(term) ||
+      (r.legal_name ?? "").toLowerCase().includes(term) ||
       (r.trade_name ?? "").toLowerCase().includes(term) ||
       (r.segment ?? "").toLowerCase().includes(term)
     ) : list;
   }, [q.data, search]);
 
   const cols: ReportColumn<(typeof rows)[number]>[] = [
-    { key: "name", label: "Razão social", format: (r) => r.name ?? "—" },
+    { key: "legal_name", label: "Razão social", format: (r) => r.legal_name ?? "—" },
     { key: "trade_name", label: "Nome fantasia", format: (r) => r.trade_name ?? "—" },
     { key: "segment", label: "Segmento", format: (r) => r.segment ?? "—" },
-    { key: "stage", label: "Estágio", format: (r) => r.stage ?? "—" },
-    { key: "city", label: "Cidade", format: (r) => [r.city, r.uf].filter(Boolean).join(" / ") || "—" },
+    { key: "lifecycle_stage", label: "Estágio", format: (r) => r.lifecycle_stage ?? "—" },
+    { key: "status", label: "Status", format: (r) => r.status ?? "—" },
+    { key: "city", label: "Cidade", format: (r) => [r.city, r.state].filter(Boolean).join(" / ") || "—" },
     { key: "created_at", label: "Cadastro", format: (r) => formatDate(r.created_at) },
   ];
 
