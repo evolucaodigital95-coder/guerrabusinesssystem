@@ -395,7 +395,7 @@ function StockReport({ orgId, search }: { orgId: string | null; search: string }
     queryFn: async () => {
       const { data, error } = await supabase
         .from("stock_items")
-        .select("id, name, sku, unit, purchase_price, sale_price, average_cost, current_stock, min_stock, updated_at")
+        .select("id, name, sku, unit, category, purchase_price, average_cost, min_quantity, supplier, updated_at")
         .eq("organization_id", orgId!)
         .is("archived_at", null)
         .order("name", { ascending: true });
@@ -417,16 +417,14 @@ function StockReport({ orgId, search }: { orgId: string | null; search: string }
     { key: "sku", label: "SKU", format: (r) => r.sku ?? "—" },
     { key: "name", label: "Item", format: (r) => r.name ?? "—" },
     { key: "unit", label: "Un.", format: (r) => r.unit ?? "un" },
-    { key: "current_stock", label: "Saldo", align: "right", format: (r) => String(r.current_stock ?? 0) },
-    { key: "min_stock", label: "Mín.", align: "right", format: (r) => String(r.min_stock ?? 0) },
+    { key: "category", label: "Categoria", format: (r) => r.category ?? "—" },
+    { key: "min_quantity", label: "Mín.", align: "right", format: (r) => String(r.min_quantity ?? 0) },
     { key: "average_cost", label: "Custo médio", align: "right", format: (r) => formatCurrency(Number(r.average_cost ?? 0)) },
     { key: "purchase_price", label: "Compra", align: "right", format: (r) => formatCurrency(Number(r.purchase_price ?? 0)) },
-    { key: "sale_price", label: "Venda", align: "right", format: (r) => formatCurrency(Number(r.sale_price ?? 0)) },
+    { key: "supplier", label: "Fornecedor", format: (r) => r.supplier ?? "—" },
   ];
 
   if (q.isLoading) return <ListSkeleton rows={8} />;
-
-  const totalValue = rows.reduce((a, r) => a + Number(r.current_stock ?? 0) * Number(r.average_cost ?? r.purchase_price ?? 0), 0);
 
   return (
     <div className="space-y-4">
