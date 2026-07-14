@@ -31,6 +31,7 @@ import {
 } from "@/lib/finance-engine";
 import { exportStatementCSV, exportStatementXLSX, exportStatementPDF, type ExportMovement } from "@/lib/agent-statement-export";
 import { cn } from "@/lib/utils";
+import { openDoc } from "@/lib/doc-links";
 
 export const Route = createFileRoute("/app/agendistas/$id")({
   head: () => ({
@@ -885,9 +886,13 @@ function AgentDetail() {
                               {m.origin.extra?.map((x) => (<Row key={x.label} label={x.label} value={x.value} />))}
                             </dl>
                             {m.origin.docRoute && (
-                              <Link to={m.origin.docRoute} className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-[var(--gold)] hover:underline">
+                              <button
+                                type="button"
+                                onClick={() => openDoc(navigate, m.origin.docRoute)}
+                                className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-[var(--gold)] hover:underline"
+                              >
                                 <ExternalLink className="h-3.5 w-3.5" /> {m.origin.docLabel ?? "Documento relacionado"}
-                              </Link>
+                              </button>
                             )}
                           </PopoverContent>
                         </Popover>
