@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { BarChart3, Download, Filter } from "lucide-react";
+import { Download, Filter } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrentOrg } from "@/hooks/use-current-org";
@@ -45,9 +45,9 @@ function RelatoriosPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        icon={BarChart3}
-        title="Relatórios"
-        subtitle="Central de exportação — dados reais, filtros por período e formatos CSV, Excel e PDF Premium."
+        eyebrow="Relatórios"
+        title="Central de Exportação"
+        description="Dados reais, filtros por período e formatos CSV, Excel e PDF Premium."
       />
 
       <div className="rounded-2xl border border-border bg-card/40 p-4">
