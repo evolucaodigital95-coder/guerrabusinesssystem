@@ -227,14 +227,19 @@ function LecturesReport({ orgId, start, end, search }: { orgId: string | null; s
     queryFn: async () => {
       const { data, error } = await supabase
         .from("lectures")
-        .select("id, title, scheduled_at, status, city, uf, expected_audience, gross_value, companies:company_id ( name ), agents:agent_id ( full_name )")
+        .select("id, title, scheduled_at, status, city, state, expected_audience, gross_revenue, companies:company_id ( legal_name, trade_name ), agents:agent_id ( full_name )")
         .eq("organization_id", orgId!)
         .is("archived_at", null)
         .gte("scheduled_at", start)
         .lte("scheduled_at", end + "T23:59:59")
         .order("scheduled_at", { ascending: false });
       if (error) throw error;
-      return data ?? [];
+      return (data ?? []) as unknown as Array<{
+        id: string; title: string | null; scheduled_at: string | null; status: string | null;
+        city: string | null; state: string | null; expected_audience: number | null; gross_revenue: number | null;
+        companies: { legal_name: string | null; trade_name: string | null } | null;
+        agents: { full_name: string | null } | null;
+      }>;
     },
   });
 
@@ -244,25 +249,25 @@ function LecturesReport({ orgId, start, end, search }: { orgId: string | null; s
     if (!term) return list;
     return list.filter((r) =>
       (r.title ?? "").toLowerCase().includes(term) ||
-      ((r.companies as { name?: string } | null)?.name ?? "").toLowerCase().includes(term) ||
-      ((r.agents as { full_name?: string } | null)?.full_name ?? "").toLowerCase().includes(term)
+      (r.companies?.legal_name ?? r.companies?.trade_name ?? "").toLowerCase().includes(term) ||
+      (r.agents?.full_name ?? "").toLowerCase().includes(term)
     );
   }, [q.data, search]);
 
   const cols: ReportColumn<(typeof rows)[number]>[] = [
     { key: "scheduled_at", label: "Data", format: (r) => formatDate(r.scheduled_at) },
     { key: "title", label: "Palestra", format: (r) => r.title ?? "—" },
-    { key: "company", label: "Empresa", format: (r) => (r.companies as { name?: string } | null)?.name ?? "—" },
-    { key: "agent", label: "Agendista", format: (r) => (r.agents as { full_name?: string } | null)?.full_name ?? "—" },
-    { key: "city", label: "Cidade", format: (r) => [r.city, r.uf].filter(Boolean).join(" / ") || "—" },
+    { key: "company", label: "Empresa", format: (r) => r.companies?.trade_name ?? r.companies?.legal_name ?? "—" },
+    { key: "agent", label: "Agendista", format: (r) => r.agents?.full_name ?? "—" },
+    { key: "city", label: "Cidade", format: (r) => [r.city, r.state].filter(Boolean).join(" / ") || "—" },
     { key: "expected_audience", label: "Público", align: "right", format: (r) => String(r.expected_audience ?? 0) },
     { key: "status", label: "Status", format: (r) => r.status ?? "—" },
-    { key: "gross_value", label: "Valor", align: "right", format: (r) => formatCurrency(Number(r.gross_value ?? 0)) },
+    { key: "gross_revenue", label: "Valor", align: "right", format: (r) => formatCurrency(Number(r.gross_revenue ?? 0)) },
   ];
 
   if (q.isLoading) return <ListSkeleton rows={8} />;
 
-  const totalGross = rows.reduce((a, r) => a + Number(r.gross_value ?? 0), 0);
+  const totalGross = rows.reduce((a, r) => a + Number(r.gross_revenue ?? 0), 0);
   const totalPublic = rows.reduce((a, r) => a + Number(r.expected_audience ?? 0), 0);
 
   return (
