@@ -36,6 +36,7 @@ import { CalcBreakdown } from "@/components/finance/calc-breakdown";
 import { calculateLecture, selectRule, BUCKET_LABEL, type RuleSnapshot, type ExpenseBucket, type LectureExpenseInput } from "@/lib/finance-engine";
 import { paymentMethodLabel } from "@/lib/finance";
 import { cn } from "@/lib/utils";
+import { openDoc } from "@/lib/doc-links";
 
 
 export const Route = createFileRoute("/app/palestras/$id")({
@@ -1258,9 +1259,13 @@ function FechamentoSection({
                         {r.origin.reason && <OriginRow label="Motivo" value={r.origin.reason} />}
                       </dl>
                       {r.origin.docRoute && (
-                        <Link to={r.origin.docRoute} className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-[var(--gold)] hover:underline">
+                        <button
+                          type="button"
+                          onClick={() => openDoc(r.origin.navigate, r.origin.docRoute)}
+                          className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-[var(--gold)] hover:underline"
+                        >
                           <ExternalLink className="h-3.5 w-3.5" /> {r.origin.docLabel ?? "Documento"}
-                        </Link>
+                        </button>
                       )}
                     </PopoverContent>
                   </Popover>
