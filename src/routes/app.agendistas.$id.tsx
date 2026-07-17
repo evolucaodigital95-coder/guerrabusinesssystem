@@ -505,7 +505,7 @@ function AgentDetail() {
     onError: (e) => toast.error(e instanceof Error ? e.message : "Erro"),
   });
 
-  const downloadStatement = (fmt: "pdf" | "xlsx" | "csv") => {
+  const downloadStatement = async (fmt: "pdf" | "xlsx" | "csv") => {
     const agentName = agent.data?.full_name ?? "Agendista";
     const periodLabel = fStart || fEnd ? `${fStart || "início"} → ${fEnd || "hoje"}` : "Completo";
     const rows: ExportMovement[] = filteredAsc.map((m) => ({
@@ -631,6 +631,142 @@ function AgentDetail() {
     }
     if (fSearch.trim()) filters.push({ label: "Busca", value: fSearch.trim() });
 
+    // Comprovantes (anexos das palestras + receipt_url dos adiantamentos) — só no PDF
+    type ReceiptItem = {
+      fileName: string; mimeType?: string | null; sizeBytes?: number | null;
+      createdAt?: string | null; dataUrl?: string | null; url?: string | null;
+      source?: "attachment" | "advance";
+    };
+    type ReceiptGroup = { company: string; lecture?: string | null; date?: string | null; items: ReceiptItem[] };
+    let receipts: ReceiptGroup[] | undefined;
+
+    if (fmt === "pdf") {
+      try {
+        const lecturesInPeriod = (snapshots.data ?? [])
+          .filter((s) => {
+            if (!fStart && !fEnd) return true;
+            const d = s.closed_at ? s.closed_at.slice(0, 10) : null;
+            if (fStart && (!d || d < fStart)) return false;
+            if (fEnd && (!d || d > fEnd)) return false;
+            return true;
+          })
+          .map((s) => {
+            const lec = s.lectures as { id?: string; title?: string; scheduled_at?: string; companies?: { legal_name?: string } } | null;
+            return {
+              lectureId: lec?.id ?? null,
+              company: lec?.companies?.legal_name ?? "—",
+              lecture: lec?.title ?? "Palestra",
+              date: lec?.scheduled_at ?? s.closed_at ?? null,
+            };
+          })
+          .filter((x) => !!x.lectureId) as { lectureId: string; company: string; lecture: string; date: string | null }[];
+
+        const lectureIds = Array.from(new Set(lecturesInPeriod.map((x) => x.lectureId)));
+
+        // Busca anexos vinculados às palestras
+        const { data: atts } = lectureIds.length
+          ? await supabase
+              .from("attachments")
+              .select("id, entity_id, file_name, mime_type, storage_path, size_bytes, created_at")
+              .eq("entity_type", "lecture")
+              .in("entity_id", lectureIds)
+              .is("archived_at", null)
+              .order("created_at", { ascending: true })
+          : { data: [] as Array<{ entity_id: string; file_name: string; mime_type: string | null; storage_path: string; size_bytes: number | null; created_at: string }> };
+
+        // Cria URLs assinadas em lote
+        const paths = (atts ?? []).map((a) => a.storage_path);
+        const signed = paths.length
+          ? (await supabase.storage.from("crm-attachments").createSignedUrls(paths, 60 * 60)).data ?? []
+          : [];
+        const urlByPath = new Map<string, string>();
+        signed.forEach((s, i) => { if (s?.signedUrl) urlByPath.set(paths[i], s.signedUrl); });
+
+        // Converte imagens em data URLs (para embutir no PDF)
+        const toDataUrl = async (url: string): Promise<string | null> => {
+          try {
+            const res = await fetch(url);
+            if (!res.ok) return null;
+            const blob = await res.blob();
+            return await new Promise<string | null>((resolve) => {
+              const r = new FileReader();
+              r.onloadend = () => resolve(typeof r.result === "string" ? r.result : null);
+              r.onerror = () => resolve(null);
+              r.readAsDataURL(blob);
+            });
+          } catch { return null; }
+        };
+
+        const isImage = (mime: string | null | undefined, name: string) =>
+          (mime ?? "").startsWith("image/") || /\.(png|jpe?g|webp|gif)$/i.test(name ?? "");
+
+        const itemsByLecture = new Map<string, ReceiptItem[]>();
+        for (const a of atts ?? []) {
+          const url = urlByPath.get(a.storage_path) ?? null;
+          const img = isImage(a.mime_type, a.file_name);
+          const dataUrl = img && url ? await toDataUrl(url) : null;
+          const arr = itemsByLecture.get(a.entity_id) ?? [];
+          arr.push({
+            fileName: a.file_name ?? "arquivo",
+            mimeType: a.mime_type,
+            sizeBytes: a.size_bytes,
+            createdAt: a.created_at,
+            dataUrl,
+            url,
+            source: "attachment",
+          });
+          itemsByLecture.set(a.entity_id, arr);
+        }
+
+        // Comprovantes de adiantamentos (receipt_url — link externo)
+        const advWithReceipt = (advances.data ?? []).filter((a) =>
+          !!a.receipt_url &&
+          (!fStart || (a.granted_on && a.granted_on >= fStart)) &&
+          (!fEnd || (a.granted_on && a.granted_on <= fEnd))
+        );
+
+        // Monta grupos por palestra
+        const groups: ReceiptGroup[] = lecturesInPeriod
+          .map((l) => {
+            const items = itemsByLecture.get(l.lectureId) ?? [];
+            // Adiantamentos ligados a esta palestra
+            const advItems: ReceiptItem[] = advWithReceipt
+              .filter((a) => (a as { lecture_id?: string }).lecture_id === l.lectureId)
+              .map((a) => ({
+                fileName: `Adiantamento · ${formatCurrency(Number(a.amount ?? 0))}`,
+                mimeType: "link/external",
+                createdAt: a.granted_on,
+                url: a.receipt_url,
+                source: "advance",
+              }));
+            return { company: l.company, lecture: l.lecture, date: l.date, items: [...items, ...advItems] };
+          })
+          .filter((g) => g.items.length > 0);
+
+        // Adiantamentos avulsos (sem palestra) com comprovante
+        const looseAdv = advWithReceipt.filter((a) => !(a as { lecture_id?: string }).lecture_id);
+        if (looseAdv.length) {
+          groups.push({
+            company: "Adiantamentos avulsos",
+            lecture: null,
+            date: null,
+            items: looseAdv.map((a) => ({
+              fileName: `Adiantamento · ${formatCurrency(Number(a.amount ?? 0))}`,
+              mimeType: "link/external",
+              createdAt: a.granted_on,
+              url: a.receipt_url,
+              source: "advance",
+            })),
+          });
+        }
+
+        if (groups.length) receipts = groups;
+      } catch (e) {
+        // Não bloqueia a exportação em caso de falha ao carregar comprovantes
+        console.warn("Falha ao carregar comprovantes:", e);
+      }
+    }
+
     const ctx = {
       agentName,
       teamName: null as string | null,
@@ -648,6 +784,7 @@ function AgentDetail() {
       advances: advancesRows,
       payouts: payoutsRows,
       filters: filters.length ? filters : undefined,
+      receipts,
     };
 
     // Validação matemática — não mascarar divergência
@@ -660,7 +797,7 @@ function AgentDetail() {
     try {
       if (fmt === "csv") exportStatementCSV(ctx);
       else if (fmt === "xlsx") exportStatementXLSX(ctx);
-      else exportStatementPDF(ctx);
+      else await exportStatementPDF(ctx);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Falha ao exportar");
     }
