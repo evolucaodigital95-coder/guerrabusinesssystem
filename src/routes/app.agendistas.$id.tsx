@@ -527,7 +527,7 @@ function AgentDetail() {
       .map(([company, amount]) => ({ company, amount }))
       .sort((a, b) => b.amount - a.amount);
 
-    // Composição dos créditos — via snapshots reais
+    // Composição dos créditos — via snapshots reais (com detalhamento de despesas)
     const creditsComposition = (snapshots.data ?? [])
       .filter((s) => {
         if (!fStart && !fEnd) return true;
@@ -537,21 +537,52 @@ function AgentDetail() {
         return true;
       })
       .map((s) => {
-        const lec = s.lectures as { title?: string; companies?: { legal_name?: string } } | null;
+        const lec = s.lectures as { title?: string; scheduled_at?: string; companies?: { legal_name?: string } } | null;
+        type BreakdownLine = { label: string; amount: number; kind: string; hint?: string };
         const bd = (s.breakdown ?? {}) as {
-          totals?: { totalMaterials?: number; totalFees?: number; totalOtherExpenses?: number };
+          totals?: {
+            totalStock?: number; totalMaterials?: number;
+            totalCardFees?: number; fee?: number;
+            totalTaxes?: number; totalCosts?: number; totalOtherExpenses?: number;
+          };
+          lines?: BreakdownLine[];
         };
+        const t = bd.totals ?? {};
+        const materials = t.totalStock ?? t.totalMaterials ?? null;
+        const cardFees = t.totalCardFees ?? null;
+        const ruleFee = t.fee ?? null;
+        const otherCosts =
+          (t.totalTaxes ?? 0) + (t.totalCosts ?? 0) + (t.totalOtherExpenses ?? 0) || null;
+
+        // Detalhes por linha (só saídas) a partir do breakdown
+        const expenseLines = (bd.lines ?? [])
+          .filter((ln) => ln.kind === "out" && Number(ln.amount) < 0)
+          .map((ln) => {
+            const lbl = String(ln.label ?? "");
+            let category: "materials" | "cardFees" | "ruleFee" | "tax" | "cost" | "expense" = "expense";
+            if (/juros|cart[aã]o/i.test(lbl)) category = "cardFees";
+            else if (/taxa de regra|taxa da regra/i.test(lbl)) category = "ruleFee";
+            else if (/material|estoque/i.test(lbl)) category = "materials";
+            else if (/imposto|taxa/i.test(lbl)) category = "tax";
+            else if (/custo/i.test(lbl)) category = "cost";
+            return { label: lbl, amount: Math.abs(Number(ln.amount || 0)), category };
+          });
+
         const agentShare = Number(s.agent_amount ?? 0);
         return {
           company: lec?.companies?.legal_name ?? "—",
           lecture: lec?.title ?? "Palestra",
+          date: lec?.scheduled_at ?? s.closed_at ?? null,
           grossRevenue: Number(s.gross_revenue ?? 0),
-          materials: bd.totals?.totalMaterials ?? null,
-          fees: bd.totals?.totalFees ?? null,
-          otherCosts: bd.totals?.totalOtherExpenses ?? null,
+          materials,
+          cardFees,
+          ruleFee,
+          fees: (cardFees ?? 0) + (ruleFee ?? 0) || null,
+          otherCosts,
           netProfit: Number(s.net_profit ?? 0),
           agentShare,
           tithe: Math.round(agentShare * 10) / 100,
+          expenseLines,
         };
       });
 
