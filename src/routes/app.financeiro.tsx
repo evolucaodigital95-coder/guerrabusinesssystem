@@ -201,12 +201,12 @@ function FinancePage() {
 
   const openMovement = (id: string) => {
     setSelectedId(id);
-    navigate({ search: (prev) => ({ ...prev, lancamento: id }) });
+    navigate({ search: { lancamento: id } });
   };
 
   const closeMovement = () => {
     setSelectedId(null);
-    navigate({ search: (prev) => ({ ...prev, lancamento: undefined }) });
+    navigate({ search: { lancamento: undefined } });
   };
 
   const selected = selectedId ? filtered.find((m) => m.id === selectedId) ?? movements.data?.find((m) => m.id === selectedId) : null;
