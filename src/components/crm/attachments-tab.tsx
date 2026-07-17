@@ -144,7 +144,7 @@ export function AttachmentsTab({
                 <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
                 <div className="min-w-0">
                   <p className="truncate text-sm text-foreground">
-                    {row.file_name ?? row.storage_path.split("/").pop()}
+                    {row.file_name ?? row.storage_path?.split("/").pop() ?? "Arquivo anexado"}
                   </p>
                   <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
                     {humanSize(row.size_bytes)} · {formatDate(row.created_at)}

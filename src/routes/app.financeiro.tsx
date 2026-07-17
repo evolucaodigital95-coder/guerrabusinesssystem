@@ -1,5 +1,5 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus, Search, ArrowDownRight, ArrowUpRight, Pencil, Trash2, Paperclip } from "lucide-react";
 import { toast } from "sonner";
@@ -30,6 +30,9 @@ import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/app/financeiro")({
+  validateSearch: (search) => ({
+    lancamento: typeof search.lancamento === "string" ? search.lancamento : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Financeiro — GBS" },
@@ -90,6 +93,8 @@ const ALL = "__all__";
 function FinancePage() {
   const { user } = useSession();
   const { organizationId, loading: orgLoading } = useCurrentOrg();
+  const navigate = useNavigate({ from: Route.fullPath });
+  const { lancamento } = Route.useSearch();
   const [openMov, setOpenMov] = useState(false);
   const [openAcc, setOpenAcc] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -104,6 +109,10 @@ function FinancePage() {
   const [fCategory, setFCategory] = useState<string>(ALL);
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
+
+  useEffect(() => {
+    if (lancamento) setSelectedId(lancamento);
+  }, [lancamento]);
 
   const accounts = useQuery({
     queryKey: ["accounts", organizationId],
@@ -189,6 +198,16 @@ function FinancePage() {
     }
     return t;
   }, [filtered]);
+
+  const openMovement = (id: string) => {
+    setSelectedId(id);
+    navigate({ search: { lancamento: id } });
+  };
+
+  const closeMovement = () => {
+    setSelectedId(null);
+    navigate({ search: { lancamento: undefined } });
+  };
 
   const selected = selectedId ? filtered.find((m) => m.id === selectedId) ?? movements.data?.find((m) => m.id === selectedId) : null;
 
@@ -314,7 +333,7 @@ function FinancePage() {
                     return (
                       <tr
                         key={m.id}
-                        onClick={() => setSelectedId(m.id)}
+                         onClick={() => openMovement(m.id)}
                         className="cursor-pointer border-t border-border/70 transition-colors hover:bg-muted/30"
                       >
                         <td className="px-4 py-3 align-top text-muted-foreground">
@@ -401,8 +420,8 @@ function FinancePage() {
           movement={selected ?? null}
           organizationId={organizationId}
           userId={user.id}
-          onClose={() => setSelectedId(null)}
-          onEdit={(m) => { setEditing(m); setOpenMov(true); }}
+          onClose={closeMovement}
+          onEdit={(m) => { closeMovement(); setEditing(m); setOpenMov(true); }}
         />
       )}
     </div>
@@ -532,8 +551,8 @@ function MovementSheet({
     onError: (e) => toast.error(e instanceof Error ? e.message : "Erro"),
   });
 
-  const attachments = useQuery({
-    queryKey: ["attachments", "financial_movement", movement?.id],
+  const attachmentEvents = useQuery({
+    queryKey: ["movement-attachment-events", movement?.id],
     enabled: !!movement,
     queryFn: async () => {
       const { data, error } = await supabase
@@ -556,7 +575,7 @@ function MovementSheet({
       title: isIn ? "Receita criada" : "Despesa criada",
       subtitle: movement.description ?? undefined,
     });
-    (attachments.data ?? []).forEach((a) => {
+    (attachmentEvents.data ?? []).forEach((a) => {
       items.push({ at: a.created_at, title: "Comprovante anexado" });
     });
     if (isSettled(movement.direction as "in" | "out", movement.status)) {
@@ -570,7 +589,7 @@ function MovementSheet({
       items.push({ at: movement.updated_at, title: "Lançamento cancelado" });
     }
     return items.sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime());
-  }, [movement, attachments.data]);
+  }, [movement, attachmentEvents.data]);
 
   const open = !!movement;
   if (!movement) {

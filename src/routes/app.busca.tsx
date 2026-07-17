@@ -30,6 +30,7 @@ type Result = {
   meta?: string | null;
   to: string;
   params?: Record<string, string>;
+  search?: Record<string, string>;
 };
 
 function BuscaPage() {
@@ -170,6 +171,7 @@ function BuscaPage() {
               .filter(Boolean)
               .join(" · ") || null,
           to: "/app/financeiro",
+          search: { lancamento: m.id },
         });
       });
 
@@ -293,7 +295,7 @@ function Group({
           }
           return (
             <li key={r.id}>
-              <Link to={r.to as never} className="block">
+              <Link to={r.to as never} search={r.search as never} className="block">
                 {content}
               </Link>
             </li>

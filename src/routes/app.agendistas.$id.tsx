@@ -321,8 +321,8 @@ function AgentDetail() {
           actorId: p.created_by ?? null,
           createdAt: p.created_at ?? null,
           reason: p.notes ?? null,
-          docRoute: p.lecture_id ? `/app/palestras/${p.lecture_id}` : `/app/financeiro`,
-          docLabel: p.lecture_id ? "Palestra vinculada" : "Abrir financeiro",
+          docRoute: p.lecture_id ? `/app/palestras/${p.lecture_id}` : `/app/financeiro/${p.id}`,
+          docLabel: p.lecture_id ? "Palestra vinculada" : "Abrir lançamento",
           extra: p.payment_method ? [{ label: "Forma", value: String(p.payment_method) }] : undefined,
         },
       });
