@@ -486,11 +486,25 @@ function MovementSheet({
     mutationFn: async () => {
       if (!movement) return;
       const { error } = await supabase.from("financial_movements")
-        .update({ archived_at: new Date().toISOString() }).eq("id", movement.id);
+        .update({ archived_at: new Date().toISOString(), updated_by: userId }).eq("id", movement.id);
       if (error) throw error;
     },
     onSuccess: () => {
       toast.success("Lançamento arquivado");
+      queryClient.invalidateQueries({ queryKey: ["movements"] });
+      onClose();
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Erro"),
+  });
+
+  const hardDelete = useMutation({
+    mutationFn: async () => {
+      if (!movement) return;
+      const { error } = await supabase.from("financial_movements").delete().eq("id", movement.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Lançamento excluído");
       queryClient.invalidateQueries({ queryKey: ["movements"] });
       onClose();
     },
