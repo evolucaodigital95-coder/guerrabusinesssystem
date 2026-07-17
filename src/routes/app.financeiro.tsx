@@ -402,7 +402,7 @@ function FinancePage() {
           organizationId={organizationId}
           userId={user.id}
           onClose={() => setSelectedId(null)}
-          onEdit={(m) => { setEditing(m); setOpenMov(true); }}
+          onEdit={(m) => { setSelectedId(null); setEditing(m); setOpenMov(true); }}
         />
       )}
     </div>
@@ -532,8 +532,8 @@ function MovementSheet({
     onError: (e) => toast.error(e instanceof Error ? e.message : "Erro"),
   });
 
-  const attachments = useQuery({
-    queryKey: ["attachments", "financial_movement", movement?.id],
+  const attachmentEvents = useQuery({
+    queryKey: ["movement-attachment-events", movement?.id],
     enabled: !!movement,
     queryFn: async () => {
       const { data, error } = await supabase
@@ -556,7 +556,7 @@ function MovementSheet({
       title: isIn ? "Receita criada" : "Despesa criada",
       subtitle: movement.description ?? undefined,
     });
-    (attachments.data ?? []).forEach((a) => {
+    (attachmentEvents.data ?? []).forEach((a) => {
       items.push({ at: a.created_at, title: "Comprovante anexado" });
     });
     if (isSettled(movement.direction as "in" | "out", movement.status)) {
@@ -570,7 +570,7 @@ function MovementSheet({
       items.push({ at: movement.updated_at, title: "Lançamento cancelado" });
     }
     return items.sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime());
-  }, [movement, attachments.data]);
+  }, [movement, attachmentEvents.data]);
 
   const open = !!movement;
   if (!movement) {
