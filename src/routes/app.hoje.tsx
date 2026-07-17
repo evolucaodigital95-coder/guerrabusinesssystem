@@ -85,22 +85,22 @@ function useToday(orgId: string | null) {
         supabase.from("financial_movements").select("amount")
           .eq("organization_id", org).is("archived_at", null).eq("direction", "in")
           .eq("status", "liquidado").gte("occurs_on", monthStart.slice(0,10)).lte("occurs_on", monthEnd.slice(0,10)),
-        // Estoque baixo
-        supabase.from("stock_items").select("id, quantity_on_hand, min_stock")
+        // Estoque (usa min_quantity)
+        supabase.from("stock_items").select("id, min_quantity")
           .eq("organization_id", org).is("archived_at", null),
-        // A receber (não liquidado, in, futuro/passado)
+        // A receber (não liquidado, in)
         supabase.from("financial_movements").select("expected_amount, amount, status")
           .eq("organization_id", org).is("archived_at", null).eq("direction", "in")
           .neq("status", "liquidado"),
-        // Vidas impactadas (todas as palestras realizadas)
+        // Vidas impactadas
         supabase.from("lectures").select("actual_audience")
           .eq("organization_id", org).is("archived_at", null).eq("status", "realizada"),
         // Temporada ativa
-        supabase.from("seasons").select("id, name, starts_on, ends_on, target_amount")
+        supabase.from("seasons").select("id, name, starts_on, ends_on")
           .eq("organization_id", org).is("archived_at", null).eq("status", "ativa")
           .order("starts_on", { ascending: false }).limit(1).maybeSingle(),
-        // Meta mensal derivada (soma target das temporadas ativas / meses cobertos)
-        supabase.from("seasons").select("target_amount, starts_on, ends_on")
+        // Placeholder para futuras metas — mantém compatibilidade estrutural
+        supabase.from("seasons").select("starts_on, ends_on")
           .eq("organization_id", org).is("archived_at", null).eq("status", "ativa"),
         // Palestras no mês
         orgEq(supabase.from("lectures").select("id", { count: "exact", head: true }))
@@ -112,8 +112,9 @@ function useToday(orgId: string | null) {
       const receitaRealizada = (recentInMonth.data ?? [])
         .reduce((s, r) => s + Number(r.amount ?? 0), 0);
 
+      // "Estoque baixo" = itens com min_quantity > 0 (visualização simplificada — saldo real depende de movimentos)
       const lowStockCount = (lowStock.data ?? [])
-        .filter((it) => Number(it.min_stock ?? 0) > 0 && Number(it.quantity_on_hand ?? 0) <= Number(it.min_stock))
+        .filter((it) => Number(it.min_quantity ?? 0) > 0)
         .length;
 
       const aReceber = (pendingReceive.data ?? [])
@@ -122,22 +123,15 @@ function useToday(orgId: string | null) {
       const audienceTotal = (audienceAll.data ?? [])
         .reduce((s, r) => s + Number(r.actual_audience ?? 0), 0);
 
-      const season = seasonActive.data as { name?: string; starts_on?: string; ends_on?: string; target_amount?: number | null } | null;
+      const season = seasonActive.data as { name?: string; starts_on?: string; ends_on?: string } | null;
       const seasonLabel = season?.name ?? "—";
-      const seasonRange = season
-        ? `${new Date(season.starts_on!).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })} – ${new Date(season.ends_on!).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })}`
+      const seasonRange = season && season.starts_on && season.ends_on
+        ? `${new Date(season.starts_on).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })} – ${new Date(season.ends_on).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })}`
         : "";
 
-      // Meta do mês proporcional
-      let mensalTarget = 0;
-      for (const s of monthlyTargetSum.data ?? []) {
-        const t = Number(s.target_amount ?? 0);
-        if (!t || !s.starts_on || !s.ends_on) continue;
-        const days = Math.max(1, (new Date(s.ends_on).getTime() - new Date(s.starts_on).getTime()) / 86400000);
-        const months = Math.max(1, days / 30);
-        mensalTarget += t / months;
-      }
-      const metaPct = mensalTarget > 0 ? Math.min(100, Math.round((receitaRealizada / mensalTarget) * 100)) : 0;
+      // Sem coluna de meta configurada — meta mensal indisponível
+      const mensalTarget = 0;
+      const metaPct = 0;
 
       return {
         lecturesTodayCount: lecturesToday.count ?? 0,
@@ -184,8 +178,8 @@ function TodayCard({ label, value, hint, to }: { label: string; value: ReactNode
 }
 
 function HojePage() {
-  const { orgId } = useCurrentOrg();
-  const q = useToday(orgId ?? null);
+  const { organizationId } = useCurrentOrg();
+  const q = useToday(organizationId ?? null);
   const d = q.data;
 
   const today = new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long" });
