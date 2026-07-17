@@ -760,8 +760,8 @@ function FechamentoFinanceiroTab({
         status: m.status,
         createdAt: m.created_at,
         createdBy: m.created_by,
-        docRoute: "/app/financeiro",
-        docLabel: "Abrir financeiro",
+        docRoute: m.id ? `/app/financeiro/${m.id}` : "/app/financeiro",
+        docLabel: "Abrir lançamento",
       }));
   }, [movements.data]);
 
@@ -802,8 +802,8 @@ function FechamentoFinanceiroTab({
         bucket: bucketOf(m.category),
         createdAt: m.created_at,
         createdBy: m.created_by,
-        docRoute: "/app/financeiro",
-        docLabel: "Abrir financeiro",
+        docRoute: m.id ? `/app/financeiro/${m.id}` : "/app/financeiro",
+        docLabel: "Abrir lançamento",
       }));
   }, [movements.data]);
 

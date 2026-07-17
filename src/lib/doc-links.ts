@@ -17,6 +17,7 @@ export function openDoc(navigate: Nav, docRoute: string | undefined | null) {
   }
 
   const matchers: Array<{ prefix: string; route: string }> = [
+    { prefix: "/app/financeiro/", route: "/app/financeiro" },
     { prefix: "/app/palestras/", route: "/app/palestras/$id" },
     { prefix: "/app/agendistas/", route: "/app/agendistas/$id" },
     { prefix: "/app/crm/", route: "/app/crm/$id" },
@@ -31,6 +32,10 @@ export function openDoc(navigate: Nav, docRoute: string | undefined | null) {
       const id = docRoute.slice(m.prefix.length).split(/[/?#]/)[0];
       if (!id) {
         toast.message("Este lançamento não está mais disponível.");
+        return;
+      }
+      if (m.route === "/app/financeiro") {
+        navigate({ to: m.route as never, search: { lancamento: id } as never });
         return;
       }
       navigate({ to: m.route as never, params: { id } as never });
