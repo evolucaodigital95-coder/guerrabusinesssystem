@@ -53,6 +53,25 @@ export type PayoutExportRow = {
 };
 export type FilterInfo = { label: string; value: string };
 
+export type ReceiptItem = {
+  fileName: string;
+  mimeType?: string | null;
+  sizeBytes?: number | null;
+  createdAt?: string | null;
+  /** data URL (image/*) — quando presente, é embutido como thumbnail no PDF */
+  dataUrl?: string | null;
+  /** URL assinada (para não-imagens ou fallback) — vira link clicável */
+  url?: string | null;
+  source?: "attachment" | "advance";
+};
+
+export type ReceiptGroup = {
+  company: string;
+  lecture?: string | null;
+  date?: string | null;
+  items: ReceiptItem[];
+};
+
 export type ExportContext = {
   agentName: string;
   teamName?: string | null;
@@ -70,6 +89,7 @@ export type ExportContext = {
   advances?: AdvanceExportRow[];
   payouts?: PayoutExportRow[];
   filters?: FilterInfo[];
+  receipts?: ReceiptGroup[];
 };
 
 const HEADERS = ["Data", "Hora", "Tipo", "Descrição", "Empresa", "Palestra", "Crédito", "Débito", "Saldo"];
