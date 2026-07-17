@@ -53,6 +53,25 @@ export type PayoutExportRow = {
 };
 export type FilterInfo = { label: string; value: string };
 
+export type ReceiptItem = {
+  fileName: string;
+  mimeType?: string | null;
+  sizeBytes?: number | null;
+  createdAt?: string | null;
+  /** data URL (image/*) — quando presente, é embutido como thumbnail no PDF */
+  dataUrl?: string | null;
+  /** URL assinada (para não-imagens ou fallback) — vira link clicável */
+  url?: string | null;
+  source?: "attachment" | "advance";
+};
+
+export type ReceiptGroup = {
+  company: string;
+  lecture?: string | null;
+  date?: string | null;
+  items: ReceiptItem[];
+};
+
 export type ExportContext = {
   agentName: string;
   teamName?: string | null;
@@ -70,6 +89,7 @@ export type ExportContext = {
   advances?: AdvanceExportRow[];
   payouts?: PayoutExportRow[];
   filters?: FilterInfo[];
+  receipts?: ReceiptGroup[];
 };
 
 const HEADERS = ["Data", "Hora", "Tipo", "Descrição", "Empresa", "Palestra", "Crédito", "Débito", "Saldo"];
@@ -658,6 +678,139 @@ export async function exportStatementPDF(ctx: ExportContext) {
       margin: { left: marginX, right: marginX },
       theme: "plain",
     });
+  }
+
+  /* ---------------- COMPROVANTES POR EMPRESA ---------------- */
+  if (ctx.receipts?.length) {
+    // Sempre inicia em página nova para facilitar leitura/impressão
+    doc.addPage();
+    let ry = 46;
+    sectionTitle(doc, "COMPROVANTES ANEXADOS", marginX, ry);
+    ry += 6;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(7.5);
+    doc.setTextColor(...MUTED);
+    doc.text(
+      "Notas fiscais, recibos e comprovantes anexados às palestras e adiantamentos do período. Imagens exibidas em tamanho reduzido — arquivos PDF/DOC aparecem como links.",
+      marginX, ry + 6,
+    );
+    ry += 20;
+
+    const thumbW = 150;
+    const thumbH = 100;
+    const thumbGap = 14;
+    const thumbsPerRow = Math.max(1, Math.floor((contentW + thumbGap) / (thumbW + thumbGap)));
+
+    for (const group of ctx.receipts) {
+      if (!group.items?.length) continue;
+
+      // Header da empresa
+      ry = ensureSpace(doc, ry, 60, pageH);
+      doc.setFillColor(...LIGHT_GRAY);
+      doc.roundedRect(marginX, ry, contentW, 40, 3, 3, "F");
+      doc.setDrawColor(...GOLD);
+      doc.setLineWidth(0.6);
+      doc.line(marginX, ry + 40, marginX + contentW, ry + 40);
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(7);
+      doc.setTextColor(...GOLD);
+      doc.text("EMPRESA", marginX + 14, ry + 15, { charSpace: 1.4 });
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(11);
+      doc.setTextColor(...NAVY);
+      doc.text(group.company.toUpperCase(), marginX + 70, ry + 15);
+
+      if (group.lecture) {
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(7);
+        doc.setTextColor(...GOLD);
+        doc.text("PALESTRA", marginX + 14, ry + 32, { charSpace: 1.4 });
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(9);
+        doc.setTextColor(...GRAPHITE);
+        const lecTxt = group.date ? `${group.lecture} · ${formatDate(group.date)}` : group.lecture;
+        doc.text(doc.splitTextToSize(lecTxt, contentW - 240)[0] ?? "", marginX + 70, ry + 32);
+      }
+      // contador
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(7.5);
+      doc.setTextColor(...NAVY);
+      doc.text(
+        `${group.items.length} ${group.items.length === 1 ? "comprovante" : "comprovantes"}`,
+        pageW - marginX - 14, ry + 24, { align: "right" },
+      );
+
+      ry += 54;
+
+      // Separa imagens e outros
+      const images = group.items.filter((it) => it.dataUrl);
+      const others = group.items.filter((it) => !it.dataUrl);
+
+      // Grade de miniaturas
+      if (images.length > 0) {
+        let col = 0;
+        for (const it of images) {
+          if (col === 0) {
+            ry = ensureSpace(doc, ry, thumbH + 40, pageH);
+          }
+          const x = marginX + col * (thumbW + thumbGap);
+          // Moldura
+          doc.setDrawColor(215, 215, 220);
+          doc.setLineWidth(0.4);
+          doc.roundedRect(x, ry, thumbW, thumbH, 3, 3, "S");
+          try {
+            const fmt = (it.mimeType ?? "").toLowerCase().includes("png") ? "PNG" : "JPEG";
+            doc.addImage(it.dataUrl!, fmt, x + 2, ry + 2, thumbW - 4, thumbH - 4, undefined, "FAST");
+          } catch {
+            doc.setFont("helvetica", "italic");
+            doc.setFontSize(8);
+            doc.setTextColor(...MUTED);
+            doc.text("Falha ao renderizar imagem", x + 8, ry + thumbH / 2);
+          }
+          // Legenda
+          const cap = doc.splitTextToSize(it.fileName, thumbW);
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(7.5);
+          doc.setTextColor(...NAVY);
+          doc.text(cap[0] ?? "", x, ry + thumbH + 12);
+          if (it.createdAt) {
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(7);
+            doc.setTextColor(...MUTED);
+            doc.text(formatDate(it.createdAt), x, ry + thumbH + 22);
+          }
+          col = (col + 1) % thumbsPerRow;
+          if (col === 0) ry += thumbH + 32;
+        }
+        if (col !== 0) ry += thumbH + 32;
+      }
+
+      // Lista de outros arquivos (PDF, DOC, etc.)
+      if (others.length > 0) {
+        ry = ensureSpace(doc, ry, 30 + others.length * 14, pageH);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(8);
+        doc.setTextColor(...NAVY);
+        doc.text("OUTROS ARQUIVOS", marginX, ry, { charSpace: 1.4 });
+        ry += 12;
+        for (const it of others) {
+          doc.setFont("helvetica", "normal");
+          doc.setFontSize(8.5);
+          doc.setTextColor(...GRAPHITE);
+          const line = `• ${it.fileName}${it.mimeType ? ` · ${it.mimeType}` : ""}${it.createdAt ? ` · ${formatDate(it.createdAt)}` : ""}`;
+          doc.text(line, marginX, ry);
+          if (it.url) {
+            doc.setTextColor(...GOLD);
+            doc.textWithLink("abrir arquivo →", pageW - marginX, ry, { url: it.url, align: "right" });
+          }
+          ry += 13;
+        }
+        ry += 6;
+      }
+
+      ry += 10;
+    }
   }
 
   /* ---------------- Watermark + footer on all pages ---------------- */
