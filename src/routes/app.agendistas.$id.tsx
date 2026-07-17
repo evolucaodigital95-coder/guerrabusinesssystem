@@ -703,7 +703,7 @@ function AgentDetail() {
         const itemsByLecture = new Map<string, ReceiptItem[]>();
         for (const a of atts ?? []) {
           const url = urlByPath.get(a.storage_path) ?? null;
-          const img = isImage(a.mime_type, a.file_name);
+          const img = isImage(a.mime_type, a.file_name ?? "");
           const dataUrl = img && url ? await toDataUrl(url) : null;
           const arr = itemsByLecture.get(a.entity_id) ?? [];
           arr.push({
