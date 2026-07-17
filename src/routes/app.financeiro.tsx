@@ -486,11 +486,25 @@ function MovementSheet({
     mutationFn: async () => {
       if (!movement) return;
       const { error } = await supabase.from("financial_movements")
-        .update({ archived_at: new Date().toISOString() }).eq("id", movement.id);
+        .update({ archived_at: new Date().toISOString(), updated_by: userId }).eq("id", movement.id);
       if (error) throw error;
     },
     onSuccess: () => {
       toast.success("Lançamento arquivado");
+      queryClient.invalidateQueries({ queryKey: ["movements"] });
+      onClose();
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Erro"),
+  });
+
+  const hardDelete = useMutation({
+    mutationFn: async () => {
+      if (!movement) return;
+      const { error } = await supabase.from("financial_movements").delete().eq("id", movement.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Lançamento excluído");
       queryClient.invalidateQueries({ queryKey: ["movements"] });
       onClose();
     },
@@ -659,6 +673,18 @@ function MovementSheet({
               trigger={
                 <Button variant="ghost" size="sm" className="text-muted-foreground">
                   <Trash2 className="mr-1.5 h-4 w-4" /> Arquivar
+                </Button>
+              }
+            />
+            <ConfirmDialog
+              title="Excluir permanentemente?"
+              description="Esta ação remove o lançamento definitivamente do Livro Razão e não pode ser desfeita. Prefira arquivar sempre que possível."
+              confirmLabel="Excluir definitivamente"
+              pending={hardDelete.isPending}
+              onConfirm={() => hardDelete.mutate()}
+              trigger={
+                <Button variant="ghost" size="sm" className="text-rose-600 hover:text-rose-700">
+                  <Trash2 className="mr-1.5 h-4 w-4" /> Excluir
                 </Button>
               }
             />
