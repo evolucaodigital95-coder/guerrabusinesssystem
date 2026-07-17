@@ -676,6 +676,18 @@ function MovementSheet({
                 </Button>
               }
             />
+            <ConfirmDialog
+              title="Excluir permanentemente?"
+              description="Esta ação remove o lançamento definitivamente do Livro Razão e não pode ser desfeita. Prefira arquivar sempre que possível."
+              confirmLabel="Excluir definitivamente"
+              pending={hardDelete.isPending}
+              onConfirm={() => hardDelete.mutate()}
+              trigger={
+                <Button variant="ghost" size="sm" className="text-rose-600 hover:text-rose-700">
+                  <Trash2 className="mr-1.5 h-4 w-4" /> Excluir
+                </Button>
+              }
+            />
           </div>
 
           <Tabs defaultValue="attachments">
