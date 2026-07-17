@@ -60,22 +60,29 @@ export function MovementFormDialog({
   const isEdit = !!initial?.id;
   const today = new Date().toISOString().slice(0, 10);
   const now = new Date().toTimeString().slice(0, 5);
-  const [f, setF] = useState<MovementRow>(
-    initial ?? {
-      direction: "in",
-      status: "previsto",
-      category: "Palestra",
-      description: "",
-      amount: "",
-      expected_amount: "",
-      expected_date: today,
-      settled_at: "",
-      occurs_on: today,
-      occurs_time: now,
-      payment_method: "pix",
-      card_installments: 1,
-    },
-  );
+  const defaults: MovementRow = {
+    direction: "in",
+    status: "previsto",
+    category: "Palestra",
+    description: "",
+    amount: "",
+    expected_amount: "",
+    expected_date: today,
+    settled_at: "",
+    occurs_on: today,
+    occurs_time: now,
+    payment_method: "pix",
+    card_installments: 1,
+  };
+  const [f, setF] = useState<MovementRow>(initial ?? defaults);
+
+  // Recarrega o formulário sempre que o diálogo abrir com um lançamento diferente
+  // (o componente é montado uma única vez pelo pai, então useState inicial não basta).
+  useEffect(() => {
+    if (open) setF(initial ?? defaults);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, initial?.id]);
+
   const queryClient = useQueryClient();
 
   const accounts = useQuery({
