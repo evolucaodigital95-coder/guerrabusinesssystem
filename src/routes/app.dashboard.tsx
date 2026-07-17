@@ -31,6 +31,8 @@ function useDashboard(orgId: string | null) {
   return useQuery({
     queryKey: ["dashboard", orgId],
     enabled: !!orgId,
+    staleTime: 30_000,
+    refetchOnWindowFocus: true,
     queryFn: async () => {
       const org = orgId!;
       const now = new Date();
