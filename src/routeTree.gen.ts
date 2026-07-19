@@ -23,6 +23,7 @@ import { Route as AppHistoriaRouteImport } from './routes/app.historia'
 import { Route as AppFinanceiroRouteImport } from './routes/app.financeiro'
 import { Route as AppDashboardRouteImport } from './routes/app.dashboard'
 import { Route as AppConfiguracoesRouteImport } from './routes/app.configuracoes'
+import { Route as AppCentroPalestranteRouteImport } from './routes/app.centro-palestrante'
 import { Route as AppBuscaRouteImport } from './routes/app.busca'
 import { Route as AppBibliotecaRouteImport } from './routes/app.biblioteca'
 import { Route as AppAuditoriaRouteImport } from './routes/app.auditoria'
@@ -109,6 +110,11 @@ const AppDashboardRoute = AppDashboardRouteImport.update({
 const AppConfiguracoesRoute = AppConfiguracoesRouteImport.update({
   id: '/configuracoes',
   path: '/configuracoes',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppCentroPalestranteRoute = AppCentroPalestranteRouteImport.update({
+  id: '/centro-palestrante',
+  path: '/centro-palestrante',
   getParentRoute: () => AppRoute,
 } as any)
 const AppBuscaRoute = AppBuscaRouteImport.update({
@@ -204,6 +210,7 @@ export interface FileRoutesByFullPath {
   '/app/auditoria': typeof AppAuditoriaRoute
   '/app/biblioteca': typeof AppBibliotecaRoute
   '/app/busca': typeof AppBuscaRoute
+  '/app/centro-palestrante': typeof AppCentroPalestranteRoute
   '/app/configuracoes': typeof AppConfiguracoesRoute
   '/app/dashboard': typeof AppDashboardRoute
   '/app/financeiro': typeof AppFinanceiroRoute
@@ -236,6 +243,7 @@ export interface FileRoutesByTo {
   '/app/auditoria': typeof AppAuditoriaRoute
   '/app/biblioteca': typeof AppBibliotecaRoute
   '/app/busca': typeof AppBuscaRoute
+  '/app/centro-palestrante': typeof AppCentroPalestranteRoute
   '/app/configuracoes': typeof AppConfiguracoesRoute
   '/app/dashboard': typeof AppDashboardRoute
   '/app/financeiro': typeof AppFinanceiroRoute
@@ -270,6 +278,7 @@ export interface FileRoutesById {
   '/app/auditoria': typeof AppAuditoriaRoute
   '/app/biblioteca': typeof AppBibliotecaRoute
   '/app/busca': typeof AppBuscaRoute
+  '/app/centro-palestrante': typeof AppCentroPalestranteRoute
   '/app/configuracoes': typeof AppConfiguracoesRoute
   '/app/dashboard': typeof AppDashboardRoute
   '/app/financeiro': typeof AppFinanceiroRoute
@@ -305,6 +314,7 @@ export interface FileRouteTypes {
     | '/app/auditoria'
     | '/app/biblioteca'
     | '/app/busca'
+    | '/app/centro-palestrante'
     | '/app/configuracoes'
     | '/app/dashboard'
     | '/app/financeiro'
@@ -337,6 +347,7 @@ export interface FileRouteTypes {
     | '/app/auditoria'
     | '/app/biblioteca'
     | '/app/busca'
+    | '/app/centro-palestrante'
     | '/app/configuracoes'
     | '/app/dashboard'
     | '/app/financeiro'
@@ -370,6 +381,7 @@ export interface FileRouteTypes {
     | '/app/auditoria'
     | '/app/biblioteca'
     | '/app/busca'
+    | '/app/centro-palestrante'
     | '/app/configuracoes'
     | '/app/dashboard'
     | '/app/financeiro'
@@ -503,6 +515,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppConfiguracoesRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/centro-palestrante': {
+      id: '/app/centro-palestrante'
+      path: '/centro-palestrante'
+      fullPath: '/app/centro-palestrante'
+      preLoaderRoute: typeof AppCentroPalestranteRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/busca': {
       id: '/app/busca'
       path: '/busca'
@@ -629,6 +648,7 @@ interface AppRouteChildren {
   AppAuditoriaRoute: typeof AppAuditoriaRoute
   AppBibliotecaRoute: typeof AppBibliotecaRoute
   AppBuscaRoute: typeof AppBuscaRoute
+  AppCentroPalestranteRoute: typeof AppCentroPalestranteRoute
   AppConfiguracoesRoute: typeof AppConfiguracoesRoute
   AppDashboardRoute: typeof AppDashboardRoute
   AppFinanceiroRoute: typeof AppFinanceiroRoute
@@ -660,6 +680,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppAuditoriaRoute: AppAuditoriaRoute,
   AppBibliotecaRoute: AppBibliotecaRoute,
   AppBuscaRoute: AppBuscaRoute,
+  AppCentroPalestranteRoute: AppCentroPalestranteRoute,
   AppConfiguracoesRoute: AppConfiguracoesRoute,
   AppDashboardRoute: AppDashboardRoute,
   AppFinanceiroRoute: AppFinanceiroRoute,
