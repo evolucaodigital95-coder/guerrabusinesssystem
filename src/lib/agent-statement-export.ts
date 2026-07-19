@@ -1,5 +1,32 @@
 import { formatCurrency, formatDate } from "@/lib/crm";
 import * as XLSX from "xlsx";
+import grupoGuerraLogo from "@/assets/grupo-guerra-logo.png.asset.json";
+
+/**
+ * Cache do dataURL da logo do Grupo Guerra para reuso entre gerações de PDF.
+ * O CDN de assets é servido a partir do mesmo origin, então uma única
+ * requisição basta e o browser cacheia.
+ */
+let __logoDataUrlPromise: Promise<string | null> | null = null;
+function loadGuerraLogoDataUrl(): Promise<string | null> {
+  if (__logoDataUrlPromise) return __logoDataUrlPromise;
+  __logoDataUrlPromise = (async () => {
+    try {
+      const res = await fetch(grupoGuerraLogo.url);
+      if (!res.ok) return null;
+      const blob = await res.blob();
+      return await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onerror = () => reject(reader.error);
+        reader.onload = () => resolve(String(reader.result ?? ""));
+        reader.readAsDataURL(blob);
+      });
+    } catch {
+      return null;
+    }
+  })();
+  return __logoDataUrlPromise;
+}
 
 export type ExportMovement = {
   date: string | null;
