@@ -1,5 +1,32 @@
 import { formatCurrency, formatDate } from "@/lib/crm";
 import * as XLSX from "xlsx";
+import grupoGuerraLogo from "@/assets/grupo-guerra-logo.png.asset.json";
+
+/**
+ * Cache do dataURL da logo do Grupo Guerra para reuso entre gerações de PDF.
+ * O CDN de assets é servido a partir do mesmo origin, então uma única
+ * requisição basta e o browser cacheia.
+ */
+let __logoDataUrlPromise: Promise<string | null> | null = null;
+function loadGuerraLogoDataUrl(): Promise<string | null> {
+  if (__logoDataUrlPromise) return __logoDataUrlPromise;
+  __logoDataUrlPromise = (async () => {
+    try {
+      const res = await fetch(grupoGuerraLogo.url);
+      if (!res.ok) return null;
+      const blob = await res.blob();
+      return await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onerror = () => reject(reader.error);
+        reader.onload = () => resolve(String(reader.result ?? ""));
+        reader.readAsDataURL(blob);
+      });
+    } catch {
+      return null;
+    }
+  })();
+  return __logoDataUrlPromise;
+}
 
 export type ExportMovement = {
   date: string | null;
@@ -228,14 +255,32 @@ export async function exportStatementPDF(ctx: ExportContext) {
   const documentId = ctx.documentId ?? `GBS-${Date.now().toString(36).toUpperCase()}`;
   const watermark = (ctx.teamName?.trim() || "GRUPO GUERRA").toUpperCase();
 
+  // Logo Grupo Guerra — pré-carregada uma única vez
+  const logoDataUrl = await loadGuerraLogoDataUrl();
+
   const drawWatermark = () => {
     doc.saveGraphicsState();
     // @ts-expect-error jspdf gState typing
-    doc.setGState(new doc.GState({ opacity: 0.04 }));
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(110);
-    doc.setTextColor(...NAVY);
-    doc.text(watermark, pageW / 2, pageH / 2 + 30, { align: "center", angle: 22 });
+    doc.setGState(new doc.GState({ opacity: 0.05 }));
+    if (logoDataUrl) {
+      // Logo em marca d'água (centralizada)
+      const wmW = 260;
+      const wmH = 260;
+      try {
+        doc.addImage(logoDataUrl, "PNG", (pageW - wmW) / 2, (pageH - wmH) / 2, wmW, wmH, undefined, "FAST");
+      } catch {
+        // fallback texto
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(110);
+        doc.setTextColor(...NAVY);
+        doc.text(watermark, pageW / 2, pageH / 2 + 30, { align: "center", angle: 22 });
+      }
+    } else {
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(110);
+      doc.setTextColor(...NAVY);
+      doc.text(watermark, pageW / 2, pageH / 2 + 30, { align: "center", angle: 22 });
+    }
     doc.restoreGraphicsState();
   };
 
@@ -255,16 +300,21 @@ export async function exportStatementPDF(ctx: ExportContext) {
 
   /* ---------------- HEADER (page 1) ---------------- */
   let y = 46;
-  doc.setFillColor(...GOLD);
-  doc.circle(marginX + 5, y + 3, 3.2, "F");
+  // Logo do Grupo Guerra no cabeçalho
+  if (logoDataUrl) {
+    try {
+      doc.addImage(logoDataUrl, "PNG", marginX, y - 8, 42, 42, undefined, "FAST");
+    } catch { /* segue sem logo */ }
+  }
+  const brandX = marginX + 54;
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(20);
+  doc.setFontSize(18);
   doc.setTextColor(...NAVY);
-  doc.text("GBS", marginX + 16, y + 8);
+  doc.text("GRUPO GUERRA", brandX, y + 8, { charSpace: 1 });
   doc.setFont("helvetica", "normal");
   doc.setFontSize(7);
   doc.setTextColor(...MUTED);
-  doc.text("GUERRA BUSINESS SYSTEM", marginX + 16, y + 20, { charSpace: 1.4 });
+  doc.text("GUERRA BUSINESS SYSTEM · GBS", brandX, y + 22, { charSpace: 1.4 });
 
   doc.setFont("helvetica", "bold");
   doc.setFontSize(9);
