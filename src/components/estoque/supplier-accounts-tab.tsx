@@ -14,7 +14,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
 import { formatCurrency } from "@/lib/crm";
-import { ConfirmDialog } from "@/components/shared/confirm-dialog";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { SettlementFormDialog } from "@/components/estoque/settlement-form-dialog";
 import {
   aggregateBySupplier, aggregateBooks, aggregateCompanies, totalsFromAggregates,
