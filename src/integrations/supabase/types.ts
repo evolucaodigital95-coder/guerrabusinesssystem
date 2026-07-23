@@ -2198,6 +2198,72 @@ export type Database = {
           },
         ]
       }
+      supplier_settlements: {
+        Row: {
+          amount_paid: number
+          archived_at: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          notes: string | null
+          organization_id: string
+          paid_on: string
+          payment_method: string | null
+          receipt_number: string | null
+          season_id: string | null
+          supplier: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          amount_paid: number
+          archived_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          organization_id: string
+          paid_on?: string
+          payment_method?: string | null
+          receipt_number?: string | null
+          season_id?: string | null
+          supplier: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          amount_paid?: number
+          archived_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          organization_id?: string
+          paid_on?: string
+          payment_method?: string | null
+          receipt_number?: string | null
+          season_id?: string | null
+          supplier?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supplier_settlements_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "supplier_settlements_season_id_fkey"
+            columns: ["season_id"]
+            isOneToOne: false
+            referencedRelation: "seasons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       taggings: {
         Row: {
           archived_at: string | null
