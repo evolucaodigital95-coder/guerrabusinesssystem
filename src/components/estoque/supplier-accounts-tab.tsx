@@ -391,16 +391,26 @@ export function SupplierAccountsTab({
         defaults={defaults}
         initial={editing}
       />
-      <ConfirmDialog
-        open={!!confirmDel}
-        onOpenChange={(v) => { if (!v) setConfirmDel(null); }}
-        title="Excluir acerto?"
-        description="Esta ação remove apenas o registro de acerto. Estoque e livro razão não são afetados."
-        confirmLabel="Excluir"
-        variant="destructive"
-        loading={del.isPending}
-        onConfirm={() => { if (confirmDel) del.mutate(confirmDel.id); }}
-      />
+      <AlertDialog open={!!confirmDel} onOpenChange={(v: boolean) => { if (!v) setConfirmDel(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="font-serif text-2xl">Excluir acerto?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação remove apenas o registro de acerto. Estoque e livro razão não são afetados.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={del.isPending}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={del.isPending}
+              className="bg-rose-600 hover:bg-rose-700"
+              onClick={(e) => { e.preventDefault(); if (confirmDel) del.mutate(confirmDel.id); }}
+            >
+              {del.isPending ? "Excluindo…" : "Excluir"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
