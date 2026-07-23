@@ -21,6 +21,8 @@ import {
 } from "@/lib/stock";
 import { ItemFormDialog } from "@/components/estoque/item-form-dialog";
 import { MovementFormDialog } from "@/components/estoque/movement-form-dialog";
+import { SupplierAccountsTab } from "@/components/estoque/supplier-accounts-tab";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export const Route = createFileRoute("/app/estoque/")({
   head: () => ({
