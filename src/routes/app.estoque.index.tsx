@@ -21,6 +21,8 @@ import {
 } from "@/lib/stock";
 import { ItemFormDialog } from "@/components/estoque/item-form-dialog";
 import { MovementFormDialog } from "@/components/estoque/movement-form-dialog";
+import { SupplierAccountsTab } from "@/components/estoque/supplier-accounts-tab";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export const Route = createFileRoute("/app/estoque/")({
   head: () => ({
@@ -152,105 +154,123 @@ function EstoquePage() {
         }
       />
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Summary label="Itens cadastrados" value={String(totals.totalItems)} />
-        <Summary label="Estoque baixo" value={String(totals.lowStock)} highlight={totals.lowStock > 0} />
-        <Summary label="Reservado" value={new Intl.NumberFormat("pt-BR").format(totals.reserved)} />
-        <Summary label="Valor estimado" value={formatCurrency(totals.totalValue)} />
-      </div>
+      <Tabs defaultValue="items" className="space-y-6">
+        <TabsList>
+          <TabsTrigger value="items">Itens & Movimentações</TabsTrigger>
+          <TabsTrigger value="supplier">Prestação de Contas</TabsTrigger>
+        </TabsList>
 
-      <div className="rounded-2xl border border-border bg-card/40 p-4">
-        <div className="grid gap-3 md:grid-cols-12">
-          <div className="relative md:col-span-6">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-            <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar nome, SKU, fornecedor, localização…" className="rounded-full pl-9" />
+        <TabsContent value="items" className="space-y-6">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <Summary label="Itens cadastrados" value={String(totals.totalItems)} />
+            <Summary label="Estoque baixo" value={String(totals.lowStock)} highlight={totals.lowStock > 0} />
+            <Summary label="Reservado" value={new Intl.NumberFormat("pt-BR").format(totals.reserved)} />
+            <Summary label="Valor estimado" value={formatCurrency(totals.totalValue)} />
           </div>
-          <div className="md:col-span-3">
-            <Select value={fCat} onValueChange={setFCat}>
-              <SelectTrigger className="rounded-full"><SelectValue placeholder="Categoria" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value={ALL}>Todas as categorias</SelectItem>
-                {STOCK_CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-              </SelectContent>
-            </Select>
+
+          <div className="rounded-2xl border border-border bg-card/40 p-4">
+            <div className="grid gap-3 md:grid-cols-12">
+              <div className="relative md:col-span-6">
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar nome, SKU, fornecedor, localização…" className="rounded-full pl-9" />
+              </div>
+              <div className="md:col-span-3">
+                <Select value={fCat} onValueChange={setFCat}>
+                  <SelectTrigger className="rounded-full"><SelectValue placeholder="Categoria" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={ALL}>Todas as categorias</SelectItem>
+                    {STOCK_CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="md:col-span-3">
+                <Select value={fStatus} onValueChange={setFStatus}>
+                  <SelectTrigger className="rounded-full"><SelectValue placeholder="Status" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={ALL}>Todos os status</SelectItem>
+                    {STOCK_ITEM_STATUS.map((s) => <SelectItem key={s.key} value={s.key}>{s.label}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
           </div>
-          <div className="md:col-span-3">
-            <Select value={fStatus} onValueChange={setFStatus}>
-              <SelectTrigger className="rounded-full"><SelectValue placeholder="Status" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value={ALL}>Todos os status</SelectItem>
-                {STOCK_ITEM_STATUS.map((s) => <SelectItem key={s.key} value={s.key}>{s.label}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-      </div>
 
-      {orgLoading || items.isLoading ? (
-        <ListSkeleton />
-      ) : filtered.length === 0 ? (
-        <div className="rounded-3xl border border-dashed border-border bg-card/30 px-8 py-16 text-center">
-          <Boxes className="mx-auto h-7 w-7 text-muted-foreground" />
-          <h3 className="mt-3 font-serif text-2xl text-foreground">Nenhum item</h3>
-          <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
-            {(items.data?.length ?? 0) > 0 ? "Ajuste os filtros." : "Cadastre o primeiro item do estoque."}
-          </p>
-          <Button variant="navy" className="mt-6 rounded-full" onClick={() => setItemOpen(true)} disabled={!organizationId}>
-            <Plus className="mr-1.5 h-4 w-4" /> Novo item
-          </Button>
-        </div>
-      ) : (
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-          {filtered.map((it) => {
-            const b = balances.get(it.id) ?? { onHand: 0, reserved: 0, available: 0 };
-            const min = Number(it.min_quantity ?? 0);
-            const low = min > 0 && b.onHand <= min;
-            const noSupplier = !it.supplier;
-            return (
-              <Link
-                key={it.id} to="/app/estoque/$id" params={{ id: it.id }}
-                className="group rounded-2xl border border-border bg-card/40 p-5 transition-all duration-300 hover:-translate-y-0.5 hover:border-foreground/20 hover:bg-card/70 hover:shadow-lg"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
-                      {it.category ?? "Sem categoria"}{it.sku ? ` · ${it.sku}` : ""}
-                    </p>
-                    <p className="mt-1 truncate font-serif text-lg text-foreground">{it.name}</p>
-                  </div>
-                  <Package className="h-4 w-4 shrink-0 text-muted-foreground" />
-                </div>
+          {orgLoading || items.isLoading ? (
+            <ListSkeleton />
+          ) : filtered.length === 0 ? (
+            <div className="rounded-3xl border border-dashed border-border bg-card/30 px-8 py-16 text-center">
+              <Boxes className="mx-auto h-7 w-7 text-muted-foreground" />
+              <h3 className="mt-3 font-serif text-2xl text-foreground">Nenhum item</h3>
+              <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
+                {(items.data?.length ?? 0) > 0 ? "Ajuste os filtros." : "Cadastre o primeiro item do estoque."}
+              </p>
+              <Button variant="navy" className="mt-6 rounded-full" onClick={() => setItemOpen(true)} disabled={!organizationId}>
+                <Plus className="mr-1.5 h-4 w-4" /> Novo item
+              </Button>
+            </div>
+          ) : (
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+              {filtered.map((it) => {
+                const b = balances.get(it.id) ?? { onHand: 0, reserved: 0, available: 0 };
+                const min = Number(it.min_quantity ?? 0);
+                const low = min > 0 && b.onHand <= min;
+                const noSupplier = !it.supplier;
+                return (
+                  <Link
+                    key={it.id} to="/app/estoque/$id" params={{ id: it.id }}
+                    className="group rounded-2xl border border-border bg-card/40 p-5 transition-all duration-300 hover:-translate-y-0.5 hover:border-foreground/20 hover:bg-card/70 hover:shadow-lg"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+                          {it.category ?? "Sem categoria"}{it.sku ? ` · ${it.sku}` : ""}
+                        </p>
+                        <p className="mt-1 truncate font-serif text-lg text-foreground">{it.name}</p>
+                      </div>
+                      <Package className="h-4 w-4 shrink-0 text-muted-foreground" />
+                    </div>
 
-                <div className="mt-5 grid grid-cols-3 gap-2">
-                  <Stat label="Em estoque" value={`${b.onHand}${it.unit ? ` ${it.unit}` : ""}`} />
-                  <Stat label="Reservado" value={`${b.reserved}`} muted />
-                  <Stat label="Disponível" value={`${b.available}`} />
-                </div>
+                    <div className="mt-5 grid grid-cols-3 gap-2">
+                      <Stat label="Em estoque" value={`${b.onHand}${it.unit ? ` ${it.unit}` : ""}`} />
+                      <Stat label="Reservado" value={`${b.reserved}`} muted />
+                      <Stat label="Disponível" value={`${b.available}`} />
+                    </div>
 
-                <div className="mt-4 flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground">
-                  {it.location && (
-                    <span className="flex items-center gap-1"><MapPin className="h-3 w-3" /> {it.location}</span>
-                  )}
-                  {it.supplier && <span>· {it.supplier}</span>}
-                </div>
+                    <div className="mt-4 flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground">
+                      {it.location && (
+                        <span className="flex items-center gap-1"><MapPin className="h-3 w-3" /> {it.location}</span>
+                      )}
+                      {it.supplier && <span>· {it.supplier}</span>}
+                    </div>
 
-                {(low || noSupplier) && (
-                  <div className="mt-4 flex flex-wrap gap-1.5">
-                    {low && (
-                      <Badge variant="outline" className="border-amber-500/40 text-amber-300">
-                        <AlertTriangle className="mr-1 h-3 w-3" /> Estoque baixo
-                      </Badge>
+                    {(low || noSupplier) && (
+                      <div className="mt-4 flex flex-wrap gap-1.5">
+                        {low && (
+                          <Badge variant="outline" className="border-amber-500/40 text-amber-300">
+                            <AlertTriangle className="mr-1 h-3 w-3" /> Estoque baixo
+                          </Badge>
+                        )}
+                        {noSupplier && (
+                          <Badge variant="outline" className="text-muted-foreground">Sem fornecedor</Badge>
+                        )}
+                      </div>
                     )}
-                    {noSupplier && (
-                      <Badge variant="outline" className="text-muted-foreground">Sem fornecedor</Badge>
-                    )}
-                  </div>
-                )}
-              </Link>
-            );
-          })}
-        </div>
-      )}
+                  </Link>
+                );
+              })}
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="supplier">
+          {organizationId && user ? (
+            <SupplierAccountsTab organizationId={organizationId} userId={user.id} />
+          ) : (
+            <ListSkeleton />
+          )}
+        </TabsContent>
+      </Tabs>
+
 
       {organizationId && user && (
         <>
