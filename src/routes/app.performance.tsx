@@ -135,7 +135,7 @@ function PerformancePage() {
               </>
             );
             const inner = r.linkTo && r.linkId
-              ? <Link to={r.linkTo as any} params={{ id: r.linkId }} className="contents">{Row}</Link>
+              ? <Link to={r.linkTo as any} params={{ id: r.linkId } as any} className="contents">{Row}</Link>
               : <>{Row}</>;
             return (
               <div key={r.key} className="grid grid-cols-[40px_minmax(0,1fr)_repeat(5,minmax(0,110px))] items-center gap-4 border-b border-border/60 px-5 py-3 last:border-b-0 hover:bg-muted/30">
