@@ -189,6 +189,10 @@ function DashboardPage() {
     { label: "Novo Lançamento", icon: Wallet, to: "/app/financeiro" },
     { label: "Novo Agendista", icon: UserCog, to: "/app/agendistas" },
     { label: "Novo Projeto", icon: LayoutDashboard, to: "/app/projetos" },
+    { label: "Ver Agenda", icon: CalendarRange, to: "/app/agenda" },
+    { label: "Indicadores", icon: TrendingUp, to: "/app/indicadores" },
+    { label: "Performance", icon: Sparkles, to: "/app/performance" },
+    { label: "Registrar Acerto com Fornecedor", icon: Wallet, to: "/app/estoque" },
   ]), []);
 
   if (orgLoading || isLoading || !data) {
