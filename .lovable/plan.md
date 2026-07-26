@@ -1,107 +1,49 @@
-# Plano — Ajustes no Extrato + Centro Financeiro do Palestrante
+# Reestruturação Estratégica do GBS
 
-O trabalho tem três frentes, todas na mesma entrega. **Nenhuma delas cria nova fonte de verdade**: tudo lê `lecture_financial_snapshots`, `financial_movements`, `advances`, `lectures`, `companies` e `agents` — os mesmos dados que já alimentam o Motor Financeiro.
+Sem alterar identidade visual, banco de dados, regras financeiras ou relacionamentos. Nenhuma funcionalidade existente será removida — apenas realocada e/ou ocultada do menu.
 
----
+## 1. Menu lateral (src/lib/modules.ts + src/routes/app.tsx)
 
-## Frente 1 — Ajustes no PDF do Extrato do Agendista
+Reorganizar seções e ordem exatamente conforme solicitado:
 
-Arquivo: `src/lib/agent-statement-export.ts` e caller em `src/routes/app.agendistas.$id.tsx`.
+- **PRINCIPAL**: Dashboard
+- **OPERAÇÃO**: Empresas (CRM), Palestras, Financeiro, Agendistas, Estoque, Temporadas, Campanhas, Projetos, Agenda *(nova)*
+- **GESTÃO**: Indicadores *(nova, renomeada da atual "Centro de Inteligência")*, Relatórios, Metas *(nova)*, Performance *(nova)*
+- **INTELIGÊNCIA**: IA Guerra, Central de Conteúdo *(rename de Biblioteca)*
+- **SISTEMA**: Auditoria, Configurações
 
-1. **Logo Grupo Guerra no cabeçalho do PDF**
-   - Registrar a logo enviada (`user-uploads://hf_20260604_150902_...png`) como asset estático em `src/assets/grupo-guerra-logo.png.asset.json`.
-   - Pré-carregar como dataURL no `exportStatementPDF` (fetch + FileReader) e desenhar no header (canto esquerdo, ~44pt), mantendo o layout navy/gold atual.
-   - Adicionar também como marca d'água discreta (opacidade ~5%) no centro de cada página.
+Remover do menu (rotas permanecem acessíveis por URL para não perder dados): **Hoje**, **História**, **Legado**, **Roadmap**, **Centro do Palestrante** (fica acessível por link direto no Dashboard e Financeiro).
 
-2. **Juros do cartão explícitos no documento**
-   - Hoje o campo aparece na composição de créditos, mas não no detalhamento por palestra. Adicionar coluna dedicada "Juros Cartão" na tabela "Palestras Fechadas" (já é derivado de `breakdown.totalCardFees` no snapshot).
-   - Nova subseção **"Deduções por Palestra"** listando, para cada palestra: bruto, materiais, **juros/taxa cartão** (com bandeira e parcelas quando houver), taxa da regra, outros custos, lucro líquido. Já lemos esse detalhe em `app.agendistas.$id.tsx` — só falta expor no PDF.
+## 2. Novas rotas
 
----
+Criar arquivos vazios/wireframes funcionais usando dados reais do Supabase:
 
-## Frente 2 — Novo Módulo: Centro Financeiro do Palestrante
+- `src/routes/app.agenda.tsx` — Painel operacional (Hoje / Amanhã / Semana / Mês) baseado em `lectures` com filtros de data. Cada card mostra empresa, cidade, contato, telefone, agendista, palestrante, status, link para abrir a palestra.
+- `src/routes/app.indicadores.tsx` — Painel executivo com KPIs: Empresas Ativas, Novas Empresas (mês), Palestras, Receita, Lucro, Ticket Médio, Pessoas Impactadas, Valor em Estoque, Valor Utilizado, Saldo a Acertar (usa `supplier-accounts.ts`), Agendistas, Taxa de Conversão.
+- `src/routes/app.metas.tsx` — Metas por temporada usando campos existentes em `seasons` (goal_revenue, goal_lectures etc.) + cálculo do realizado. Barras de progresso: Meta / Realizado / % / Falta.
+- `src/routes/app.performance.tsx` — Rankings automáticos (Agendistas, Empresas, Cidades, Campanhas, Temporadas, Palestras) — Receita, Lucro, Pessoas, Materiais, Ticket Médio a partir de `lecture_financial_snapshots`.
 
-Rota: `src/routes/app.centro-palestrante.tsx` (nova). Item no sidebar dentro de "Financeiro".
+## 3. Central de Conteúdo (rename da Biblioteca)
 
-Arquitetura de dados — **uma única query central** (`useCentroPalestrante`) que agrega:
-- `lecture_financial_snapshots` (JOIN `lectures`, `companies`, `agents`, `seasons`, `campaigns`, `projects`).
-- `financial_movements` (pagamentos ao palestrante — categoria "Pró-labore"/"Palestrante").
-- `advances` (adiantamentos que o palestrante concedeu / recebeu, conforme papel).
-- `lectures` sem snapshot (para "A receber" / "Previsão de recebimentos").
+- Atualizar label em `modules.ts` e rota `src/routes/app.biblioteca.tsx` (mantém URL para não quebrar links) renderizando uma UI de repositório com categorias fixas (Slides, Livros, Propostas, Contratos, Autorizações, Modelos PDF, Identidade Visual, Logos, Fotos, Vídeos, Treinamentos, Documentos), pesquisa, filtros, favoritos e recentes. Reutiliza `attachments` (bucket `crm-attachments`) com `entity_kind='content'` — sem alterar schema.
 
-**Nunca recalcular histórico** — todos os valores retro vêm dos snapshots congelados. Valores atuais (previsões) usam `lectures.gross_amount` e regra vigente.
+## 4. Dashboard — atalhos rápidos
 
-### Seções da página (uma rota, abas)
+Adicionar seção "Atalhos" no topo do `app.dashboard.tsx`: Nova Empresa, Nova Palestra, Novo Lançamento, Nova Entrada de Estoque, Novo Agendista, Registrar Pagamento, Registrar Acerto com Fornecedor. Cada botão navega para o módulo com estado inicial abrindo o diálogo apropriado (via query param `?new=1`).
 
-Layout premium: Header executivo com nome do palestrante (Gustavo), período (seletor global), botão exportar PDF/XLSX/CSV.
+## 5. IA Guerra executiva
 
-**Aba 1 — Dashboard Executivo**
-KPIs em cards navy/gold: Saldo Atual, A Receber, Recebido, Adiantamentos Abertos, Lucro Líquido Mês, Lucro Líquido Ano, Receita Bruta, Custos Totais, Margem %, Dízimo Sugerido, # Empresas, # Palestras, # Pessoas Impactadas.
+`app.ia-guerra.tsx` deixa de ser placeholder. Cria chat simples que consulta o gateway Lovable AI (Gemini) com um contexto injetado no system prompt contendo um snapshot resumido em tempo real (faturamento do mês, top empresas, saldo com fornecedor, palestras pendentes, estoque). Usa `createServerFn` para não expor chave. Escopo mínimo nesta fase — o suficiente para responder às perguntas de exemplo do briefing.
 
-**Aba 2 — Extrato Detalhado**
-Tabela cronológica com colunas: Data · Empresa · Palestra · Valor Vendido · Materiais · Juros/Taxas · Outros Custos · Lucro Líquido · Parte Palestrante · Dízimo · Saldo Acumulado. Filtros: empresa, palestra, cidade, estado, temporada, campanha, projeto, período.
+## 6. Relatórios
 
-**Aba 3 — Resultados** (sub-tabs internas)
-- Por Empresa (ranking): palestras, receita, lucro, % palestrante, % agendista, pessoas, margem.
-- Por Agendista: palestras, receita, lucro, % participação, ticket médio, público.
-- Por Cidade: palestras, receita, lucro, pessoas.
-- Por Temporada: receita, lucro, palestras, empresas, pessoas.
+Reorganizar `app.relatorios.tsx` em 9 abas/categorias (Financeiro, Empresas, Palestras, Agendistas, Estoque, Fornecedores, Performance, Temporadas, Campanhas). Reaproveita `report-export.ts` (PDF/XLSX/CSV).
 
-**Aba 4 — Evolução Mensal**
-Recharts: linha de Receita Bruta vs Lucro Líquido; barras de # Palestras e # Empresas; linha de Pessoas Impactadas; linha de Ticket Médio.
+## Fora de escopo desta entrega
 
-**Aba 5 — Rentabilidade por Palestra**
-Tabela com heatmap de margem (verde/âmbar/vermelho): bruto, material, taxas, custos, lucro, margem, resultado palestrante, resultado agendista. Ordenável por margem.
+- Nenhum ajuste em `finance-engine.ts`, snapshots, triggers de auditoria ou motores existentes.
+- Sem migração de banco. Metas usam colunas já existentes em `seasons`; se algum campo faltar, o card mostra "Definir meta" e link para editar a temporada (sem criar coluna nova).
 
-**Aba 6 — Adiantamentos & Pagamentos**
-Duas seções lado a lado: adiantamentos (data, valor, responsável, forma, observação, saldo após) e pagamentos (data, forma, conta, comprovante, valor, saldo restante). Lê de `advances` e `financial_movements`.
+## Entrega
 
-**Aba 7 — Dízimo (Informativo)**
-Cards: dízimo do mês, do ano, acumulado (10% sobre `gustavo_amount` dos snapshots). Aviso claro "Apenas informativo — nunca descontado automaticamente". Tabela de origem por palestra.
-
-**Aba 8 — Metas & Previsão**
-- Metas: input local (persistido em `localStorage` por enquanto — pergunto se querem tabela dedicada) mensal e anual, com barras de progresso.
-- Previsão de Recebimentos: palestras confirmadas/agendadas sem snapshot, com valor previsto, data e empresa.
-
-### Exportação PDF Premium
-
-`src/lib/speaker-report-export.ts` (novo, reutiliza estilo do agent-statement-export):
-Header com logo Grupo Guerra + marca d'água, resumo executivo, indicadores, resultados por empresa/agendista/cidade/temporada, extrato, mini-gráficos renderizados como imagem (recharts → `toDataURL` via `html-to-image`), rodapé institucional, paginação, QR Code (usando `qrcode` — se não tiver, adiciono) apontando para hash do relatório.
-
-Também XLSX e CSV via `report-export.ts` existente.
-
----
-
-## Frente 3 — Testes & Validação
-
-1. Comparar totais do Centro Palestrante com totais somados diretamente dos snapshots (script node ad-hoc).
-2. Verificar que "Saldo Atual" = Recebido − Adiantamentos abatidos, cruzando com Livro Razão.
-3. Testar filtros (empresa, período, temporada) e conferir que somas batem com os subtotais.
-4. Gerar o PDF e inspecionar visualmente (logo, marca d'água, tabelas dentro da página, QR).
-
----
-
-## Detalhes técnicos
-
-**Arquivos novos**
-- `src/assets/grupo-guerra-logo.png.asset.json` (pointer via `lovable-assets`)
-- `src/routes/app.centro-palestrante.tsx`
-- `src/lib/speaker-report-export.ts`
-- `src/hooks/use-speaker-finance.ts` (query agregada)
-
-**Arquivos alterados**
-- `src/lib/agent-statement-export.ts` (logo + coluna juros cartão + seção deduções por palestra)
-- `src/routes/app.agendistas.$id.tsx` (passar detalhes de card fees ao PDF — já está preparado; garantir que estão sendo enviados)
-- `src/lib/modules.ts` ou sidebar equivalente (adicionar item "Centro do Palestrante" na seção Financeiro)
-
-**Dependências novas (se faltar)**
-- `qrcode` para QR de autenticidade.
-- `html-to-image` para converter gráficos em PNG no PDF.
-
-**Riscos**
-- Renderizar gráficos recharts no PDF exige montá-los off-screen; se ficar pesado, gero versões estáticas via jsPDF nativo (linhas/barras).
-- Metas: sem tabela dedicada, uso `localStorage` — se você preferir persistência real, criamos `speaker_goals` na base (uma migration a mais).
-
----
-
-**Pergunta antes de executar:** confirma o uso de `localStorage` para as metas, ou quer que eu já crie uma tabela `speaker_goals` no banco? Se não responder, sigo com `localStorage` (mais rápido, sem migration) e deixo a troca fácil no futuro.
+Ao final: lista de arquivos novos/alterados, rotas criadas, confirmação de que Financeiro, Palestras, Estoque e Livro Razão não foram tocados, e verificação com build/typecheck.
