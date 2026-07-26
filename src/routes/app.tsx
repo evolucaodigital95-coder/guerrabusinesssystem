@@ -48,14 +48,12 @@ function AppLayout() {
     navigate({ to: "/" });
   }
 
-  const sections = ["principal", "preparação", "comercial", "operação", "financeiro", "estratégia", "sistema"] as const;
+  const sections = ["principal", "operação", "gestão", "inteligência", "sistema"] as const;
   const sectionLabel: Record<(typeof sections)[number], string> = {
     principal: "Principal",
-    "preparação": "Preparação",
-    comercial: "Comercial",
     "operação": "Operação",
-    financeiro: "Financeiro",
-    "estratégia": "Estratégia",
+    "gestão": "Gestão",
+    "inteligência": "Inteligência",
     sistema: "Sistema",
   };
 
