@@ -15,6 +15,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppIndexRouteImport } from './routes/app.index'
 import { Route as AppRoadmapRouteImport } from './routes/app.roadmap'
 import { Route as AppRelatoriosRouteImport } from './routes/app.relatorios'
+import { Route as AppPerformanceRouteImport } from './routes/app.performance'
 import { Route as AppMetasRouteImport } from './routes/app.metas'
 import { Route as AppLegadoRouteImport } from './routes/app.legado'
 import { Route as AppInteligenciaRouteImport } from './routes/app.inteligencia'
@@ -73,6 +74,11 @@ const AppRoadmapRoute = AppRoadmapRouteImport.update({
 const AppRelatoriosRoute = AppRelatoriosRouteImport.update({
   id: '/relatorios',
   path: '/relatorios',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPerformanceRoute = AppPerformanceRouteImport.update({
+  id: '/performance',
+  path: '/performance',
   getParentRoute: () => AppRoute,
 } as any)
 const AppMetasRoute = AppMetasRouteImport.update({
@@ -240,6 +246,7 @@ export interface FileRoutesByFullPath {
   '/app/inteligencia': typeof AppInteligenciaRoute
   '/app/legado': typeof AppLegadoRoute
   '/app/metas': typeof AppMetasRoute
+  '/app/performance': typeof AppPerformanceRoute
   '/app/relatorios': typeof AppRelatoriosRoute
   '/app/roadmap': typeof AppRoadmapRoute
   '/app/': typeof AppIndexRoute
@@ -276,6 +283,7 @@ export interface FileRoutesByTo {
   '/app/inteligencia': typeof AppInteligenciaRoute
   '/app/legado': typeof AppLegadoRoute
   '/app/metas': typeof AppMetasRoute
+  '/app/performance': typeof AppPerformanceRoute
   '/app/relatorios': typeof AppRelatoriosRoute
   '/app/roadmap': typeof AppRoadmapRoute
   '/app': typeof AppIndexRoute
@@ -314,6 +322,7 @@ export interface FileRoutesById {
   '/app/inteligencia': typeof AppInteligenciaRoute
   '/app/legado': typeof AppLegadoRoute
   '/app/metas': typeof AppMetasRoute
+  '/app/performance': typeof AppPerformanceRoute
   '/app/relatorios': typeof AppRelatoriosRoute
   '/app/roadmap': typeof AppRoadmapRoute
   '/app/': typeof AppIndexRoute
@@ -353,6 +362,7 @@ export interface FileRouteTypes {
     | '/app/inteligencia'
     | '/app/legado'
     | '/app/metas'
+    | '/app/performance'
     | '/app/relatorios'
     | '/app/roadmap'
     | '/app/'
@@ -389,6 +399,7 @@ export interface FileRouteTypes {
     | '/app/inteligencia'
     | '/app/legado'
     | '/app/metas'
+    | '/app/performance'
     | '/app/relatorios'
     | '/app/roadmap'
     | '/app'
@@ -426,6 +437,7 @@ export interface FileRouteTypes {
     | '/app/inteligencia'
     | '/app/legado'
     | '/app/metas'
+    | '/app/performance'
     | '/app/relatorios'
     | '/app/roadmap'
     | '/app/'
@@ -493,6 +505,13 @@ declare module '@tanstack/react-router' {
       path: '/relatorios'
       fullPath: '/app/relatorios'
       preLoaderRoute: typeof AppRelatoriosRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/performance': {
+      id: '/app/performance'
+      path: '/performance'
+      fullPath: '/app/performance'
+      preLoaderRoute: typeof AppPerformanceRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/metas': {
@@ -717,6 +736,7 @@ interface AppRouteChildren {
   AppInteligenciaRoute: typeof AppInteligenciaRoute
   AppLegadoRoute: typeof AppLegadoRoute
   AppMetasRoute: typeof AppMetasRoute
+  AppPerformanceRoute: typeof AppPerformanceRoute
   AppRelatoriosRoute: typeof AppRelatoriosRoute
   AppRoadmapRoute: typeof AppRoadmapRoute
   AppIndexRoute: typeof AppIndexRoute
@@ -752,6 +772,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppInteligenciaRoute: AppInteligenciaRoute,
   AppLegadoRoute: AppLegadoRoute,
   AppMetasRoute: AppMetasRoute,
+  AppPerformanceRoute: AppPerformanceRoute,
   AppRelatoriosRoute: AppRelatoriosRoute,
   AppRoadmapRoute: AppRoadmapRoute,
   AppIndexRoute: AppIndexRoute,
