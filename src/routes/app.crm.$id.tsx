@@ -633,53 +633,250 @@ function OwnerLabel({ ownerId, organizationId }: { ownerId: string; organization
 
 /* ---------------- Timeline Tab ---------------- */
 
+type FeedKind = "company" | "contact" | "lead" | "opportunity" | "lecture" | "finance-in" | "finance-out" | "note" | "attachment" | "event";
+type FeedItem = {
+  id: string;
+  at: string;
+  kind: FeedKind;
+  title: string;
+  subtitle?: string;
+  amount?: number;
+  linkTo?: string;
+  linkParams?: Record<string, string>;
+};
+
+const FEED_META: Record<FeedKind, { label: string; icon: React.ComponentType<{ className?: string }>; dot: string; badge: string }> = {
+  company:      { label: "Empresa",      icon: Building2,     dot: "bg-slate-500",   badge: "border-slate-500/40 text-slate-600" },
+  contact:      { label: "Contato",      icon: Users,         dot: "bg-sky-500",     badge: "border-sky-500/40 text-sky-600" },
+  lead:         { label: "Lead",         icon: Target,        dot: "bg-indigo-500",  badge: "border-indigo-500/40 text-indigo-600" },
+  opportunity:  { label: "Oportunidade", icon: Target,        dot: "bg-violet-500",  badge: "border-violet-500/40 text-violet-600" },
+  lecture:      { label: "Palestra",     icon: Calendar,      dot: "bg-amber-500",   badge: "border-amber-500/40 text-amber-600" },
+  "finance-in": { label: "Entrada",      icon: Wallet,        dot: "bg-emerald-500", badge: "border-emerald-500/40 text-emerald-600" },
+  "finance-out":{ label: "Saída",        icon: Wallet,        dot: "bg-rose-500",    badge: "border-rose-500/40 text-rose-600" },
+  note:         { label: "Nota",         icon: MessageSquare, dot: "bg-teal-500",    badge: "border-teal-500/40 text-teal-600" },
+  attachment:   { label: "Anexo",        icon: Paperclip,     dot: "bg-zinc-500",    badge: "border-zinc-500/40 text-zinc-600" },
+  event:        { label: "Evento",       icon: Star,          dot: "bg-[var(--gold)]", badge: "border-[var(--gold)]/40 text-[var(--gold)]" },
+};
+
+const FEED_FILTERS: { key: "all" | FeedKind; label: string }[] = [
+  { key: "all", label: "Tudo" },
+  { key: "lecture", label: "Palestras" },
+  { key: "finance-in", label: "Entradas" },
+  { key: "finance-out", label: "Saídas" },
+  { key: "opportunity", label: "Oportunidades" },
+  { key: "contact", label: "Contatos" },
+  { key: "event", label: "Eventos" },
+  { key: "note", label: "Notas" },
+];
+
 function TimelineTab({
   companyId, organizationId, userId, company,
 }: { companyId: string; organizationId: string; userId: string; company: Record<string, unknown> }) {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
+  const [filter, setFilter] = useState<"all" | FeedKind>("all");
 
   const events = useQuery({
     queryKey: ["company-timeline", companyId],
     queryFn: async () => {
-      const [te, leads, opps, contacts] = await Promise.all([
+      const [te, leads, opps, contacts, lectures, movs, notes, atts] = await Promise.all([
         supabase.from("timeline_events").select("id, kind, title, body, occurs_at")
           .eq("organization_id", organizationId).eq("entity_type", "company").eq("entity_id", companyId)
           .is("archived_at", null),
         supabase.from("leads").select("id, source, status, created_at").eq("company_id", companyId).is("archived_at", null),
-        supabase.from("opportunities").select("id, title, status, created_at").eq("company_id", companyId).is("archived_at", null),
-        supabase.from("contacts").select("id, full_name, created_at").eq("company_id", companyId).is("archived_at", null),
+        supabase.from("opportunities").select("id, title, status, amount, created_at").eq("company_id", companyId).is("archived_at", null),
+        supabase.from("contacts").select("id, full_name, role, created_at").eq("company_id", companyId).is("archived_at", null),
+        supabase.from("lectures").select("id, title, status, scheduled_at, gross_revenue, city, state").eq("company_id", companyId).is("archived_at", null),
+        supabase.from("financial_movements").select("id, direction, description, amount, expected_amount, occurs_on, status, category").eq("company_id", companyId).is("archived_at", null),
+        supabase.from("notes").select("id, body, created_at").eq("entity_type", "company").eq("entity_id", companyId).is("archived_at", null),
+        supabase.from("attachments").select("id, file_name, created_at").eq("entity_type", "company").eq("entity_id", companyId).is("archived_at", null),
       ]);
-      const items: { id: string; at: string; title: string; subtitle?: string }[] = [];
-      items.push({ id: `c-${company.id}`, at: company.created_at as string, title: "Empresa cadastrada", subtitle: company.legal_name as string });
-      leads.data?.forEach((l) => items.push({ id: `l-${l.id}`, at: l.created_at, title: "Lead registrado", subtitle: l.source ?? undefined }));
-      opps.data?.forEach((o) => items.push({ id: `o-${o.id}`, at: o.created_at, title: `Oportunidade: ${o.title}`, subtitle: o.status ?? undefined }));
-      contacts.data?.forEach((c) => items.push({ id: `ct-${c.id}`, at: c.created_at, title: "Contato adicionado", subtitle: c.full_name }));
-      te.data?.forEach((e) => items.push({ id: `t-${e.id}`, at: e.occurs_at, title: e.title ?? timelineKindLabel(e.kind), subtitle: e.body ?? undefined }));
-      return items.sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime());
+      const items: FeedItem[] = [];
+      items.push({
+        id: `c-${company.id}`, at: company.created_at as string, kind: "company",
+        title: "Empresa cadastrada", subtitle: company.legal_name as string,
+      });
+      contacts.data?.forEach((c) => items.push({
+        id: `ct-${c.id}`, at: c.created_at, kind: "contact",
+        title: c.full_name, subtitle: c.role ?? "Contato adicionado",
+      }));
+      leads.data?.forEach((l) => items.push({
+        id: `l-${l.id}`, at: l.created_at, kind: "lead",
+        title: "Lead registrado", subtitle: [l.source, l.status].filter(Boolean).join(" · ") || undefined,
+      }));
+      opps.data?.forEach((o) => items.push({
+        id: `o-${o.id}`, at: o.created_at, kind: "opportunity",
+        title: o.title, subtitle: o.status ?? undefined,
+        amount: o.amount ? Number(o.amount) : undefined,
+      }));
+      lectures.data?.forEach((l) => items.push({
+        id: `lec-${l.id}`, at: l.scheduled_at ?? l.id, kind: "lecture",
+        title: l.title, subtitle: [l.status, [l.city, l.state].filter(Boolean).join("/")].filter(Boolean).join(" · ") || undefined,
+        amount: l.gross_revenue ? Number(l.gross_revenue) : undefined,
+        linkTo: "/app/palestras/$id", linkParams: { id: l.id },
+      }));
+      movs.data?.forEach((m) => {
+        const v = Number(m.amount ?? m.expected_amount ?? 0);
+        items.push({
+          id: `m-${m.id}`, at: m.occurs_on ?? new Date().toISOString(),
+          kind: m.direction === "in" ? "finance-in" : "finance-out",
+          title: m.description ?? (m.direction === "in" ? "Recebimento" : "Pagamento"),
+          subtitle: [m.category, m.status].filter(Boolean).join(" · ") || undefined,
+          amount: v,
+        });
+      });
+      notes.data?.forEach((n) => items.push({
+        id: `n-${n.id}`, at: n.created_at, kind: "note",
+        title: "Nota", subtitle: n.body?.slice(0, 140) ?? undefined,
+      }));
+      atts.data?.forEach((a) => items.push({
+        id: `a-${a.id}`, at: a.created_at, kind: "attachment",
+        title: a.file_name ?? "Anexo",
+      }));
+      te.data?.forEach((e) => items.push({
+        id: `t-${e.id}`, at: e.occurs_at, kind: "event",
+        title: e.title ?? timelineKindLabel(e.kind), subtitle: e.body ?? undefined,
+      }));
+      return items
+        .filter((i) => i.at)
+        .sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime());
     },
   });
 
+  const all = events.data ?? [];
+  const filtered = filter === "all" ? all : all.filter((i) => i.kind === filter);
+
+  // Agrupamento por mês
+  const grouped = filtered.reduce<Record<string, FeedItem[]>>((acc, item) => {
+    const d = new Date(item.at);
+    const key = new Intl.DateTimeFormat("pt-BR", { month: "long", year: "numeric" }).format(d);
+    (acc[key] ??= []).push(item);
+    return acc;
+  }, {});
+
+  const totals = filtered.reduce(
+    (acc, i) => {
+      if (i.kind === "finance-in") acc.in += i.amount ?? 0;
+      else if (i.kind === "finance-out") acc.out += i.amount ?? 0;
+      else if (i.kind === "lecture" && i.amount) acc.lectures += i.amount;
+      return acc;
+    },
+    { in: 0, out: 0, lectures: 0 },
+  );
+
   return (
     <div className="space-y-5">
-      <div className="flex justify-end">
+      {/* Header com filtros e ação */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap gap-1.5">
+          {FEED_FILTERS.map((f) => {
+            const count = f.key === "all" ? all.length : all.filter((i) => i.kind === f.key).length;
+            return (
+              <button
+                key={f.key}
+                type="button"
+                onClick={() => setFilter(f.key)}
+                className={cn(
+                  "rounded-full border px-3 py-1 text-xs transition",
+                  filter === f.key
+                    ? "border-[var(--navy)] bg-[var(--navy)] text-white"
+                    : "border-border bg-card/40 text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {f.label} <span className="ml-1 opacity-70">{count}</span>
+              </button>
+            );
+          })}
+        </div>
         <Button variant="navy" size="sm" className="rounded-full" onClick={() => setOpen(true)}>
           <Plus className="mr-1.5 h-4 w-4" /> Registrar evento
         </Button>
       </div>
-      {!events.data || events.data.length === 0 ? (
-        <EmptyTab icon={<Building2 className="h-6 w-6 text-muted-foreground" />} title="Sem eventos" description="Registre o primeiro evento ou aguarde a operação acontecer." />
+
+      {/* KPIs do recorte */}
+      {filtered.length > 0 && (
+        <div className="grid gap-3 sm:grid-cols-4">
+          <div className="rounded-2xl border border-border bg-card/40 px-4 py-3">
+            <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">Eventos</p>
+            <p className="mt-1 font-serif text-2xl tabular-nums text-foreground">{filtered.length}</p>
+          </div>
+          <div className="rounded-2xl border border-border bg-card/40 px-4 py-3">
+            <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">Receita bruta</p>
+            <p className="mt-1 font-serif text-2xl tabular-nums text-amber-600">{formatCurrency(totals.lectures)}</p>
+          </div>
+          <div className="rounded-2xl border border-border bg-card/40 px-4 py-3">
+            <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">Entradas</p>
+            <p className="mt-1 font-serif text-2xl tabular-nums text-emerald-600">{formatCurrency(totals.in)}</p>
+          </div>
+          <div className="rounded-2xl border border-border bg-card/40 px-4 py-3">
+            <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">Saídas</p>
+            <p className="mt-1 font-serif text-2xl tabular-nums text-rose-600">{formatCurrency(totals.out)}</p>
+          </div>
+        </div>
+      )}
+
+      {events.isLoading ? (
+        <div className="text-sm text-muted-foreground">Carregando linha do tempo…</div>
+      ) : filtered.length === 0 ? (
+        <EmptyTab icon={<Building2 className="h-6 w-6 text-muted-foreground" />} title="Sem eventos" description="Nenhum evento neste recorte. Ajuste o filtro ou registre um evento." />
       ) : (
-        <ol className="relative space-y-5 border-l border-border pl-6">
-          {events.data.map((e) => (
-            <li key={e.id} className="relative">
-              <span className="absolute -left-[27px] top-1.5 h-2 w-2 rounded-full bg-[var(--navy)]" />
-              <p className="text-sm text-foreground">{e.title}</p>
-              {e.subtitle && <p className="text-xs text-muted-foreground">{e.subtitle}</p>}
-              <p className="mt-1 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">{formatDate(e.at)}</p>
-            </li>
+        <div className="space-y-8">
+          {Object.entries(grouped).map(([month, items]) => (
+            <div key={month}>
+              <p className="mb-3 text-[10px] font-medium uppercase tracking-[0.28em] text-muted-foreground">{month}</p>
+              <ol className="relative space-y-4 border-l border-border/70 pl-6">
+                {items.map((e) => {
+                  const meta = FEED_META[e.kind];
+                  const Icon = meta.icon;
+                  const content = (
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline" className={cn("h-5 rounded-full border px-2 text-[10px] font-normal", meta.badge)}>
+                            {meta.label}
+                          </Badge>
+                          <p className="truncate text-sm font-medium text-foreground">{e.title}</p>
+                          {e.linkTo && <ExternalLink className="h-3 w-3 shrink-0 text-muted-foreground opacity-0 transition group-hover:opacity-100" />}
+                        </div>
+                        {e.subtitle && <p className="mt-0.5 truncate text-xs text-muted-foreground">{e.subtitle}</p>}
+                        <p className="mt-1 text-[10px] uppercase tracking-[0.18em] text-muted-foreground/80">{formatDate(e.at)}</p>
+                      </div>
+                      {e.amount != null && (
+                        <span className={cn(
+                          "shrink-0 whitespace-nowrap font-serif text-base tabular-nums",
+                          e.kind === "finance-in" && "text-emerald-600",
+                          e.kind === "finance-out" && "text-rose-600",
+                          (e.kind === "lecture" || e.kind === "opportunity") && "text-amber-600",
+                        )}>
+                          {e.kind === "finance-out" ? "−" : e.kind === "finance-in" ? "+" : ""}
+                          {formatCurrency(Math.abs(e.amount))}
+                        </span>
+                      )}
+                    </div>
+                  );
+                  return (
+                    <li key={e.id} className="group relative">
+                      <span className={cn("absolute -left-[29px] top-1.5 flex h-4 w-4 items-center justify-center rounded-full ring-4 ring-background", meta.dot)}>
+                        <Icon className="h-2.5 w-2.5 text-white" />
+                      </span>
+                      {e.linkTo ? (
+                        <Link
+                          to={e.linkTo}
+                          params={e.linkParams as never}
+                          className="block rounded-xl border border-transparent p-2 transition hover:border-border hover:bg-card/40"
+                        >
+                          {content}
+                        </Link>
+                      ) : (
+                        <div className="rounded-xl p-2">{content}</div>
+                      )}
+                    </li>
+                  );
+                })}
+              </ol>
+            </div>
           ))}
-        </ol>
+        </div>
       )}
       <TimelineEventDialog
         open={open} onOpenChange={setOpen}
