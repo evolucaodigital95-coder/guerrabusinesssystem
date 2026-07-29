@@ -162,12 +162,32 @@ function FinancePage() {
     },
   });
 
+  // Reference lists for filters (only entities that appear in movements)
+  const refs = useMemo(() => {
+    const list = movements.data ?? [];
+    const dedup = <T extends { id: string; label: string }>(arr: T[]) => {
+      const map = new Map<string, T>();
+      for (const x of arr) if (!map.has(x.id)) map.set(x.id, x);
+      return [...map.values()].sort((a, b) => a.label.localeCompare(b.label));
+    };
+    return {
+      companies: dedup(list.filter((m) => m.companies).map((m) => ({ id: m.companies!.id, label: m.companies!.legal_name }))),
+      agents: dedup(list.filter((m) => m.agents).map((m) => ({ id: m.agents!.id, label: m.agents!.full_name }))),
+      seasons: dedup(list.filter((m) => m.seasons).map((m) => ({ id: m.seasons!.id, label: m.seasons!.name }))),
+      projects: dedup(list.filter((m) => m.projects).map((m) => ({ id: m.projects!.id, label: m.projects!.name }))),
+    };
+  }, [movements.data]);
+
   const filtered = useMemo(() => {
     let list = movements.data ?? [];
     if (fDirection !== ALL) list = list.filter((m) => m.direction === fDirection);
     if (fStatus !== ALL) list = list.filter((m) => m.status === fStatus);
     if (fAccount !== ALL) list = list.filter((m) => m.account_id === fAccount);
     if (fCategory !== ALL) list = list.filter((m) => m.category === fCategory);
+    if (fCompany !== ALL) list = list.filter((m) => m.company_id === fCompany);
+    if (fAgent !== ALL) list = list.filter((m) => m.agent_id === fAgent);
+    if (fSeason !== ALL) list = list.filter((m) => m.season_id === fSeason);
+    if (fProject !== ALL) list = list.filter((m) => m.project_id === fProject);
     if (dateFrom) list = list.filter((m) => (m.occurs_on ?? "") >= dateFrom);
     if (dateTo) list = list.filter((m) => (m.occurs_on ?? "") <= dateTo);
     const q = search.trim().toLowerCase();
@@ -177,6 +197,7 @@ function FinancePage() {
           m.description, m.category, m.notes,
           paymentMethodLabel(m.payment_method), m.card_brands?.name,
           m.accounts?.name, m.companies?.legal_name, m.lectures?.title,
+          m.agents?.full_name, m.seasons?.name, m.projects?.name,
           m.amount != null ? String(m.amount) : "",
           m.expected_amount != null ? String(m.expected_amount) : "",
           m.occurs_on, m.settled_at, m.expected_date,
@@ -184,7 +205,75 @@ function FinancePage() {
       );
     }
     return list;
-  }, [movements.data, search, fDirection, fStatus, fAccount, fCategory, dateFrom, dateTo]);
+  }, [movements.data, search, fDirection, fStatus, fAccount, fCategory, fCompany, fAgent, fSeason, fProject, dateFrom, dateTo]);
+
+  const activeFilterCount =
+    (fDirection !== ALL ? 1 : 0) + (fStatus !== ALL ? 1 : 0) + (fAccount !== ALL ? 1 : 0) +
+    (fCategory !== ALL ? 1 : 0) + (fCompany !== ALL ? 1 : 0) + (fAgent !== ALL ? 1 : 0) +
+    (fSeason !== ALL ? 1 : 0) + (fProject !== ALL ? 1 : 0) +
+    (dateFrom ? 1 : 0) + (dateTo ? 1 : 0) + (search.trim() ? 1 : 0);
+
+  const clearFilters = () => {
+    setSearch(""); setFDirection(ALL); setFStatus(ALL); setFAccount(ALL); setFCategory(ALL);
+    setFCompany(ALL); setFAgent(ALL); setFSeason(ALL); setFProject(ALL);
+    setDateFrom(""); setDateTo("");
+  };
+
+  // Breakdown by dimension for the analytical panel
+  const breakdown = useMemo(() => {
+    const acc = (getKey: (m: Movement) => { id: string; label: string } | null) => {
+      const map = new Map<string, { label: string; inV: number; outV: number; count: number }>();
+      for (const m of filtered) {
+        const k = getKey(m);
+        if (!k) continue;
+        const cur = map.get(k.id) ?? { label: k.label, inV: 0, outV: 0, count: 0 };
+        const v = Number(m.amount ?? m.expected_amount ?? 0);
+        if (m.direction === "in") cur.inV += v; else if (m.direction === "out") cur.outV += v;
+        cur.count += 1;
+        map.set(k.id, cur);
+      }
+      return [...map.entries()]
+        .map(([id, v]) => ({ id, ...v, net: v.inV - v.outV }))
+        .sort((a, b) => b.net - a.net);
+    };
+    return {
+      companies: acc((m) => m.companies ? { id: m.companies.id, label: m.companies.legal_name } : null),
+      agents: acc((m) => m.agents ? { id: m.agents.id, label: m.agents.full_name } : null),
+      seasons: acc((m) => m.seasons ? { id: m.seasons.id, label: m.seasons.name } : null),
+      categories: acc((m) => m.category ? { id: m.category, label: m.category } : null),
+    };
+  }, [filtered]);
+
+  const exportCsv = () => {
+    const header = [
+      "data","hora","tipo","status","categoria","descricao","conta","empresa","palestra","agendista","temporada","projeto",
+      "forma","bandeira","parcelas","juros_%","taxa","valor","liquido","previsto","notas",
+    ];
+    const rows = filtered.map((m) => [
+      m.occurs_on ?? "", m.occurs_time?.slice(0, 5) ?? "",
+      m.direction === "in" ? "Entrada" : "Saída",
+      statusLabel(m.direction as "in" | "out", m.status),
+      m.category ?? "", m.description ?? "", m.accounts?.name ?? "",
+      m.companies?.legal_name ?? "", m.lectures?.title ?? "",
+      m.agents?.full_name ?? "", m.seasons?.name ?? "", m.projects?.name ?? "",
+      paymentMethodLabel(m.payment_method), m.card_brands?.name ?? "",
+      m.card_installments ?? "", m.card_fee_percent ?? "", m.card_fee_amount ?? "",
+      m.amount ?? "", m.net_amount ?? "", m.expected_amount ?? "", (m.notes ?? "").replace(/\n/g, " "),
+    ]);
+    const esc = (v: unknown) => {
+      const s = String(v ?? "");
+      return /[",;\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const csv = [header, ...rows].map((r) => r.map(esc).join(";")).join("\n");
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `livro-razao-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success(`${filtered.length} lançamentos exportados`);
+  };
 
   const totals = useMemo(() => {
     const t = { inSettled: 0, outSettled: 0, inPlanned: 0, outPlanned: 0 };
