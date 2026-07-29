@@ -119,7 +119,7 @@ function useDirector(orgId: string | null) {
       const lectureById = new Map((lectures.data ?? []).map((l: any) => [l.id, l]));
       const companyRev = new Map<string, number>();
       const agentRev = new Map<string, { name: string; value: number }>();
-      const agentNames = new Map((agents.data ?? []).map((a: any) => [a.id, a.full_name]));
+      const agentNames = new Map<string, string>((agents.data ?? []).map((a: any) => [a.id, a.full_name]));
       for (const s of snaps as any[]) {
         const l: any = lectureById.get(s.lecture_id);
         const cName = l?.companies?.legal_name ?? "Sem empresa";
