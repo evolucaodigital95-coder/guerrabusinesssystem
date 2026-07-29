@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useParams, useNavigate } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Building2, Globe, Instagram, MapPin, Pencil, Plus, Star, Trash2 } from "lucide-react";
+import { ArrowLeft, Building2, Globe, Instagram, MapPin, Pencil, Plus, Star, Trash2, Calendar, Wallet, Users, Target, MessageSquare, Paperclip, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
