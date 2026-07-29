@@ -249,7 +249,12 @@ function SeasonDetail() {
       .sort((a, b) => new Date(a.scheduled_at!).getTime() - new Date(b.scheduled_at!).getTime())[0] ?? null;
   }, [lectures.data]);
 
+  const takeSnapshot = useMutation({
+    mutationFn: async () => {
+      if (!organizationId || !user) throw new Error("Sem organização");
+      const { error } = await supabase.from("season_snapshots").insert({
         organization_id: organizationId,
+        season_id: id,
         season_id: id,
         revenue: fin.revenue,
         expenses: fin.expenses,
