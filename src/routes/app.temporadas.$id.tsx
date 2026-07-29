@@ -319,13 +319,170 @@ function SeasonDetail() {
           ].map(([v,l]) => <TabsTrigger key={v} value={v} className="rounded-full text-xs">{l}</TabsTrigger>)}
         </TabsList>
 
-        <TabsContent value="visao" className="mt-6 grid gap-3 md:grid-cols-3">
-          <Stat label="Palestras" value={(lectures.data ?? []).length} />
-          <Stat label="Pessoas impactadas" value={peopleImpacted} />
-          <Stat label="Empresas únicas" value={companiesCount} />
-          <Stat label="Agendistas envolvidos" value={agentsCount} />
-          <Stat label="Projetos" value={(projects.data ?? []).length} />
-          <Stat label="Campanhas" value={(campaigns.data ?? []).length} />
+        <TabsContent value="visao" className="mt-6 space-y-6">
+          {/* Progresso da temporada + próxima palestra */}
+          <div className="grid gap-3 lg:grid-cols-3">
+            <div className="rounded-2xl border border-border bg-gradient-to-br from-[var(--navy)]/10 to-card/40 p-5 lg:col-span-2">
+              <div className="flex items-baseline justify-between">
+                <p className="text-[10px] font-medium uppercase tracking-[0.22em] text-muted-foreground">Progresso da temporada</p>
+                {seasonProgress && (
+                  <p className="text-xs text-muted-foreground">
+                    {seasonProgress.daysLeft} de {seasonProgress.daysTotal} dias restantes
+                  </p>
+                )}
+              </div>
+              <div className="mt-3 flex items-baseline gap-3">
+                <p className="font-serif text-4xl tabular-nums text-foreground">
+                  {seasonProgress ? Math.round(seasonProgress.pct) : 0}%
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {formatDate(season.data.starts_on)} → {formatDate(season.data.ends_on)}
+                </p>
+              </div>
+              <div className="mt-4 h-2 overflow-hidden rounded-full bg-border/60">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-[var(--navy)] to-[var(--gold)] transition-all"
+                  style={{ width: `${seasonProgress?.pct ?? 0}%` }}
+                />
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-border bg-card/40 p-5">
+              <p className="text-[10px] font-medium uppercase tracking-[0.22em] text-muted-foreground">Próxima palestra</p>
+              {nextLecture ? (
+                <Link to="/app/palestras/$id" params={{ id: nextLecture.id }} className="mt-2 block">
+                  <p className="font-serif text-lg text-foreground line-clamp-2">{nextLecture.title}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    <Calendar className="mr-1 inline h-3 w-3" />
+                    {formatDate(nextLecture.scheduled_at)}
+                  </p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    {[nextLecture.city, nextLecture.state].filter(Boolean).join(" / ") || "Local a definir"}
+                  </p>
+                </Link>
+              ) : (
+                <p className="mt-2 text-sm text-muted-foreground">Nenhuma palestra futura agendada.</p>
+              )}
+            </div>
+          </div>
+
+          {/* KPIs principais */}
+          <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
+            <Kpi label="Palestras" value={(lectures.data ?? []).length} icon={<Calendar className="h-3.5 w-3.5" />} />
+            <Kpi label="Pessoas impactadas" value={peopleImpacted} icon={<Users className="h-3.5 w-3.5" />} />
+            <Kpi label="Empresas" value={companiesCount} icon={<Building2 className="h-3.5 w-3.5" />} />
+            <Kpi label="Agendistas" value={agentsCount} icon={<Users className="h-3.5 w-3.5" />} />
+            <Kpi label="Projetos" value={(projects.data ?? []).length} />
+            <Kpi label="Campanhas" value={(campaigns.data ?? []).length} />
+          </div>
+
+          {/* Charts */}
+          <div className="grid gap-4 lg:grid-cols-3">
+            <div className="rounded-2xl border border-border bg-card/40 p-5 lg:col-span-2">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-[10px] font-medium uppercase tracking-[0.22em] text-muted-foreground">Receita, Despesa e Lucro acumulado</p>
+                  <p className="mt-1 font-serif text-lg text-foreground">Evolução mensal</p>
+                </div>
+                <TrendingUp className="h-4 w-4 text-muted-foreground" />
+              </div>
+              {revenueSeries.length === 0 ? (
+                <p className="mt-8 py-8 text-center text-sm text-muted-foreground">Sem lançamentos liquidados para plotar.</p>
+              ) : (
+                <div className="mt-4 h-64">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={revenueSeries}>
+                      <defs>
+                        <linearGradient id="gRev" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="hsl(160, 65%, 45%)" stopOpacity={0.4} />
+                          <stop offset="100%" stopColor="hsl(160, 65%, 45%)" stopOpacity={0} />
+                        </linearGradient>
+                        <linearGradient id="gExp" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="hsl(0, 70%, 55%)" stopOpacity={0.4} />
+                          <stop offset="100%" stopColor="hsl(0, 70%, 55%)" stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.4} />
+                      <XAxis dataKey="month" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
+                      <YAxis tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} tickFormatter={(v) => `R$${(v / 1000).toFixed(0)}k`} />
+                      <RTooltip
+                        contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 12, fontSize: 12 }}
+                        formatter={(v: number) => formatCurrency(v)}
+                      />
+                      <Legend wrapperStyle={{ fontSize: 11 }} />
+                      <Area type="monotone" dataKey="receita" name="Receita" stroke="hsl(160, 65%, 45%)" fill="url(#gRev)" strokeWidth={2} />
+                      <Area type="monotone" dataKey="despesa" name="Despesa" stroke="hsl(0, 70%, 55%)" fill="url(#gExp)" strokeWidth={2} />
+                      <Area type="monotone" dataKey="acumulado" name="Lucro acumulado" stroke="hsl(43, 74%, 49%)" fill="none" strokeWidth={2.5} />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
+            </div>
+
+            <div className="rounded-2xl border border-border bg-card/40 p-5">
+              <p className="text-[10px] font-medium uppercase tracking-[0.22em] text-muted-foreground">Mix de status</p>
+              <p className="mt-1 font-serif text-lg text-foreground">Palestras por status</p>
+              {statusMix.length === 0 ? (
+                <p className="mt-6 text-sm text-muted-foreground">Sem dados.</p>
+              ) : (
+                <div className="mt-4 h-56">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie data={statusMix} dataKey="value" nameKey="name" innerRadius={40} outerRadius={70} paddingAngle={2}>
+                        {statusMix.map((_, i) => (
+                          <Cell key={i} fill={["hsl(217, 65%, 45%)","hsl(160, 65%, 45%)","hsl(43, 74%, 49%)","hsl(0, 70%, 55%)","hsl(280, 60%, 55%)","hsl(200, 60%, 55%)"][i % 6]} />
+                        ))}
+                      </Pie>
+                      <RTooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 12, fontSize: 12 }} />
+                      <Legend wrapperStyle={{ fontSize: 10 }} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="grid gap-4 lg:grid-cols-2">
+            <div className="rounded-2xl border border-border bg-card/40 p-5">
+              <p className="text-[10px] font-medium uppercase tracking-[0.22em] text-muted-foreground">Ranking</p>
+              <p className="mt-1 font-serif text-lg text-foreground">Empresas por público impactado</p>
+              {topCompanies.length === 0 ? (
+                <p className="mt-6 text-sm text-muted-foreground">Sem dados.</p>
+              ) : (
+                <div className="mt-4 h-64">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={topCompanies} layout="vertical" margin={{ left: 10 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.4} horizontal={false} />
+                      <XAxis type="number" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
+                      <YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} width={120} />
+                      <RTooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 12, fontSize: 12 }} />
+                      <Bar dataKey="value" fill="hsl(217, 65%, 45%)" radius={[0, 6, 6, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
+            </div>
+
+            <div className="rounded-2xl border border-border bg-card/40 p-5">
+              <p className="text-[10px] font-medium uppercase tracking-[0.22em] text-muted-foreground">Ranking</p>
+              <p className="mt-1 font-serif text-lg text-foreground">Agendistas por nº de palestras</p>
+              {topAgents.length === 0 ? (
+                <p className="mt-6 text-sm text-muted-foreground">Sem dados.</p>
+              ) : (
+                <div className="mt-4 h-64">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={topAgents} layout="vertical" margin={{ left: 10 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.4} horizontal={false} />
+                      <XAxis type="number" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
+                      <YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} width={120} />
+                      <RTooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 12, fontSize: 12 }} />
+                      <Bar dataKey="value" fill="hsl(43, 74%, 49%)" radius={[0, 6, 6, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
+            </div>
+          </div>
         </TabsContent>
 
         <TabsContent value="palestras" className="mt-6">
