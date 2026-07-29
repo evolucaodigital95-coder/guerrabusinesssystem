@@ -182,10 +182,16 @@ function PalestrasPage() {
       )}
 
       {organizationId && user && (
-        <LectureFormDialog
-          open={open} onOpenChange={setOpen}
-          organizationId={organizationId} userId={user.id}
-        />
+        <>
+          <LectureFormDialog
+            open={open} onOpenChange={setOpen}
+            organizationId={organizationId} userId={user.id}
+          />
+          <LectureWizardDialog
+            open={wizardOpen} onOpenChange={setWizardOpen}
+            organizationId={organizationId} userId={user.id}
+          />
+        </>
       )}
     </div>
   );
