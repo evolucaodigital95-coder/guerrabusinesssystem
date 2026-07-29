@@ -255,7 +255,6 @@ function SeasonDetail() {
       const { error } = await supabase.from("season_snapshots").insert({
         organization_id: organizationId,
         season_id: id,
-        season_id: id,
         revenue: fin.revenue,
         expenses: fin.expenses,
         profit: fin.profit,
