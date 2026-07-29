@@ -107,6 +107,10 @@ function FinancePage() {
   const [fStatus, setFStatus] = useState<string>(ALL);
   const [fAccount, setFAccount] = useState<string>(ALL);
   const [fCategory, setFCategory] = useState<string>(ALL);
+  const [fCompany, setFCompany] = useState<string>(ALL);
+  const [fAgent, setFAgent] = useState<string>(ALL);
+  const [fSeason, setFSeason] = useState<string>(ALL);
+  const [fProject, setFProject] = useState<string>(ALL);
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
 
