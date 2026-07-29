@@ -14,6 +14,8 @@ import { useCurrentOrg } from "@/hooks/use-current-org";
 import { formatDate } from "@/lib/crm";
 import { LECTURE_STATUS, lectureStatusLabel } from "@/lib/lectures";
 import { LectureFormDialog } from "@/components/palestras/lecture-form-dialog";
+import { LectureWizardDialog } from "@/components/palestras/lecture-wizard-dialog";
+import { Sparkles } from "lucide-react";
 
 export const Route = createFileRoute("/app/palestras/")({
   head: () => ({
