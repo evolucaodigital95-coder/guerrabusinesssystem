@@ -312,6 +312,9 @@ function FinancePage() {
         description="Toda informação financeira é derivada de movimentos. Nada é apagado — apenas arquivado."
         actions={
           <div className="flex flex-wrap gap-2">
+            <Button variant="outline" className="rounded-full" onClick={exportCsv} disabled={filtered.length === 0}>
+              <Download className="mr-1.5 h-4 w-4" /> Exportar CSV
+            </Button>
             <Button variant="outline" className="rounded-full" onClick={() => { setEditingAccount(null); setOpenAcc(true); }} disabled={!organizationId}>
               <Plus className="mr-1.5 h-4 w-4" /> Nova conta
             </Button>
