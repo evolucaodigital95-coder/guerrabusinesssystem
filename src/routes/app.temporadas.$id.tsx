@@ -2,7 +2,11 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ArrowLeft, Pencil, Camera } from "lucide-react";
+import { ArrowLeft, Pencil, Camera, TrendingUp, Users, Building2, Calendar } from "lucide-react";
+import {
+  Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Pie, PieChart,
+  ResponsiveContainer, Tooltip as RTooltip, XAxis, YAxis, Legend,
+} from "recharts";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -18,6 +22,7 @@ import { TimelineTab } from "@/components/shared/timeline-tab";
 import { NotesTab } from "@/components/shared/notes-tab";
 import { AttachmentsTab } from "@/components/shared/attachments-tab";
 import { ArchiveButton } from "@/components/shared/archive-button";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/app/temporadas/$id")({
   head: () => ({
