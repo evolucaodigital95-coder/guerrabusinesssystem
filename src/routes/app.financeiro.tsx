@@ -614,6 +614,50 @@ function SummaryCard({ label, value, accent, muted }: { label: string; value: st
   );
 }
 
+/* ---------------- Breakdown card ---------------- */
+
+function BreakdownCard({
+  title,
+  rows,
+}: {
+  title: string;
+  rows: Array<{ id: string; label: string; inV: number; outV: number; net: number; count: number }>;
+}) {
+  const top = rows.slice(0, 5);
+  return (
+    <div className="rounded-2xl border border-border bg-card/40 p-5">
+      <p className="text-[10px] font-medium uppercase tracking-[0.22em] text-muted-foreground">{title}</p>
+      {top.length === 0 ? (
+        <p className="mt-4 text-xs text-muted-foreground">Sem dados no recorte atual.</p>
+      ) : (
+        <ol className="mt-3 space-y-2 text-sm">
+          {top.map((r) => (
+            <li key={r.id} className="flex items-baseline justify-between gap-3 border-t border-border/50 pt-2 first:border-0 first:pt-0">
+              <div className="min-w-0">
+                <p className="truncate text-foreground" title={r.label}>{r.label}</p>
+                <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+                  {r.count} lanç. · +{formatCurrency(r.inV)} · −{formatCurrency(r.outV)}
+                </p>
+              </div>
+              <span className={cn(
+                "shrink-0 tabular-nums text-sm font-medium",
+                r.net >= 0 ? "text-emerald-600" : "text-rose-600",
+              )}>
+                {formatCurrency(r.net)}
+              </span>
+            </li>
+          ))}
+        </ol>
+      )}
+      {rows.length > 5 && (
+        <p className="mt-3 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+          +{rows.length - 5} outros
+        </p>
+      )}
+    </div>
+  );
+}
+
 /* ---------------- Accounts tab ---------------- */
 
 function AccountsTab({
