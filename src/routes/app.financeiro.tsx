@@ -340,6 +340,22 @@ function FinancePage() {
             <SummaryCard label="Saídas previstas" value={formatCurrency(totals.outPlanned)} muted />
           </div>
 
+          {/* Saldo líquido do recorte */}
+          <div className="flex flex-wrap items-baseline justify-between gap-4 rounded-2xl border border-border bg-gradient-to-br from-card/60 to-card/30 px-6 py-4">
+            <div>
+              <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">Saldo líquido do recorte</p>
+              <p className={cn(
+                "mt-1 font-serif text-3xl tabular-nums",
+                totals.inSettled - totals.outSettled >= 0 ? "text-emerald-600" : "text-rose-600",
+              )}>
+                {formatCurrency(totals.inSettled - totals.outSettled)}
+              </p>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {filtered.length} lançamento{filtered.length === 1 ? "" : "s"} · aplique filtros para segmentar por empresa, agendista, temporada ou projeto.
+            </p>
+          </div>
+
           {/* Filters */}
           <div className="rounded-2xl border border-border bg-card/40 p-4">
             <div className="grid gap-3 md:grid-cols-12">
