@@ -95,6 +95,10 @@ export const MODULES: ModuleDef[] = [
     primaryAction: "Nova iniciativa" },
 
   // INTELIGÊNCIA
+  { to: "/app/painel-diretor", label: "Painel do Diretor", icon: Crown, section: "inteligência",
+    description: "Visão executiva consolidada — rentabilidade, ranking e alertas.",
+    emptyMessage: "Feche palestras para alimentar o painel executivo.",
+    primaryAction: "Ver painel" },
   { to: "/app/indicadores", label: "Indicadores", icon: BarChart3, section: "inteligência",
     description: "Painel executivo com KPIs consolidados em tempo real.",
     emptyMessage: "Sem dados suficientes para gerar KPIs.",
