@@ -407,8 +407,64 @@ function FinancePage() {
               <div className="md:col-span-2">
                 <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="rounded-full" />
               </div>
+              <div className="md:col-span-3">
+                <Select value={fCompany} onValueChange={setFCompany}>
+                  <SelectTrigger className="rounded-full"><SelectValue placeholder="Empresa" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={ALL}>Todas as empresas</SelectItem>
+                    {refs.companies.map((c) => <SelectItem key={c.id} value={c.id}>{c.label}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="md:col-span-3">
+                <Select value={fAgent} onValueChange={setFAgent}>
+                  <SelectTrigger className="rounded-full"><SelectValue placeholder="Agendista" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={ALL}>Todos os agendistas</SelectItem>
+                    {refs.agents.map((a) => <SelectItem key={a.id} value={a.id}>{a.label}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="md:col-span-3">
+                <Select value={fSeason} onValueChange={setFSeason}>
+                  <SelectTrigger className="rounded-full"><SelectValue placeholder="Temporada" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={ALL}>Todas as temporadas</SelectItem>
+                    {refs.seasons.map((s) => <SelectItem key={s.id} value={s.id}>{s.label}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="md:col-span-3">
+                <Select value={fProject} onValueChange={setFProject}>
+                  <SelectTrigger className="rounded-full"><SelectValue placeholder="Projeto" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={ALL}>Todos os projetos</SelectItem>
+                    {refs.projects.map((p) => <SelectItem key={p.id} value={p.id}>{p.label}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
+            {activeFilterCount > 0 && (
+              <div className="mt-3 flex items-center justify-between border-t border-border/60 pt-3">
+                <p className="text-xs text-muted-foreground">
+                  {activeFilterCount} filtro{activeFilterCount === 1 ? "" : "s"} aplicado{activeFilterCount === 1 ? "" : "s"} · {filtered.length} de {movements.data?.length ?? 0} lançamentos
+                </p>
+                <Button variant="ghost" size="sm" className="h-7 rounded-full text-xs" onClick={clearFilters}>
+                  <X className="mr-1 h-3 w-3" /> Limpar filtros
+                </Button>
+              </div>
+            )}
           </div>
+
+          {/* Breakdown analítico */}
+          {filtered.length > 0 && (
+            <div className="grid gap-3 lg:grid-cols-2 xl:grid-cols-4">
+              <BreakdownCard title="Por empresa" rows={breakdown.companies} />
+              <BreakdownCard title="Por agendista" rows={breakdown.agents} />
+              <BreakdownCard title="Por temporada" rows={breakdown.seasons} />
+              <BreakdownCard title="Por categoria" rows={breakdown.categories} />
+            </div>
+          )}
 
           {/* Table */}
           {orgLoading || movements.isLoading ? (
