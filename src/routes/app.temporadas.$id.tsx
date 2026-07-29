@@ -601,6 +601,19 @@ function Stat({ label, value }: { label: string; value: number | string }) {
     </div>
   );
 }
+function Kpi({ label, value, icon }: { label: string; value: number | string; icon?: React.ReactNode }) {
+  return (
+    <div className="rounded-2xl border border-border bg-card/40 p-4">
+      <div className="flex items-center gap-1.5 text-muted-foreground">
+        {icon}
+        <p className="text-[10px] font-medium uppercase tracking-[0.22em]">{label}</p>
+      </div>
+      <p className="mt-2 font-serif text-2xl tabular-nums text-foreground">
+        {typeof value === "number" ? new Intl.NumberFormat("pt-BR").format(value) : value}
+      </p>
+    </div>
+  );
+}
 type RowItem = { id: string; primary: string; secondary?: string; right?: string; to?: string };
 function SimpleList({ rows, empty }: { rows: RowItem[]; empty: string }) {
   if (rows.length === 0) return <p className="text-sm text-muted-foreground">{empty}</p>;
