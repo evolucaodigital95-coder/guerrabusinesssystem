@@ -50,6 +50,7 @@ function PalestrasPage() {
   const { user } = useSession();
   const { organizationId, loading: orgLoading } = useCurrentOrg();
   const [open, setOpen] = useState(false);
+  const [wizardOpen, setWizardOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [fStatus, setFStatus] = useState<string>(ALL);
 
