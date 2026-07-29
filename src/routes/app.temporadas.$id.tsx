@@ -171,10 +171,84 @@ function SeasonDetail() {
     return set.size;
   }, [lectures.data]);
 
-  const takeSnapshot = useMutation({
-    mutationFn: async () => {
-      if (!organizationId || !user) throw new Error("Sem organização");
-      const { error } = await supabase.from("season_snapshots").insert({
+  // ---------------- Analytics: Dashboard da Temporada ----------------
+  const revenueSeries = useMemo(() => {
+    // Cumulativo por mês (receita e despesa liquidada)
+    const byMonth = new Map<string, { month: string; receita: number; despesa: number }>();
+    const fmt = new Intl.DateTimeFormat("pt-BR", { month: "short", year: "2-digit" });
+    for (const m of movements.data ?? []) {
+      if (!isSettled(m.direction as never, m.status) || !m.occurs_on) continue;
+      const d = new Date(m.occurs_on);
+      const key = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
+      const label = fmt.format(d);
+      const row = byMonth.get(key) ?? { month: label, receita: 0, despesa: 0 };
+      const v = Number(m.amount ?? 0);
+      if (m.direction === "in") row.receita += v;
+      else row.despesa += v;
+      byMonth.set(key, row);
+    }
+    const sorted = Array.from(byMonth.entries()).sort(([a], [b]) => a.localeCompare(b));
+    let accR = 0, accE = 0;
+    return sorted.map(([, row]) => {
+      accR += row.receita;
+      accE += row.despesa;
+      return { ...row, acumulado: accR - accE };
+    });
+  }, [movements.data]);
+
+  const topCompanies = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const l of lectures.data ?? []) {
+      const name = (l as { companies?: { legal_name?: string } | null }).companies?.legal_name ?? "Sem empresa";
+      map.set(name, (map.get(name) ?? 0) + Number((l as { actual_audience?: number | null }).actual_audience ?? 0));
+    }
+    return Array.from(map.entries())
+      .map(([name, value]) => ({ name, value }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 6);
+  }, [lectures.data]);
+
+  const topAgents = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const l of lectures.data ?? []) {
+      const name = (l as { agents?: { full_name?: string } | null }).agents?.full_name ?? "—";
+      map.set(name, (map.get(name) ?? 0) + 1);
+    }
+    return Array.from(map.entries())
+      .map(([name, value]) => ({ name, value }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 6);
+  }, [lectures.data]);
+
+  const statusMix = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const l of lectures.data ?? []) {
+      const k = l.status ?? "sem_status";
+      map.set(k, (map.get(k) ?? 0) + 1);
+    }
+    return Array.from(map.entries()).map(([name, value]) => ({ name, value }));
+  }, [lectures.data]);
+
+  const seasonProgress = useMemo(() => {
+    const s = season.data;
+    if (!s?.starts_on || !s?.ends_on) return null;
+    const start = new Date(s.starts_on).getTime();
+    const end = new Date(s.ends_on).getTime();
+    const now = Date.now();
+    if (end <= start) return null;
+    const pct = Math.max(0, Math.min(100, ((now - start) / (end - start)) * 100));
+    const daysTotal = Math.round((end - start) / 86400000);
+    const daysLeft = Math.max(0, Math.round((end - now) / 86400000));
+    return { pct, daysTotal, daysLeft };
+  }, [season.data]);
+
+  const nextLecture = useMemo(() => {
+    const now = Date.now();
+    return (lectures.data ?? [])
+      .filter((l) => l.scheduled_at && new Date(l.scheduled_at).getTime() >= now)
+      .sort((a, b) => new Date(a.scheduled_at!).getTime() - new Date(b.scheduled_at!).getTime())[0] ?? null;
+  }, [lectures.data]);
+
         organization_id: organizationId,
         season_id: id,
         revenue: fin.revenue,
