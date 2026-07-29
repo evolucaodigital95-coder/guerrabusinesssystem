@@ -129,7 +129,7 @@ function useDirector(orgId: string | null) {
         cur.value += Number(s.agent_amount ?? 0);
         agentRev.set(s.agent_id ?? "none", cur);
       }
-      const topCompanies = Array.from(companyRev.entries())
+      const topCompanies: { name: string; value: number }[] = Array.from(companyRev.entries())
         .map(([name, value]) => ({ name, value }))
         .sort((a, b) => b.value - a.value).slice(0, 6);
       const topAgents = Array.from(agentRev.values())

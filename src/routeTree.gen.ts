@@ -16,6 +16,7 @@ import { Route as AppIndexRouteImport } from './routes/app.index'
 import { Route as AppRoadmapRouteImport } from './routes/app.roadmap'
 import { Route as AppRelatoriosRouteImport } from './routes/app.relatorios'
 import { Route as AppPerformanceRouteImport } from './routes/app.performance'
+import { Route as AppPainelDiretorRouteImport } from './routes/app.painel-diretor'
 import { Route as AppMetasRouteImport } from './routes/app.metas'
 import { Route as AppLegadoRouteImport } from './routes/app.legado'
 import { Route as AppInteligenciaRouteImport } from './routes/app.inteligencia'
@@ -79,6 +80,11 @@ const AppRelatoriosRoute = AppRelatoriosRouteImport.update({
 const AppPerformanceRoute = AppPerformanceRouteImport.update({
   id: '/performance',
   path: '/performance',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPainelDiretorRoute = AppPainelDiretorRouteImport.update({
+  id: '/painel-diretor',
+  path: '/painel-diretor',
   getParentRoute: () => AppRoute,
 } as any)
 const AppMetasRoute = AppMetasRouteImport.update({
@@ -246,6 +252,7 @@ export interface FileRoutesByFullPath {
   '/app/inteligencia': typeof AppInteligenciaRoute
   '/app/legado': typeof AppLegadoRoute
   '/app/metas': typeof AppMetasRoute
+  '/app/painel-diretor': typeof AppPainelDiretorRoute
   '/app/performance': typeof AppPerformanceRoute
   '/app/relatorios': typeof AppRelatoriosRoute
   '/app/roadmap': typeof AppRoadmapRoute
@@ -283,6 +290,7 @@ export interface FileRoutesByTo {
   '/app/inteligencia': typeof AppInteligenciaRoute
   '/app/legado': typeof AppLegadoRoute
   '/app/metas': typeof AppMetasRoute
+  '/app/painel-diretor': typeof AppPainelDiretorRoute
   '/app/performance': typeof AppPerformanceRoute
   '/app/relatorios': typeof AppRelatoriosRoute
   '/app/roadmap': typeof AppRoadmapRoute
@@ -322,6 +330,7 @@ export interface FileRoutesById {
   '/app/inteligencia': typeof AppInteligenciaRoute
   '/app/legado': typeof AppLegadoRoute
   '/app/metas': typeof AppMetasRoute
+  '/app/painel-diretor': typeof AppPainelDiretorRoute
   '/app/performance': typeof AppPerformanceRoute
   '/app/relatorios': typeof AppRelatoriosRoute
   '/app/roadmap': typeof AppRoadmapRoute
@@ -362,6 +371,7 @@ export interface FileRouteTypes {
     | '/app/inteligencia'
     | '/app/legado'
     | '/app/metas'
+    | '/app/painel-diretor'
     | '/app/performance'
     | '/app/relatorios'
     | '/app/roadmap'
@@ -399,6 +409,7 @@ export interface FileRouteTypes {
     | '/app/inteligencia'
     | '/app/legado'
     | '/app/metas'
+    | '/app/painel-diretor'
     | '/app/performance'
     | '/app/relatorios'
     | '/app/roadmap'
@@ -437,6 +448,7 @@ export interface FileRouteTypes {
     | '/app/inteligencia'
     | '/app/legado'
     | '/app/metas'
+    | '/app/painel-diretor'
     | '/app/performance'
     | '/app/relatorios'
     | '/app/roadmap'
@@ -512,6 +524,13 @@ declare module '@tanstack/react-router' {
       path: '/performance'
       fullPath: '/app/performance'
       preLoaderRoute: typeof AppPerformanceRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/painel-diretor': {
+      id: '/app/painel-diretor'
+      path: '/painel-diretor'
+      fullPath: '/app/painel-diretor'
+      preLoaderRoute: typeof AppPainelDiretorRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/metas': {
@@ -736,6 +755,7 @@ interface AppRouteChildren {
   AppInteligenciaRoute: typeof AppInteligenciaRoute
   AppLegadoRoute: typeof AppLegadoRoute
   AppMetasRoute: typeof AppMetasRoute
+  AppPainelDiretorRoute: typeof AppPainelDiretorRoute
   AppPerformanceRoute: typeof AppPerformanceRoute
   AppRelatoriosRoute: typeof AppRelatoriosRoute
   AppRoadmapRoute: typeof AppRoadmapRoute
@@ -772,6 +792,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppInteligenciaRoute: AppInteligenciaRoute,
   AppLegadoRoute: AppLegadoRoute,
   AppMetasRoute: AppMetasRoute,
+  AppPainelDiretorRoute: AppPainelDiretorRoute,
   AppPerformanceRoute: AppPerformanceRoute,
   AppRelatoriosRoute: AppRelatoriosRoute,
   AppRoadmapRoute: AppRoadmapRoute,
