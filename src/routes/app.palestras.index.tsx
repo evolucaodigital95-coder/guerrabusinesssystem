@@ -14,6 +14,8 @@ import { useCurrentOrg } from "@/hooks/use-current-org";
 import { formatDate } from "@/lib/crm";
 import { LECTURE_STATUS, lectureStatusLabel } from "@/lib/lectures";
 import { LectureFormDialog } from "@/components/palestras/lecture-form-dialog";
+import { LectureWizardDialog } from "@/components/palestras/lecture-wizard-dialog";
+import { Sparkles } from "lucide-react";
 
 export const Route = createFileRoute("/app/palestras/")({
   head: () => ({
@@ -48,6 +50,7 @@ function PalestrasPage() {
   const { user } = useSession();
   const { organizationId, loading: orgLoading } = useCurrentOrg();
   const [open, setOpen] = useState(false);
+  const [wizardOpen, setWizardOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [fStatus, setFStatus] = useState<string>(ALL);
 
@@ -102,9 +105,14 @@ function PalestrasPage() {
         title="Hub central"
         description="Cada palestra conecta empresa, contato, agendista, temporada, projeto, financeiro, estoque, timeline e auditoria."
         actions={
-          <Button variant="navy" className="rounded-full" onClick={() => setOpen(true)} disabled={!organizationId}>
-            <Plus className="mr-1.5 h-4 w-4" /> Nova palestra
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="navy" className="rounded-full" onClick={() => setWizardOpen(true)} disabled={!organizationId}>
+              <Sparkles className="mr-1.5 h-4 w-4" /> Nova palestra (assistente)
+            </Button>
+            <Button variant="outline" className="rounded-full" onClick={() => setOpen(true)} disabled={!organizationId}>
+              <Plus className="mr-1.5 h-4 w-4" /> Cadastro rápido
+            </Button>
+          </div>
         }
       />
 
@@ -174,10 +182,16 @@ function PalestrasPage() {
       )}
 
       {organizationId && user && (
-        <LectureFormDialog
-          open={open} onOpenChange={setOpen}
-          organizationId={organizationId} userId={user.id}
-        />
+        <>
+          <LectureFormDialog
+            open={open} onOpenChange={setOpen}
+            organizationId={organizationId} userId={user.id}
+          />
+          <LectureWizardDialog
+            open={wizardOpen} onOpenChange={setWizardOpen}
+            organizationId={organizationId} userId={user.id}
+          />
+        </>
       )}
     </div>
   );
