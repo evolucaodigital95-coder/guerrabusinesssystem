@@ -339,7 +339,7 @@ function PainelDiretorPage() {
               <p className="text-xs text-muted-foreground">Nenhum alerta ativo. Operação em dia.</p>
             )}
             {pendFin.slice(0, 4).map((p: any) => (
-              <Link key={p.id} to="/app/financeiro" className="flex items-start justify-between gap-3 rounded-xl border border-border/60 p-3 hover:border-foreground/30">
+              <Link key={p.id} to="/app/financeiro" search={{ lancamento: undefined }} className="flex items-start justify-between gap-3 rounded-xl border border-border/60 p-3 hover:border-foreground/30">
                 <div className="flex items-start gap-2">
                   <Wallet className="mt-0.5 h-4 w-4 text-muted-foreground" />
                   <div>

@@ -170,7 +170,7 @@ function AppLayout() {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild><Link to="/app/crm">Nova Empresa</Link></DropdownMenuItem>
                 <DropdownMenuItem asChild><Link to="/app/palestras">Nova Palestra</Link></DropdownMenuItem>
-                <DropdownMenuItem asChild><Link to="/app/financeiro">Novo Lançamento</Link></DropdownMenuItem>
+                <DropdownMenuItem asChild><Link to="/app/financeiro" search={{ lancamento: undefined }}>Novo Lançamento</Link></DropdownMenuItem>
                 <DropdownMenuItem asChild><Link to="/app/agendistas">Novo Agendista</Link></DropdownMenuItem>
                 <DropdownMenuItem asChild><Link to="/app/projetos">Novo Projeto</Link></DropdownMenuItem>
               </DropdownMenuContent>

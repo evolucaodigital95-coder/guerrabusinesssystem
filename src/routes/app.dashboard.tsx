@@ -700,7 +700,7 @@ function DashboardPage() {
               <ul className="divide-y divide-border">
                 {todayLectures.map((l: any) => (
                   <li key={l.id}>
-                    <Link to={`/app/palestras/${l.id}`} className="block py-3 transition-colors hover:bg-muted/40">
+                    <Link to="/app/palestras/$id" params={{ id: l.id }} className="block py-3 transition-colors hover:bg-muted/40">
                       <div className="flex items-baseline justify-between gap-3">
                         <span className="truncate text-sm font-medium">{l.companies?.trade_name || l.companies?.legal_name || l.title}</span>
                         <span className="shrink-0 font-display text-sm">{fmtTime(l.scheduled_at) || l.scheduled_time || "—"}</span>
@@ -731,7 +731,7 @@ function DashboardPage() {
               <ul className="divide-y divide-border">
                 {nextLectures.map((l: any) => (
                   <li key={l.id}>
-                    <Link to={`/app/palestras/${l.id}`} className="flex items-center justify-between gap-3 py-3 transition-colors hover:bg-muted/40">
+                    <Link to="/app/palestras/$id" params={{ id: l.id }} className="flex items-center justify-between gap-3 py-3 transition-colors hover:bg-muted/40">
                       <div className="min-w-0">
                         <div className="truncate text-sm">{l.title || l.companies?.legal_name}</div>
                         <div className="mt-0.5 text-[11px] text-muted-foreground">
