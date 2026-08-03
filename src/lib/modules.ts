@@ -1,4 +1,5 @@
 import {
+  Bot,
   Home,
   LayoutDashboard,
   Users,
@@ -137,6 +138,10 @@ export const MODULES: ModuleDef[] = [
     primaryAction: "Novo pilar" },
 
   // SISTEMA
+  { to: "/app/automacoes", label: "Automações", icon: Bot, section: "sistema",
+    description: "Motor de eventos: cada ação dispara as atualizações relacionadas.",
+    emptyMessage: "Nenhuma automação executada ainda.",
+    primaryAction: "Executar testes" },
   { to: "/app/auditoria", label: "Auditoria", icon: ShieldCheck, section: "sistema",
     description: "Trilha de eventos e segurança.",
     emptyMessage: "Nenhum evento registrado.",

@@ -12,6 +12,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
+import { useAutomation } from "@/hooks/use-automation";
 import { ADVANCE_SOURCES, ADVANCE_STATUS } from "@/lib/finance-engine";
 
 export type AdvanceRow = {
@@ -57,6 +58,7 @@ export function AdvanceFormDialog({
     },
   );
   const queryClient = useQueryClient();
+  const { emit } = useAutomation();
 
   const lectures = useQuery({
     queryKey: ["agent-lectures-select", organizationId, agentId],
@@ -100,6 +102,13 @@ export function AdvanceFormDialog({
       toast.success(isEdit ? "Adiantamento atualizado" : "Adiantamento registrado");
       queryClient.invalidateQueries({ queryKey: ["advances", agentId] });
       queryClient.invalidateQueries({ queryKey: ["agent-statement", agentId] });
+      void emit("advance.created", {
+        entityType: "agent",
+        entityId: agentId,
+        agentId,
+        lectureId: f.lecture_id ?? null,
+        summary: isEdit ? "Adiantamento atualizado" : "Adiantamento registrado",
+      });
       onOpenChange(false);
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Erro"),

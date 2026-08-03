@@ -13,6 +13,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
+import { useAutomation } from "@/hooks/use-automation";
 import { calcOnHand, type MovementKind } from "@/lib/stock";
 
 /**
@@ -74,6 +75,7 @@ export function MovementFormDialog({
   }, [open]);
 
   const qc = useQueryClient();
+  const { emit } = useAutomation();
 
   const items = useQuery({
     queryKey: ["stock-items-select", organizationId],
@@ -226,6 +228,12 @@ export function MovementFormDialog({
         qc.invalidateQueries({ queryKey: ["fechamento-stock", lectureId] });
         qc.invalidateQueries({ queryKey: ["lecture-stock", lectureId] });
       }
+      void emit("stock.movement.created", {
+        entityType: "stock_item",
+        entityId: null,
+        lectureId: lectureId ?? null,
+        summary: n === 1 ? "Movimentação de estoque registrada" : `${n} movimentações de estoque registradas`,
+      });
       onOpenChange(false);
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Erro"),

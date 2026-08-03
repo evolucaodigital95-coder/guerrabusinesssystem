@@ -12,6 +12,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
+import { useAutomation } from "@/hooks/use-automation";
 import { PAYMENT_METHODS } from "@/lib/supplier-accounts";
 
 type Season = { id: string; name: string };
@@ -82,6 +83,7 @@ export function SettlementFormDialog({
   });
 
   const qc = useQueryClient();
+  const { emit } = useAutomation();
 
   const save = useMutation({
     mutationFn: async () => {
@@ -113,6 +115,12 @@ export function SettlementFormDialog({
     onSuccess: () => {
       toast.success(initial?.id ? "Acerto atualizado" : "Acerto registrado");
       qc.invalidateQueries({ queryKey: ["supplier-settlements"] });
+      void emit("supplier.settlement.created", {
+        entityType: "stock_item",
+        entityId: null,
+        seasonId: seasonId === "__none__" ? null : seasonId,
+        summary: `Acerto com fornecedor ${supplier.trim()}`,
+      });
       onOpenChange(false);
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Erro ao salvar"),

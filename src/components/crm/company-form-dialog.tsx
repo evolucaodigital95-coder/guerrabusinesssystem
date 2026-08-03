@@ -21,6 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
+import { useAutomation } from "@/hooks/use-automation";
 import { COMPANY_STATUS, LIFECYCLE_STAGES } from "@/lib/crm";
 import { useOrgMembers } from "@/hooks/use-org-members";
 
@@ -59,6 +60,7 @@ export function CompanyFormDialog({
   const isEdit = !!initial?.id;
   const [form, setForm] = useState<CompanyRow>(initial ?? { status: "ativo", lifecycle_stage: "lead" });
   const queryClient = useQueryClient();
+  const { emit } = useAutomation();
   const members = useOrgMembers(organizationId);
 
   const save = useMutation({
@@ -95,6 +97,12 @@ export function CompanyFormDialog({
       toast.success(isEdit ? "Empresa atualizada" : "Empresa cadastrada");
       queryClient.invalidateQueries({ queryKey: ["companies"] });
       if (isEdit) queryClient.invalidateQueries({ queryKey: ["company", initial!.id] });
+      void emit(isEdit ? "company.updated" : "company.created", {
+        entityType: "company",
+        entityId: initial?.id ?? null,
+        companyId: initial?.id ?? null,
+        summary: isEdit ? "Empresa atualizada" : "Empresa cadastrada",
+      });
       onOpenChange(false);
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Erro ao salvar"),

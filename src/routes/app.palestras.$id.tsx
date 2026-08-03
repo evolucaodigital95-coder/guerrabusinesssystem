@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/select";
 import { PageHeader } from "@/components/page-shell";
 import { supabase } from "@/integrations/supabase/client";
+import { useAutomation } from "@/hooks/use-automation";
 import { useSession } from "@/hooks/use-session";
 import { useCurrentOrg } from "@/hooks/use-current-org";
 import { formatCurrency, formatDate } from "@/lib/crm";
@@ -650,6 +651,7 @@ function FechamentoFinanceiroTab({
   seasonId: string | null;
 }) {
   const qc = useQueryClient();
+  const { emit } = useAutomation();
 
   const movements = useQuery({
     queryKey: ["fechamento-movements", lectureId],
@@ -936,6 +938,13 @@ function FechamentoFinanceiroTab({
     },
     onSuccess: () => {
       toast.success("Fechamento concluído. Snapshot salvo permanentemente.");
+      void emit("lecture.closed", {
+        entityType: "lecture",
+        entityId: lectureId,
+        lectureId,
+        agentId: agentId ?? null,
+        summary: "Fechamento financeiro concluído",
+      });
       qc.invalidateQueries({ queryKey: ["fechamento-snapshot", lectureId] });
       qc.invalidateQueries({ queryKey: ["fechamento-advances", lectureId, agentId] });
       qc.invalidateQueries({ queryKey: ["lecture-snapshot", lectureId] });

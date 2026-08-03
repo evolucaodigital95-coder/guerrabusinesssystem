@@ -30,6 +30,7 @@ import { Route as AppConfiguracoesRouteImport } from './routes/app.configuracoes
 import { Route as AppCentroPalestranteRouteImport } from './routes/app.centro-palestrante'
 import { Route as AppBuscaRouteImport } from './routes/app.busca'
 import { Route as AppBibliotecaRouteImport } from './routes/app.biblioteca'
+import { Route as AppAutomacoesRouteImport } from './routes/app.automacoes'
 import { Route as AppAuditoriaRouteImport } from './routes/app.auditoria'
 import { Route as AppAgendaRouteImport } from './routes/app.agenda'
 import { Route as AppTemporadasIndexRouteImport } from './routes/app.temporadas.index'
@@ -152,6 +153,11 @@ const AppBibliotecaRoute = AppBibliotecaRouteImport.update({
   path: '/biblioteca',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAutomacoesRoute = AppAutomacoesRouteImport.update({
+  id: '/automacoes',
+  path: '/automacoes',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppAuditoriaRoute = AppAuditoriaRouteImport.update({
   id: '/auditoria',
   path: '/auditoria',
@@ -239,6 +245,7 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/app/agenda': typeof AppAgendaRoute
   '/app/auditoria': typeof AppAuditoriaRoute
+  '/app/automacoes': typeof AppAutomacoesRoute
   '/app/biblioteca': typeof AppBibliotecaRoute
   '/app/busca': typeof AppBuscaRoute
   '/app/centro-palestrante': typeof AppCentroPalestranteRoute
@@ -277,6 +284,7 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/app/agenda': typeof AppAgendaRoute
   '/app/auditoria': typeof AppAuditoriaRoute
+  '/app/automacoes': typeof AppAutomacoesRoute
   '/app/biblioteca': typeof AppBibliotecaRoute
   '/app/busca': typeof AppBuscaRoute
   '/app/centro-palestrante': typeof AppCentroPalestranteRoute
@@ -317,6 +325,7 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/app/agenda': typeof AppAgendaRoute
   '/app/auditoria': typeof AppAuditoriaRoute
+  '/app/automacoes': typeof AppAutomacoesRoute
   '/app/biblioteca': typeof AppBibliotecaRoute
   '/app/busca': typeof AppBuscaRoute
   '/app/centro-palestrante': typeof AppCentroPalestranteRoute
@@ -358,6 +367,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/app/agenda'
     | '/app/auditoria'
+    | '/app/automacoes'
     | '/app/biblioteca'
     | '/app/busca'
     | '/app/centro-palestrante'
@@ -396,6 +406,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/app/agenda'
     | '/app/auditoria'
+    | '/app/automacoes'
     | '/app/biblioteca'
     | '/app/busca'
     | '/app/centro-palestrante'
@@ -435,6 +446,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/app/agenda'
     | '/app/auditoria'
+    | '/app/automacoes'
     | '/app/biblioteca'
     | '/app/busca'
     | '/app/centro-palestrante'
@@ -624,6 +636,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppBibliotecaRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/automacoes': {
+      id: '/app/automacoes'
+      path: '/automacoes'
+      fullPath: '/app/automacoes'
+      preLoaderRoute: typeof AppAutomacoesRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/auditoria': {
       id: '/app/auditoria'
       path: '/auditoria'
@@ -742,6 +761,7 @@ declare module '@tanstack/react-router' {
 interface AppRouteChildren {
   AppAgendaRoute: typeof AppAgendaRoute
   AppAuditoriaRoute: typeof AppAuditoriaRoute
+  AppAutomacoesRoute: typeof AppAutomacoesRoute
   AppBibliotecaRoute: typeof AppBibliotecaRoute
   AppBuscaRoute: typeof AppBuscaRoute
   AppCentroPalestranteRoute: typeof AppCentroPalestranteRoute
@@ -779,6 +799,7 @@ interface AppRouteChildren {
 const AppRouteChildren: AppRouteChildren = {
   AppAgendaRoute: AppAgendaRoute,
   AppAuditoriaRoute: AppAuditoriaRoute,
+  AppAutomacoesRoute: AppAutomacoesRoute,
   AppBibliotecaRoute: AppBibliotecaRoute,
   AppBuscaRoute: AppBuscaRoute,
   AppCentroPalestranteRoute: AppCentroPalestranteRoute,
