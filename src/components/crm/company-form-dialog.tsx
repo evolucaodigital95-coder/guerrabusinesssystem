@@ -95,6 +95,12 @@ export function CompanyFormDialog({
       toast.success(isEdit ? "Empresa atualizada" : "Empresa cadastrada");
       queryClient.invalidateQueries({ queryKey: ["companies"] });
       if (isEdit) queryClient.invalidateQueries({ queryKey: ["company", initial!.id] });
+      void emit(isEdit ? "company.updated" : "company.created", {
+        entityType: "company",
+        entityId: initial?.id ?? null,
+        companyId: initial?.id ?? null,
+        summary: isEdit ? "Empresa atualizada" : "Empresa cadastrada",
+      });
       onOpenChange(false);
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Erro ao salvar"),
