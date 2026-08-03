@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
+import { useAutomation } from "@/hooks/use-automation";
 
 /**
  * Cada "Entrada" cria um lote E uma movimentação de tipo "entrada"
@@ -34,6 +35,7 @@ export function BatchFormDialog({
     notes: "",
   });
   const qc = useQueryClient();
+  const { emit } = useAutomation();
 
   const save = useMutation({
     mutationFn: async () => {
@@ -86,6 +88,12 @@ export function BatchFormDialog({
       qc.invalidateQueries({ queryKey: ["stock-item", stockItemId] });
       qc.invalidateQueries({ queryKey: ["stock-item-metrics", stockItemId] });
       qc.invalidateQueries({ queryKey: ["stock-items"] });
+      void emit("stock.batch.created", {
+        entityType: "stock_item",
+        entityId: stockItemId,
+        stockItemId,
+        summary: "Entrada de estoque registrada (lote)",
+      });
       onOpenChange(false);
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Erro"),

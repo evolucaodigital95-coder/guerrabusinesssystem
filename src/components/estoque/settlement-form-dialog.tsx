@@ -115,6 +115,12 @@ export function SettlementFormDialog({
     onSuccess: () => {
       toast.success(initial?.id ? "Acerto atualizado" : "Acerto registrado");
       qc.invalidateQueries({ queryKey: ["supplier-settlements"] });
+      void emit("supplier.settlement.created", {
+        entityType: "stock_item",
+        entityId: null,
+        seasonId: seasonId === "__none__" ? null : seasonId,
+        summary: `Acerto com fornecedor ${supplier.trim()}`,
+      });
       onOpenChange(false);
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Erro ao salvar"),

@@ -102,6 +102,13 @@ export function AdvanceFormDialog({
       toast.success(isEdit ? "Adiantamento atualizado" : "Adiantamento registrado");
       queryClient.invalidateQueries({ queryKey: ["advances", agentId] });
       queryClient.invalidateQueries({ queryKey: ["agent-statement", agentId] });
+      void emit("advance.created", {
+        entityType: "agent",
+        entityId: agentId,
+        agentId,
+        lectureId: f.lecture_id ?? null,
+        summary: isEdit ? "Adiantamento atualizado" : "Adiantamento registrado",
+      });
       onOpenChange(false);
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Erro"),

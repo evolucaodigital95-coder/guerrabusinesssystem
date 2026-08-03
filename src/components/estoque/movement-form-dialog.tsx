@@ -228,6 +228,12 @@ export function MovementFormDialog({
         qc.invalidateQueries({ queryKey: ["fechamento-stock", lectureId] });
         qc.invalidateQueries({ queryKey: ["lecture-stock", lectureId] });
       }
+      void emit("stock.movement.created", {
+        entityType: "stock_item",
+        entityId: null,
+        lectureId: lectureId ?? null,
+        summary: n === 1 ? "Movimentação de estoque registrada" : `${n} movimentações de estoque registradas`,
+      });
       onOpenChange(false);
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Erro"),

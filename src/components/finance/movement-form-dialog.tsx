@@ -198,6 +198,19 @@ export function MovementFormDialog({
       toast.success(isEdit ? "Lançamento atualizado" : "Lançamento criado");
       queryClient.invalidateQueries({ queryKey: ["movements"] });
       if (isEdit) queryClient.invalidateQueries({ queryKey: ["movement", initial!.id] });
+      const settled = f.status === "recebido" || f.status === "paga";
+      const evt = settled
+        ? (direction === "in" ? "finance.payment.received" : "finance.payment.made")
+        : (isEdit ? "finance.movement.updated" : "finance.movement.created");
+      void emit(evt, {
+        entityType: "financial_movement",
+        entityId: initial?.id ?? null,
+        companyId: f.company_id ?? null,
+        lectureId: f.lecture_id ?? null,
+        agentId: f.agent_id ?? null,
+        seasonId: f.season_id ?? null,
+        summary: `${direction === "in" ? "Receita" : "Despesa"}: ${f.description?.trim() ?? ""}`,
+      });
       onOpenChange(false);
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Erro"),

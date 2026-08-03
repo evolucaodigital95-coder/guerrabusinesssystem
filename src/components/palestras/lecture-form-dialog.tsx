@@ -136,6 +136,15 @@ export function LectureFormDialog({
       toast.success(isEdit ? "Palestra atualizada" : "Palestra criada");
       qc.invalidateQueries({ queryKey: ["lectures"] });
       if (isEdit) qc.invalidateQueries({ queryKey: ["lecture", initial!.id] });
+      void emit(isEdit ? "lecture.updated" : "lecture.created", {
+        entityType: "lecture",
+        entityId: initial?.id ?? null,
+        lectureId: initial?.id ?? null,
+        companyId: f.company_id ?? null,
+        agentId: f.agent_id ?? null,
+        seasonId: f.season_id ?? null,
+        summary: isEdit ? "Palestra atualizada" : "Palestra criada",
+      });
       onOpenChange(false);
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Erro"),
