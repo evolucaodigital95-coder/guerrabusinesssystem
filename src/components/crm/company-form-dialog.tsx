@@ -21,6 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
+import { useAutomation } from "@/hooks/use-automation";
 import { COMPANY_STATUS, LIFECYCLE_STAGES } from "@/lib/crm";
 import { useOrgMembers } from "@/hooks/use-org-members";
 
@@ -59,6 +60,7 @@ export function CompanyFormDialog({
   const isEdit = !!initial?.id;
   const [form, setForm] = useState<CompanyRow>(initial ?? { status: "ativo", lifecycle_stage: "lead" });
   const queryClient = useQueryClient();
+  const { emit } = useAutomation();
   const members = useOrgMembers(organizationId);
 
   const save = useMutation({

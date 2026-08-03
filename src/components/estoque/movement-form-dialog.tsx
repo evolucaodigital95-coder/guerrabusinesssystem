@@ -13,6 +13,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
+import { useAutomation } from "@/hooks/use-automation";
 import { calcOnHand, type MovementKind } from "@/lib/stock";
 
 /**
@@ -74,6 +75,7 @@ export function MovementFormDialog({
   }, [open]);
 
   const qc = useQueryClient();
+  const { emit } = useAutomation();
 
   const items = useQuery({
     queryKey: ["stock-items-select", organizationId],

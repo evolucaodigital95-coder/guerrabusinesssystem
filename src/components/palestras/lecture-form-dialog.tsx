@@ -12,6 +12,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
+import { useAutomation } from "@/hooks/use-automation";
 import { LECTURE_STATUS } from "@/lib/lectures";
 
 export type LectureRow = {
@@ -58,6 +59,7 @@ export function LectureFormDialog({
     scheduled_at: initialDate,
   });
   const qc = useQueryClient();
+  const { emit } = useAutomation();
 
   useEffect(() => {
     if (open) setF({ title: "", status: "lead", ...initial, scheduled_at: initialDate });

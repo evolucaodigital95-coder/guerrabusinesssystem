@@ -12,6 +12,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
+import { useAutomation } from "@/hooks/use-automation";
 import {
   MOVEMENT_DIRECTIONS, MOVEMENT_CATEGORIES, PAYMENT_METHODS,
   isCardPayment, statusOptions, type MovementDirection,
@@ -84,6 +85,7 @@ export function MovementFormDialog({
   }, [open, initial?.id]);
 
   const queryClient = useQueryClient();
+  const { emit } = useAutomation();
 
   const accounts = useQuery({
     queryKey: ["accounts", organizationId],

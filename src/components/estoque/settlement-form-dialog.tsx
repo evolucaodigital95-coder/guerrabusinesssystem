@@ -12,6 +12,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
+import { useAutomation } from "@/hooks/use-automation";
 import { PAYMENT_METHODS } from "@/lib/supplier-accounts";
 
 type Season = { id: string; name: string };
@@ -82,6 +83,7 @@ export function SettlementFormDialog({
   });
 
   const qc = useQueryClient();
+  const { emit } = useAutomation();
 
   const save = useMutation({
     mutationFn: async () => {
