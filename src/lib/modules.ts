@@ -1,4 +1,5 @@
 import {
+  Bot,
   Home,
   LayoutDashboard,
   Users,
