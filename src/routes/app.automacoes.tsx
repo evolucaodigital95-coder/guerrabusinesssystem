@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Bot, CheckCircle2, PlayCircle, RefreshCw, Trash2, XCircle } from "lucide-react";
+import { Bot, CheckCircle2, Clock, Gauge, ListOrdered, PlayCircle, RefreshCw, Trash2, XCircle } from "lucide-react";
 import { toast } from "sonner";
 
 import { PageHeader } from "@/components/page-shell";
@@ -10,7 +10,8 @@ import {
 } from "@/components/ui/select";
 import { useAutomation } from "@/hooks/use-automation";
 import {
-  clearAutomationLog, readAutomationLog, type AutomationLogEntry,
+  AUTOMATION_LOG_EVENT, clearAutomationLog, readAutomationLog, readAutomationQueue,
+  type AutomationLogEntry, type QueueItem,
 } from "@/lib/automation/engine";
 import { AUTOMATION_EVENT_LIST } from "@/lib/automation/events";
 import { AUTOMATION_RULES } from "@/lib/automation/rules";
@@ -36,14 +37,15 @@ function fmt(at: string) {
 function AutomacoesPage() {
   const { emit, ready } = useAutomation();
   const [log, setLog] = useState<AutomationLogEntry[]>([]);
+  const [queue, setQueue] = useState<QueueItem[]>([]);
   const [filter, setFilter] = useState<string>("todos");
   const [running, setRunning] = useState(false);
 
   useEffect(() => {
-    const load = () => setLog(readAutomationLog());
+    const load = () => { setLog(readAutomationLog()); setQueue(readAutomationQueue()); };
     load();
-    window.addEventListener("gbs:automation-log", load);
-    return () => window.removeEventListener("gbs:automation-log", load);
+    window.addEventListener(AUTOMATION_LOG_EVENT, load);
+    return () => window.removeEventListener(AUTOMATION_LOG_EVENT, load);
   }, []);
 
   const filtered = useMemo(
@@ -51,12 +53,22 @@ function AutomacoesPage() {
     [log, filter],
   );
 
-  const stats = useMemo(() => ({
-    total: log.length,
-    ok: log.filter((l) => l.status === "ok").length,
-    errors: log.filter((l) => l.status === "error").length,
-    rules: AUTOMATION_RULES.length,
-  }), [log]);
+  const stats = useMemo(() => {
+    const avg = log.length
+      ? Math.round(log.reduce((s, l) => s + l.durationMs, 0) / log.length)
+      : 0;
+    return {
+      total: log.length,
+      ok: log.filter((l) => l.status === "ok").length,
+      errors: log.filter((l) => l.status === "error").length,
+      rules: AUTOMATION_RULES.length,
+      pending: queue.length,
+      avg,
+    };
+  }, [log, queue]);
+
+  const errorEntries = useMemo(() => log.filter((l) => l.status === "error").slice(0, 8), [log]);
+
 
   async function runTests() {
     if (!ready) { toast.error("Organização não carregada."); return; }
