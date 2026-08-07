@@ -102,12 +102,14 @@ function AutomacoesPage() {
         }
       />
 
-      <section className="grid gap-4 sm:grid-cols-4">
+      <section className="grid gap-4 sm:grid-cols-3 lg:grid-cols-6">
         {[
           { label: "Regras ativas", value: stats.rules, icon: Bot },
-          { label: "Execuções registradas", value: stats.total, icon: RefreshCw },
+          { label: "Etapas executadas", value: stats.total, icon: RefreshCw },
           { label: "Concluídas", value: stats.ok, icon: CheckCircle2 },
           { label: "Falhas", value: stats.errors, icon: XCircle },
+          { label: "Na fila", value: stats.pending, icon: ListOrdered },
+          { label: "Tempo médio (ms)", value: stats.avg, icon: Gauge },
         ].map((s) => (
           <div key={s.label} className="rounded-2xl border border-border bg-card p-5">
             <s.icon className="mb-3 h-4 w-4 text-muted-foreground" />
@@ -116,6 +118,43 @@ function AutomacoesPage() {
           </div>
         ))}
       </section>
+
+      {queue.length > 0 && (
+        <section className="space-y-3">
+          <h2 className="font-serif text-2xl">Fila de execução</h2>
+          <div className="space-y-2">
+            {queue.map((q) => (
+              <div key={q.runId} className="flex items-center justify-between rounded-xl border border-border bg-card px-4 py-3 text-sm">
+                <span className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-muted-foreground" />
+                  {q.eventLabel}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {q.steps} etapa(s) · {q.status === "running" ? "executando" : "aguardando"} · {fmt(q.enqueuedAt)}
+                </span>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {errorEntries.length > 0 && (
+        <section className="space-y-3">
+          <h2 className="font-serif text-2xl">Eventos com erro</h2>
+          <div className="space-y-2">
+            {errorEntries.map((e) => (
+              <div key={e.id} className="rounded-xl border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm">
+                <p className="font-medium">{e.eventLabel} — etapa {e.step}/{e.stepCount}: {e.ruleLabel}</p>
+                <p className="mt-1 text-xs text-destructive">{e.errorMessage ?? e.result}</p>
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  {fmt(e.at)} · {e.userLabel ?? "—"} · {e.durationMs} ms
+                </p>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
 
       <section className="space-y-4">
         <h2 className="font-serif text-2xl">Regras registradas</h2>
