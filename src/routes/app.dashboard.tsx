@@ -868,25 +868,6 @@ function DashboardPage() {
           </Panel>
         </div>
       </section>
-
-      {/* Central de decisões */}
-      <section>
-        <SectionTitle eyebrow="Central de Decisões" title="Insights automáticos" />
-        {insights.length === 0 ? (
-          <div className="rounded-2xl border border-border bg-card p-6 text-sm text-muted-foreground">
-            Cadastre palestras e fechamentos para o sistema gerar insights.
-          </div>
-        ) : (
-          <div className="grid gap-3 md:grid-cols-2">
-            {insights.map((t) => (
-              <div key={t} className="flex items-start gap-3 rounded-2xl border border-border bg-card p-4">
-                <Lightbulb className="mt-0.5 h-4 w-4" style={{ color: GOLD }} />
-                <p className="text-sm leading-relaxed">{t}</p>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
     </div>
   );
 }
