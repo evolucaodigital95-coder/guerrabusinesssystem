@@ -751,37 +751,6 @@ function DashboardPage() {
         </div>
       </section>
 
-      {/* Alertas */}
-      <section>
-        <SectionTitle eyebrow="Alertas" title="Riscos e pendências detectados" />
-        {alerts.length === 0 ? (
-          <div className="flex items-center gap-3 rounded-2xl border border-border bg-card p-6 text-sm text-muted-foreground">
-            <CheckCircle2 className="h-4 w-4" /> Nenhum alerta ativo. Operação em dia.
-          </div>
-        ) : (
-          <div className="grid gap-3 md:grid-cols-2">
-            {alerts.map((a) => {
-              const inner = (
-                <div className={`flex items-start gap-3 rounded-2xl border p-4 ${sevClass(a.severity)}`}>
-                  <AlertTriangle className={`mt-0.5 h-4 w-4 ${a.severity === "high" ? "text-destructive" : "text-muted-foreground"}`} />
-                  <div className="min-w-0">
-                    <div className="text-sm font-medium">{a.title}</div>
-                    <div className="mt-0.5 text-[11px] text-muted-foreground">{a.detail}</div>
-                  </div>
-                </div>
-              );
-              return a.to ? (
-                <Link key={a.id} to={a.to} className="hover-lift block">
-                  {inner}
-                </Link>
-              ) : (
-                <div key={a.id}>{inner}</div>
-              );
-            })}
-          </div>
-        )}
-      </section>
-
       {/* Resumo executivo */}
       <section>
         <SectionTitle eyebrow="Resumo Executivo" title="O mês em números" />
