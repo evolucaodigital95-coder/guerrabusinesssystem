@@ -74,17 +74,17 @@ function useOperations(orgId: string | null) {
       const org = orgId!;
       const base = <T extends { eq: any; is: any }>(q: T): T => q.eq("organization_id", org).is("archived_at", null);
 
-      const [seasons, lectures, movements, snapshots, items, batches, stockMovs, settlements, companies, campaigns, agents] =
+      const [seasons, lectures, movements, snapshots, items, batches, stockMovs, settlements, companies, campaigns, agents, projects, advances] =
         await Promise.all([
           base(supabase.from("seasons").select("id, name, status, starts_on, ends_on")),
           base(
             supabase.from("lectures").select(
-              "id, title, status, scheduled_at, scheduled_time, city, state, actual_audience, expected_audience, gross_revenue, financial_status, closed_at, season_id, campaign_id, company_id, agent_id, contact_id, companies:company_id(legal_name, trade_name), contacts:contact_id(full_name, phone, whatsapp), agents:agent_id(full_name)",
+              "id, title, status, scheduled_at, scheduled_time, city, state, actual_audience, expected_audience, gross_revenue, financial_status, closed_at, season_id, campaign_id, project_id, company_id, agent_id, contact_id, companies:company_id(legal_name, trade_name), contacts:contact_id(full_name, phone, whatsapp), agents:agent_id(full_name)",
             ),
           ),
           base(
             supabase.from("financial_movements").select(
-              "id, direction, amount, expected_amount, net_amount, occurs_on, expected_date, status, category, description, company_id, season_id, lecture_id",
+              "id, direction, amount, expected_amount, net_amount, occurs_on, expected_date, status, category, description, company_id, season_id, project_id, agent_id, lecture_id",
             ),
           ),
           supabase
@@ -99,6 +99,8 @@ function useOperations(orgId: string | null) {
           base(supabase.from("companies").select("id, legal_name, trade_name, city, state, lifecycle_stage, updated_at")),
           base(supabase.from("campaigns").select("id, name, season_id")),
           base(supabase.from("agents").select("id, full_name")),
+          base(supabase.from("projects").select("id, name, season_id, campaign_id")),
+          base(supabase.from("advances").select("id, agent_id, lecture_id, amount, amount_amortized, status, granted_on")),
         ]);
 
       return {
@@ -113,7 +115,10 @@ function useOperations(orgId: string | null) {
         companies: (companies.data ?? []) as any[],
         campaigns: (campaigns.data ?? []) as any[],
         agents: (agents.data ?? []) as any[],
+        projects: (projects.data ?? []) as any[],
+        advances: (advances.data ?? []) as any[],
       };
+
     },
   });
 }
