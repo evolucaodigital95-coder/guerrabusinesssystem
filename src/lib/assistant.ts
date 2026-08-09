@@ -54,7 +54,9 @@ export type AssistantResult = {
   hasData: boolean;
 };
 
-type Row = Record<string, unknown> & { [k: string]: never extends never ? unknown : never };
+/* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+type Row = Record<string, any>;
+
 
 export type AssistantData = {
   lectures: Row[];
