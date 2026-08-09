@@ -796,37 +796,6 @@ function DashboardPage() {
         </div>
       </section>
 
-      {/* Tarefas */}
-      <section>
-        <SectionTitle eyebrow="Tarefas" title="O que precisa ser feito" />
-        <div className="overflow-hidden rounded-2xl border border-border bg-card">
-          {tasks.length === 0 ? (
-            <div className="p-6 text-sm text-muted-foreground">Nenhuma tarefa pendente gerada pelo sistema.</div>
-          ) : (
-            <ul className="divide-y divide-border">
-              {tasks.map((t) => (
-                <li key={t.id} className="flex items-center gap-3 px-5 py-3">
-                  <input
-                    type="checkbox"
-                    checked={!!doneTasks[t.id]}
-                    onChange={(e) => setDoneTasks((s) => ({ ...s, [t.id]: e.target.checked }))}
-                    className="h-4 w-4 shrink-0 rounded border-border"
-                    aria-label={t.label}
-                  />
-                  <span className={`min-w-0 flex-1 truncate text-sm ${doneTasks[t.id] ? "text-muted-foreground line-through" : ""}`}>{t.label}</span>
-                  <span className={`shrink-0 text-[10px] uppercase tracking-wider ${prioClass(t.priority)}`}>{t.priority}</span>
-                  <span className="hidden shrink-0 text-[11px] text-muted-foreground sm:inline">{t.owner}</span>
-                  <span className="hidden shrink-0 items-center gap-1 text-[11px] text-muted-foreground md:inline-flex">
-                    <Clock className="h-3 w-3" /> {t.due}
-                  </span>
-                  <span className="hidden shrink-0 text-[10px] uppercase tracking-wider text-muted-foreground lg:inline">{t.status}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      </section>
-
       {/* Desempenho */}
       <section>
         <SectionTitle eyebrow="Desempenho" title="Quem entrega resultado" />
