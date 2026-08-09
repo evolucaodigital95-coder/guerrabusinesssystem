@@ -10,6 +10,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useCurrentOrg } from "@/hooks/use-current-org";
 import { PageHeader } from "@/components/page-shell";
 import { lectureStatusLabel } from "@/lib/lectures";
+import { AssistantGuerra } from "@/components/dashboard/assistant-guerra";
+
 
 export const Route = createFileRoute("/app/dashboard")({
   head: () => ({
