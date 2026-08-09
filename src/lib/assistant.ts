@@ -38,7 +38,13 @@ export type AssistantAlert = {
   source: string;
 };
 
-export type SummaryRow = { key: string; label: string; value: number; to: string; tone?: "danger" | "warn" | "neutral" };
+export type SummaryRow = {
+  key: string;
+  label: string;
+  value: number;
+  to: string;
+  tone?: "danger" | "warn" | "neutral";
+};
 
 export type AssistantResult = {
   summary: SummaryRow[];
@@ -85,7 +91,9 @@ function addDays(iso: string, days: number) {
 }
 
 function diffDays(from: string, to: string) {
-  return Math.round((new Date(to + "T00:00:00").getTime() - new Date(from + "T00:00:00").getTime()) / 86400000);
+  return Math.round(
+    (new Date(to + "T00:00:00").getTime() - new Date(from + "T00:00:00").getTime()) / 86400000,
+  );
 }
 
 export function fmtDay(s: string | null | undefined) {
@@ -95,20 +103,32 @@ export function fmtDay(s: string | null | undefined) {
 }
 
 const isSettled = (m: Row) => m.status === "recebido" || m.status === "pago" || m.status === "paga";
-const isPending = (m: Row) => m.status === "previsto" || m.status === "prevista" || m.status === "parcial";
+const isPending = (m: Row) =>
+  m.status === "previsto" || m.status === "prevista" || m.status === "parcial";
 const movDate = (m: Row) => dayOf(m.expected_date ?? m.occurs_on);
 const movValue = (m: Row) => N(m.amount) || N(m.expected_amount);
 
-function periodRange(period: AssistantPeriod, today: string): { from: string | null; to: string | null } {
+function periodRange(
+  period: AssistantPeriod,
+  today: string,
+): { from: string | null; to: string | null } {
   if (period === "hoje") return { from: today, to: today };
   if (period === "semana") return { from: today, to: addDays(today, 7) };
-  if (period === "mes") return { from: today.slice(0, 7) + "-01", to: addDays(today.slice(0, 7) + "-01", 45).slice(0, 7) + "-01" };
+  if (period === "mes")
+    return {
+      from: today.slice(0, 7) + "-01",
+      to: addDays(today.slice(0, 7) + "-01", 45).slice(0, 7) + "-01",
+    };
   return { from: null, to: null };
 }
 
 /* --------------------------------------------------------------- build */
 
-export function buildAssistant(data: AssistantData, filters: AssistantFilters, now = new Date()): AssistantResult {
+export function buildAssistant(
+  data: AssistantData,
+  filters: AssistantFilters,
+  now = new Date(),
+): AssistantResult {
   const today = todayISO(now);
   const { from, to } = periodRange(filters.period, today);
 
@@ -116,7 +136,8 @@ export function buildAssistant(data: AssistantData, filters: AssistantFilters, n
 
   /** Um registro pertence ao escopo dos filtros dimensionais? */
   const lectureMatches = (l: Row | null | undefined) => {
-    if (!l) return !filters.seasonId && !filters.agentId && !filters.campaignId && !filters.projectId;
+    if (!l)
+      return !filters.seasonId && !filters.agentId && !filters.campaignId && !filters.projectId;
     if (filters.seasonId && l.season_id !== filters.seasonId) return false;
     if (filters.agentId && l.agent_id !== filters.agentId) return false;
     if (filters.campaignId && l.campaign_id !== filters.campaignId) return false;
@@ -149,7 +170,9 @@ export function buildAssistant(data: AssistantData, filters: AssistantFilters, n
   const upcoming = lectures
     .filter((l) => {
       const d = dayOf(l.scheduled_at);
-      return !!d && d > today && (filters.period === "temporada" ? true : d <= (to ?? addDays(today, 7)));
+      return (
+        !!d && d > today && (filters.period === "temporada" ? true : d <= (to ?? addDays(today, 7)))
+      );
     })
     .sort((a, b) => String(a.scheduled_at).localeCompare(String(b.scheduled_at)));
 
@@ -157,7 +180,12 @@ export function buildAssistant(data: AssistantData, filters: AssistantFilters, n
   const unclosed = lectures
     .filter((l) => {
       const d = dayOf(l.scheduled_at);
-      return !!d && d < today && (l.status === "realizada" || l.status === "encerrada") && !snapLectures.has(l.id);
+      return (
+        !!d &&
+        d < today &&
+        (l.status === "realizada" || l.status === "encerrada") &&
+        !snapLectures.has(l.id)
+      );
     })
     .sort((a, b) => String(a.scheduled_at).localeCompare(String(b.scheduled_at)));
 
@@ -168,16 +196,29 @@ export function buildAssistant(data: AssistantData, filters: AssistantFilters, n
   const dueSoon = movements
     .filter((m) => {
       const d = movDate(m);
-      return isPending(m) && !!d && d >= today && diffDays(today, d) <= (filters.period === "hoje" ? 1 : 7);
+      return (
+        isPending(m) &&
+        !!d &&
+        d >= today &&
+        diffDays(today, d) <= (filters.period === "hoje" ? 1 : 7)
+      );
     })
     .sort((a, b) => String(movDate(a)).localeCompare(String(movDate(b))));
 
-  const expectedIn = movements.filter((m) => m.direction === "in" && isPending(m)).reduce((a, m) => a + movValue(m), 0);
-  const settledIn = movements.filter((m) => m.direction === "in" && isSettled(m)).reduce((a, m) => a + N(m.amount), 0);
-  const settledOut = movements.filter((m) => m.direction === "out" && isSettled(m)).reduce((a, m) => a + N(m.amount), 0);
+  const expectedIn = movements
+    .filter((m) => m.direction === "in" && isPending(m))
+    .reduce((a, m) => a + movValue(m), 0);
+  const settledIn = movements
+    .filter((m) => m.direction === "in" && isSettled(m))
+    .reduce((a, m) => a + N(m.amount), 0);
+  const settledOut = movements
+    .filter((m) => m.direction === "out" && isSettled(m))
+    .reduce((a, m) => a + N(m.amount), 0);
 
   /* ---------------- estoque */
-  const stockMovs = data.stockMovs.filter((m) => (m.lecture_id ? lectureMatches(lectureById.get(m.lecture_id)) : !filters.campaignId));
+  const stockMovs = data.stockMovs.filter((m) =>
+    m.lecture_id ? lectureMatches(lectureById.get(m.lecture_id)) : !filters.campaignId,
+  );
   const balance = new Map<string, number>();
   for (const m of data.stockMovs) {
     if (m.status === "cancelado" || !m.stock_item_id) continue;
@@ -186,7 +227,12 @@ export function buildAssistant(data: AssistantData, filters: AssistantFilters, n
   }
   const lowStock = data.items
     .filter((i) => N(i.min_quantity) > 0 && (balance.get(i.id) ?? 0) <= N(i.min_quantity))
-    .map((i) => ({ id: i.id, name: i.name as string, qty: balance.get(i.id) ?? 0, min: N(i.min_quantity) }))
+    .map((i) => ({
+      id: i.id,
+      name: i.name as string,
+      qty: balance.get(i.id) ?? 0,
+      min: N(i.min_quantity),
+    }))
     .sort((a, b) => a.qty - b.qty);
 
   const stockValue = data.items.reduce((a, i) => {
@@ -207,7 +253,8 @@ export function buildAssistant(data: AssistantData, filters: AssistantFilters, n
   };
   for (const b of data.batches) {
     if (filters.seasonId && b.season_id && b.season_id !== filters.seasonId) continue;
-    bump(b.supplier ?? "Sem fornecedor").purchased += N(b.unit_cost) * N(b.initial_quantity ?? b.quantity);
+    bump(b.supplier ?? "Sem fornecedor").purchased +=
+      N(b.unit_cost) * N(b.initial_quantity ?? b.quantity);
   }
   for (const s of data.settlements) {
     if (filters.seasonId && s.season_id && s.season_id !== filters.seasonId) continue;
@@ -229,8 +276,17 @@ export function buildAssistant(data: AssistantData, filters: AssistantFilters, n
 
   /* ---------------- follow-up */
   const staleCompanies = data.companies
-    .filter((c) => c.updated_at && c.lifecycle_stage !== "cliente_perdido" && diffDays(dayOf(c.updated_at)!, today) >= 60)
-    .map((c) => ({ id: c.id, name: (c.trade_name || c.legal_name) as string, days: diffDays(dayOf(c.updated_at)!, today) }))
+    .filter(
+      (c) =>
+        c.updated_at &&
+        c.lifecycle_stage !== "cliente_perdido" &&
+        diffDays(dayOf(c.updated_at)!, today) >= 60,
+    )
+    .map((c) => ({
+      id: c.id,
+      name: (c.trade_name || c.legal_name) as string,
+      days: diffDays(dayOf(c.updated_at)!, today),
+    }))
     .sort((a, b) => b.days - a.days);
 
   /* ------------------------------------------------------------ resumo */
@@ -244,11 +300,40 @@ export function buildAssistant(data: AssistantData, filters: AssistantFilters, n
       to: "/app/financeiro",
       tone: dueSoon.length ? "warn" : "neutral",
     },
-    { key: "overdue", label: "Pagamentos atrasados", value: overdue.length, to: "/app/financeiro", tone: overdue.length ? "danger" : "neutral" },
-    { key: "closing", label: "Pendências de fechamento", value: unclosed.length, to: "/app/palestras", tone: unclosed.length ? "danger" : "neutral" },
-    { key: "followup", label: "Empresas p/ follow-up", value: staleCompanies.length, to: "/app/crm" },
-    { key: "stock", label: "Alertas de estoque", value: lowStock.length, to: "/app/estoque", tone: lowStock.length ? "warn" : "neutral" },
-    { key: "cc", label: "Conta corrente pendente", value: advances.length, to: "/app/agendistas", tone: advances.length ? "warn" : "neutral" },
+    {
+      key: "overdue",
+      label: "Pagamentos atrasados",
+      value: overdue.length,
+      to: "/app/financeiro",
+      tone: overdue.length ? "danger" : "neutral",
+    },
+    {
+      key: "closing",
+      label: "Pendências de fechamento",
+      value: unclosed.length,
+      to: "/app/palestras",
+      tone: unclosed.length ? "danger" : "neutral",
+    },
+    {
+      key: "followup",
+      label: "Empresas p/ follow-up",
+      value: staleCompanies.length,
+      to: "/app/crm",
+    },
+    {
+      key: "stock",
+      label: "Alertas de estoque",
+      value: lowStock.length,
+      to: "/app/estoque",
+      tone: lowStock.length ? "warn" : "neutral",
+    },
+    {
+      key: "cc",
+      label: "Conta corrente pendente",
+      value: advances.length,
+      to: "/app/agendistas",
+      tone: advances.length ? "warn" : "neutral",
+    },
   ];
 
   /* ------------------------------------------------------------ alertas */
@@ -356,7 +441,9 @@ export function buildAssistant(data: AssistantData, filters: AssistantFilters, n
   }
 
   alerts.sort(
-    (a, b) => PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority] || String(a.date ?? "9").localeCompare(String(b.date ?? "9")),
+    (a, b) =>
+      PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority] ||
+      String(a.date ?? "9").localeCompare(String(b.date ?? "9")),
   );
 
   const limited = alerts.slice(0, 12);
@@ -367,8 +454,12 @@ export function buildAssistant(data: AssistantData, filters: AssistantFilters, n
   const grossApurado = snapshots.reduce((a, s) => a + N(s.gross_revenue), 0);
   const profitApurado = snapshots.reduce((a, s) => a + N(s.net_profit), 0);
 
-  if (grossApurado > 0) insights.push(`As palestras apuradas no escopo atual geraram ${BRL.format(grossApurado)} de receita bruta.`);
-  if (profitApurado !== 0) insights.push(`O lucro líquido apurado no escopo atual é de ${BRL.format(profitApurado)}.`);
+  if (grossApurado > 0)
+    insights.push(
+      `As palestras apuradas no escopo atual geraram ${BRL.format(grossApurado)} de receita bruta.`,
+    );
+  if (profitApurado !== 0)
+    insights.push(`O lucro líquido apurado no escopo atual é de ${BRL.format(profitApurado)}.`);
 
   if (grossApurado > 0) {
     const byCompany = new Map<string, number>();
@@ -379,7 +470,10 @@ export function buildAssistant(data: AssistantData, filters: AssistantFilters, n
       byCompany.set(name, (byCompany.get(name) ?? 0) + N(s.gross_revenue));
     }
     const top = Array.from(byCompany.entries()).sort((a, b) => b[1] - a[1])[0];
-    if (top && top[1] > 0) insights.push(`A empresa ${top[0]} é responsável por ${((top[1] / grossApurado) * 100).toFixed(0)}% da receita apurada.`);
+    if (top && top[1] > 0)
+      insights.push(
+        `A empresa ${top[0]} é responsável por ${((top[1] / grossApurado) * 100).toFixed(0)}% da receita apurada.`,
+      );
   }
 
   const byAgent = new Map<string, number>();
@@ -389,15 +483,29 @@ export function buildAssistant(data: AssistantData, filters: AssistantFilters, n
     byAgent.set(name, (byAgent.get(name) ?? 0) + N(s.gross_revenue));
   }
   const topAgent = Array.from(byAgent.entries()).sort((a, b) => b[1] - a[1])[0];
-  if (topAgent && topAgent[1] > 0) insights.push(`O agendista ${topAgent[0]} gerou o maior faturamento: ${BRL.format(topAgent[1])}.`);
+  if (topAgent && topAgent[1] > 0)
+    insights.push(
+      `O agendista ${topAgent[0]} gerou o maior faturamento: ${BRL.format(topAgent[1])}.`,
+    );
 
-  if (stockValue > 0) insights.push(`O estoque atual possui ${BRL.format(stockValue)} em materiais disponíveis.`);
-  if (usedCost > 0) insights.push(`Já foram consumidos ${BRL.format(usedCost)} em materiais no escopo selecionado.`);
-  if (expectedIn > 0) insights.push(`Você possui ${BRL.format(expectedIn)} pendente de recebimento.`);
-  if (settledIn > 0 || settledOut > 0) insights.push(`Caixa realizado no escopo: ${BRL.format(settledIn - settledOut)} (${BRL.format(settledIn)} entradas · ${BRL.format(settledOut)} saídas).`);
+  if (stockValue > 0)
+    insights.push(`O estoque atual possui ${BRL.format(stockValue)} em materiais disponíveis.`);
+  if (usedCost > 0)
+    insights.push(
+      `Já foram consumidos ${BRL.format(usedCost)} em materiais no escopo selecionado.`,
+    );
+  if (expectedIn > 0)
+    insights.push(`Você possui ${BRL.format(expectedIn)} pendente de recebimento.`);
+  if (settledIn > 0 || settledOut > 0)
+    insights.push(
+      `Caixa realizado no escopo: ${BRL.format(settledIn - settledOut)} (${BRL.format(settledIn)} entradas · ${BRL.format(settledOut)} saídas).`,
+    );
 
   const hasData =
-    data.lectures.length > 0 || data.movements.length > 0 || data.companies.length > 0 || data.items.length > 0;
+    data.lectures.length > 0 ||
+    data.movements.length > 0 ||
+    data.companies.length > 0 ||
+    data.items.length > 0;
 
   return { summary, alerts: limited, priorities, insights: insights.slice(0, 6), hasData };
 }

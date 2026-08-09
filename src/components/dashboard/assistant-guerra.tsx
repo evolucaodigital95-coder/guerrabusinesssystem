@@ -1,12 +1,29 @@
 import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import {
-  AlertTriangle, ArrowRight, Building2, CalendarRange, CheckCircle2, FileText,
-  Lightbulb, Mic, Package, PackageMinus, Receipt, Sparkles, Wallet, HandCoins,
+  AlertTriangle,
+  ArrowRight,
+  Building2,
+  CalendarRange,
+  CheckCircle2,
+  FileText,
+  Lightbulb,
+  Mic,
+  Package,
+  PackageMinus,
+  Receipt,
+  Sparkles,
+  Wallet,
+  HandCoins,
 } from "lucide-react";
 import {
-  buildAssistant, PRIORITY_LABEL, fmtDay,
-  type AssistantData, type AssistantFilters, type AssistantPeriod, type Priority,
+  buildAssistant,
+  PRIORITY_LABEL,
+  fmtDay,
+  type AssistantData,
+  type AssistantFilters,
+  type AssistantPeriod,
+  type Priority,
 } from "@/lib/assistant";
 
 const PERIODS: { key: AssistantPeriod; label: string }[] = [
@@ -29,9 +46,18 @@ const QUICK_ACTIONS = [
 ];
 
 function priorityClasses(p: Priority) {
-  if (p === "critico") return { chip: "border-destructive/50 text-destructive", card: "border-destructive/40 bg-destructive/5" };
-  if (p === "alto") return { chip: "border-destructive/30 text-destructive", card: "border-destructive/25" };
-  if (p === "medio") return { chip: "border-[color:var(--gold)]/50 text-[color:var(--gold)]", card: "border-[color:var(--gold)]/35" };
+  if (p === "critico")
+    return {
+      chip: "border-destructive/50 text-destructive",
+      card: "border-destructive/40 bg-destructive/5",
+    };
+  if (p === "alto")
+    return { chip: "border-destructive/30 text-destructive", card: "border-destructive/25" };
+  if (p === "medio")
+    return {
+      chip: "border-[color:var(--gold)]/50 text-[color:var(--gold)]",
+      card: "border-[color:var(--gold)]/35",
+    };
   return { chip: "border-border text-muted-foreground", card: "border-border" };
 }
 
@@ -62,7 +88,8 @@ export function AssistantGuerra({
   });
 
   const result = useMemo(() => buildAssistant(data, filters), [data, filters]);
-  const set = <K extends keyof AssistantFilters>(k: K, v: AssistantFilters[K]) => setFilters((f) => ({ ...f, [k]: v }));
+  const set = <K extends keyof AssistantFilters>(k: K, v: AssistantFilters[K]) =>
+    setFilters((f) => ({ ...f, [k]: v }));
 
   return (
     <section className="space-y-8">
@@ -87,28 +114,66 @@ export function AssistantGuerra({
                 type="button"
                 onClick={() => set("period", p.key)}
                 className={`rounded-full px-3 py-1.5 text-xs transition-colors ${
-                  filters.period === p.key ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground"
+                  filters.period === p.key
+                    ? "bg-foreground text-background"
+                    : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 {p.label}
               </button>
             ))}
           </div>
-          <select className={selectClass} value={filters.seasonId ?? ""} onChange={(e) => set("seasonId", e.target.value || null)} aria-label="Temporada">
+          <select
+            className={selectClass}
+            value={filters.seasonId ?? ""}
+            onChange={(e) => set("seasonId", e.target.value || null)}
+            aria-label="Temporada"
+          >
             <option value="">Todas as temporadas</option>
-            {seasons.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+            {seasons.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
           </select>
-          <select className={selectClass} value={filters.agentId ?? ""} onChange={(e) => set("agentId", e.target.value || null)} aria-label="Agendista">
+          <select
+            className={selectClass}
+            value={filters.agentId ?? ""}
+            onChange={(e) => set("agentId", e.target.value || null)}
+            aria-label="Agendista"
+          >
             <option value="">Todos os agendistas</option>
-            {agents.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+            {agents.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
           </select>
-          <select className={selectClass} value={filters.campaignId ?? ""} onChange={(e) => set("campaignId", e.target.value || null)} aria-label="Campanha">
+          <select
+            className={selectClass}
+            value={filters.campaignId ?? ""}
+            onChange={(e) => set("campaignId", e.target.value || null)}
+            aria-label="Campanha"
+          >
             <option value="">Todas as campanhas</option>
-            {campaigns.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+            {campaigns.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
           </select>
-          <select className={selectClass} value={filters.projectId ?? ""} onChange={(e) => set("projectId", e.target.value || null)} aria-label="Projeto">
+          <select
+            className={selectClass}
+            value={filters.projectId ?? ""}
+            onChange={(e) => set("projectId", e.target.value || null)}
+            aria-label="Projeto"
+          >
             <option value="">Todos os projetos</option>
-            {projects.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+            {projects.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
           </select>
         </div>
       </div>
@@ -127,7 +192,9 @@ export function AssistantGuerra({
                   : "border-border"
             }`}
           >
-            <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">{s.label}</div>
+            <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+              {s.label}
+            </div>
             <div className="mt-3 font-display text-2xl leading-none tabular-nums">{s.value}</div>
           </Link>
         ))}
@@ -150,7 +217,9 @@ export function AssistantGuerra({
                     {i + 1}
                   </span>
                   <div className="min-w-0 flex-1">
-                    <Link to={a.to} className="block truncate text-sm hover:underline">{a.title}</Link>
+                    <Link to={a.to} className="block truncate text-sm hover:underline">
+                      {a.title}
+                    </Link>
                     <div className="mt-0.5 text-[11px] text-muted-foreground">
                       {PRIORITY_LABEL[a.priority]} · {a.source}
                       {a.date ? ` · ${fmtDay(a.date)}` : ""}
@@ -172,19 +241,28 @@ export function AssistantGuerra({
               {result.alerts.map((a) => {
                 const c = priorityClasses(a.priority);
                 return (
-                  <div key={a.id} className={`flex flex-col gap-3 rounded-2xl border bg-card p-4 ${c.card}`}>
+                  <div
+                    key={a.id}
+                    className={`flex flex-col gap-3 rounded-2xl border bg-card p-4 ${c.card}`}
+                  >
                     <div className="flex items-start gap-3">
-                      <AlertTriangle className={`mt-0.5 h-4 w-4 shrink-0 ${a.priority === "critico" || a.priority === "alto" ? "text-destructive" : "text-muted-foreground"}`} />
+                      <AlertTriangle
+                        className={`mt-0.5 h-4 w-4 shrink-0 ${a.priority === "critico" || a.priority === "alto" ? "text-destructive" : "text-muted-foreground"}`}
+                      />
                       <div className="min-w-0">
                         <div className="text-sm font-medium">{a.title}</div>
                         <div className="mt-0.5 text-[11px] text-muted-foreground">{a.detail}</div>
                       </div>
                     </div>
                     <div className="flex items-center justify-between gap-3">
-                      <span className={`rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-wider ${c.chip}`}>
+                      <span
+                        className={`rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-wider ${c.chip}`}
+                      >
                         {PRIORITY_LABEL[a.priority]}
                       </span>
-                      <span className="text-[10px] text-muted-foreground">{a.date ? fmtDay(a.date) : a.source}</span>
+                      <span className="text-[10px] text-muted-foreground">
+                        {a.date ? fmtDay(a.date) : a.source}
+                      </span>
                       <Link
                         to={a.to}
                         className="inline-flex items-center gap-1 rounded-full border border-border px-3 py-1 text-[11px] font-medium hover:border-foreground/40"
@@ -210,7 +288,10 @@ export function AssistantGuerra({
         ) : (
           <div className="grid gap-3 md:grid-cols-2">
             {result.insights.map((t) => (
-              <div key={t} className="flex items-start gap-3 rounded-2xl border border-border bg-card p-4">
+              <div
+                key={t}
+                className="flex items-start gap-3 rounded-2xl border border-border bg-card p-4"
+              >
                 <Lightbulb className="mt-0.5 h-4 w-4 shrink-0" style={{ color: "var(--gold)" }} />
                 <p className="text-sm leading-relaxed">{t}</p>
               </div>
