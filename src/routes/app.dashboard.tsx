@@ -578,24 +578,7 @@ function DashboardPage() {
     );
   }
 
-  const { activeSeason, season, exec, todayLectures, nextLectures, alerts, tasks, insights, perf } = model;
-
-  const quickActions = [
-    { label: "Nova Empresa", icon: Building2, to: "/app/crm" },
-    { label: "Nova Palestra", icon: Mic, to: "/app/palestras" },
-    { label: "Entrada de Estoque", icon: Package, to: "/app/estoque" },
-    { label: "Novo Pagamento", icon: Wallet, to: "/app/financeiro" },
-    { label: "Gerar Extrato", icon: Receipt, to: "/app/agendistas" },
-    { label: "Prestação de Contas", icon: FileText, to: "/app/estoque" },
-    { label: "Relatórios", icon: BarChart3, to: "/app/relatorios" },
-    { label: "Agenda", icon: CalendarRange, to: "/app/agenda" },
-    { label: "Painel do Diretor", icon: TrendingUp, to: "/app/painel-diretor" },
-  ];
-
-  const sevClass = (s: string) =>
-    s === "high" ? "border-destructive/40 bg-destructive/5" : s === "medium" ? "border-[color:var(--gold)]/40" : "border-border";
-  const prioClass = (p: string) =>
-    p === "Alta" ? "text-destructive" : p === "Média" ? "text-[color:var(--gold)]" : "text-muted-foreground";
+  const { activeSeason, season, exec, todayLectures, nextLectures, perf } = model;
 
   return (
     <div className="mx-auto max-w-6xl space-y-14">
@@ -609,6 +592,27 @@ function DashboardPage() {
           </Link>
         }
       />
+
+      <AssistantGuerra
+        data={{
+          lectures: data!.lectures,
+          movements: data!.movements,
+          snapshots: data!.snapshots,
+          items: data!.items,
+          batches: data!.batches,
+          stockMovs: data!.stockMovs,
+          settlements: data!.settlements,
+          companies: data!.companies,
+          advances: data!.advances,
+          seasons: data!.seasons as any[],
+          agents: data!.agents,
+        }}
+        seasons={(data!.seasons as any[]).map((s) => ({ id: s.id, name: s.name }))}
+        agents={data!.agents.map((a) => ({ id: a.id, name: a.full_name }))}
+        campaigns={data!.campaigns.map((c) => ({ id: c.id, name: c.name }))}
+        projects={data!.projects.map((p) => ({ id: p.id, name: p.name }))}
+      />
+
 
       {/* Situação da temporada */}
       <section>
