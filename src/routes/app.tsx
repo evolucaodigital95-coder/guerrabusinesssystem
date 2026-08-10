@@ -218,9 +218,15 @@ function AppLayout() {
         </header>
 
         <main className="min-w-0 flex-1 px-6 py-10 md:px-12 md:py-14">
-          <div className="fade-up">
-            <Outlet />
-          </div>
+          {switching ? (
+            <div className="grid place-items-center py-24 text-sm text-muted-foreground">
+              Trocando de organização…
+            </div>
+          ) : (
+            <div className="fade-up">
+              <Outlet />
+            </div>
+          )}
         </main>
       </div>
 
