@@ -172,6 +172,7 @@ function AppLayout() {
           </button>
 
           <div className="ml-auto flex items-center gap-1">
+            {can("create") && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="navy" size="sm" className="rounded-full px-3 md:px-4">
@@ -189,6 +190,7 @@ function AppLayout() {
                 <DropdownMenuItem asChild><Link to="/app/projetos">Novo Projeto</Link></DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+            )}
 
             <Button
               variant="ghost"
