@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/hooks/use-session";
 import { useCurrentOrg } from "@/hooks/use-current-org";
 import { toast } from "sonner";
+import { RequirePermission } from "@/components/require-permission";
 
 export const Route = createFileRoute("/app/configuracoes")({
   head: () => ({
@@ -17,7 +18,11 @@ export const Route = createFileRoute("/app/configuracoes")({
       { name: "description", content: "Informações da versão, novidades e canal de feedback do GBS." },
     ],
   }),
-  component: ConfigPage,
+  component: () => (
+    <RequirePermission permission="settings">
+      <ConfigPage />
+    </RequirePermission>
+  ),
 });
 
 type FeedbackKind = "gostei" | "nao_gostei" | "bug" | "ideia" | "melhoria";
