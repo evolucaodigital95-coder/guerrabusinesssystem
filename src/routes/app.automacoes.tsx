@@ -15,6 +15,7 @@ import {
 } from "@/lib/automation/engine";
 import { AUTOMATION_EVENT_LIST } from "@/lib/automation/events";
 import { AUTOMATION_RULES } from "@/lib/automation/rules";
+import { RequirePermission } from "@/components/require-permission";
 
 export const Route = createFileRoute("/app/automacoes")({
   head: () => ({
@@ -27,7 +28,11 @@ export const Route = createFileRoute("/app/automacoes")({
       { name: "twitter:card", content: "summary" },
     ],
   }),
-  component: AutomacoesPage,
+  component: () => (
+    <RequirePermission permission="settings">
+      <AutomacoesPage />
+    </RequirePermission>
+  ),
 });
 
 function fmt(at: string) {

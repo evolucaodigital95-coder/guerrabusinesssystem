@@ -16,10 +16,28 @@ import { useTheme } from "@/components/theme-provider";
 import { cn } from "@/lib/utils";
 import { useSession } from "@/hooks/use-session";
 import { supabase } from "@/integrations/supabase/client";
+import { OrgProvider } from "@/components/org-provider";
+import { OrgSwitcher } from "@/components/org-switcher";
+import { useCurrentOrg } from "@/hooks/use-current-org";
 
 export const Route = createFileRoute("/app")({
-  component: AppLayout,
+  component: AppRoute,
 });
+
+function AppRoute() {
+  const { session, loading } = useSession();
+
+  if (loading) {
+    return <div className="grid min-h-screen place-items-center text-sm text-muted-foreground">Carregando…</div>;
+  }
+  if (!session) return <Navigate to="/" />;
+
+  return (
+    <OrgProvider>
+      <AppLayout />
+    </OrgProvider>
+  );
+}
 
 function greeting() {
   const h = new Date().getHours();
@@ -33,12 +51,8 @@ function AppLayout() {
   const { theme, toggleTheme } = useTheme();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
-  const { session, user, loading } = useSession();
-
-  if (loading) {
-    return <div className="grid min-h-screen place-items-center text-sm text-muted-foreground">Carregando…</div>;
-  }
-  if (!session) return <Navigate to="/" />;
+  const { user } = useSession();
+  const { can, switching } = useCurrentOrg();
 
   const firstName = (user?.user_metadata?.full_name as string | undefined)?.split(" ")[0] ?? user?.email?.split("@")[0] ?? "";
   const initials = (firstName || "GG").slice(0, 2).toUpperCase();
@@ -66,7 +80,7 @@ function AppLayout() {
           mobileOpen ? "flex translate-x-0" : "hidden -translate-x-full",
         )}
       >
-        <div className="flex items-center justify-between px-7 pt-8 pb-10">
+        <div className="flex items-center justify-between px-7 pt-8 pb-4">
           <GbsMark />
           <button
             onClick={() => setMobileOpen(false)}
@@ -75,6 +89,9 @@ function AppLayout() {
           >
             <X className="h-4 w-4" />
           </button>
+        </div>
+        <div className="px-6 pb-6">
+          <OrgSwitcher className="w-full" />
         </div>
 
         <nav className="flex-1 overflow-y-auto px-4 pb-8">
@@ -139,8 +156,9 @@ function AppLayout() {
             <Menu className="h-5 w-5" />
           </button>
 
-          <div className="hidden min-w-0 flex-1 md:block">
-            <p className="text-sm text-muted-foreground">
+          <div className="hidden min-w-0 flex-1 md:flex md:items-center md:gap-4">
+            <OrgSwitcher className="max-w-[220px]" />
+            <p className="hidden truncate text-sm text-muted-foreground lg:block">
               {greeting()}, <span className="text-foreground">{firstName || "executivo"}</span>
             </p>
           </div>
@@ -158,6 +176,7 @@ function AppLayout() {
           </button>
 
           <div className="ml-auto flex items-center gap-1">
+            {can("create") && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="navy" size="sm" className="rounded-full px-3 md:px-4">
@@ -175,6 +194,7 @@ function AppLayout() {
                 <DropdownMenuItem asChild><Link to="/app/projetos">Novo Projeto</Link></DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+            )}
 
             <Button
               variant="ghost"
@@ -204,9 +224,15 @@ function AppLayout() {
         </header>
 
         <main className="min-w-0 flex-1 px-6 py-10 md:px-12 md:py-14">
-          <div className="fade-up">
-            <Outlet />
-          </div>
+          {switching ? (
+            <div className="grid place-items-center py-24 text-sm text-muted-foreground">
+              Trocando de organização…
+            </div>
+          ) : (
+            <div className="fade-up">
+              <Outlet />
+            </div>
+          )}
         </main>
       </div>
 
