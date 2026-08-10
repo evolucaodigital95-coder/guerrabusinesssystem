@@ -80,7 +80,7 @@ function AppLayout() {
           mobileOpen ? "flex translate-x-0" : "hidden -translate-x-full",
         )}
       >
-        <div className="flex items-center justify-between px-7 pt-8 pb-10">
+        <div className="flex items-center justify-between px-7 pt-8 pb-4">
           <GbsMark />
           <button
             onClick={() => setMobileOpen(false)}
@@ -89,6 +89,9 @@ function AppLayout() {
           >
             <X className="h-4 w-4" />
           </button>
+        </div>
+        <div className="px-6 pb-6">
+          <OrgSwitcher className="w-full" />
         </div>
 
         <nav className="flex-1 overflow-y-auto px-4 pb-8">
@@ -153,8 +156,9 @@ function AppLayout() {
             <Menu className="h-5 w-5" />
           </button>
 
-          <div className="hidden min-w-0 flex-1 md:block">
-            <p className="text-sm text-muted-foreground">
+          <div className="hidden min-w-0 flex-1 md:flex md:items-center md:gap-4">
+            <OrgSwitcher className="max-w-[220px]" />
+            <p className="hidden truncate text-sm text-muted-foreground lg:block">
               {greeting()}, <span className="text-foreground">{firstName || "executivo"}</span>
             </p>
           </div>
