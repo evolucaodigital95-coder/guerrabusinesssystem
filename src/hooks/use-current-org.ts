@@ -1,30 +1,26 @@
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { useSession } from "./use-session";
+import { useOrgContext } from "@/components/org-provider";
 
+/**
+ * Organização ATIVA do usuário (persistida em localStorage e validada
+ * contra as memberships reais). O isolamento definitivo é do RLS —
+ * este valor é apenas conveniência de UI/queries.
+ */
 export function useCurrentOrg() {
-  const { user, loading } = useSession();
-  const query = useQuery({
-    queryKey: ["current-org", user?.id],
-    enabled: !!user,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("organization_members")
-        .select("organization_id, role, organizations:organization_id ( id, name )")
-        .eq("user_id", user!.id)
-        .is("archived_at", null)
-        .order("created_at", { ascending: true })
-        .limit(1)
-        .maybeSingle();
-      if (error) throw error;
-      return data;
-    },
-  });
-
+  const ctx = useOrgContext();
   return {
-    loading: loading || query.isLoading,
-    organizationId: query.data?.organization_id ?? null,
-    organizationName: (query.data?.organizations as { name?: string } | null)?.name ?? null,
-    role: query.data?.role ?? null,
+    loading: ctx.loading,
+    switching: ctx.switching,
+    organizationId: ctx.organizationId,
+    organizationName: ctx.organizationName,
+    role: ctx.role,
+    memberships: ctx.memberships,
+    setActiveOrg: ctx.setActiveOrg,
+    can: ctx.can,
   };
+}
+
+/** Atalho para checagem de permissão na interface. */
+export function usePermissions() {
+  const ctx = useOrgContext();
+  return { role: ctx.role, can: ctx.can };
 }
