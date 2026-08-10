@@ -16,10 +16,28 @@ import { useTheme } from "@/components/theme-provider";
 import { cn } from "@/lib/utils";
 import { useSession } from "@/hooks/use-session";
 import { supabase } from "@/integrations/supabase/client";
+import { OrgProvider } from "@/components/org-provider";
+import { OrgSwitcher } from "@/components/org-switcher";
+import { useCurrentOrg } from "@/hooks/use-current-org";
 
 export const Route = createFileRoute("/app")({
-  component: AppLayout,
+  component: AppRoute,
 });
+
+function AppRoute() {
+  const { session, loading } = useSession();
+
+  if (loading) {
+    return <div className="grid min-h-screen place-items-center text-sm text-muted-foreground">Carregando…</div>;
+  }
+  if (!session) return <Navigate to="/" />;
+
+  return (
+    <OrgProvider>
+      <AppLayout />
+    </OrgProvider>
+  );
+}
 
 function greeting() {
   const h = new Date().getHours();
@@ -33,12 +51,8 @@ function AppLayout() {
   const { theme, toggleTheme } = useTheme();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
-  const { session, user, loading } = useSession();
-
-  if (loading) {
-    return <div className="grid min-h-screen place-items-center text-sm text-muted-foreground">Carregando…</div>;
-  }
-  if (!session) return <Navigate to="/" />;
+  const { user } = useSession();
+  const { can, switching } = useCurrentOrg();
 
   const firstName = (user?.user_metadata?.full_name as string | undefined)?.split(" ")[0] ?? user?.email?.split("@")[0] ?? "";
   const initials = (firstName || "GG").slice(0, 2).toUpperCase();
