@@ -822,6 +822,7 @@ function DashboardPage() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-14">
+      <SetupBanner />
       <PageHeader
         eyebrow="Centro de Operações"
         title="Como está a empresa hoje"
