@@ -744,7 +744,7 @@ function FinishScreen({
   progress,
   onEnter,
 }: {
-  form: Record<string, any>;
+  form: Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
   progress: number;
   onEnter: () => void;
 }) {
