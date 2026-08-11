@@ -34,6 +34,7 @@ function AppRoute() {
 
   return (
     <OrgProvider>
+      <OnboardingGate />
       <AppLayout />
     </OrgProvider>
   );
