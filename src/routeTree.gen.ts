@@ -17,6 +17,7 @@ import { Route as AppRoadmapRouteImport } from './routes/app.roadmap'
 import { Route as AppRelatoriosRouteImport } from './routes/app.relatorios'
 import { Route as AppPerformanceRouteImport } from './routes/app.performance'
 import { Route as AppPainelDiretorRouteImport } from './routes/app.painel-diretor'
+import { Route as AppOnboardingRouteImport } from './routes/app.onboarding'
 import { Route as AppMetasRouteImport } from './routes/app.metas'
 import { Route as AppLegadoRouteImport } from './routes/app.legado'
 import { Route as AppInteligenciaRouteImport } from './routes/app.inteligencia'
@@ -86,6 +87,11 @@ const AppPerformanceRoute = AppPerformanceRouteImport.update({
 const AppPainelDiretorRoute = AppPainelDiretorRouteImport.update({
   id: '/painel-diretor',
   path: '/painel-diretor',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppOnboardingRoute = AppOnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
   getParentRoute: () => AppRoute,
 } as any)
 const AppMetasRoute = AppMetasRouteImport.update({
@@ -259,6 +265,7 @@ export interface FileRoutesByFullPath {
   '/app/inteligencia': typeof AppInteligenciaRoute
   '/app/legado': typeof AppLegadoRoute
   '/app/metas': typeof AppMetasRoute
+  '/app/onboarding': typeof AppOnboardingRoute
   '/app/painel-diretor': typeof AppPainelDiretorRoute
   '/app/performance': typeof AppPerformanceRoute
   '/app/relatorios': typeof AppRelatoriosRoute
@@ -298,6 +305,7 @@ export interface FileRoutesByTo {
   '/app/inteligencia': typeof AppInteligenciaRoute
   '/app/legado': typeof AppLegadoRoute
   '/app/metas': typeof AppMetasRoute
+  '/app/onboarding': typeof AppOnboardingRoute
   '/app/painel-diretor': typeof AppPainelDiretorRoute
   '/app/performance': typeof AppPerformanceRoute
   '/app/relatorios': typeof AppRelatoriosRoute
@@ -339,6 +347,7 @@ export interface FileRoutesById {
   '/app/inteligencia': typeof AppInteligenciaRoute
   '/app/legado': typeof AppLegadoRoute
   '/app/metas': typeof AppMetasRoute
+  '/app/onboarding': typeof AppOnboardingRoute
   '/app/painel-diretor': typeof AppPainelDiretorRoute
   '/app/performance': typeof AppPerformanceRoute
   '/app/relatorios': typeof AppRelatoriosRoute
@@ -381,6 +390,7 @@ export interface FileRouteTypes {
     | '/app/inteligencia'
     | '/app/legado'
     | '/app/metas'
+    | '/app/onboarding'
     | '/app/painel-diretor'
     | '/app/performance'
     | '/app/relatorios'
@@ -420,6 +430,7 @@ export interface FileRouteTypes {
     | '/app/inteligencia'
     | '/app/legado'
     | '/app/metas'
+    | '/app/onboarding'
     | '/app/painel-diretor'
     | '/app/performance'
     | '/app/relatorios'
@@ -460,6 +471,7 @@ export interface FileRouteTypes {
     | '/app/inteligencia'
     | '/app/legado'
     | '/app/metas'
+    | '/app/onboarding'
     | '/app/painel-diretor'
     | '/app/performance'
     | '/app/relatorios'
@@ -543,6 +555,13 @@ declare module '@tanstack/react-router' {
       path: '/painel-diretor'
       fullPath: '/app/painel-diretor'
       preLoaderRoute: typeof AppPainelDiretorRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/onboarding': {
+      id: '/app/onboarding'
+      path: '/onboarding'
+      fullPath: '/app/onboarding'
+      preLoaderRoute: typeof AppOnboardingRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/metas': {
@@ -775,6 +794,7 @@ interface AppRouteChildren {
   AppInteligenciaRoute: typeof AppInteligenciaRoute
   AppLegadoRoute: typeof AppLegadoRoute
   AppMetasRoute: typeof AppMetasRoute
+  AppOnboardingRoute: typeof AppOnboardingRoute
   AppPainelDiretorRoute: typeof AppPainelDiretorRoute
   AppPerformanceRoute: typeof AppPerformanceRoute
   AppRelatoriosRoute: typeof AppRelatoriosRoute
@@ -813,6 +833,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppInteligenciaRoute: AppInteligenciaRoute,
   AppLegadoRoute: AppLegadoRoute,
   AppMetasRoute: AppMetasRoute,
+  AppOnboardingRoute: AppOnboardingRoute,
   AppPainelDiretorRoute: AppPainelDiretorRoute,
   AppPerformanceRoute: AppPerformanceRoute,
   AppRelatoriosRoute: AppRelatoriosRoute,
@@ -844,13 +865,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
