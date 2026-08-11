@@ -11,26 +11,39 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import { RequirePermission } from "@/components/require-permission";
 import { useCurrentOrg } from "@/hooks/use-current-org";
 import { useOrgMembers } from "@/hooks/use-org-members";
 import {
-  useOrgInvites, useOrgSettings, useSetupChecklist, useUpdateOrgSettings,
+  useOrgInvites,
+  useOrgSettings,
+  useSetupChecklist,
+  useUpdateOrgSettings,
 } from "@/hooks/use-onboarding";
-import {
-  OPERATION_TYPES, OPERATIONAL_MODULES, PAYMENT_METHODS,
-} from "@/lib/onboarding";
+import { OPERATION_TYPES, OPERATIONAL_MODULES, PAYMENT_METHODS } from "@/lib/onboarding";
 import { ROLE_LABEL, type OrgRole } from "@/lib/permissions";
 
 export const Route = createFileRoute("/app/organizacao")({
   head: () => ({
     meta: [
       { title: "Configuração da organização — GBS" },
-      { name: "description", content: "Perfil da empresa, identidade visual, produtos, regras financeiras, equipe e preferências da sua organização no GBS." },
+      {
+        name: "description",
+        content:
+          "Perfil da empresa, identidade visual, produtos, regras financeiras, equipe e preferências da sua organização no GBS.",
+      },
       { property: "og:title", content: "Configuração da organização — GBS" },
-      { property: "og:description", content: "Gerencie perfil, identidade, produtos, financeiro, equipe e preferências por organização." },
+      {
+        property: "og:description",
+        content:
+          "Gerencie perfil, identidade, produtos, financeiro, equipe e preferências por organização.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -62,7 +75,9 @@ function OrganizacaoPage() {
 
   async function save(keys: string[]) {
     try {
-      const patch = Object.fromEntries(keys.filter((k) => f[k] !== undefined).map((k) => [k, f[k]]));
+      const patch = Object.fromEntries(
+        keys.filter((k) => f[k] !== undefined).map((k) => [k, f[k]]),
+      );
       await update.mutateAsync(patch);
       toast.success("Configuração salva.");
     } catch (e) {
@@ -94,14 +109,20 @@ function OrganizacaoPage() {
             <div className="text-xs text-muted-foreground">{checklist.progress}% concluído</div>
           </div>
           <Button asChild size="sm" variant="outline">
-            <Link to="/app/onboarding">{checklist.isComplete ? "Revisar etapas" : "Continuar configuração"}</Link>
+            <Link to="/app/onboarding">
+              {checklist.isComplete ? "Revisar etapas" : "Continuar configuração"}
+            </Link>
           </Button>
         </div>
         <Progress value={checklist.progress} className="mt-4 h-1.5" />
         <ul className="mt-5 grid gap-2 sm:grid-cols-2">
           {checklist.items.map((i) => (
             <li key={i.key} className="flex items-center gap-2 text-sm">
-              {i.done ? <Check className="h-4 w-4 text-emerald-600" /> : <Circle className="h-4 w-4 text-muted-foreground" />}
+              {i.done ? (
+                <Check className="h-4 w-4 text-emerald-600" />
+              ) : (
+                <Circle className="h-4 w-4 text-muted-foreground" />
+              )}
               <span className={i.done ? "" : "text-muted-foreground"}>{i.label}</span>
             </li>
           ))}
@@ -118,7 +139,10 @@ function OrganizacaoPage() {
           <TabsTrigger value="preferencias">Preferências</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="perfil" className="mt-6 space-y-5 rounded-3xl border border-border bg-card p-6">
+        <TabsContent
+          value="perfil"
+          className="mt-6 space-y-5 rounded-3xl border border-border bg-card p-6"
+        >
           <div className="grid gap-5 sm:grid-cols-2">
             {[
               ["legal_name", "Nome da empresa"],
@@ -132,80 +156,173 @@ function OrganizacaoPage() {
             ].map(([k, label]) => (
               <div key={k} className="space-y-2">
                 <Label className="text-[13px]">{label}</Label>
-                <Input value={f[k] ?? ""} disabled={!canEdit} onChange={(e) => set(k, e.target.value)} />
+                <Input
+                  value={f[k] ?? ""}
+                  disabled={!canEdit}
+                  onChange={(e) => set(k, e.target.value)}
+                />
               </div>
             ))}
             <div className="sm:col-span-2 space-y-2">
               <Label className="text-[13px]">Descrição</Label>
-              <Textarea rows={3} value={f.description ?? ""} disabled={!canEdit} onChange={(e) => set("description", e.target.value)} />
+              <Textarea
+                rows={3}
+                value={f.description ?? ""}
+                disabled={!canEdit}
+                onChange={(e) => set("description", e.target.value)}
+              />
             </div>
             <div className="space-y-2">
               <Label className="text-[13px]">Tipo de operação</Label>
-              <Select value={f.operation_type ?? ""} onValueChange={(v) => set("operation_type", v)} disabled={!canEdit}>
-                <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+              <Select
+                value={f.operation_type ?? ""}
+                onValueChange={(v) => set("operation_type", v)}
+                disabled={!canEdit}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione" />
+                </SelectTrigger>
                 <SelectContent>
-                  {OPERATION_TYPES.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                  {OPERATION_TYPES.map((o) => (
+                    <SelectItem key={o.value} value={o.value}>
+                      {o.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
           </div>
-          <Button size="sm" disabled={!canEdit || update.isPending} onClick={() => save(["legal_name","trade_name","owner_name","phone","email","website","city","state","description","operation_type"])}>
+          <Button
+            size="sm"
+            disabled={!canEdit || update.isPending}
+            onClick={() =>
+              save([
+                "legal_name",
+                "trade_name",
+                "owner_name",
+                "phone",
+                "email",
+                "website",
+                "city",
+                "state",
+                "description",
+                "operation_type",
+              ])
+            }
+          >
             Salvar perfil
           </Button>
         </TabsContent>
 
-        <TabsContent value="identidade" className="mt-6 space-y-5 rounded-3xl border border-border bg-card p-6">
+        <TabsContent
+          value="identidade"
+          className="mt-6 space-y-5 rounded-3xl border border-border bg-card p-6"
+        >
           <div className="grid gap-5 sm:grid-cols-2">
             <div className="space-y-2">
               <Label className="text-[13px]">Nome exibido</Label>
-              <Input value={f.display_name ?? ""} disabled={!canEdit} onChange={(e) => set("display_name", e.target.value)} />
+              <Input
+                value={f.display_name ?? ""}
+                disabled={!canEdit}
+                onChange={(e) => set("display_name", e.target.value)}
+              />
             </div>
             <div className="space-y-2">
               <Label className="text-[13px]">URL do logo</Label>
-              <Input value={f.logo_url ?? ""} disabled={!canEdit} onChange={(e) => set("logo_url", e.target.value)} />
+              <Input
+                value={f.logo_url ?? ""}
+                disabled={!canEdit}
+                onChange={(e) => set("logo_url", e.target.value)}
+              />
             </div>
             <div className="space-y-2">
               <Label className="text-[13px]">Cor principal</Label>
-              <Input value={f.primary_color ?? ""} disabled={!canEdit} onChange={(e) => set("primary_color", e.target.value)} placeholder="#0B1D3A" />
+              <Input
+                value={f.primary_color ?? ""}
+                disabled={!canEdit}
+                onChange={(e) => set("primary_color", e.target.value)}
+                placeholder="#0B1D3A"
+              />
             </div>
             <div className="space-y-2">
               <Label className="text-[13px]">Cor secundária</Label>
-              <Input value={f.secondary_color ?? ""} disabled={!canEdit} onChange={(e) => set("secondary_color", e.target.value)} placeholder="#C9A227" />
+              <Input
+                value={f.secondary_color ?? ""}
+                disabled={!canEdit}
+                onChange={(e) => set("secondary_color", e.target.value)}
+                placeholder="#C9A227"
+              />
             </div>
             <div className="sm:col-span-2 space-y-2">
               <Label className="text-[13px]">Imagem de marca</Label>
-              <Input value={f.brand_image_url ?? ""} disabled={!canEdit} onChange={(e) => set("brand_image_url", e.target.value)} />
+              <Input
+                value={f.brand_image_url ?? ""}
+                disabled={!canEdit}
+                onChange={(e) => set("brand_image_url", e.target.value)}
+              />
             </div>
           </div>
           <p className="text-xs text-muted-foreground">
-            Usada em dashboard, PDFs, extratos, relatórios, documentos e biblioteca desta organização.
+            Usada em dashboard, PDFs, extratos, relatórios, documentos e biblioteca desta
+            organização.
           </p>
-          <Button size="sm" disabled={!canEdit || update.isPending} onClick={() => save(["display_name","logo_url","primary_color","secondary_color","brand_image_url"])}>
+          <Button
+            size="sm"
+            disabled={!canEdit || update.isPending}
+            onClick={() =>
+              save([
+                "display_name",
+                "logo_url",
+                "primary_color",
+                "secondary_color",
+                "brand_image_url",
+              ])
+            }
+          >
             Salvar identidade
           </Button>
         </TabsContent>
 
-        <TabsContent value="produtos" className="mt-6 space-y-4 rounded-3xl border border-border bg-card p-6">
+        <TabsContent
+          value="produtos"
+          className="mt-6 space-y-4 rounded-3xl border border-border bg-card p-6"
+        >
           <p className="text-sm text-muted-foreground">
-            Produtos, lotes e movimentações continuam no módulo de Estoque, sempre isolados por organização.
+            Produtos, lotes e movimentações continuam no módulo de Estoque, sempre isolados por
+            organização.
           </p>
           <div className="flex flex-wrap gap-2">
-            <Button asChild size="sm" variant="outline"><Link to="/app/estoque">Abrir Estoque</Link></Button>
-            <Button asChild size="sm" variant="ghost"><Link to="/app/onboarding">Cadastrar produtos iniciais</Link></Button>
+            <Button asChild size="sm" variant="outline">
+              <Link to="/app/estoque">Abrir Estoque</Link>
+            </Button>
+            <Button asChild size="sm" variant="ghost">
+              <Link to="/app/onboarding">Cadastrar produtos iniciais</Link>
+            </Button>
           </div>
         </TabsContent>
 
-        <TabsContent value="financeiro" className="mt-6 space-y-5 rounded-3xl border border-border bg-card p-6">
+        <TabsContent
+          value="financeiro"
+          className="mt-6 space-y-5 rounded-3xl border border-border bg-card p-6"
+        >
           <div className="space-y-2">
             <Label className="text-[13px]">Formas de pagamento</Label>
             <div className="grid gap-2 sm:grid-cols-3">
               {PAYMENT_METHODS.map((m) => (
-                <label key={m.value} className="flex items-center gap-2 rounded-xl border border-border p-3 text-sm">
+                <label
+                  key={m.value}
+                  className="flex items-center gap-2 rounded-xl border border-border p-3 text-sm"
+                >
                   <Checkbox
                     checked={methods.includes(m.value)}
                     disabled={!canEdit}
                     onCheckedChange={() =>
-                      set("payment_methods", methods.includes(m.value) ? methods.filter((x) => x !== m.value) : [...methods, m.value])
+                      set(
+                        "payment_methods",
+                        methods.includes(m.value)
+                          ? methods.filter((x) => x !== m.value)
+                          : [...methods, m.value],
+                      )
                     }
                   />
                   {m.label}
@@ -223,25 +340,56 @@ function OrganizacaoPage() {
             ].map(([k, label]) => (
               <div key={k} className="space-y-2">
                 <Label className="text-[13px]">{label}</Label>
-                <Input type="number" step="0.01" value={f[k] ?? ""} disabled={!canEdit} onChange={(e) => set(k, Number(e.target.value))} />
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={f[k] ?? ""}
+                  disabled={!canEdit}
+                  onChange={(e) => set(k, Number(e.target.value))}
+                />
               </div>
             ))}
           </div>
           <div className="space-y-2">
             <Label className="text-[13px]">Observações</Label>
-            <Textarea rows={3} value={f.finance_notes ?? ""} disabled={!canEdit} onChange={(e) => set("finance_notes", e.target.value)} />
+            <Textarea
+              rows={3}
+              value={f.finance_notes ?? ""}
+              disabled={!canEdit}
+              onChange={(e) => set("finance_notes", e.target.value)}
+            />
           </div>
           <p className="text-xs text-muted-foreground">
-            Regras válidas apenas para esta organização. Lançamentos e fechamentos já registrados não são recalculados.
+            Regras válidas apenas para esta organização. Lançamentos e fechamentos já registrados
+            não são recalculados.
           </p>
-          <Button size="sm" disabled={!canEdit || update.isPending} onClick={() => save(["payment_methods","default_card_fee_percent","max_installments","speaker_share","agent_share","tithe_percent","finance_notes"])}>
+          <Button
+            size="sm"
+            disabled={!canEdit || update.isPending}
+            onClick={() =>
+              save([
+                "payment_methods",
+                "default_card_fee_percent",
+                "max_installments",
+                "speaker_share",
+                "agent_share",
+                "tithe_percent",
+                "finance_notes",
+              ])
+            }
+          >
             Salvar regras
           </Button>
         </TabsContent>
 
-        <TabsContent value="equipe" className="mt-6 space-y-6 rounded-3xl border border-border bg-card p-6">
+        <TabsContent
+          value="equipe"
+          className="mt-6 space-y-6 rounded-3xl border border-border bg-card p-6"
+        >
           <div>
-            <div className="mb-2 text-[10px] uppercase tracking-[0.22em] text-muted-foreground">Membros ativos</div>
+            <div className="mb-2 text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+              Membros ativos
+            </div>
             <div className="divide-y divide-border rounded-2xl border border-border">
               {(members.data ?? []).map((m) => (
                 <div key={m.user_id} className="flex items-center justify-between p-4 text-sm">
@@ -249,11 +397,15 @@ function OrganizacaoPage() {
                   <Badge variant="outline">ativo</Badge>
                 </div>
               ))}
-              {(members.data?.length ?? 0) === 0 && <div className="p-4 text-sm text-muted-foreground">—</div>}
+              {(members.data?.length ?? 0) === 0 && (
+                <div className="p-4 text-sm text-muted-foreground">—</div>
+              )}
             </div>
           </div>
           <div>
-            <div className="mb-2 text-[10px] uppercase tracking-[0.22em] text-muted-foreground">Convites</div>
+            <div className="mb-2 text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+              Convites
+            </div>
             <div className="divide-y divide-border rounded-2xl border border-border">
               {(invites.data ?? []).map((i) => (
                 <div key={i.id} className="flex items-center justify-between p-4 text-sm">
@@ -261,23 +413,38 @@ function OrganizacaoPage() {
                   <Badge variant="outline">{ROLE_LABEL[i.role as OrgRole] ?? i.role}</Badge>
                 </div>
               ))}
-              {(invites.data?.length ?? 0) === 0 && <div className="p-4 text-sm text-muted-foreground">Nenhum convite.</div>}
+              {(invites.data?.length ?? 0) === 0 && (
+                <div className="p-4 text-sm text-muted-foreground">Nenhum convite.</div>
+              )}
             </div>
           </div>
-          <Button asChild size="sm" variant="outline"><Link to="/app/onboarding">Convidar membros</Link></Button>
+          <Button asChild size="sm" variant="outline">
+            <Link to="/app/onboarding">Convidar membros</Link>
+          </Button>
         </TabsContent>
 
-        <TabsContent value="preferencias" className="mt-6 space-y-5 rounded-3xl border border-border bg-card p-6">
+        <TabsContent
+          value="preferencias"
+          className="mt-6 space-y-5 rounded-3xl border border-border bg-card p-6"
+        >
           <div className="space-y-2">
             <Label className="text-[13px]">Módulos utilizados</Label>
             <div className="grid gap-2 sm:grid-cols-3">
               {OPERATIONAL_MODULES.map((m) => (
-                <label key={m.value} className="flex items-center gap-2 rounded-xl border border-border p-3 text-sm">
+                <label
+                  key={m.value}
+                  className="flex items-center gap-2 rounded-xl border border-border p-3 text-sm"
+                >
                   <Checkbox
                     checked={modules.includes(m.value)}
                     disabled={!canEdit}
                     onCheckedChange={() =>
-                      set("enabled_modules", modules.includes(m.value) ? modules.filter((x) => x !== m.value) : [...modules, m.value])
+                      set(
+                        "enabled_modules",
+                        modules.includes(m.value)
+                          ? modules.filter((x) => x !== m.value)
+                          : [...modules, m.value],
+                      )
                     }
                   />
                   {m.label}
@@ -286,9 +453,14 @@ function OrganizacaoPage() {
             </div>
           </div>
           <p className="text-xs text-muted-foreground">
-            Notificações, integrações e importação de dados (CSV/XLSX) serão acopladas a esta área nas próximas fases.
+            Notificações, integrações e importação de dados (CSV/XLSX) serão acopladas a esta área
+            nas próximas fases.
           </p>
-          <Button size="sm" disabled={!canEdit || update.isPending} onClick={() => save(["enabled_modules"])}>
+          <Button
+            size="sm"
+            disabled={!canEdit || update.isPending}
+            onClick={() => save(["enabled_modules"])}
+          >
             Salvar preferências
           </Button>
         </TabsContent>
