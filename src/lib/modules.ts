@@ -1,5 +1,6 @@
 import {
   Bot,
+  Building2,
   Home,
   LayoutDashboard,
   Users,
