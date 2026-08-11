@@ -17,6 +17,7 @@ import { Route as AppRoadmapRouteImport } from './routes/app.roadmap'
 import { Route as AppRelatoriosRouteImport } from './routes/app.relatorios'
 import { Route as AppPerformanceRouteImport } from './routes/app.performance'
 import { Route as AppPainelDiretorRouteImport } from './routes/app.painel-diretor'
+import { Route as AppOrganizacaoRouteImport } from './routes/app.organizacao'
 import { Route as AppOnboardingRouteImport } from './routes/app.onboarding'
 import { Route as AppMetasRouteImport } from './routes/app.metas'
 import { Route as AppLegadoRouteImport } from './routes/app.legado'
@@ -87,6 +88,11 @@ const AppPerformanceRoute = AppPerformanceRouteImport.update({
 const AppPainelDiretorRoute = AppPainelDiretorRouteImport.update({
   id: '/painel-diretor',
   path: '/painel-diretor',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppOrganizacaoRoute = AppOrganizacaoRouteImport.update({
+  id: '/organizacao',
+  path: '/organizacao',
   getParentRoute: () => AppRoute,
 } as any)
 const AppOnboardingRoute = AppOnboardingRouteImport.update({
@@ -266,6 +272,7 @@ export interface FileRoutesByFullPath {
   '/app/legado': typeof AppLegadoRoute
   '/app/metas': typeof AppMetasRoute
   '/app/onboarding': typeof AppOnboardingRoute
+  '/app/organizacao': typeof AppOrganizacaoRoute
   '/app/painel-diretor': typeof AppPainelDiretorRoute
   '/app/performance': typeof AppPerformanceRoute
   '/app/relatorios': typeof AppRelatoriosRoute
@@ -306,6 +313,7 @@ export interface FileRoutesByTo {
   '/app/legado': typeof AppLegadoRoute
   '/app/metas': typeof AppMetasRoute
   '/app/onboarding': typeof AppOnboardingRoute
+  '/app/organizacao': typeof AppOrganizacaoRoute
   '/app/painel-diretor': typeof AppPainelDiretorRoute
   '/app/performance': typeof AppPerformanceRoute
   '/app/relatorios': typeof AppRelatoriosRoute
@@ -348,6 +356,7 @@ export interface FileRoutesById {
   '/app/legado': typeof AppLegadoRoute
   '/app/metas': typeof AppMetasRoute
   '/app/onboarding': typeof AppOnboardingRoute
+  '/app/organizacao': typeof AppOrganizacaoRoute
   '/app/painel-diretor': typeof AppPainelDiretorRoute
   '/app/performance': typeof AppPerformanceRoute
   '/app/relatorios': typeof AppRelatoriosRoute
@@ -391,6 +400,7 @@ export interface FileRouteTypes {
     | '/app/legado'
     | '/app/metas'
     | '/app/onboarding'
+    | '/app/organizacao'
     | '/app/painel-diretor'
     | '/app/performance'
     | '/app/relatorios'
@@ -431,6 +441,7 @@ export interface FileRouteTypes {
     | '/app/legado'
     | '/app/metas'
     | '/app/onboarding'
+    | '/app/organizacao'
     | '/app/painel-diretor'
     | '/app/performance'
     | '/app/relatorios'
@@ -472,6 +483,7 @@ export interface FileRouteTypes {
     | '/app/legado'
     | '/app/metas'
     | '/app/onboarding'
+    | '/app/organizacao'
     | '/app/painel-diretor'
     | '/app/performance'
     | '/app/relatorios'
@@ -555,6 +567,13 @@ declare module '@tanstack/react-router' {
       path: '/painel-diretor'
       fullPath: '/app/painel-diretor'
       preLoaderRoute: typeof AppPainelDiretorRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/organizacao': {
+      id: '/app/organizacao'
+      path: '/organizacao'
+      fullPath: '/app/organizacao'
+      preLoaderRoute: typeof AppOrganizacaoRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/onboarding': {
@@ -795,6 +814,7 @@ interface AppRouteChildren {
   AppLegadoRoute: typeof AppLegadoRoute
   AppMetasRoute: typeof AppMetasRoute
   AppOnboardingRoute: typeof AppOnboardingRoute
+  AppOrganizacaoRoute: typeof AppOrganizacaoRoute
   AppPainelDiretorRoute: typeof AppPainelDiretorRoute
   AppPerformanceRoute: typeof AppPerformanceRoute
   AppRelatoriosRoute: typeof AppRelatoriosRoute
@@ -834,6 +854,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppLegadoRoute: AppLegadoRoute,
   AppMetasRoute: AppMetasRoute,
   AppOnboardingRoute: AppOnboardingRoute,
+  AppOrganizacaoRoute: AppOrganizacaoRoute,
   AppPainelDiretorRoute: AppPainelDiretorRoute,
   AppPerformanceRoute: AppPerformanceRoute,
   AppRelatoriosRoute: AppRelatoriosRoute,
