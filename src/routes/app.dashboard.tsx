@@ -26,6 +26,7 @@ import { useCurrentOrg } from "@/hooks/use-current-org";
 import { PageHeader } from "@/components/page-shell";
 import { lectureStatusLabel } from "@/lib/lectures";
 import { AssistantGuerra } from "@/components/dashboard/assistant-guerra";
+import { SetupBanner } from "@/components/onboarding/setup-banner";
 
 export const Route = createFileRoute("/app/dashboard")({
   head: () => ({
