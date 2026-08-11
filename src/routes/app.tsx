@@ -1,4 +1,11 @@
-import { Link, Outlet, Navigate, createFileRoute, useRouterState, useNavigate } from "@tanstack/react-router";
+import {
+  Link,
+  Outlet,
+  Navigate,
+  createFileRoute,
+  useRouterState,
+  useNavigate,
+} from "@tanstack/react-router";
 import { useState } from "react";
 import { LogOut, Menu, Moon, Search, Sun, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -19,6 +26,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { OrgProvider } from "@/components/org-provider";
 import { OrgSwitcher } from "@/components/org-switcher";
 import { useCurrentOrg } from "@/hooks/use-current-org";
+import { OnboardingGate } from "@/components/onboarding/onboarding-gate";
 
 export const Route = createFileRoute("/app")({
   component: AppRoute,
@@ -28,12 +36,17 @@ function AppRoute() {
   const { session, loading } = useSession();
 
   if (loading) {
-    return <div className="grid min-h-screen place-items-center text-sm text-muted-foreground">Carregando…</div>;
+    return (
+      <div className="grid min-h-screen place-items-center text-sm text-muted-foreground">
+        Carregando…
+      </div>
+    );
   }
   if (!session) return <Navigate to="/" />;
 
   return (
     <OrgProvider>
+      <OnboardingGate />
       <AppLayout />
     </OrgProvider>
   );
@@ -54,7 +67,10 @@ function AppLayout() {
   const { user } = useSession();
   const { can, switching } = useCurrentOrg();
 
-  const firstName = (user?.user_metadata?.full_name as string | undefined)?.split(" ")[0] ?? user?.email?.split("@")[0] ?? "";
+  const firstName =
+    (user?.user_metadata?.full_name as string | undefined)?.split(" ")[0] ??
+    user?.email?.split("@")[0] ??
+    "";
   const initials = (firstName || "GG").slice(0, 2).toUpperCase();
 
   async function handleSignOut() {
@@ -65,9 +81,9 @@ function AppLayout() {
   const sections = ["principal", "operação", "gestão", "inteligência", "sistema"] as const;
   const sectionLabel: Record<(typeof sections)[number], string> = {
     principal: "Principal",
-    "operação": "Operação",
-    "gestão": "Gestão",
-    "inteligência": "Inteligência",
+    operação: "Operação",
+    gestão: "Gestão",
+    inteligência: "Inteligência",
     sistema: "Sistema",
   };
 
@@ -125,7 +141,14 @@ function AppLayout() {
                               style={{ background: "var(--gold)" }}
                             />
                           )}
-                          <Icon className={cn("h-4 w-4 shrink-0 transition-colors", active ? "text-foreground" : "text-muted-foreground group-hover:text-foreground")} />
+                          <Icon
+                            className={cn(
+                              "h-4 w-4 shrink-0 transition-colors",
+                              active
+                                ? "text-foreground"
+                                : "text-muted-foreground group-hover:text-foreground",
+                            )}
+                          />
                           <span className="truncate">{m.label}</span>
                         </Link>
                       </li>
@@ -177,23 +200,35 @@ function AppLayout() {
 
           <div className="ml-auto flex items-center gap-1">
             {can("create") && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="navy" size="sm" className="rounded-full px-3 md:px-4">
-                  <span className="md:hidden">+</span>
-                  <span className="hidden md:inline">+ Novo</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel>Ações rápidas</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild><Link to="/app/crm">Nova Empresa</Link></DropdownMenuItem>
-                <DropdownMenuItem asChild><Link to="/app/palestras">Nova Palestra</Link></DropdownMenuItem>
-                <DropdownMenuItem asChild><Link to="/app/financeiro" search={{ lancamento: undefined }}>Novo Lançamento</Link></DropdownMenuItem>
-                <DropdownMenuItem asChild><Link to="/app/agendistas">Novo Agendista</Link></DropdownMenuItem>
-                <DropdownMenuItem asChild><Link to="/app/projetos">Novo Projeto</Link></DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="navy" size="sm" className="rounded-full px-3 md:px-4">
+                    <span className="md:hidden">+</span>
+                    <span className="hidden md:inline">+ Novo</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel>Ações rápidas</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link to="/app/crm">Nova Empresa</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/app/palestras">Nova Palestra</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/app/financeiro" search={{ lancamento: undefined }}>
+                      Novo Lançamento
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/app/agendistas">Novo Agendista</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/app/projetos">Novo Projeto</Link>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
 
             <Button
@@ -207,14 +242,19 @@ function AppLayout() {
             </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="ml-2 hidden h-9 w-9 shrink-0 place-items-center rounded-full border border-border bg-card text-[11px] font-medium text-foreground transition-colors hover:bg-muted md:grid" aria-label="Conta">
+                <button
+                  className="ml-2 hidden h-9 w-9 shrink-0 place-items-center rounded-full border border-border bg-card text-[11px] font-medium text-foreground transition-colors hover:bg-muted md:grid"
+                  aria-label="Conta"
+                >
                   {initials}
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuLabel className="truncate">{user?.email}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem asChild><Link to="/app/configuracoes">Configurações</Link></DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/app/configuracoes">Configurações</Link>
+                </DropdownMenuItem>
                 <DropdownMenuItem onSelect={handleSignOut}>
                   <LogOut className="mr-2 h-4 w-4" /> Sair
                 </DropdownMenuItem>

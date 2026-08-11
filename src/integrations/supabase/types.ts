@@ -1636,6 +1636,62 @@ export type Database = {
           },
         ]
       }
+      organization_invites: {
+        Row: {
+          accepted_at: string | null
+          archived_at: string | null
+          created_at: string
+          created_by: string | null
+          email: string
+          expires_at: string
+          id: string
+          invited_by: string | null
+          organization_id: string
+          role: Database["public"]["Enums"]["org_role"]
+          status: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          accepted_at?: string | null
+          archived_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          email: string
+          expires_at?: string
+          id?: string
+          invited_by?: string | null
+          organization_id: string
+          role?: Database["public"]["Enums"]["org_role"]
+          status?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          accepted_at?: string | null
+          archived_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string
+          expires_at?: string
+          id?: string
+          invited_by?: string | null
+          organization_id?: string
+          role?: Database["public"]["Enums"]["org_role"]
+          status?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_invites_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organization_members: {
         Row: {
           archived_at: string | null
@@ -1675,6 +1731,172 @@ export type Database = {
             foreignKeyName: "organization_members_organization_id_fkey"
             columns: ["organization_id"]
             isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organization_onboarding: {
+        Row: {
+          completed_at: string | null
+          completed_by: string | null
+          completed_steps: Json
+          created_at: string
+          created_by: string | null
+          current_step: number
+          id: string
+          organization_id: string
+          progress_percent: number
+          started_at: string | null
+          status: string
+          total_steps: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          completed_by?: string | null
+          completed_steps?: Json
+          created_at?: string
+          created_by?: string | null
+          current_step?: number
+          id?: string
+          organization_id: string
+          progress_percent?: number
+          started_at?: string | null
+          status?: string
+          total_steps?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          completed_by?: string | null
+          completed_steps?: Json
+          created_at?: string
+          created_by?: string | null
+          current_step?: number
+          id?: string
+          organization_id?: string
+          progress_percent?: number
+          started_at?: string | null
+          status?: string
+          total_steps?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_onboarding_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organization_settings: {
+        Row: {
+          agent_share: number
+          brand_image_url: string | null
+          city: string | null
+          created_at: string
+          created_by: string | null
+          default_card_fee_percent: number
+          description: string | null
+          display_name: string | null
+          email: string | null
+          enabled_modules: Json
+          finance_notes: string | null
+          id: string
+          legal_name: string | null
+          logo_url: string | null
+          max_installments: number
+          operation_type: string | null
+          organization_id: string
+          owner_name: string | null
+          payment_methods: Json
+          phone: string | null
+          preferences: Json
+          primary_color: string | null
+          secondary_color: string | null
+          speaker_share: number
+          state: string | null
+          tithe_percent: number
+          trade_name: string | null
+          updated_at: string
+          updated_by: string | null
+          website: string | null
+        }
+        Insert: {
+          agent_share?: number
+          brand_image_url?: string | null
+          city?: string | null
+          created_at?: string
+          created_by?: string | null
+          default_card_fee_percent?: number
+          description?: string | null
+          display_name?: string | null
+          email?: string | null
+          enabled_modules?: Json
+          finance_notes?: string | null
+          id?: string
+          legal_name?: string | null
+          logo_url?: string | null
+          max_installments?: number
+          operation_type?: string | null
+          organization_id: string
+          owner_name?: string | null
+          payment_methods?: Json
+          phone?: string | null
+          preferences?: Json
+          primary_color?: string | null
+          secondary_color?: string | null
+          speaker_share?: number
+          state?: string | null
+          tithe_percent?: number
+          trade_name?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          website?: string | null
+        }
+        Update: {
+          agent_share?: number
+          brand_image_url?: string | null
+          city?: string | null
+          created_at?: string
+          created_by?: string | null
+          default_card_fee_percent?: number
+          description?: string | null
+          display_name?: string | null
+          email?: string | null
+          enabled_modules?: Json
+          finance_notes?: string | null
+          id?: string
+          legal_name?: string | null
+          logo_url?: string | null
+          max_installments?: number
+          operation_type?: string | null
+          organization_id?: string
+          owner_name?: string | null
+          payment_methods?: Json
+          phone?: string | null
+          preferences?: Json
+          primary_color?: string | null
+          secondary_color?: string | null
+          speaker_share?: number
+          state?: string | null
+          tithe_percent?: number
+          trade_name?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_settings_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: true
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
