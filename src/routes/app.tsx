@@ -19,6 +19,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { OrgProvider } from "@/components/org-provider";
 import { OrgSwitcher } from "@/components/org-switcher";
 import { useCurrentOrg } from "@/hooks/use-current-org";
+import { OnboardingGate } from "@/components/onboarding/onboarding-gate";
 
 export const Route = createFileRoute("/app")({
   component: AppRoute,
