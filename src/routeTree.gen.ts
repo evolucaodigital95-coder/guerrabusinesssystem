@@ -11,8 +11,10 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as AppRouteImport } from './routes/app'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppIndexRouteImport } from './routes/app.index'
+import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AppRoadmapRouteImport } from './routes/app.roadmap'
 import { Route as AppRelatoriosRouteImport } from './routes/app.relatorios'
 import { Route as AppPerformanceRouteImport } from './routes/app.performance'
@@ -35,6 +37,8 @@ import { Route as AppBibliotecaRouteImport } from './routes/app.biblioteca'
 import { Route as AppAutomacoesRouteImport } from './routes/app.automacoes'
 import { Route as AppAuditoriaRouteImport } from './routes/app.auditoria'
 import { Route as AppAgendaRouteImport } from './routes/app.agenda'
+import { Route as AdminPlanosRouteImport } from './routes/admin.planos'
+import { Route as AdminAuditoriaRouteImport } from './routes/admin.auditoria'
 import { Route as AppTemporadasIndexRouteImport } from './routes/app.temporadas.index'
 import { Route as AppProjetosIndexRouteImport } from './routes/app.projetos.index'
 import { Route as AppPalestrasIndexRouteImport } from './routes/app.palestras.index'
@@ -42,6 +46,7 @@ import { Route as AppEstoqueIndexRouteImport } from './routes/app.estoque.index'
 import { Route as AppCrmIndexRouteImport } from './routes/app.crm.index'
 import { Route as AppCampanhasIndexRouteImport } from './routes/app.campanhas.index'
 import { Route as AppAgendistasIndexRouteImport } from './routes/app.agendistas.index'
+import { Route as AdminClientesIndexRouteImport } from './routes/admin.clientes.index'
 import { Route as AppTemporadasIdRouteImport } from './routes/app.temporadas.$id'
 import { Route as AppProjetosIdRouteImport } from './routes/app.projetos.$id'
 import { Route as AppPalestrasIdRouteImport } from './routes/app.palestras.$id'
@@ -49,6 +54,7 @@ import { Route as AppEstoqueIdRouteImport } from './routes/app.estoque.$id'
 import { Route as AppCrmIdRouteImport } from './routes/app.crm.$id'
 import { Route as AppCampanhasIdRouteImport } from './routes/app.campanhas.$id'
 import { Route as AppAgendistasIdRouteImport } from './routes/app.agendistas.$id'
+import { Route as AdminClientesIdRouteImport } from './routes/admin.clientes.$id'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
@@ -60,6 +66,11 @@ const AppRoute = AppRouteImport.update({
   path: '/app',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -69,6 +80,11 @@ const AppIndexRoute = AppIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AppRoute,
+} as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRoute,
 } as any)
 const AppRoadmapRoute = AppRoadmapRouteImport.update({
   id: '/roadmap',
@@ -180,6 +196,16 @@ const AppAgendaRoute = AppAgendaRouteImport.update({
   path: '/agenda',
   getParentRoute: () => AppRoute,
 } as any)
+const AdminPlanosRoute = AdminPlanosRouteImport.update({
+  id: '/planos',
+  path: '/planos',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAuditoriaRoute = AdminAuditoriaRouteImport.update({
+  id: '/auditoria',
+  path: '/auditoria',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AppTemporadasIndexRoute = AppTemporadasIndexRouteImport.update({
   id: '/temporadas/',
   path: '/temporadas/',
@@ -214,6 +240,11 @@ const AppAgendistasIndexRoute = AppAgendistasIndexRouteImport.update({
   id: '/agendistas/',
   path: '/agendistas/',
   getParentRoute: () => AppRoute,
+} as any)
+const AdminClientesIndexRoute = AdminClientesIndexRouteImport.update({
+  id: '/clientes/',
+  path: '/clientes/',
+  getParentRoute: () => AdminRoute,
 } as any)
 const AppTemporadasIdRoute = AppTemporadasIdRouteImport.update({
   id: '/temporadas/$id',
@@ -250,11 +281,19 @@ const AppAgendistasIdRoute = AppAgendistasIdRouteImport.update({
   path: '/agendistas/$id',
   getParentRoute: () => AppRoute,
 } as any)
+const AdminClientesIdRoute = AdminClientesIdRouteImport.update({
+  id: '/clientes/$id',
+  path: '/clientes/$id',
+  getParentRoute: () => AdminRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
   '/app': typeof AppRouteWithChildren
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/admin/auditoria': typeof AdminAuditoriaRoute
+  '/admin/planos': typeof AdminPlanosRoute
   '/app/agenda': typeof AppAgendaRoute
   '/app/auditoria': typeof AppAuditoriaRoute
   '/app/automacoes': typeof AppAutomacoesRoute
@@ -277,7 +316,9 @@ export interface FileRoutesByFullPath {
   '/app/performance': typeof AppPerformanceRoute
   '/app/relatorios': typeof AppRelatoriosRoute
   '/app/roadmap': typeof AppRoadmapRoute
+  '/admin/': typeof AdminIndexRoute
   '/app/': typeof AppIndexRoute
+  '/admin/clientes/$id': typeof AdminClientesIdRoute
   '/app/agendistas/$id': typeof AppAgendistasIdRoute
   '/app/campanhas/$id': typeof AppCampanhasIdRoute
   '/app/crm/$id': typeof AppCrmIdRoute
@@ -285,6 +326,7 @@ export interface FileRoutesByFullPath {
   '/app/palestras/$id': typeof AppPalestrasIdRoute
   '/app/projetos/$id': typeof AppProjetosIdRoute
   '/app/temporadas/$id': typeof AppTemporadasIdRoute
+  '/admin/clientes/': typeof AdminClientesIndexRoute
   '/app/agendistas/': typeof AppAgendistasIndexRoute
   '/app/campanhas/': typeof AppCampanhasIndexRoute
   '/app/crm/': typeof AppCrmIndexRoute
@@ -296,6 +338,8 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/admin/auditoria': typeof AdminAuditoriaRoute
+  '/admin/planos': typeof AdminPlanosRoute
   '/app/agenda': typeof AppAgendaRoute
   '/app/auditoria': typeof AppAuditoriaRoute
   '/app/automacoes': typeof AppAutomacoesRoute
@@ -318,7 +362,9 @@ export interface FileRoutesByTo {
   '/app/performance': typeof AppPerformanceRoute
   '/app/relatorios': typeof AppRelatoriosRoute
   '/app/roadmap': typeof AppRoadmapRoute
+  '/admin': typeof AdminIndexRoute
   '/app': typeof AppIndexRoute
+  '/admin/clientes/$id': typeof AdminClientesIdRoute
   '/app/agendistas/$id': typeof AppAgendistasIdRoute
   '/app/campanhas/$id': typeof AppCampanhasIdRoute
   '/app/crm/$id': typeof AppCrmIdRoute
@@ -326,6 +372,7 @@ export interface FileRoutesByTo {
   '/app/palestras/$id': typeof AppPalestrasIdRoute
   '/app/projetos/$id': typeof AppProjetosIdRoute
   '/app/temporadas/$id': typeof AppTemporadasIdRoute
+  '/admin/clientes': typeof AdminClientesIndexRoute
   '/app/agendistas': typeof AppAgendistasIndexRoute
   '/app/campanhas': typeof AppCampanhasIndexRoute
   '/app/crm': typeof AppCrmIndexRoute
@@ -337,8 +384,11 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
   '/app': typeof AppRouteWithChildren
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/admin/auditoria': typeof AdminAuditoriaRoute
+  '/admin/planos': typeof AdminPlanosRoute
   '/app/agenda': typeof AppAgendaRoute
   '/app/auditoria': typeof AppAuditoriaRoute
   '/app/automacoes': typeof AppAutomacoesRoute
@@ -361,7 +411,9 @@ export interface FileRoutesById {
   '/app/performance': typeof AppPerformanceRoute
   '/app/relatorios': typeof AppRelatoriosRoute
   '/app/roadmap': typeof AppRoadmapRoute
+  '/admin/': typeof AdminIndexRoute
   '/app/': typeof AppIndexRoute
+  '/admin/clientes/$id': typeof AdminClientesIdRoute
   '/app/agendistas/$id': typeof AppAgendistasIdRoute
   '/app/campanhas/$id': typeof AppCampanhasIdRoute
   '/app/crm/$id': typeof AppCrmIdRoute
@@ -369,6 +421,7 @@ export interface FileRoutesById {
   '/app/palestras/$id': typeof AppPalestrasIdRoute
   '/app/projetos/$id': typeof AppProjetosIdRoute
   '/app/temporadas/$id': typeof AppTemporadasIdRoute
+  '/admin/clientes/': typeof AdminClientesIndexRoute
   '/app/agendistas/': typeof AppAgendistasIndexRoute
   '/app/campanhas/': typeof AppCampanhasIndexRoute
   '/app/crm/': typeof AppCrmIndexRoute
@@ -381,8 +434,11 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin'
     | '/app'
     | '/sitemap.xml'
+    | '/admin/auditoria'
+    | '/admin/planos'
     | '/app/agenda'
     | '/app/auditoria'
     | '/app/automacoes'
@@ -405,7 +461,9 @@ export interface FileRouteTypes {
     | '/app/performance'
     | '/app/relatorios'
     | '/app/roadmap'
+    | '/admin/'
     | '/app/'
+    | '/admin/clientes/$id'
     | '/app/agendistas/$id'
     | '/app/campanhas/$id'
     | '/app/crm/$id'
@@ -413,6 +471,7 @@ export interface FileRouteTypes {
     | '/app/palestras/$id'
     | '/app/projetos/$id'
     | '/app/temporadas/$id'
+    | '/admin/clientes/'
     | '/app/agendistas/'
     | '/app/campanhas/'
     | '/app/crm/'
@@ -424,6 +483,8 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/sitemap.xml'
+    | '/admin/auditoria'
+    | '/admin/planos'
     | '/app/agenda'
     | '/app/auditoria'
     | '/app/automacoes'
@@ -446,7 +507,9 @@ export interface FileRouteTypes {
     | '/app/performance'
     | '/app/relatorios'
     | '/app/roadmap'
+    | '/admin'
     | '/app'
+    | '/admin/clientes/$id'
     | '/app/agendistas/$id'
     | '/app/campanhas/$id'
     | '/app/crm/$id'
@@ -454,6 +517,7 @@ export interface FileRouteTypes {
     | '/app/palestras/$id'
     | '/app/projetos/$id'
     | '/app/temporadas/$id'
+    | '/admin/clientes'
     | '/app/agendistas'
     | '/app/campanhas'
     | '/app/crm'
@@ -464,8 +528,11 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/admin'
     | '/app'
     | '/sitemap.xml'
+    | '/admin/auditoria'
+    | '/admin/planos'
     | '/app/agenda'
     | '/app/auditoria'
     | '/app/automacoes'
@@ -488,7 +555,9 @@ export interface FileRouteTypes {
     | '/app/performance'
     | '/app/relatorios'
     | '/app/roadmap'
+    | '/admin/'
     | '/app/'
+    | '/admin/clientes/$id'
     | '/app/agendistas/$id'
     | '/app/campanhas/$id'
     | '/app/crm/$id'
@@ -496,6 +565,7 @@ export interface FileRouteTypes {
     | '/app/palestras/$id'
     | '/app/projetos/$id'
     | '/app/temporadas/$id'
+    | '/admin/clientes/'
     | '/app/agendistas/'
     | '/app/campanhas/'
     | '/app/crm/'
@@ -507,6 +577,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRouteWithChildren
   AppRoute: typeof AppRouteWithChildren
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
 }
@@ -527,6 +598,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -540,6 +618,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/app/'
       preLoaderRoute: typeof AppIndexRouteImport
       parentRoute: typeof AppRoute
+    }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRoute
     }
     '/app/roadmap': {
       id: '/app/roadmap'
@@ -695,6 +780,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAgendaRouteImport
       parentRoute: typeof AppRoute
     }
+    '/admin/planos': {
+      id: '/admin/planos'
+      path: '/planos'
+      fullPath: '/admin/planos'
+      preLoaderRoute: typeof AdminPlanosRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/auditoria': {
+      id: '/admin/auditoria'
+      path: '/auditoria'
+      fullPath: '/admin/auditoria'
+      preLoaderRoute: typeof AdminAuditoriaRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/app/temporadas/': {
       id: '/app/temporadas/'
       path: '/temporadas'
@@ -743,6 +842,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/app/agendistas/'
       preLoaderRoute: typeof AppAgendistasIndexRouteImport
       parentRoute: typeof AppRoute
+    }
+    '/admin/clientes/': {
+      id: '/admin/clientes/'
+      path: '/clientes'
+      fullPath: '/admin/clientes/'
+      preLoaderRoute: typeof AdminClientesIndexRouteImport
+      parentRoute: typeof AdminRoute
     }
     '/app/temporadas/$id': {
       id: '/app/temporadas/$id'
@@ -793,8 +899,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAgendistasIdRouteImport
       parentRoute: typeof AppRoute
     }
+    '/admin/clientes/$id': {
+      id: '/admin/clientes/$id'
+      path: '/clientes/$id'
+      fullPath: '/admin/clientes/$id'
+      preLoaderRoute: typeof AdminClientesIdRouteImport
+      parentRoute: typeof AdminRoute
+    }
   }
 }
+
+interface AdminRouteChildren {
+  AdminAuditoriaRoute: typeof AdminAuditoriaRoute
+  AdminPlanosRoute: typeof AdminPlanosRoute
+  AdminIndexRoute: typeof AdminIndexRoute
+  AdminClientesIdRoute: typeof AdminClientesIdRoute
+  AdminClientesIndexRoute: typeof AdminClientesIndexRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminAuditoriaRoute: AdminAuditoriaRoute,
+  AdminPlanosRoute: AdminPlanosRoute,
+  AdminIndexRoute: AdminIndexRoute,
+  AdminClientesIdRoute: AdminClientesIdRoute,
+  AdminClientesIndexRoute: AdminClientesIndexRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
 interface AppRouteChildren {
   AppAgendaRoute: typeof AppAgendaRoute
@@ -880,6 +1011,7 @@ const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRouteWithChildren,
   AppRoute: AppRouteWithChildren,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
 }
