@@ -3043,7 +3043,6 @@ export type Database = {
     }
     Functions: {
       compute_stock_avg_cost: { Args: { p_item: string }; Returns: number }
-      is_platform_admin: { Args: { _user?: string }; Returns: boolean }
     }
     Enums: {
       org_role: "owner" | "admin" | "member" | "viewer"
