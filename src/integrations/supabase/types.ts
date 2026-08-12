@@ -1935,6 +1935,176 @@ export type Database = {
         }
         Relationships: []
       }
+      plans: {
+        Row: {
+          archived_at: string | null
+          code: string
+          created_at: string
+          created_by: string | null
+          currency: string
+          description: string | null
+          display_order: number
+          features: Json
+          highlight: boolean
+          id: string
+          is_trial_default: boolean
+          limits: Json
+          name: string
+          price_monthly: number
+          price_yearly: number
+          status: string
+          trial_days: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          archived_at?: string | null
+          code: string
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          description?: string | null
+          display_order?: number
+          features?: Json
+          highlight?: boolean
+          id?: string
+          is_trial_default?: boolean
+          limits?: Json
+          name: string
+          price_monthly?: number
+          price_yearly?: number
+          status?: string
+          trial_days?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          archived_at?: string | null
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          description?: string | null
+          display_order?: number
+          features?: Json
+          highlight?: boolean
+          id?: string
+          is_trial_default?: boolean
+          limits?: Json
+          name?: string
+          price_monthly?: number
+          price_yearly?: number
+          status?: string
+          trial_days?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      platform_admins: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          note: string | null
+          updated_at: string
+          updated_by: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          note?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          note?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      platform_audit_log: {
+        Row: {
+          action: string
+          actor_id: string | null
+          created_at: string
+          diff: Json
+          entity_id: string | null
+          entity_type: string
+          id: string
+          organization_id: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          created_at?: string
+          diff?: Json
+          entity_id?: string | null
+          entity_type: string
+          id?: string
+          organization_id?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          created_at?: string
+          diff?: Json
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+          organization_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "platform_audit_log_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      platform_settings: {
+        Row: {
+          created_at: string
+          default_trial_days: number
+          gateway: string | null
+          id: string
+          settings: Json
+          singleton: boolean
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          default_trial_days?: number
+          gateway?: string | null
+          id?: string
+          settings?: Json
+          singleton?: boolean
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          default_trial_days?: number
+          gateway?: string | null
+          id?: string
+          settings?: Json
+          singleton?: boolean
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -2420,6 +2590,185 @@ export type Database = {
           },
         ]
       }
+      subscription_events: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          event: string
+          from_plan_id: string | null
+          from_status: string | null
+          id: string
+          organization_id: string
+          payload: Json
+          source: string
+          subscription_id: string | null
+          to_plan_id: string | null
+          to_status: string | null
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          event: string
+          from_plan_id?: string | null
+          from_status?: string | null
+          id?: string
+          organization_id: string
+          payload?: Json
+          source?: string
+          subscription_id?: string | null
+          to_plan_id?: string | null
+          to_status?: string | null
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          event?: string
+          from_plan_id?: string | null
+          from_status?: string | null
+          id?: string
+          organization_id?: string
+          payload?: Json
+          source?: string
+          subscription_id?: string | null
+          to_plan_id?: string | null
+          to_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_events_from_plan_id_fkey"
+            columns: ["from_plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_events_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_events_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_events_to_plan_id_fkey"
+            columns: ["to_plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subscriptions: {
+        Row: {
+          cancel_reason: string | null
+          canceled_at: string | null
+          contracted_price: number | null
+          created_at: string
+          created_by: string | null
+          currency: string
+          ends_at: string | null
+          external_reference: string | null
+          gateway: string | null
+          gateway_checkout_url: string | null
+          gateway_customer_id: string | null
+          gateway_invoice_id: string | null
+          gateway_metadata: Json
+          gateway_payment_id: string | null
+          gateway_payment_status: string | null
+          gateway_subscription_id: string | null
+          id: string
+          next_renewal_at: string | null
+          notes: string | null
+          organization_id: string
+          period: string
+          plan_id: string | null
+          started_at: string
+          status: string
+          trial_ends_at: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          cancel_reason?: string | null
+          canceled_at?: string | null
+          contracted_price?: number | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          ends_at?: string | null
+          external_reference?: string | null
+          gateway?: string | null
+          gateway_checkout_url?: string | null
+          gateway_customer_id?: string | null
+          gateway_invoice_id?: string | null
+          gateway_metadata?: Json
+          gateway_payment_id?: string | null
+          gateway_payment_status?: string | null
+          gateway_subscription_id?: string | null
+          id?: string
+          next_renewal_at?: string | null
+          notes?: string | null
+          organization_id: string
+          period?: string
+          plan_id?: string | null
+          started_at?: string
+          status?: string
+          trial_ends_at?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          cancel_reason?: string | null
+          canceled_at?: string | null
+          contracted_price?: number | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          ends_at?: string | null
+          external_reference?: string | null
+          gateway?: string | null
+          gateway_checkout_url?: string | null
+          gateway_customer_id?: string | null
+          gateway_invoice_id?: string | null
+          gateway_metadata?: Json
+          gateway_payment_id?: string | null
+          gateway_payment_status?: string | null
+          gateway_subscription_id?: string | null
+          id?: string
+          next_renewal_at?: string | null
+          notes?: string | null
+          organization_id?: string
+          period?: string
+          plan_id?: string | null
+          started_at?: string
+          status?: string
+          trial_ends_at?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       supplier_settlements: {
         Row: {
           amount_paid: number
@@ -2694,6 +3043,7 @@ export type Database = {
     }
     Functions: {
       compute_stock_avg_cost: { Args: { p_item: string }; Returns: number }
+      is_platform_admin: { Args: { _user?: string }; Returns: boolean }
     }
     Enums: {
       org_role: "owner" | "admin" | "member" | "viewer"
