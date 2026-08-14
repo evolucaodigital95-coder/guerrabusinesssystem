@@ -323,6 +323,184 @@ export type Database = {
           },
         ]
       }
+      billing_customers: {
+        Row: {
+          created_at: string
+          email: string | null
+          environment: string
+          gateway: string
+          gateway_customer_id: string
+          id: string
+          name: string | null
+          organization_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          environment?: string
+          gateway?: string
+          gateway_customer_id: string
+          id?: string
+          name?: string | null
+          organization_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          environment?: string
+          gateway?: string
+          gateway_customer_id?: string
+          id?: string
+          name?: string | null
+          organization_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "billing_customers_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      billing_events: {
+        Row: {
+          created_at: string
+          environment: string
+          error: string | null
+          event_id: string
+          event_type: string
+          gateway: string
+          gateway_customer_id: string | null
+          gateway_subscription_id: string | null
+          gateway_transaction_id: string | null
+          id: string
+          organization_id: string | null
+          payload: Json | null
+          processed_at: string | null
+          received_at: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          environment?: string
+          error?: string | null
+          event_id: string
+          event_type: string
+          gateway?: string
+          gateway_customer_id?: string | null
+          gateway_subscription_id?: string | null
+          gateway_transaction_id?: string | null
+          id?: string
+          organization_id?: string | null
+          payload?: Json | null
+          processed_at?: string | null
+          received_at?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          environment?: string
+          error?: string | null
+          event_id?: string
+          event_type?: string
+          gateway?: string
+          gateway_customer_id?: string | null
+          gateway_subscription_id?: string | null
+          gateway_transaction_id?: string | null
+          id?: string
+          organization_id?: string | null
+          payload?: Json | null
+          processed_at?: string | null
+          received_at?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "billing_events_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      billing_payments: {
+        Row: {
+          amount_cents: number | null
+          billed_at: string | null
+          created_at: string
+          currency: string
+          environment: string
+          failure_reason: string | null
+          gateway: string
+          gateway_customer_id: string | null
+          gateway_invoice_id: string | null
+          gateway_transaction_id: string
+          id: string
+          organization_id: string | null
+          status: string
+          subscription_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount_cents?: number | null
+          billed_at?: string | null
+          created_at?: string
+          currency?: string
+          environment?: string
+          failure_reason?: string | null
+          gateway?: string
+          gateway_customer_id?: string | null
+          gateway_invoice_id?: string | null
+          gateway_transaction_id: string
+          id?: string
+          organization_id?: string | null
+          status: string
+          subscription_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount_cents?: number | null
+          billed_at?: string | null
+          created_at?: string
+          currency?: string
+          environment?: string
+          failure_reason?: string | null
+          gateway?: string
+          gateway_customer_id?: string | null
+          gateway_invoice_id?: string | null
+          gateway_transaction_id?: string
+          id?: string
+          organization_id?: string | null
+          status?: string
+          subscription_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "billing_payments_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "billing_payments_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       campaigns: {
         Row: {
           archived_at: string | null
@@ -1905,6 +2083,7 @@ export type Database = {
       organizations: {
         Row: {
           archived_at: string | null
+          billing_exempt: boolean
           created_at: string
           created_by: string | null
           id: string
@@ -1915,6 +2094,7 @@ export type Database = {
         }
         Insert: {
           archived_at?: string | null
+          billing_exempt?: boolean
           created_at?: string
           created_by?: string | null
           id?: string
@@ -1925,6 +2105,7 @@ export type Database = {
         }
         Update: {
           archived_at?: string | null
+          billing_exempt?: boolean
           created_at?: string
           created_by?: string | null
           id?: string
@@ -1945,6 +2126,10 @@ export type Database = {
           description: string | null
           display_order: number
           features: Json
+          gateway: string | null
+          gateway_price_id_monthly: string | null
+          gateway_price_id_yearly: string | null
+          gateway_product_id: string | null
           highlight: boolean
           id: string
           is_trial_default: boolean
@@ -1966,6 +2151,10 @@ export type Database = {
           description?: string | null
           display_order?: number
           features?: Json
+          gateway?: string | null
+          gateway_price_id_monthly?: string | null
+          gateway_price_id_yearly?: string | null
+          gateway_product_id?: string | null
           highlight?: boolean
           id?: string
           is_trial_default?: boolean
@@ -1987,6 +2176,10 @@ export type Database = {
           description?: string | null
           display_order?: number
           features?: Json
+          gateway?: string | null
+          gateway_price_id_monthly?: string | null
+          gateway_price_id_yearly?: string | null
+          gateway_product_id?: string | null
           highlight?: boolean
           id?: string
           is_trial_default?: boolean
@@ -2666,12 +2859,15 @@ export type Database = {
       }
       subscriptions: {
         Row: {
+          cancel_at_period_end: boolean
           cancel_reason: string | null
           canceled_at: string | null
           contracted_price: number | null
           created_at: string
           created_by: string | null
           currency: string
+          current_period_end: string | null
+          current_period_start: string | null
           ends_at: string | null
           external_reference: string | null
           gateway: string | null
@@ -2681,8 +2877,11 @@ export type Database = {
           gateway_metadata: Json
           gateway_payment_id: string | null
           gateway_payment_status: string | null
+          gateway_price_id: string | null
           gateway_subscription_id: string | null
+          grace_period_days: number
           id: string
+          last_synced_at: string | null
           next_renewal_at: string | null
           notes: string | null
           organization_id: string
@@ -2695,12 +2894,15 @@ export type Database = {
           updated_by: string | null
         }
         Insert: {
+          cancel_at_period_end?: boolean
           cancel_reason?: string | null
           canceled_at?: string | null
           contracted_price?: number | null
           created_at?: string
           created_by?: string | null
           currency?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
           ends_at?: string | null
           external_reference?: string | null
           gateway?: string | null
@@ -2710,8 +2912,11 @@ export type Database = {
           gateway_metadata?: Json
           gateway_payment_id?: string | null
           gateway_payment_status?: string | null
+          gateway_price_id?: string | null
           gateway_subscription_id?: string | null
+          grace_period_days?: number
           id?: string
+          last_synced_at?: string | null
           next_renewal_at?: string | null
           notes?: string | null
           organization_id: string
@@ -2724,12 +2929,15 @@ export type Database = {
           updated_by?: string | null
         }
         Update: {
+          cancel_at_period_end?: boolean
           cancel_reason?: string | null
           canceled_at?: string | null
           contracted_price?: number | null
           created_at?: string
           created_by?: string | null
           currency?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
           ends_at?: string | null
           external_reference?: string | null
           gateway?: string | null
@@ -2739,8 +2947,11 @@ export type Database = {
           gateway_metadata?: Json
           gateway_payment_id?: string | null
           gateway_payment_status?: string | null
+          gateway_price_id?: string | null
           gateway_subscription_id?: string | null
+          grace_period_days?: number
           id?: string
+          last_synced_at?: string | null
           next_renewal_at?: string | null
           notes?: string | null
           organization_id?: string
