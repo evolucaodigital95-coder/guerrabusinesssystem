@@ -17,6 +17,7 @@ import { Route as AppIndexRouteImport } from './routes/app.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AppRoadmapRouteImport } from './routes/app.roadmap'
 import { Route as AppRelatoriosRouteImport } from './routes/app.relatorios'
+import { Route as AppPlanosRouteImport } from './routes/app.planos'
 import { Route as AppPerformanceRouteImport } from './routes/app.performance'
 import { Route as AppPainelDiretorRouteImport } from './routes/app.painel-diretor'
 import { Route as AppOrganizacaoRouteImport } from './routes/app.organizacao'
@@ -95,6 +96,11 @@ const AppRoadmapRoute = AppRoadmapRouteImport.update({
 const AppRelatoriosRoute = AppRelatoriosRouteImport.update({
   id: '/relatorios',
   path: '/relatorios',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPlanosRoute = AppPlanosRouteImport.update({
+  id: '/planos',
+  path: '/planos',
   getParentRoute: () => AppRoute,
 } as any)
 const AppPerformanceRoute = AppPerformanceRouteImport.update({
@@ -320,6 +326,7 @@ export interface FileRoutesByFullPath {
   '/app/organizacao': typeof AppOrganizacaoRoute
   '/app/painel-diretor': typeof AppPainelDiretorRoute
   '/app/performance': typeof AppPerformanceRoute
+  '/app/planos': typeof AppPlanosRoute
   '/app/relatorios': typeof AppRelatoriosRoute
   '/app/roadmap': typeof AppRoadmapRoute
   '/admin/': typeof AdminIndexRoute
@@ -367,6 +374,7 @@ export interface FileRoutesByTo {
   '/app/organizacao': typeof AppOrganizacaoRoute
   '/app/painel-diretor': typeof AppPainelDiretorRoute
   '/app/performance': typeof AppPerformanceRoute
+  '/app/planos': typeof AppPlanosRoute
   '/app/relatorios': typeof AppRelatoriosRoute
   '/app/roadmap': typeof AppRoadmapRoute
   '/admin': typeof AdminIndexRoute
@@ -417,6 +425,7 @@ export interface FileRoutesById {
   '/app/organizacao': typeof AppOrganizacaoRoute
   '/app/painel-diretor': typeof AppPainelDiretorRoute
   '/app/performance': typeof AppPerformanceRoute
+  '/app/planos': typeof AppPlanosRoute
   '/app/relatorios': typeof AppRelatoriosRoute
   '/app/roadmap': typeof AppRoadmapRoute
   '/admin/': typeof AdminIndexRoute
@@ -468,6 +477,7 @@ export interface FileRouteTypes {
     | '/app/organizacao'
     | '/app/painel-diretor'
     | '/app/performance'
+    | '/app/planos'
     | '/app/relatorios'
     | '/app/roadmap'
     | '/admin/'
@@ -515,6 +525,7 @@ export interface FileRouteTypes {
     | '/app/organizacao'
     | '/app/painel-diretor'
     | '/app/performance'
+    | '/app/planos'
     | '/app/relatorios'
     | '/app/roadmap'
     | '/admin'
@@ -564,6 +575,7 @@ export interface FileRouteTypes {
     | '/app/organizacao'
     | '/app/painel-diretor'
     | '/app/performance'
+    | '/app/planos'
     | '/app/relatorios'
     | '/app/roadmap'
     | '/admin/'
@@ -651,6 +663,13 @@ declare module '@tanstack/react-router' {
       path: '/relatorios'
       fullPath: '/app/relatorios'
       preLoaderRoute: typeof AppRelatoriosRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/planos': {
+      id: '/app/planos'
+      path: '/planos'
+      fullPath: '/app/planos'
+      preLoaderRoute: typeof AppPlanosRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/performance': {
@@ -968,6 +987,7 @@ interface AppRouteChildren {
   AppOrganizacaoRoute: typeof AppOrganizacaoRoute
   AppPainelDiretorRoute: typeof AppPainelDiretorRoute
   AppPerformanceRoute: typeof AppPerformanceRoute
+  AppPlanosRoute: typeof AppPlanosRoute
   AppRelatoriosRoute: typeof AppRelatoriosRoute
   AppRoadmapRoute: typeof AppRoadmapRoute
   AppIndexRoute: typeof AppIndexRoute
@@ -1008,6 +1028,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppOrganizacaoRoute: AppOrganizacaoRoute,
   AppPainelDiretorRoute: AppPainelDiretorRoute,
   AppPerformanceRoute: AppPerformanceRoute,
+  AppPlanosRoute: AppPlanosRoute,
   AppRelatoriosRoute: AppRelatoriosRoute,
   AppRoadmapRoute: AppRoadmapRoute,
   AppIndexRoute: AppIndexRoute,
