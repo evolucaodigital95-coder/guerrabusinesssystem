@@ -282,6 +282,16 @@ export const MODULES: ModuleDef[] = [
     primaryAction: "Continuar configuração",
   },
   {
+    to: "/app/planos",
+    label: "Plano e cobrança",
+    icon: CreditCard,
+    section: "sistema",
+    description: "Plano atual, status da assinatura, próxima cobrança e histórico de pagamentos.",
+    emptyMessage: "Nenhuma cobrança registrada.",
+    primaryAction: "Ver planos",
+  },
+  {
+
     to: "/app/configuracoes",
     label: "Configurações",
     icon: Settings,
