@@ -55,6 +55,7 @@ import { Route as AppCrmIdRouteImport } from './routes/app.crm.$id'
 import { Route as AppCampanhasIdRouteImport } from './routes/app.campanhas.$id'
 import { Route as AppAgendistasIdRouteImport } from './routes/app.agendistas.$id'
 import { Route as AdminClientesIdRouteImport } from './routes/admin.clientes.$id'
+import { Route as ApiPublicBillingPaddleRouteImport } from './routes/api/public/billing/paddle'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
@@ -286,6 +287,11 @@ const AdminClientesIdRoute = AdminClientesIdRouteImport.update({
   path: '/clientes/$id',
   getParentRoute: () => AdminRoute,
 } as any)
+const ApiPublicBillingPaddleRoute = ApiPublicBillingPaddleRouteImport.update({
+  id: '/api/public/billing/paddle',
+  path: '/api/public/billing/paddle',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -334,6 +340,7 @@ export interface FileRoutesByFullPath {
   '/app/palestras/': typeof AppPalestrasIndexRoute
   '/app/projetos/': typeof AppProjetosIndexRoute
   '/app/temporadas/': typeof AppTemporadasIndexRoute
+  '/api/public/billing/paddle': typeof ApiPublicBillingPaddleRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -380,6 +387,7 @@ export interface FileRoutesByTo {
   '/app/palestras': typeof AppPalestrasIndexRoute
   '/app/projetos': typeof AppProjetosIndexRoute
   '/app/temporadas': typeof AppTemporadasIndexRoute
+  '/api/public/billing/paddle': typeof ApiPublicBillingPaddleRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -429,6 +437,7 @@ export interface FileRoutesById {
   '/app/palestras/': typeof AppPalestrasIndexRoute
   '/app/projetos/': typeof AppProjetosIndexRoute
   '/app/temporadas/': typeof AppTemporadasIndexRoute
+  '/api/public/billing/paddle': typeof ApiPublicBillingPaddleRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -479,6 +488,7 @@ export interface FileRouteTypes {
     | '/app/palestras/'
     | '/app/projetos/'
     | '/app/temporadas/'
+    | '/api/public/billing/paddle'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -525,6 +535,7 @@ export interface FileRouteTypes {
     | '/app/palestras'
     | '/app/projetos'
     | '/app/temporadas'
+    | '/api/public/billing/paddle'
   id:
     | '__root__'
     | '/'
@@ -573,6 +584,7 @@ export interface FileRouteTypes {
     | '/app/palestras/'
     | '/app/projetos/'
     | '/app/temporadas/'
+    | '/api/public/billing/paddle'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -580,6 +592,7 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRouteWithChildren
   AppRoute: typeof AppRouteWithChildren
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  ApiPublicBillingPaddleRoute: typeof ApiPublicBillingPaddleRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -906,6 +919,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminClientesIdRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/api/public/billing/paddle': {
+      id: '/api/public/billing/paddle'
+      path: '/api/public/billing/paddle'
+      fullPath: '/api/public/billing/paddle'
+      preLoaderRoute: typeof ApiPublicBillingPaddleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -1014,6 +1034,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRouteWithChildren,
   AppRoute: AppRouteWithChildren,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  ApiPublicBillingPaddleRoute: ApiPublicBillingPaddleRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
