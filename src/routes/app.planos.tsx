@@ -55,7 +55,6 @@ function PlanosPage() {
   const cancelFn = useServerFn(cancelSubscription);
 
   const [interval, setInterval] = useState<"monthly" | "yearly">("monthly");
-  const [cancelOpen, setCancelOpen] = useState(false);
 
   const overview = useQuery({
     queryKey: ["billing", "overview", organizationId],
@@ -160,9 +159,19 @@ function PlanosPage() {
 
         {subscription?.gateway_subscription_id && can("settings") && (
           <div className="mt-5 flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => setCancelOpen(true)}>
-              Cancelar assinatura
-            </Button>
+            <ConfirmDialog
+              title="Cancelar assinatura?"
+              description="O acesso continua até o fim do período já contratado. Nenhum dado da organização é apagado."
+              confirmLabel="Cancelar no fim do período"
+              destructive
+              pending={cancel.isPending}
+              onConfirm={() => cancel.mutate("next_billing_period")}
+              trigger={
+                <Button variant="outline" size="sm">
+                  Cancelar assinatura
+                </Button>
+              }
+            />
           </div>
         )}
       </section>
@@ -286,14 +295,6 @@ function PlanosPage() {
         )}
       </section>
 
-      <ConfirmDialog
-        open={cancelOpen}
-        onOpenChange={setCancelOpen}
-        title="Cancelar assinatura?"
-        description="O acesso continua até o fim do período já contratado. Nenhum dado da organização é apagado."
-        confirmLabel="Cancelar no fim do período"
-        onConfirm={() => cancel.mutate("next_billing_period")}
-      />
     </>
   );
 }
