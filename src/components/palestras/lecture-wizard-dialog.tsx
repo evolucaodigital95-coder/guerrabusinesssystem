@@ -412,7 +412,7 @@ export function LectureWizardDialog({
 
               {isCard(f.payment_method) && (
                 <>
-                  <PickField label="Bandeira *" value={f.card_brand_id} onChange={(v) => set("card_brand_id", v)}
+                  <PickField label={hasBrands ? "Bandeira *" : "Bandeira"} value={f.card_brand_id} onChange={(v) => set("card_brand_id", v)}
                     options={(cardBrands.data ?? []).map((c: any) => ({ value: c.id, label: c.name }))} />
                   <FieldWrap label="Parcelas">
                     <Input type="number" min="1" step="1" value={f.card_installments} onChange={(e) => set("card_installments", e.target.value)} />
@@ -420,8 +420,14 @@ export function LectureWizardDialog({
                   <FieldWrap label="Taxa cartão (%)">
                     <Input type="number" step="0.01" value={f.card_fee_percent} onChange={(e) => set("card_fee_percent", e.target.value)} placeholder="Auto pela bandeira" />
                   </FieldWrap>
+                  {!hasBrands && (
+                    <p className="sm:col-span-2 text-xs text-muted-foreground">
+                      Nenhuma bandeira cadastrada nesta organização — informe apenas a taxa (%) acima. Você pode cadastrar bandeiras em Configurações.
+                    </p>
+                  )}
                 </>
               )}
+
             </div>
           )}
 
