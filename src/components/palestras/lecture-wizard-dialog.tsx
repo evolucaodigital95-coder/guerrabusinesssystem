@@ -130,6 +130,8 @@ export function LectureWizardDialog({
     queryFn: async () => (await supabase.from("financial_rules").select("*").eq("organization_id", organizationId).is("archived_at", null)).data ?? [],
   });
 
+  const hasBrands = (cardBrands.data ?? []).length > 0;
+
   const itemsById = useMemo(() => {
     const m = new Map<string, { id: string; name: string; unit: string | null; average_cost: number | null; purchase_price: number | null }>();
     for (const it of stockItems.data ?? []) m.set(it.id, it);
