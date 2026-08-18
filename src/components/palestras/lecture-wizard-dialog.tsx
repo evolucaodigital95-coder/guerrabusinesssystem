@@ -198,7 +198,8 @@ export function LectureWizardDialog({
     }
     if (from === 2) {
       if (!f.gross_revenue || Number(f.gross_revenue) <= 0) return "Informe o valor vendido.";
-      if (isCard(f.payment_method) && !f.card_brand_id) return "Selecione a bandeira do cartão.";
+      if (isCard(f.payment_method) && hasBrands && !f.card_brand_id) return "Selecione a bandeira do cartão.";
+      if (isCard(f.payment_method) && !hasBrands && !f.card_fee_percent) return "Informe a taxa do cartão (%).";
     }
     if (from === 3) {
       const seen = new Set<string>();
