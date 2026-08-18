@@ -130,6 +130,8 @@ export function LectureWizardDialog({
     queryFn: async () => (await supabase.from("financial_rules").select("*").eq("organization_id", organizationId).is("archived_at", null)).data ?? [],
   });
 
+  const hasBrands = (cardBrands.data ?? []).length > 0;
+
   const itemsById = useMemo(() => {
     const m = new Map<string, { id: string; name: string; unit: string | null; average_cost: number | null; purchase_price: number | null }>();
     for (const it of stockItems.data ?? []) m.set(it.id, it);
@@ -198,7 +200,8 @@ export function LectureWizardDialog({
     }
     if (from === 2) {
       if (!f.gross_revenue || Number(f.gross_revenue) <= 0) return "Informe o valor vendido.";
-      if (isCard(f.payment_method) && !f.card_brand_id) return "Selecione a bandeira do cartão.";
+      if (isCard(f.payment_method) && hasBrands && !f.card_brand_id) return "Selecione a bandeira do cartão.";
+      if (isCard(f.payment_method) && !hasBrands && !f.card_fee_percent) return "Informe a taxa do cartão (%).";
     }
     if (from === 3) {
       const seen = new Set<string>();
@@ -412,7 +415,7 @@ export function LectureWizardDialog({
 
               {isCard(f.payment_method) && (
                 <>
-                  <PickField label="Bandeira *" value={f.card_brand_id} onChange={(v) => set("card_brand_id", v)}
+                  <PickField label={hasBrands ? "Bandeira *" : "Bandeira"} value={f.card_brand_id} onChange={(v) => set("card_brand_id", v)}
                     options={(cardBrands.data ?? []).map((c: any) => ({ value: c.id, label: c.name }))} />
                   <FieldWrap label="Parcelas">
                     <Input type="number" min="1" step="1" value={f.card_installments} onChange={(e) => set("card_installments", e.target.value)} />
@@ -420,8 +423,14 @@ export function LectureWizardDialog({
                   <FieldWrap label="Taxa cartão (%)">
                     <Input type="number" step="0.01" value={f.card_fee_percent} onChange={(e) => set("card_fee_percent", e.target.value)} placeholder="Auto pela bandeira" />
                   </FieldWrap>
+                  {!hasBrands && (
+                    <p className="sm:col-span-2 text-xs text-muted-foreground">
+                      Nenhuma bandeira cadastrada nesta organização — informe apenas a taxa (%) acima. Você pode cadastrar bandeiras em Configurações.
+                    </p>
+                  )}
                 </>
               )}
+
             </div>
           )}
 
