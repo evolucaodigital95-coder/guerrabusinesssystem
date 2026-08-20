@@ -313,7 +313,7 @@ function EstoquePage() {
       {organizationId && user && (
         <>
           <ItemFormDialog open={itemOpen} onOpenChange={setItemOpen} organizationId={organizationId} userId={user.id} />
-          <MovementFormDialog open={mvtOpen} onOpenChange={setMvtOpen} organizationId={organizationId} userId={user.id} />
+          <MovementFormDialog key={mvtType} open={mvtOpen} onOpenChange={setMvtOpen} organizationId={organizationId} userId={user.id} defaultType={mvtType} />
         </>
       )}
     </div>
