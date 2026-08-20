@@ -53,8 +53,11 @@ type Movement = {
   lecture_id: string | null;
   season_id: string | null;
   project_id: string | null;
+  reversed_at: string | null;
+  reversal_reason: string | null;
   lectures: { id: string; title: string } | null;
 };
+
 
 type Batch = {
   id: string;
