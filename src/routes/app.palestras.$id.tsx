@@ -102,6 +102,8 @@ function PalestraDetail() {
         .from("stock_movements")
         .select("id, direction, kind, status, quantity, unit_cost, total_cost, reason, occurs_on, notes, stock_items:stock_item_id ( id, name, unit )")
         .eq("lecture_id", id).is("archived_at", null)
+        .not("status", "in", "(cancelado,estornado)")
+
         .order("occurs_on", { ascending: false, nullsFirst: false });
       if (error) throw error;
       return data ?? [];
