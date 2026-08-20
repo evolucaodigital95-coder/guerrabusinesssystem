@@ -62,11 +62,19 @@ export function movementDirection(kind: string | null | undefined): "in" | "out"
 export const RESERVATION_STATUS = [
   { key: "disponivel", label: "Disponível" },
   { key: "reservado", label: "Reservado" },
-  { key: "utilizado", label: "Utilizado" },
-  { key: "cancelado", label: "Cancelado" },
+  { key: "utilizado", label: "Efetivada" },
+  { key: "cancelado", label: "Cancelada" },
+  { key: "estornado", label: "Estornada" },
 ] as const;
 
 export type ReservationStatus = (typeof RESERVATION_STATUS)[number]["key"];
+
+/** Status que anulam o efeito da movimentação (saldo, custo e indicadores). */
+export const VOID_STATUSES = ["cancelado", "estornado"] as const;
+
+export function isVoidMovement(status?: string | null, kind?: string | null) {
+  return !!status && (VOID_STATUSES as readonly string[]).includes(status) || kind === "cancelamento";
+}
 
 export function reservationStatusLabel(key: string | null | undefined) {
   if (!key) return "—";
@@ -82,7 +90,7 @@ export function calcOnHand(
   for (const m of movements) {
     const q = Number(m.quantity ?? 0);
     if (!q) continue;
-    if (m.kind === "cancelamento" || m.status === "cancelado") continue;
+    if (isVoidMovement(m.status, m.kind)) continue;
     if (m.kind === "reserva" && m.status !== "utilizado") {
       reserved += q;
       continue;
@@ -92,3 +100,15 @@ export function calcOnHand(
   }
   return { onHand, reserved, available: onHand - reserved };
 }
+
+/** Custo real de uma movimentação (usa o valor histórico gravado). */
+export function movementCost(m: {
+  quantity?: number | string | null;
+  unit_cost?: number | string | null;
+  total_cost?: number | string | null;
+}) {
+  const total = Number(m.total_cost ?? 0);
+  if (total) return total;
+  return Number(m.quantity ?? 0) * Number(m.unit_cost ?? 0);
+}
+

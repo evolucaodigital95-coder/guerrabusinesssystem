@@ -2675,6 +2675,9 @@ export type Database = {
           project_id: string | null
           quantity: number | null
           reason: string | null
+          reversal_reason: string | null
+          reversed_at: string | null
+          reversed_by: string | null
           season_id: string | null
           status: string | null
           stock_item_id: string | null
@@ -2699,6 +2702,9 @@ export type Database = {
           project_id?: string | null
           quantity?: number | null
           reason?: string | null
+          reversal_reason?: string | null
+          reversed_at?: string | null
+          reversed_by?: string | null
           season_id?: string | null
           status?: string | null
           stock_item_id?: string | null
@@ -2723,6 +2729,9 @@ export type Database = {
           project_id?: string | null
           quantity?: number | null
           reason?: string | null
+          reversal_reason?: string | null
+          reversed_at?: string | null
+          reversed_by?: string | null
           season_id?: string | null
           status?: string | null
           stock_item_id?: string | null
