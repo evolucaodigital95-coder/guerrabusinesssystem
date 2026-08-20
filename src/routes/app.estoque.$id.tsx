@@ -87,6 +87,9 @@ function ItemDetail() {
   const [editOpen, setEditOpen] = useState(false);
   const [batchOpen, setBatchOpen] = useState(false);
   const [mvtOpen, setMvtOpen] = useState(false);
+  const [mvtType, setMvtType] = useState<"entrada" | "saida_palestra">("entrada");
+  const [editingMvt, setEditingMvt] = useState<EditableMovement | null>(null);
+
 
   const item = useQuery({
     queryKey: ["stock-item", id],
