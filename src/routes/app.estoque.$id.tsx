@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
-  ArrowLeft, Pencil, Plus, ArrowDownUp, Package, AlertTriangle, MapPin, Truck,
+  ArrowLeft, Pencil, Plus, Minus, Layers, Package, AlertTriangle, MapPin, Truck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -16,14 +16,16 @@ import { useSession } from "@/hooks/use-session";
 import { useCurrentOrg } from "@/hooks/use-current-org";
 import { formatCurrency, formatDate } from "@/lib/crm";
 import {
-  calcOnHand, movementKindLabel, reservationStatusLabel,
+  calcOnHand, isVoidMovement, movementKindLabel, reservationStatusLabel,
 } from "@/lib/stock";
 import { ItemFormDialog, type ItemRow } from "@/components/estoque/item-form-dialog";
 import { BatchFormDialog } from "@/components/estoque/batch-form-dialog";
 import { MovementFormDialog } from "@/components/estoque/movement-form-dialog";
+import { MovementEditDialog, type EditableMovement } from "@/components/estoque/movement-edit-dialog";
 import { AttachmentsTab } from "@/components/shared/attachments-tab";
 import { NotesTab } from "@/components/shared/notes-tab";
 import { ArchiveButton } from "@/components/shared/archive-button";
+
 
 export const Route = createFileRoute("/app/estoque/$id")({
   head: () => ({
