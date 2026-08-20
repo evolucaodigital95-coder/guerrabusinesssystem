@@ -43,7 +43,7 @@ function emptyLine(itemId: string | null = null): Line {
 }
 
 export function MovementFormDialog({
-  open, onOpenChange, organizationId, userId, stockItemId, lockedItem, defaultLectureId,
+  open, onOpenChange, organizationId, userId, stockItemId, lockedItem, defaultLectureId, defaultType,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
@@ -52,27 +52,32 @@ export function MovementFormDialog({
   stockItemId?: string;
   lockedItem?: boolean;
   defaultLectureId?: string;
+  defaultType?: SimpleType;
 }) {
   const today = new Date().toISOString().slice(0, 10);
+  const initialType: SimpleType = defaultType ?? "saida_palestra";
 
-  const [type, setType] = useState<SimpleType>("saida_palestra");
+  const [type, setType] = useState<SimpleType>(initialType);
   const [lines, setLines] = useState<Line[]>([emptyLine(stockItemId ?? null)]);
   const [supplier, setSupplier] = useState<string>("");
+  const [reason, setReason] = useState<string>("");
   const [lectureId, setLectureId] = useState<string | null>(defaultLectureId ?? null);
   const [occursOn, setOccursOn] = useState<string>(today);
   const [notes, setNotes] = useState<string>("");
 
   useEffect(() => {
     if (open) {
-      setType("saida_palestra");
+      setType(initialType);
       setLines([emptyLine(stockItemId ?? null)]);
       setSupplier("");
+      setReason("");
       setLectureId(defaultLectureId ?? null);
       setOccursOn(today);
       setNotes("");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
+  }, [open, initialType]);
+
 
   const qc = useQueryClient();
   const { emit } = useAutomation();
