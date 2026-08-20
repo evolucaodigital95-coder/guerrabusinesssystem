@@ -212,7 +212,7 @@ export function MovementFormDialog({
           occurs_on: occursOn,
           occurs_at: new Date().toISOString(),
           lecture_id: isSaidaPalestra ? lectureId : null,
-          reason: isEntrada ? (supplier.trim() || null) : null,
+          reason: (isEntrada ? supplier.trim() : reason.trim()) || null,
           notes: notes.trim() || null,
           created_by: userId,
           updated_by: userId,
