@@ -292,35 +292,57 @@ function ItemDetail() {
                     <TableHead>Tipo</TableHead>
                     <TableHead>Qtd</TableHead>
                     <TableHead>Valor</TableHead>
-                    <TableHead>Palestra</TableHead>
+                    <TableHead>Motivo / Palestra</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {(movements.data ?? []).map((m) => (
-                    <TableRow key={m.id}>
-                      <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
-                        {m.occurs_at ? formatDate(m.occurs_at) : formatDate(m.occurs_on)}
-                      </TableCell>
-                      <TableCell><Badge variant="outline" className="font-normal">{movementKindLabel(m.kind)}</Badge></TableCell>
-                      <TableCell className="tabular-nums">
-                        <span className={m.direction === "in" ? "text-emerald-300" : "text-foreground"}>
-                          {m.direction === "in" ? "+" : "−"}{m.quantity}
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-xs">{formatCurrency(m.total_cost)}</TableCell>
-                      <TableCell className="text-xs">
-                        {m.lectures ? (
-                          <Link to="/app/palestras/$id" params={{ id: m.lectures.id }} className="hover:underline">
-                            {m.lectures.title}
-                          </Link>
-                        ) : "—"}
-                      </TableCell>
-                      <TableCell className="text-xs text-muted-foreground">{reservationStatusLabel(m.status)}</TableCell>
-                    </TableRow>
-                  ))}
+                  {(movements.data ?? []).map((m) => {
+                    const voided = isVoidMovement(m.status, m.kind);
+                    return (
+                      <TableRow key={m.id} className={voided ? "opacity-55" : undefined}>
+                        <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
+                          {m.occurs_at ? formatDate(m.occurs_at) : formatDate(m.occurs_on)}
+                        </TableCell>
+                        <TableCell><Badge variant="outline" className="font-normal">{movementKindLabel(m.kind)}</Badge></TableCell>
+                        <TableCell className="tabular-nums">
+                          <span className={voided ? "line-through text-muted-foreground" : m.direction === "in" ? "text-emerald-300" : "text-foreground"}>
+                            {m.direction === "in" ? "+" : "−"}{m.quantity}
+                          </span>
+                        </TableCell>
+                        <TableCell className={`text-xs ${voided ? "line-through text-muted-foreground" : ""}`}>
+                          {formatCurrency(m.total_cost)}
+                        </TableCell>
+                        <TableCell className="text-xs">
+                          {m.lectures ? (
+                            <Link to="/app/palestras/$id" params={{ id: m.lectures.id }} className="hover:underline">
+                              {m.lectures.title}
+                            </Link>
+                          ) : (m.reason ?? "—")}
+                        </TableCell>
+                        <TableCell className="text-xs text-muted-foreground">
+                          {reservationStatusLabel(m.status)}
+                          {m.reversal_reason && (
+                            <div className="text-[10px] text-amber-500/80">{m.reversal_reason}</div>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 rounded-full px-2 text-xs text-muted-foreground"
+                            onClick={() => setEditingMvt({ ...m, stock_item_id: id } as EditableMovement)}
+                          >
+                            <Pencil className="mr-1 h-3 w-3" /> {voided ? "Ver" : "Corrigir"}
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
+
             </div>
           )}
         </TabsContent>
