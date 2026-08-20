@@ -434,10 +434,18 @@ function ItemDetail() {
             stockItemId={id}
           />
           <MovementFormDialog
+            key={mvtType}
             open={mvtOpen} onOpenChange={setMvtOpen}
             organizationId={organizationId} userId={user.id}
-            stockItemId={id} lockedItem
+            stockItemId={id} lockedItem defaultType={mvtType}
           />
+          <MovementEditDialog
+            open={!!editingMvt}
+            onOpenChange={(v) => !v && setEditingMvt(null)}
+            organizationId={organizationId} userId={user.id}
+            movement={editingMvt}
+          />
+
         </>
       )}
     </div>
