@@ -673,7 +673,9 @@ function FechamentoFinanceiroTab({
       const { data, error } = await supabase
         .from("stock_movements")
         .select("id, direction, quantity, reason, occurs_on, notes, kind, unit_cost, total_cost, created_at, created_by, stock_items:stock_item_id ( id, name, unit, average_cost )")
-        .eq("lecture_id", lectureId).is("archived_at", null);
+        .eq("lecture_id", lectureId).is("archived_at", null)
+        .not("status", "in", "(cancelado,estornado)");
+
       if (error) throw error;
       return data ?? [];
     },
