@@ -2,8 +2,9 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
-  Plus, Search, Package, AlertTriangle, Boxes, ArrowDownUp, MapPin,
+  Plus, Minus, Search, Package, AlertTriangle, Boxes, MapPin,
 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -64,9 +65,16 @@ function EstoquePage() {
   const { organizationId, loading: orgLoading } = useCurrentOrg();
   const [itemOpen, setItemOpen] = useState(false);
   const [mvtOpen, setMvtOpen] = useState(false);
+  const [mvtType, setMvtType] = useState<"entrada" | "saida_palestra">("entrada");
   const [search, setSearch] = useState("");
   const [fCat, setFCat] = useState(ALL);
   const [fStatus, setFStatus] = useState(ALL);
+
+  function openMovement(type: "entrada" | "saida_palestra") {
+    setMvtType(type);
+    setMvtOpen(true);
+  }
+
 
   const items = useQuery({
     queryKey: ["stock-items", organizationId],
@@ -118,37 +126,62 @@ function EstoquePage() {
     return list;
   }, [items.data, search, fCat, fStatus]);
 
+  const metrics = useQuery({
+    queryKey: ["stock-item-metrics", organizationId],
+    enabled: !!organizationId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("stock_item_metrics")
+        .select("stock_item_id, total_purchased, total_used, total_used_cost, last_movement_at")
+        .eq("organization_id", organizationId!);
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
   const totals = useMemo(() => {
     const list = items.data ?? [];
-    let totalItems = list.length;
+    const totalItems = list.length;
     let lowStock = 0;
     let totalValue = 0;
     let reserved = 0;
+    let withStock = 0;
     for (const it of list) {
       const b = balances.get(it.id);
       if (!b) continue;
       reserved += b.reserved;
+      if (b.available > 0) withStock += 1;
       const min = Number(it.min_quantity ?? 0);
       if (min > 0 && b.onHand <= min) lowStock += 1;
       const cost = Number(it.average_cost ?? it.purchase_price ?? 0);
       totalValue += b.onHand * cost;
     }
-    return { totalItems, lowStock, totalValue, reserved };
-  }, [items.data, balances]);
+    let usedCost = 0;
+    let lastMovement: string | null = null;
+    for (const m of metrics.data ?? []) {
+      usedCost += Number(m.total_used_cost ?? 0);
+      const at = m.last_movement_at as string | null;
+      if (at && (!lastMovement || at > lastMovement)) lastMovement = at;
+    }
+    return { totalItems, lowStock, totalValue, reserved, withStock, usedCost, lastMovement };
+  }, [items.data, balances, metrics.data]);
 
   return (
     <div className="space-y-8">
       <PageHeader
         eyebrow="Operação"
         title="Estoque"
-        description="Tudo o que entra, sai, é reservado ou utilizado nas palestras e operações do Grupo Guerra."
+        description="Entradas, saídas e uso em palestras — com correção e estorno rastreáveis, sem perder histórico."
         actions={
           <div className="flex flex-wrap gap-2">
-            <Button variant="ghost" className="rounded-full" onClick={() => setMvtOpen(true)} disabled={!organizationId}>
-              <ArrowDownUp className="mr-1.5 h-4 w-4" /> Nova movimentação
+            <Button variant="ghost" className="rounded-full" onClick={() => openMovement("entrada")} disabled={!organizationId}>
+              <Plus className="mr-1.5 h-4 w-4" /> Entrada
+            </Button>
+            <Button variant="ghost" className="rounded-full" onClick={() => openMovement("saida_palestra")} disabled={!organizationId}>
+              <Minus className="mr-1.5 h-4 w-4" /> Saída
             </Button>
             <Button variant="navy" className="rounded-full" onClick={() => setItemOpen(true)} disabled={!organizationId}>
-              <Plus className="mr-1.5 h-4 w-4" /> Novo item
+              <Plus className="mr-1.5 h-4 w-4" /> Novo material
             </Button>
           </div>
         }
@@ -156,17 +189,22 @@ function EstoquePage() {
 
       <Tabs defaultValue="items" className="space-y-6">
         <TabsList>
-          <TabsTrigger value="items">Itens & Movimentações</TabsTrigger>
+          <TabsTrigger value="items">Materiais & Movimentações</TabsTrigger>
           <TabsTrigger value="supplier">Prestação de Contas</TabsTrigger>
         </TabsList>
 
         <TabsContent value="items" className="space-y-6">
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <Summary label="Itens cadastrados" value={String(totals.totalItems)} />
-            <Summary label="Estoque baixo" value={String(totals.lowStock)} highlight={totals.lowStock > 0} />
-            <Summary label="Reservado" value={new Intl.NumberFormat("pt-BR").format(totals.reserved)} />
-            <Summary label="Valor estimado" value={formatCurrency(totals.totalValue)} />
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+            <Summary label="Valor total em estoque" value={formatCurrency(totals.totalValue)} />
+            <Summary label="Materiais disponíveis" value={`${totals.withStock}/${totals.totalItems}`} />
+            <Summary label="Total utilizado (custo)" value={formatCurrency(totals.usedCost)} />
+            <Summary label="Abaixo do mínimo" value={String(totals.lowStock)} highlight={totals.lowStock > 0} />
+            <Summary
+              label="Última movimentação"
+              value={totals.lastMovement ? new Date(totals.lastMovement).toLocaleDateString("pt-BR") : "—"}
+            />
           </div>
+
 
           <div className="rounded-2xl border border-border bg-card/40 p-4">
             <div className="grid gap-3 md:grid-cols-12">
@@ -275,7 +313,7 @@ function EstoquePage() {
       {organizationId && user && (
         <>
           <ItemFormDialog open={itemOpen} onOpenChange={setItemOpen} organizationId={organizationId} userId={user.id} />
-          <MovementFormDialog open={mvtOpen} onOpenChange={setMvtOpen} organizationId={organizationId} userId={user.id} />
+          <MovementFormDialog key={mvtType} open={mvtOpen} onOpenChange={setMvtOpen} organizationId={organizationId} userId={user.id} defaultType={mvtType} />
         </>
       )}
     </div>

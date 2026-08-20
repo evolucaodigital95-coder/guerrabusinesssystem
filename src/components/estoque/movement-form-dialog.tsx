@@ -43,7 +43,7 @@ function emptyLine(itemId: string | null = null): Line {
 }
 
 export function MovementFormDialog({
-  open, onOpenChange, organizationId, userId, stockItemId, lockedItem, defaultLectureId,
+  open, onOpenChange, organizationId, userId, stockItemId, lockedItem, defaultLectureId, defaultType,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
@@ -52,27 +52,32 @@ export function MovementFormDialog({
   stockItemId?: string;
   lockedItem?: boolean;
   defaultLectureId?: string;
+  defaultType?: SimpleType;
 }) {
   const today = new Date().toISOString().slice(0, 10);
+  const initialType: SimpleType = defaultType ?? "saida_palestra";
 
-  const [type, setType] = useState<SimpleType>("saida_palestra");
+  const [type, setType] = useState<SimpleType>(initialType);
   const [lines, setLines] = useState<Line[]>([emptyLine(stockItemId ?? null)]);
   const [supplier, setSupplier] = useState<string>("");
+  const [reason, setReason] = useState<string>("");
   const [lectureId, setLectureId] = useState<string | null>(defaultLectureId ?? null);
   const [occursOn, setOccursOn] = useState<string>(today);
   const [notes, setNotes] = useState<string>("");
 
   useEffect(() => {
     if (open) {
-      setType("saida_palestra");
+      setType(initialType);
       setLines([emptyLine(stockItemId ?? null)]);
       setSupplier("");
+      setReason("");
       setLectureId(defaultLectureId ?? null);
       setOccursOn(today);
       setNotes("");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
+  }, [open, initialType]);
+
 
   const qc = useQueryClient();
   const { emit } = useAutomation();
@@ -166,6 +171,8 @@ export function MovementFormDialog({
     mutationFn: async () => {
       if (validLines.length === 0) throw new Error("Adicione ao menos um item com quantidade.");
       if (isSaidaPalestra && !lectureId) throw new Error("Selecione a palestra vinculada à saída.");
+      if (!isEntrada && !isSaidaPalestra && !reason.trim()) throw new Error("Informe o motivo da movimentação.");
+
 
       // Validações por linha
       for (const l of validLines) {
@@ -207,7 +214,7 @@ export function MovementFormDialog({
           occurs_on: occursOn,
           occurs_at: new Date().toISOString(),
           lecture_id: isSaidaPalestra ? lectureId : null,
-          reason: isEntrada ? (supplier.trim() || null) : null,
+          reason: (isEntrada ? supplier.trim() : reason.trim()) || null,
           notes: notes.trim() || null,
           created_by: userId,
           updated_by: userId,
@@ -289,12 +296,22 @@ export function MovementFormDialog({
             </div>
           )}
 
-          {isEntrada && (
+          {isEntrada ? (
             <div className="space-y-1.5">
               <Label>Fornecedor</Label>
               <Input value={supplier} onChange={(e) => setSupplier(e.target.value)} placeholder="Opcional — aplicado a todos os itens" />
             </div>
+          ) : (
+            <div className="space-y-1.5">
+              <Label>Motivo{isSaidaPalestra ? "" : " *"}</Label>
+              <Input
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+                placeholder={isSaidaPalestra ? "Opcional — ex.: kit de materiais do evento" : "Ex.: perda no transporte, correção de inventário"}
+              />
+            </div>
           )}
+
 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
@@ -320,7 +337,20 @@ export function MovementFormDialog({
                         {lockedItem ? (
                           <Input value={it?.name ?? ""} readOnly />
                         ) : (
-                          <Select value={l.itemId ?? ""} onValueChange={(v) => updateLine(l.key, { itemId: v })}>
+                          <Select
+                            value={l.itemId ?? ""}
+                            onValueChange={(v) => {
+                              const picked = itemsById.get(v);
+                              updateLine(l.key, {
+                                itemId: v,
+                                unitCost:
+                                  isEntrada && !l.unitCost && picked?.purchase_price != null
+                                    ? String(picked.purchase_price)
+                                    : l.unitCost,
+                              });
+                            }}
+                          >
+
                             <SelectTrigger><SelectValue placeholder="Selecionar item" /></SelectTrigger>
                             <SelectContent>
                               {(items.data ?? []).map((i) => (

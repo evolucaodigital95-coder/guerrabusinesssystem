@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
-  ArrowLeft, Pencil, Plus, ArrowDownUp, Package, AlertTriangle, MapPin, Truck,
+  ArrowLeft, Pencil, Plus, Minus, Layers, Package, AlertTriangle, MapPin, Truck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -16,14 +16,16 @@ import { useSession } from "@/hooks/use-session";
 import { useCurrentOrg } from "@/hooks/use-current-org";
 import { formatCurrency, formatDate } from "@/lib/crm";
 import {
-  calcOnHand, movementKindLabel, reservationStatusLabel,
+  calcOnHand, isVoidMovement, movementKindLabel, reservationStatusLabel,
 } from "@/lib/stock";
 import { ItemFormDialog, type ItemRow } from "@/components/estoque/item-form-dialog";
 import { BatchFormDialog } from "@/components/estoque/batch-form-dialog";
 import { MovementFormDialog } from "@/components/estoque/movement-form-dialog";
+import { MovementEditDialog, type EditableMovement } from "@/components/estoque/movement-edit-dialog";
 import { AttachmentsTab } from "@/components/shared/attachments-tab";
 import { NotesTab } from "@/components/shared/notes-tab";
 import { ArchiveButton } from "@/components/shared/archive-button";
+
 
 export const Route = createFileRoute("/app/estoque/$id")({
   head: () => ({
@@ -51,8 +53,11 @@ type Movement = {
   lecture_id: string | null;
   season_id: string | null;
   project_id: string | null;
+  reversed_at: string | null;
+  reversal_reason: string | null;
   lectures: { id: string; title: string } | null;
 };
+
 
 type Batch = {
   id: string;
@@ -82,6 +87,9 @@ function ItemDetail() {
   const [editOpen, setEditOpen] = useState(false);
   const [batchOpen, setBatchOpen] = useState(false);
   const [mvtOpen, setMvtOpen] = useState(false);
+  const [mvtType, setMvtType] = useState<"entrada" | "saida_palestra">("entrada");
+  const [editingMvt, setEditingMvt] = useState<EditableMovement | null>(null);
+
 
   const item = useQuery({
     queryKey: ["stock-item", id],
@@ -106,8 +114,10 @@ function ItemDetail() {
           id, kind, direction, status, quantity, unit_cost, total_cost,
           occurs_on, occurs_at, reason, notes,
           batch_id, lecture_id, season_id, project_id,
+          reversed_at, reversal_reason,
           lectures:lecture_id ( id, title )
         `)
+
         .eq("stock_item_id", id).is("archived_at", null)
         .order("occurs_at", { ascending: false, nullsFirst: false })
         .order("created_at", { ascending: false });
@@ -173,7 +183,7 @@ function ItemDetail() {
       if (!m.lectures) continue;
       const g = groups.get(m.lectures.id) ?? { title: m.lectures.title, reserved: 0, used: 0 };
       const q = Number(m.quantity ?? 0);
-      if (m.status === "cancelado" || m.kind === "cancelamento") continue;
+      if (isVoidMovement(m.status, m.kind)) continue;
       if (m.kind === "reserva" && m.status !== "utilizado") g.reserved += q;
       else if (m.direction === "out") g.used += q;
       groups.set(m.lectures.id, g);
@@ -187,13 +197,17 @@ function ItemDetail() {
         <Link to="/app/estoque" className="inline-flex items-center text-xs uppercase tracking-[0.2em] text-muted-foreground hover:text-foreground">
           <ArrowLeft className="mr-1.5 h-3.5 w-3.5" /> Estoque
         </Link>
-        <div className="flex gap-2">
-          <Button variant="ghost" size="sm" className="rounded-full" onClick={() => setBatchOpen(true)}>
-            <Plus className="mr-1.5 h-4 w-4" /> Nova entrada
+        <div className="flex flex-wrap justify-end gap-2">
+          <Button variant="ghost" size="sm" className="rounded-full" onClick={() => { setMvtType("entrada"); setMvtOpen(true); }}>
+            <Plus className="mr-1.5 h-4 w-4" /> Entrada
           </Button>
-          <Button variant="ghost" size="sm" className="rounded-full" onClick={() => setMvtOpen(true)}>
-            <ArrowDownUp className="mr-1.5 h-4 w-4" /> Movimentação
+          <Button variant="ghost" size="sm" className="rounded-full" onClick={() => { setMvtType("saida_palestra"); setMvtOpen(true); }}>
+            <Minus className="mr-1.5 h-4 w-4" /> Saída
           </Button>
+          <Button variant="ghost" size="sm" className="rounded-full text-muted-foreground" onClick={() => setBatchOpen(true)}>
+            <Layers className="mr-1.5 h-4 w-4" /> Lote
+          </Button>
+
           <ArchiveButton table="stock_items" id={id} label="este item" listQueryKey="stock-items" backTo="/app/estoque" />
           <Button variant="navy" size="sm" className="rounded-full" onClick={() => setEditOpen(true)}>
             <Pencil className="mr-1.5 h-4 w-4" /> Editar
@@ -278,35 +292,57 @@ function ItemDetail() {
                     <TableHead>Tipo</TableHead>
                     <TableHead>Qtd</TableHead>
                     <TableHead>Valor</TableHead>
-                    <TableHead>Palestra</TableHead>
+                    <TableHead>Motivo / Palestra</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {(movements.data ?? []).map((m) => (
-                    <TableRow key={m.id}>
-                      <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
-                        {m.occurs_at ? formatDate(m.occurs_at) : formatDate(m.occurs_on)}
-                      </TableCell>
-                      <TableCell><Badge variant="outline" className="font-normal">{movementKindLabel(m.kind)}</Badge></TableCell>
-                      <TableCell className="tabular-nums">
-                        <span className={m.direction === "in" ? "text-emerald-300" : "text-foreground"}>
-                          {m.direction === "in" ? "+" : "−"}{m.quantity}
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-xs">{formatCurrency(m.total_cost)}</TableCell>
-                      <TableCell className="text-xs">
-                        {m.lectures ? (
-                          <Link to="/app/palestras/$id" params={{ id: m.lectures.id }} className="hover:underline">
-                            {m.lectures.title}
-                          </Link>
-                        ) : "—"}
-                      </TableCell>
-                      <TableCell className="text-xs text-muted-foreground">{reservationStatusLabel(m.status)}</TableCell>
-                    </TableRow>
-                  ))}
+                  {(movements.data ?? []).map((m) => {
+                    const voided = isVoidMovement(m.status, m.kind);
+                    return (
+                      <TableRow key={m.id} className={voided ? "opacity-55" : undefined}>
+                        <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
+                          {m.occurs_at ? formatDate(m.occurs_at) : formatDate(m.occurs_on)}
+                        </TableCell>
+                        <TableCell><Badge variant="outline" className="font-normal">{movementKindLabel(m.kind)}</Badge></TableCell>
+                        <TableCell className="tabular-nums">
+                          <span className={voided ? "line-through text-muted-foreground" : m.direction === "in" ? "text-emerald-300" : "text-foreground"}>
+                            {m.direction === "in" ? "+" : "−"}{m.quantity}
+                          </span>
+                        </TableCell>
+                        <TableCell className={`text-xs ${voided ? "line-through text-muted-foreground" : ""}`}>
+                          {formatCurrency(m.total_cost)}
+                        </TableCell>
+                        <TableCell className="text-xs">
+                          {m.lectures ? (
+                            <Link to="/app/palestras/$id" params={{ id: m.lectures.id }} className="hover:underline">
+                              {m.lectures.title}
+                            </Link>
+                          ) : (m.reason ?? "—")}
+                        </TableCell>
+                        <TableCell className="text-xs text-muted-foreground">
+                          {reservationStatusLabel(m.status)}
+                          {m.reversal_reason && (
+                            <div className="text-[10px] text-amber-500/80">{m.reversal_reason}</div>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 rounded-full px-2 text-xs text-muted-foreground"
+                            onClick={() => setEditingMvt({ ...m, stock_item_id: id } as EditableMovement)}
+                          >
+                            <Pencil className="mr-1 h-3 w-3" /> {voided ? "Ver" : "Corrigir"}
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
+
             </div>
           )}
         </TabsContent>
@@ -398,10 +434,18 @@ function ItemDetail() {
             stockItemId={id}
           />
           <MovementFormDialog
+            key={mvtType}
             open={mvtOpen} onOpenChange={setMvtOpen}
             organizationId={organizationId} userId={user.id}
-            stockItemId={id} lockedItem
+            stockItemId={id} lockedItem defaultType={mvtType}
           />
+          <MovementEditDialog
+            open={!!editingMvt}
+            onOpenChange={(v) => !v && setEditingMvt(null)}
+            organizationId={organizationId} userId={user.id}
+            movement={editingMvt}
+          />
+
         </>
       )}
     </div>
