@@ -294,12 +294,22 @@ export function MovementFormDialog({
             </div>
           )}
 
-          {isEntrada && (
+          {isEntrada ? (
             <div className="space-y-1.5">
               <Label>Fornecedor</Label>
               <Input value={supplier} onChange={(e) => setSupplier(e.target.value)} placeholder="Opcional — aplicado a todos os itens" />
             </div>
+          ) : (
+            <div className="space-y-1.5">
+              <Label>Motivo{isSaidaPalestra ? "" : " *"}</Label>
+              <Input
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+                placeholder={isSaidaPalestra ? "Opcional — ex.: kit de materiais do evento" : "Ex.: perda no transporte, correção de inventário"}
+              />
+            </div>
           )}
+
 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
