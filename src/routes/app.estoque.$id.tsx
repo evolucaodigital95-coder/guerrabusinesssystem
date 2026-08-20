@@ -114,8 +114,10 @@ function ItemDetail() {
           id, kind, direction, status, quantity, unit_cost, total_cost,
           occurs_on, occurs_at, reason, notes,
           batch_id, lecture_id, season_id, project_id,
+          reversed_at, reversal_reason,
           lectures:lecture_id ( id, title )
         `)
+
         .eq("stock_item_id", id).is("archived_at", null)
         .order("occurs_at", { ascending: false, nullsFirst: false })
         .order("created_at", { ascending: false });
