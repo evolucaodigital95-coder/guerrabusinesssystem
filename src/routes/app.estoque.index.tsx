@@ -2,8 +2,9 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
-  Plus, Search, Package, AlertTriangle, Boxes, ArrowDownUp, MapPin,
+  Plus, Minus, Search, Package, AlertTriangle, Boxes, MapPin,
 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
