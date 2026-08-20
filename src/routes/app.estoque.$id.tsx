@@ -183,7 +183,7 @@ function ItemDetail() {
       if (!m.lectures) continue;
       const g = groups.get(m.lectures.id) ?? { title: m.lectures.title, reserved: 0, used: 0 };
       const q = Number(m.quantity ?? 0);
-      if (m.status === "cancelado" || m.kind === "cancelamento") continue;
+      if (isVoidMovement(m.status, m.kind)) continue;
       if (m.kind === "reserva" && m.status !== "utilizado") g.reserved += q;
       else if (m.direction === "out") g.used += q;
       groups.set(m.lectures.id, g);
@@ -197,13 +197,17 @@ function ItemDetail() {
         <Link to="/app/estoque" className="inline-flex items-center text-xs uppercase tracking-[0.2em] text-muted-foreground hover:text-foreground">
           <ArrowLeft className="mr-1.5 h-3.5 w-3.5" /> Estoque
         </Link>
-        <div className="flex gap-2">
-          <Button variant="ghost" size="sm" className="rounded-full" onClick={() => setBatchOpen(true)}>
-            <Plus className="mr-1.5 h-4 w-4" /> Nova entrada
+        <div className="flex flex-wrap justify-end gap-2">
+          <Button variant="ghost" size="sm" className="rounded-full" onClick={() => { setMvtType("entrada"); setMvtOpen(true); }}>
+            <Plus className="mr-1.5 h-4 w-4" /> Entrada
           </Button>
-          <Button variant="ghost" size="sm" className="rounded-full" onClick={() => setMvtOpen(true)}>
-            <ArrowDownUp className="mr-1.5 h-4 w-4" /> Movimentação
+          <Button variant="ghost" size="sm" className="rounded-full" onClick={() => { setMvtType("saida_palestra"); setMvtOpen(true); }}>
+            <Minus className="mr-1.5 h-4 w-4" /> Saída
           </Button>
+          <Button variant="ghost" size="sm" className="rounded-full text-muted-foreground" onClick={() => setBatchOpen(true)}>
+            <Layers className="mr-1.5 h-4 w-4" /> Lote
+          </Button>
+
           <ArchiveButton table="stock_items" id={id} label="este item" listQueryKey="stock-items" backTo="/app/estoque" />
           <Button variant="navy" size="sm" className="rounded-full" onClick={() => setEditOpen(true)}>
             <Pencil className="mr-1.5 h-4 w-4" /> Editar
