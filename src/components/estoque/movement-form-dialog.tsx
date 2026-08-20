@@ -337,7 +337,20 @@ export function MovementFormDialog({
                         {lockedItem ? (
                           <Input value={it?.name ?? ""} readOnly />
                         ) : (
-                          <Select value={l.itemId ?? ""} onValueChange={(v) => updateLine(l.key, { itemId: v })}>
+                          <Select
+                            value={l.itemId ?? ""}
+                            onValueChange={(v) => {
+                              const picked = itemsById.get(v);
+                              updateLine(l.key, {
+                                itemId: v,
+                                unitCost:
+                                  isEntrada && !l.unitCost && picked?.purchase_price != null
+                                    ? String(picked.purchase_price)
+                                    : l.unitCost,
+                              });
+                            }}
+                          >
+
                             <SelectTrigger><SelectValue placeholder="Selecionar item" /></SelectTrigger>
                             <SelectContent>
                               {(items.data ?? []).map((i) => (
