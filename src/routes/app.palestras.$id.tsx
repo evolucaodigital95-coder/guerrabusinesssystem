@@ -1255,11 +1255,61 @@ function FechamentoFinanceiroTab({
         totalLabel="Subtotal adiantamentos"
         total={calc.totals.totalAdvances}
       />
+
+      {/* Conciliação — conferência contra documentos externos */}
+      <ReconciliationPanel
+        entityType="lecture"
+        entityId={lectureId}
+        organizationId={organizationId}
+        userId={userId}
+        suggestedAmount={calc.totals.netProfit}
+        suggestedTitle="Lucro líquido da palestra"
+      />
     </div>
   );
 }
 
+function ReopenDialog({ pending, onConfirm }: { pending: boolean; onConfirm: (reason: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const [reason, setReason] = useState("");
+  return (
+    <>
+      <Button variant="outline" size="sm" className="rounded-full" onClick={() => setOpen(true)} disabled={pending}>
+        <Unlock className="mr-1.5 h-4 w-4" /> Reabrir palestra
+      </Button>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="font-serif text-2xl">Reabrir fechamento</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              O snapshot atual será arquivado (nada é apagado), os adiantamentos amortizados neste
+              fechamento voltam para o saldo em aberto e a palestra retorna para <strong>Em conferência</strong>.
+              A Conta Corrente deixa de considerar este resultado até o novo fechamento.
+            </p>
+            <div className="space-y-1.5">
+              <Label>Motivo da reabertura</Label>
+              <Textarea rows={3} value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Ex.: correção do custo dos materiais." />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="ghost" onClick={() => setOpen(false)}>Cancelar</Button>
+            <Button
+              type="button" variant="navy" disabled={pending}
+              onClick={() => { onConfirm(reason); setOpen(false); setReason(""); }}
+            >
+              Reabrir palestra
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
 /* ----- helpers do fechamento ----- */
+
 
 function pctStr(v: number) {
   return `${Math.round((v || 0) * 1000) / 10}%`;
