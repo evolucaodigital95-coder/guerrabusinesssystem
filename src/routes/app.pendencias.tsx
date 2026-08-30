@@ -55,7 +55,7 @@ function PendenciasPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("lectures")
-        .select("id, title, scheduled_at, status, financial_status, gross_revenue, company_id, agent_id, speaker_name, season_id")
+        .select("id, title, scheduled_at, status, financial_status, gross_revenue, company_id, agent_id, speaker_id, season_id")
         .eq("organization_id", organizationId!).is("archived_at", null);
       if (error) throw error;
       return data ?? [];
@@ -114,7 +114,7 @@ function PendenciasPage() {
       if (l.status === "cancelada") continue;
       if (!l.company_id) out.push({ id: `lec-comp-${l.id}`, group: "Palestras", severity: "alta", title: `${label} sem empresa`, detail: "Vincule a empresa para conectar CRM, financeiro e relatórios.", date: l.scheduled_at, route });
       if (!l.agent_id) out.push({ id: `lec-agent-${l.id}`, group: "Palestras", severity: "alta", title: `${label} sem agendista`, detail: "Sem agendista o fechamento e a conta corrente não podem ser gerados.", date: l.scheduled_at, route });
-      if (!l.speaker_name) out.push({ id: `lec-speaker-${l.id}`, group: "Palestras", severity: "media", title: `${label} sem palestrante`, detail: "Informe o palestrante responsável.", date: l.scheduled_at, route });
+      if (!l.speaker_id) out.push({ id: `lec-speaker-${l.id}`, group: "Palestras", severity: "media", title: `${label} sem palestrante`, detail: "Informe o palestrante responsável.", date: l.scheduled_at, route });
       if (!l.season_id) out.push({ id: `lec-season-${l.id}`, group: "Palestras", severity: "media", title: `${label} sem temporada`, detail: "Sem temporada a palestra não entra na consolidação do ciclo.", date: l.scheduled_at, route });
       const realizada = l.status === "realizada" || (l.scheduled_at && l.scheduled_at < today);
       if (realizada && l.financial_status !== "closed") {
