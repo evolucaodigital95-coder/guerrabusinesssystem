@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import {
   ArrowLeft, Pencil, Plus, MapPin, Users, Calendar, Building2, UserCircle2,
   ShieldCheck, History as HistoryIcon, Paperclip, Package, Wallet, Activity,
-  Calculator, Info, ExternalLink, Lock,
+  Calculator, Info, ExternalLink, Lock, Unlock,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -34,6 +34,7 @@ import { ArchiveButton } from "@/components/shared/archive-button";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CalcBreakdown } from "@/components/finance/calc-breakdown";
+import { ReconciliationPanel } from "@/components/finance/reconciliation-panel";
 import { calculateLecture, selectRule, BUCKET_LABEL, type RuleSnapshot, type ExpenseBucket, type LectureExpenseInput } from "@/lib/finance-engine";
 import { paymentMethodLabel } from "@/lib/finance";
 import { cn } from "@/lib/utils";
@@ -999,6 +1000,69 @@ function FechamentoFinanceiroTab({
     onError: (e) => toast.error(e instanceof Error ? e.message : "Erro ao recalcular"),
   });
 
+  /**
+   * REABRIR — arquiva o snapshot vigente (nada é apagado), estorna a amortização
+   * dos adiantamentos aplicados nele e devolve a palestra para "em conferência".
+   * Como a Conta Corrente lê apenas snapshots não arquivados, não há crédito duplicado
+   * quando a palestra for fechada novamente.
+   */
+  const reopen = useMutation({
+    mutationFn: async (reason: string) => {
+      const snap = snapshot.data;
+      if (!snap?.id) throw new Error("Não há fechamento para reabrir.");
+
+      const { error: archErr } = await supabase
+        .from("lecture_financial_snapshots")
+        .update({ archived_at: new Date().toISOString() })
+        .eq("id", snap.id);
+      if (archErr) throw archErr;
+
+      // Estorna as amortizações registradas neste snapshot.
+      const inputs = (snap.inputs ?? {}) as { advances?: Array<{ id: string; amount: number }> };
+      for (const a of inputs.advances ?? []) {
+        const current = (lectureAdvances.data ?? []).find((x) => x.id === a.id);
+        if (!current) continue;
+        const restored = Math.max(0, Number(current.amount_amortized ?? 0) - Number(a.amount ?? 0));
+        await supabase.from("advances").update({
+          amount_amortized: restored,
+          status: restored <= 0 ? "aberto" : "abatido_parcial",
+          updated_by: userId,
+        }).eq("id", a.id);
+      }
+
+      const { error: lecErr } = await supabase.from("lectures").update({
+        financial_status: "review",
+        closed_at: null,
+        closed_by: null,
+        reopened_at: new Date().toISOString(),
+        reopened_by: userId,
+        reopen_reason: reason.trim() || null,
+        updated_by: userId,
+      }).eq("id", lectureId);
+      if (lecErr) throw lecErr;
+
+      await supabase.from("timeline_events").insert({
+        organization_id: organizationId,
+        entity_type: "lecture", entity_id: lectureId,
+        kind: "closing",
+        title: "Fechamento reaberto",
+        body: reason.trim() || "Sem motivo informado.",
+        occurs_at: new Date().toISOString(),
+        created_by: userId, updated_by: userId,
+      });
+    },
+    onSuccess: () => {
+      toast.success("Palestra reaberta. Ajuste os dados e feche novamente.");
+      qc.invalidateQueries({ queryKey: ["fechamento-snapshot", lectureId] });
+      qc.invalidateQueries({ queryKey: ["fechamento-advances", lectureId, agentId] });
+      qc.invalidateQueries({ queryKey: ["lecture-snapshot", lectureId] });
+      qc.invalidateQueries({ queryKey: ["lecture-timeline", lectureId] });
+      qc.invalidateQueries({ queryKey: ["lecture", lectureId] });
+      qc.invalidateQueries({ queryKey: ["agent-snapshots", agentId] });
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Erro ao reabrir"),
+  });
+
   const loading = movements.isLoading || stockMoves.isLoading || lectureAdvances.isLoading || rules.isLoading || snapshot.isLoading;
   if (loading) return <p className="text-sm text-muted-foreground">Carregando motor financeiro…</p>;
 
@@ -1070,6 +1134,9 @@ function FechamentoFinanceiroTab({
                 </Button>
               }
             />
+          )}
+          {isClosed && (
+            <ReopenDialog pending={reopen.isPending} onConfirm={(reason) => reopen.mutate(reason)} />
           )}
         </div>
       </div>
@@ -1189,11 +1256,61 @@ function FechamentoFinanceiroTab({
         totalLabel="Subtotal adiantamentos"
         total={calc.totals.totalAdvances}
       />
+
+      {/* Conciliação — conferência contra documentos externos */}
+      <ReconciliationPanel
+        entityType="lecture"
+        entityId={lectureId}
+        organizationId={organizationId}
+        userId={userId}
+        suggestedAmount={calc.totals.netProfit}
+        suggestedTitle="Lucro líquido da palestra"
+      />
     </div>
   );
 }
 
+function ReopenDialog({ pending, onConfirm }: { pending: boolean; onConfirm: (reason: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const [reason, setReason] = useState("");
+  return (
+    <>
+      <Button variant="outline" size="sm" className="rounded-full" onClick={() => setOpen(true)} disabled={pending}>
+        <Unlock className="mr-1.5 h-4 w-4" /> Reabrir palestra
+      </Button>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="font-serif text-2xl">Reabrir fechamento</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              O snapshot atual será arquivado (nada é apagado), os adiantamentos amortizados neste
+              fechamento voltam para o saldo em aberto e a palestra retorna para <strong>Em conferência</strong>.
+              A Conta Corrente deixa de considerar este resultado até o novo fechamento.
+            </p>
+            <div className="space-y-1.5">
+              <Label>Motivo da reabertura</Label>
+              <Textarea rows={3} value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Ex.: correção do custo dos materiais." />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="ghost" onClick={() => setOpen(false)}>Cancelar</Button>
+            <Button
+              type="button" variant="navy" disabled={pending}
+              onClick={() => { onConfirm(reason); setOpen(false); setReason(""); }}
+            >
+              Reabrir palestra
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
 /* ----- helpers do fechamento ----- */
+
 
 function pctStr(v: number) {
   return `${Math.round((v || 0) * 1000) / 10}%`;

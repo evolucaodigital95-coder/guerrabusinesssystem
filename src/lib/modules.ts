@@ -18,6 +18,7 @@ import {
   Crown,
   Library,
   ShieldCheck,
+  ShieldAlert,
   Settings,
   UserCog,
   Briefcase,
@@ -114,6 +115,16 @@ export const MODULES: ModuleDef[] = [
     description: "Livro razão: lançamentos, recebimentos e fluxo de caixa.",
     emptyMessage: "Nenhum lançamento por aqui.",
     primaryAction: "Novo Lançamento",
+  },
+
+  {
+    to: "/app/pendencias",
+    label: "Pendências",
+    icon: ShieldAlert,
+    section: "operação",
+    description: "Inconsistências reais: vínculos faltando, fechamentos e divergências.",
+    emptyMessage: "Nenhuma pendência encontrada.",
+    primaryAction: "Ver pendências",
   },
 
   // GESTÃO

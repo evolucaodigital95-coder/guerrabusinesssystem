@@ -19,6 +19,7 @@ import { Route as AppRoadmapRouteImport } from './routes/app.roadmap'
 import { Route as AppRelatoriosRouteImport } from './routes/app.relatorios'
 import { Route as AppPlanosRouteImport } from './routes/app.planos'
 import { Route as AppPerformanceRouteImport } from './routes/app.performance'
+import { Route as AppPendenciasRouteImport } from './routes/app.pendencias'
 import { Route as AppPainelDiretorRouteImport } from './routes/app.painel-diretor'
 import { Route as AppOrganizacaoRouteImport } from './routes/app.organizacao'
 import { Route as AppOnboardingRouteImport } from './routes/app.onboarding'
@@ -106,6 +107,11 @@ const AppPlanosRoute = AppPlanosRouteImport.update({
 const AppPerformanceRoute = AppPerformanceRouteImport.update({
   id: '/performance',
   path: '/performance',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPendenciasRoute = AppPendenciasRouteImport.update({
+  id: '/pendencias',
+  path: '/pendencias',
   getParentRoute: () => AppRoute,
 } as any)
 const AppPainelDiretorRoute = AppPainelDiretorRouteImport.update({
@@ -325,6 +331,7 @@ export interface FileRoutesByFullPath {
   '/app/onboarding': typeof AppOnboardingRoute
   '/app/organizacao': typeof AppOrganizacaoRoute
   '/app/painel-diretor': typeof AppPainelDiretorRoute
+  '/app/pendencias': typeof AppPendenciasRoute
   '/app/performance': typeof AppPerformanceRoute
   '/app/planos': typeof AppPlanosRoute
   '/app/relatorios': typeof AppRelatoriosRoute
@@ -373,6 +380,7 @@ export interface FileRoutesByTo {
   '/app/onboarding': typeof AppOnboardingRoute
   '/app/organizacao': typeof AppOrganizacaoRoute
   '/app/painel-diretor': typeof AppPainelDiretorRoute
+  '/app/pendencias': typeof AppPendenciasRoute
   '/app/performance': typeof AppPerformanceRoute
   '/app/planos': typeof AppPlanosRoute
   '/app/relatorios': typeof AppRelatoriosRoute
@@ -424,6 +432,7 @@ export interface FileRoutesById {
   '/app/onboarding': typeof AppOnboardingRoute
   '/app/organizacao': typeof AppOrganizacaoRoute
   '/app/painel-diretor': typeof AppPainelDiretorRoute
+  '/app/pendencias': typeof AppPendenciasRoute
   '/app/performance': typeof AppPerformanceRoute
   '/app/planos': typeof AppPlanosRoute
   '/app/relatorios': typeof AppRelatoriosRoute
@@ -476,6 +485,7 @@ export interface FileRouteTypes {
     | '/app/onboarding'
     | '/app/organizacao'
     | '/app/painel-diretor'
+    | '/app/pendencias'
     | '/app/performance'
     | '/app/planos'
     | '/app/relatorios'
@@ -524,6 +534,7 @@ export interface FileRouteTypes {
     | '/app/onboarding'
     | '/app/organizacao'
     | '/app/painel-diretor'
+    | '/app/pendencias'
     | '/app/performance'
     | '/app/planos'
     | '/app/relatorios'
@@ -574,6 +585,7 @@ export interface FileRouteTypes {
     | '/app/onboarding'
     | '/app/organizacao'
     | '/app/painel-diretor'
+    | '/app/pendencias'
     | '/app/performance'
     | '/app/planos'
     | '/app/relatorios'
@@ -677,6 +689,13 @@ declare module '@tanstack/react-router' {
       path: '/performance'
       fullPath: '/app/performance'
       preLoaderRoute: typeof AppPerformanceRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/pendencias': {
+      id: '/app/pendencias'
+      path: '/pendencias'
+      fullPath: '/app/pendencias'
+      preLoaderRoute: typeof AppPendenciasRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/painel-diretor': {
@@ -986,6 +1005,7 @@ interface AppRouteChildren {
   AppOnboardingRoute: typeof AppOnboardingRoute
   AppOrganizacaoRoute: typeof AppOrganizacaoRoute
   AppPainelDiretorRoute: typeof AppPainelDiretorRoute
+  AppPendenciasRoute: typeof AppPendenciasRoute
   AppPerformanceRoute: typeof AppPerformanceRoute
   AppPlanosRoute: typeof AppPlanosRoute
   AppRelatoriosRoute: typeof AppRelatoriosRoute
@@ -1027,6 +1047,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppOnboardingRoute: AppOnboardingRoute,
   AppOrganizacaoRoute: AppOrganizacaoRoute,
   AppPainelDiretorRoute: AppPainelDiretorRoute,
+  AppPendenciasRoute: AppPendenciasRoute,
   AppPerformanceRoute: AppPerformanceRoute,
   AppPlanosRoute: AppPlanosRoute,
   AppRelatoriosRoute: AppRelatoriosRoute,

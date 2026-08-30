@@ -1631,6 +1631,9 @@ export type Database = {
           notes: string | null
           organization_id: string
           project_id: string | null
+          reopen_reason: string | null
+          reopened_at: string | null
+          reopened_by: string | null
           scheduled_at: string | null
           scheduled_time: string | null
           season_id: string | null
@@ -1664,6 +1667,9 @@ export type Database = {
           notes?: string | null
           organization_id: string
           project_id?: string | null
+          reopen_reason?: string | null
+          reopened_at?: string | null
+          reopened_by?: string | null
           scheduled_at?: string | null
           scheduled_time?: string | null
           season_id?: string | null
@@ -1697,6 +1703,9 @@ export type Database = {
           notes?: string | null
           organization_id?: string
           project_id?: string | null
+          reopen_reason?: string | null
+          reopened_at?: string | null
+          reopened_by?: string | null
           scheduled_at?: string | null
           scheduled_time?: string | null
           season_id?: string | null
@@ -2475,6 +2484,74 @@ export type Database = {
             columns: ["season_id"]
             isOneToOne: false
             referencedRelation: "seasons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reconciliations: {
+        Row: {
+          archived_at: string | null
+          created_at: string
+          created_by: string | null
+          difference: number | null
+          document_ref: string | null
+          entity_id: string | null
+          entity_type: string
+          external_amount: number
+          gbs_amount: number
+          id: string
+          notes: string | null
+          organization_id: string
+          reference_date: string
+          status: string
+          title: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          archived_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          difference?: number | null
+          document_ref?: string | null
+          entity_id?: string | null
+          entity_type: string
+          external_amount?: number
+          gbs_amount?: number
+          id?: string
+          notes?: string | null
+          organization_id: string
+          reference_date?: string
+          status?: string
+          title: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          archived_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          difference?: number | null
+          document_ref?: string | null
+          entity_id?: string | null
+          entity_type?: string
+          external_amount?: number
+          gbs_amount?: number
+          id?: string
+          notes?: string | null
+          organization_id?: string
+          reference_date?: string
+          status?: string
+          title?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reconciliations_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
         ]
