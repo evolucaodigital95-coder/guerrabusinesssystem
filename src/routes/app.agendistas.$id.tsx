@@ -1077,7 +1077,12 @@ function AgentDetail() {
               </p>
             </div>
           )}
+
+          <div className="border-t border-border pt-6">
+            <AgentDocuments agentId={id} userId={user?.id ?? ""} />
+          </div>
         </TabsContent>
+
 
 
 
