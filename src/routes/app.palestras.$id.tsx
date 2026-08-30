@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import {
   ArrowLeft, Pencil, Plus, MapPin, Users, Calendar, Building2, UserCircle2,
   ShieldCheck, History as HistoryIcon, Paperclip, Package, Wallet, Activity,
-  Calculator, Info, ExternalLink, Lock,
+  Calculator, Info, ExternalLink, Lock, Unlock, ClipboardCheck,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -34,6 +34,7 @@ import { ArchiveButton } from "@/components/shared/archive-button";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CalcBreakdown } from "@/components/finance/calc-breakdown";
+import { ReconciliationPanel } from "@/components/finance/reconciliation-panel";
 import { calculateLecture, selectRule, BUCKET_LABEL, type RuleSnapshot, type ExpenseBucket, type LectureExpenseInput } from "@/lib/finance-engine";
 import { paymentMethodLabel } from "@/lib/finance";
 import { cn } from "@/lib/utils";
