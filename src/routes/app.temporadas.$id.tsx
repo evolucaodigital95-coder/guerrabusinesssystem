@@ -114,13 +114,31 @@ function SeasonDetail() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("stock_movements")
-        .select("id, kind, status, quantity, occurs_at, stock_items:stock_item_id(name)")
+        .select("id, kind, direction, status, quantity, unit_cost, total_cost, occurs_at, stock_items:stock_item_id(name)")
         .eq("season_id", id).is("archived_at", null)
         .order("occurs_at", { ascending: false, nullsFirst: false });
       if (error) throw error;
       return data ?? [];
     },
   });
+
+  /**
+   * Materiais utilizados na temporada — quantidade e CUSTO DE COMPRA ACUMULADO,
+   * derivado das movimentações reais de estoque (ignora cancelados/estornados).
+   */
+  const materials = useMemo(() => {
+    let qty = 0, cost = 0;
+    for (const m of stockMov.data ?? []) {
+      const rec = m as unknown as { kind?: string | null; direction?: string | null; status?: string | null; quantity?: number | null; unit_cost?: number | null; total_cost?: number | null };
+      if (rec.status === "cancelado" || rec.status === "estornado" || rec.kind === "cancelamento") continue;
+      const dir = rec.direction ?? (rec.kind === "entrada" || rec.kind === "devolucao" || rec.kind === "ajuste" ? "in" : "out");
+      if (dir !== "out" || rec.kind === "reserva") continue;
+      const q = Number(rec.quantity ?? 0);
+      qty += q;
+      cost += Number(rec.total_cost ?? 0) || q * Number(rec.unit_cost ?? 0);
+    }
+    return { qty, cost };
+  }, [stockMov.data]);
 
   const snapshots = useQuery({
     queryKey: ["season-snapshots", id],
@@ -307,6 +325,10 @@ function SeasonDetail() {
         <Summary label="Receita liquidada" text={formatCurrency(fin.revenue)} />
         <Summary label="Despesa liquidada" text={formatCurrency(fin.expenses)} muted />
         <Summary label="Resultado" text={formatCurrency(fin.profit)} />
+        <Summary label="Pessoas impactadas" text={String(peopleImpacted)} />
+        <Summary label="Materiais utilizados" text={`${materials.qty} un`} muted />
+        <Summary label="Custo de compra acumulado" text={formatCurrency(materials.cost)} muted />
+        <Summary label="Palestras · Empresas · Agendistas" text={`${(lectures.data ?? []).length} · ${companiesCount} · ${agentsCount}`} muted />
       </div>
 
       <Tabs defaultValue="visao">
