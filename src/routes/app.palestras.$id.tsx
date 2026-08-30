@@ -1134,6 +1134,9 @@ function FechamentoFinanceiroTab({
               }
             />
           )}
+          {isClosed && (
+            <ReopenDialog pending={reopen.isPending} onConfirm={(reason) => reopen.mutate(reason)} />
+          )}
         </div>
       </div>
 
