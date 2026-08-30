@@ -242,7 +242,7 @@ export function buildAssistant(
   }, 0);
 
   const usedCost = stockMovs
-    .filter((m) => (m.kind === "saida" || m.kind === "baixa") && m.status !== "cancelado")
+    .filter((m) => (m.kind === "saida" || m.kind === "baixa") && m.status !== "cancelado" && m.status !== "estornado")
     .reduce((a, m) => a + (N(m.total_cost) || N(m.unit_cost) * N(m.quantity)), 0);
 
   /* ---------------- fornecedores */
