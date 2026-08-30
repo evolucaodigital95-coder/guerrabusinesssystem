@@ -21,6 +21,8 @@ import { AgentFormDialog, type AgentRow } from "@/components/agendistas/agent-fo
 import { AdvanceFormDialog, type AdvanceRow } from "@/components/agendistas/advance-form-dialog";
 import { RuleFormDialog, type RuleRow } from "@/components/agendistas/rule-form-dialog";
 import { AgentPayoutDialog } from "@/components/agendistas/agent-payout-dialog";
+import { AgentDocuments } from "@/components/agendistas/agent-documents";
+
 import { AttachmentsTab } from "@/components/crm/attachments-tab";
 import { TimelineTab } from "@/components/shared/timeline-tab";
 import { ArchiveButton } from "@/components/shared/archive-button";
