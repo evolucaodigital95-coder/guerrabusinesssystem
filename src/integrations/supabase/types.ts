@@ -158,6 +158,84 @@ export type Database = {
           },
         ]
       }
+      agent_documents: {
+        Row: {
+          agent_id: string
+          archived_at: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          doc_date: string | null
+          doc_type: string
+          file_name: string | null
+          id: string
+          mime_type: string | null
+          organization_id: string
+          reference_amount: number | null
+          reference_period: string | null
+          size_bytes: number | null
+          storage_path: string
+          title: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          agent_id: string
+          archived_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          doc_date?: string | null
+          doc_type?: string
+          file_name?: string | null
+          id?: string
+          mime_type?: string | null
+          organization_id: string
+          reference_amount?: number | null
+          reference_period?: string | null
+          size_bytes?: number | null
+          storage_path: string
+          title: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          agent_id?: string
+          archived_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          doc_date?: string | null
+          doc_type?: string
+          file_name?: string | null
+          id?: string
+          mime_type?: string | null
+          organization_id?: string
+          reference_amount?: number | null
+          reference_period?: string | null
+          size_bytes?: number | null
+          storage_path?: string
+          title?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_documents_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agent_documents_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       agents: {
         Row: {
           address: string | null
