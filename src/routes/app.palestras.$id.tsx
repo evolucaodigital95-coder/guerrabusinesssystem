@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import {
   ArrowLeft, Pencil, Plus, MapPin, Users, Calendar, Building2, UserCircle2,
   ShieldCheck, History as HistoryIcon, Paperclip, Package, Wallet, Activity,
-  Calculator, Info, ExternalLink, Lock, Unlock, ClipboardCheck,
+  Calculator, Info, ExternalLink, Lock, Unlock,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
