@@ -398,7 +398,7 @@ function DashboardPage() {
     // ---- estoque
     const balance = new Map<string, number>();
     for (const m of stockMovs) {
-      if (m.status === "cancelado" || !m.stock_item_id) continue;
+      if (m.status === "cancelado" || m.status === "estornado" || m.kind === "cancelamento" || !m.stock_item_id) continue;
       const q = N(m.quantity);
       const sign = m.kind === "saida" || m.kind === "baixa" || m.kind === "reserva" ? -1 : 1;
       balance.set(m.stock_item_id, (balance.get(m.stock_item_id) ?? 0) + sign * q);
@@ -413,10 +413,10 @@ function DashboardPage() {
       }));
 
     const usedQty = stockMovs
-      .filter((m) => (m.kind === "saida" || m.kind === "baixa") && m.status !== "cancelado")
+      .filter((m) => (m.kind === "saida" || m.kind === "baixa") && m.status !== "cancelado" && m.status !== "estornado")
       .reduce((a, m) => a + N(m.quantity), 0);
     const usedCost = stockMovs
-      .filter((m) => (m.kind === "saida" || m.kind === "baixa") && m.status !== "cancelado")
+      .filter((m) => (m.kind === "saida" || m.kind === "baixa") && m.status !== "cancelado" && m.status !== "estornado")
       .reduce((a, m) => a + (N(m.total_cost) || N(m.unit_cost) * N(m.quantity)), 0);
     const totalBalance = Array.from(balance.values()).reduce((a, b) => a + Math.max(0, b), 0);
     const avgPerLecture = doneLectures.length > 0 ? usedQty / doneLectures.length : 0;
@@ -425,7 +425,7 @@ function DashboardPage() {
     // custo por item (materiais)
     const costByItem = new Map<string, number>();
     for (const m of stockMovs) {
-      if (m.status === "cancelado" || !m.stock_item_id) continue;
+      if (m.status === "cancelado" || m.status === "estornado" || m.kind === "cancelamento" || !m.stock_item_id) continue;
       if (m.kind !== "saida" && m.kind !== "baixa") continue;
       costByItem.set(
         m.stock_item_id,
