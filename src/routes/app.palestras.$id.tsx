@@ -999,6 +999,69 @@ function FechamentoFinanceiroTab({
     onError: (e) => toast.error(e instanceof Error ? e.message : "Erro ao recalcular"),
   });
 
+  /**
+   * REABRIR — arquiva o snapshot vigente (nada é apagado), estorna a amortização
+   * dos adiantamentos aplicados nele e devolve a palestra para "em conferência".
+   * Como a Conta Corrente lê apenas snapshots não arquivados, não há crédito duplicado
+   * quando a palestra for fechada novamente.
+   */
+  const reopen = useMutation({
+    mutationFn: async (reason: string) => {
+      const snap = snapshot.data;
+      if (!snap?.id) throw new Error("Não há fechamento para reabrir.");
+
+      const { error: archErr } = await supabase
+        .from("lecture_financial_snapshots")
+        .update({ archived_at: new Date().toISOString() })
+        .eq("id", snap.id);
+      if (archErr) throw archErr;
+
+      // Estorna as amortizações registradas neste snapshot.
+      const inputs = (snap.inputs ?? {}) as { advances?: Array<{ id: string; amount: number }> };
+      for (const a of inputs.advances ?? []) {
+        const current = (lectureAdvances.data ?? []).find((x) => x.id === a.id);
+        if (!current) continue;
+        const restored = Math.max(0, Number(current.amount_amortized ?? 0) - Number(a.amount ?? 0));
+        await supabase.from("advances").update({
+          amount_amortized: restored,
+          status: restored <= 0 ? "aberto" : "abatido_parcial",
+          updated_by: userId,
+        }).eq("id", a.id);
+      }
+
+      const { error: lecErr } = await supabase.from("lectures").update({
+        financial_status: "review",
+        closed_at: null,
+        closed_by: null,
+        reopened_at: new Date().toISOString(),
+        reopened_by: userId,
+        reopen_reason: reason.trim() || null,
+        updated_by: userId,
+      }).eq("id", lectureId);
+      if (lecErr) throw lecErr;
+
+      await supabase.from("timeline_events").insert({
+        organization_id: organizationId,
+        entity_type: "lecture", entity_id: lectureId,
+        kind: "closing",
+        title: "Fechamento reaberto",
+        body: reason.trim() || "Sem motivo informado.",
+        occurs_at: new Date().toISOString(),
+        created_by: userId, updated_by: userId,
+      });
+    },
+    onSuccess: () => {
+      toast.success("Palestra reaberta. Ajuste os dados e feche novamente.");
+      qc.invalidateQueries({ queryKey: ["fechamento-snapshot", lectureId] });
+      qc.invalidateQueries({ queryKey: ["fechamento-advances", lectureId, agentId] });
+      qc.invalidateQueries({ queryKey: ["lecture-snapshot", lectureId] });
+      qc.invalidateQueries({ queryKey: ["lecture-timeline", lectureId] });
+      qc.invalidateQueries({ queryKey: ["lecture", lectureId] });
+      qc.invalidateQueries({ queryKey: ["agent-snapshots", agentId] });
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Erro ao reabrir"),
+  });
+
   const loading = movements.isLoading || stockMoves.isLoading || lectureAdvances.isLoading || rules.isLoading || snapshot.isLoading;
   if (loading) return <p className="text-sm text-muted-foreground">Carregando motor financeiro…</p>;
 
