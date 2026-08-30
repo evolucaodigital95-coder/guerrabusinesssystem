@@ -69,7 +69,7 @@ const num = (v: unknown): number => {
 const UNKNOWN_SUPPLIER = "Sem fornecedor";
 
 function movementIsLive(m: Movement) {
-  if (m.status === "cancelado") return false;
+  if (m.status === "cancelado" || m.status === "estornado") return false;
   if (m.kind === "cancelamento") return false;
   return true;
 }
