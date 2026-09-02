@@ -64,6 +64,7 @@ export type ClosingTermData = {
   movements: ExportMovement[];
   lectures: ClosingLectureRow[];
   advances: AdvanceExportRow[];
+  cards?: CardEntry[];
   externalDocs?: { title: string; kind?: string | null; date?: string | null }[];
   notes?: string | null;
   thanksMessage: string;
