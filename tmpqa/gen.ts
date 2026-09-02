@@ -1,6 +1,15 @@
 const orig = globalThis.fetch;
 globalThis.fetch = ((u: any, o: any) => orig(typeof u === "string" && u.startsWith("/") ? "http://localhost:8080" + u : u, o)) as any;
 
+const origFetch = globalThis.fetch;
+globalThis.fetch = (async (u: any, ...r: any[]) => {
+  if (typeof u === "string" && u.startsWith("/")) {
+    const f = Bun.file(process.cwd() + u.replace("/src/", "/src/"));
+    return new Response(await f.arrayBuffer(), { headers: { "content-type": "image/png" } });
+  }
+  return origFetch(u, ...r);
+}) as any;
+
 if (typeof (globalThis as any).FileReader === "undefined") {
   (globalThis as any).FileReader = class {
     result: any = null; onload: any = null; onerror: any = null;
