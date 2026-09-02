@@ -14,6 +14,176 @@ export type Database = {
   }
   public: {
     Tables: {
+      account_closings: {
+        Row: {
+          agent_id: string
+          agent_share: number
+          cancel_reason: string | null
+          cancelled_at: string | null
+          cancelled_by: string | null
+          closed_at: string
+          closed_by: string | null
+          closing_number: string
+          companies_count: number
+          created_at: string
+          created_by: string | null
+          doc_kind: string
+          file_name: string | null
+          final_balance: number
+          id: string
+          lectures_count: number
+          mime_type: string | null
+          net_profit: number
+          notes: string | null
+          opening_balance: number
+          organization_id: string
+          period_end: string | null
+          period_label: string | null
+          period_start: string | null
+          reopen_reason: string | null
+          reopened_at: string | null
+          reopened_by: string | null
+          season_id: string | null
+          size_bytes: number | null
+          status: string
+          storage_path: string | null
+          supersedes_id: string | null
+          thanks_message: string | null
+          tithe: number
+          total_advances: number
+          total_credits: number
+          total_debits: number
+          total_expenses: number
+          total_fees: number
+          total_materials: number
+          total_revenue: number
+          updated_at: string
+          updated_by: string | null
+          version: number
+        }
+        Insert: {
+          agent_id: string
+          agent_share?: number
+          cancel_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          closed_at?: string
+          closed_by?: string | null
+          closing_number: string
+          companies_count?: number
+          created_at?: string
+          created_by?: string | null
+          doc_kind?: string
+          file_name?: string | null
+          final_balance?: number
+          id?: string
+          lectures_count?: number
+          mime_type?: string | null
+          net_profit?: number
+          notes?: string | null
+          opening_balance?: number
+          organization_id: string
+          period_end?: string | null
+          period_label?: string | null
+          period_start?: string | null
+          reopen_reason?: string | null
+          reopened_at?: string | null
+          reopened_by?: string | null
+          season_id?: string | null
+          size_bytes?: number | null
+          status?: string
+          storage_path?: string | null
+          supersedes_id?: string | null
+          thanks_message?: string | null
+          tithe?: number
+          total_advances?: number
+          total_credits?: number
+          total_debits?: number
+          total_expenses?: number
+          total_fees?: number
+          total_materials?: number
+          total_revenue?: number
+          updated_at?: string
+          updated_by?: string | null
+          version?: number
+        }
+        Update: {
+          agent_id?: string
+          agent_share?: number
+          cancel_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          closed_at?: string
+          closed_by?: string | null
+          closing_number?: string
+          companies_count?: number
+          created_at?: string
+          created_by?: string | null
+          doc_kind?: string
+          file_name?: string | null
+          final_balance?: number
+          id?: string
+          lectures_count?: number
+          mime_type?: string | null
+          net_profit?: number
+          notes?: string | null
+          opening_balance?: number
+          organization_id?: string
+          period_end?: string | null
+          period_label?: string | null
+          period_start?: string | null
+          reopen_reason?: string | null
+          reopened_at?: string | null
+          reopened_by?: string | null
+          season_id?: string | null
+          size_bytes?: number | null
+          status?: string
+          storage_path?: string | null
+          supersedes_id?: string | null
+          thanks_message?: string | null
+          tithe?: number
+          total_advances?: number
+          total_credits?: number
+          total_debits?: number
+          total_expenses?: number
+          total_fees?: number
+          total_materials?: number
+          total_revenue?: number
+          updated_at?: string
+          updated_by?: string | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "account_closings_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "account_closings_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "account_closings_season_id_fkey"
+            columns: ["season_id"]
+            isOneToOne: false
+            referencedRelation: "seasons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "account_closings_supersedes_id_fkey"
+            columns: ["supersedes_id"]
+            isOneToOne: false
+            referencedRelation: "account_closings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       accounts: {
         Row: {
           archived_at: string | null
@@ -3418,6 +3588,7 @@ export type Database = {
     }
     Functions: {
       compute_stock_avg_cost: { Args: { p_item: string }; Returns: number }
+      next_closing_number: { Args: { _org: string }; Returns: string }
     }
     Enums: {
       org_role: "owner" | "admin" | "member" | "viewer"
@@ -3436,12 +3607,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -3465,11 +3636,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -3490,11 +3661,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -3515,11 +3686,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -3532,11 +3703,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }

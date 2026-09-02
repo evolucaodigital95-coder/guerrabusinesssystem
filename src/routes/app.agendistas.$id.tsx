@@ -22,6 +22,7 @@ import { AdvanceFormDialog, type AdvanceRow } from "@/components/agendistas/adva
 import { RuleFormDialog, type RuleRow } from "@/components/agendistas/rule-form-dialog";
 import { AgentPayoutDialog } from "@/components/agendistas/agent-payout-dialog";
 import { AgentDocuments } from "@/components/agendistas/agent-documents";
+import { AccountClosing, type ClosingSource } from "@/components/agendistas/account-closing";
 
 import { AttachmentsTab } from "@/components/crm/attachments-tab";
 import { TimelineTab } from "@/components/shared/timeline-tab";
@@ -49,7 +50,7 @@ function AgentDetail() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
   const { user } = useSession();
-  const { organizationId } = useCurrentOrg();
+  const { organizationId, organizationName } = useCurrentOrg();
   const [editOpen, setEditOpen] = useState(false);
   const [advOpen, setAdvOpen] = useState(false);
   const [editingAdv, setEditingAdv] = useState<AdvanceRow | null>(null);
@@ -507,30 +508,12 @@ function AgentDetail() {
     onError: (e) => toast.error(e instanceof Error ? e.message : "Erro"),
   });
 
-  const downloadStatement = async (fmt: "pdf" | "xlsx" | "csv") => {
-    const agentName = agent.data?.full_name ?? "Agendista";
-    const periodLabel = fStart || fEnd ? `${fStart || "início"} → ${fEnd || "hoje"}` : "Completo";
-    const rows: ExportMovement[] = filteredAsc.map((m) => ({
-      date: m.date, time: m.time, type: m.type, description: m.description,
-      company: m.companyName ?? null, lecture: m.lectureTitle ?? null,
-      credit: m.amount > 0 ? m.amount : 0, debit: m.amount < 0 ? Math.abs(m.amount) : 0,
-      balance: m.balance,
-    }));
-
-    // Resultado por empresa (créditos do período)
-    const companyMap = new Map<string, number>();
-    filteredAsc.forEach((m) => {
-      if (m.amount > 0) {
-        const key = m.companyName ?? "Sem empresa";
-        companyMap.set(key, (companyMap.get(key) ?? 0) + m.amount);
-      }
-    });
-    const companySummary = Array.from(companyMap.entries())
-      .map(([company, amount]) => ({ company, amount }))
-      .sort((a, b) => b.amount - a.amount);
-
-    // Composição dos créditos — via snapshots reais (com detalhamento de despesas)
-    const creditsComposition = (snapshots.data ?? [])
+  /**
+   * Composição dos créditos a partir dos snapshots reais.
+   * Fonte única para o extrato (PDF/Excel/CSV) e para o Termo de Fechamento.
+   */
+  const creditsComposition = useMemo(() => {
+    return (snapshots.data ?? [])
       .filter((s) => {
         if (!fStart && !fEnd) return true;
         const d = s.closed_at ? s.closed_at.slice(0, 10) : null;
@@ -551,15 +534,12 @@ function AgentDetail() {
         };
         const t = bd.totals ?? {};
         const materials = t.totalStock ?? t.totalMaterials ?? (s.total_stock_cost != null ? Number(s.total_stock_cost) : null);
-        // Fallback: snapshots antigos podem não ter totalCardFees no breakdown,
-        // mas o campo dedicado da coluna já preserva o valor histórico.
         const snapCardFees = s.total_card_fees != null ? Number(s.total_card_fees) : null;
         const cardFees = t.totalCardFees ?? snapCardFees;
         const ruleFee = t.fee ?? null;
         const otherCosts =
           (t.totalTaxes ?? 0) + (t.totalCosts ?? 0) + (t.totalOtherExpenses ?? 0) || null;
 
-        // Detalhes por linha (só saídas) a partir do breakdown
         const expenseLines = (bd.lines ?? [])
           .filter((ln) => ln.kind === "out" && Number(ln.amount) < 0)
           .map((ln) => {
@@ -590,8 +570,10 @@ function AgentDetail() {
           expenseLines,
         };
       });
+  }, [snapshots.data, fStart, fEnd]);
 
-    const advancesRows = (advances.data ?? [])
+  const advancesRows = useMemo(() => {
+    return (advances.data ?? [])
       .filter((a) => {
         if (!fStart && !fEnd) return true;
         const d = a.granted_on;
@@ -606,6 +588,88 @@ function AgentDetail() {
         lecture: (a.lectures as { title?: string } | null)?.title ?? null,
         notes: a.notes ?? null,
       }));
+  }, [advances.data, fStart, fEnd]);
+
+  /**
+   * Fotografia dos valores JÁ APURADOS para o Termo de Fechamento.
+   * Não recalcula nada — apenas consolida o que o motor financeiro produziu.
+   */
+  const buildClosingSource = (): ClosingSource => {
+    const periodLabel = fStart || fEnd ? `${fStart || "início"} → ${fEnd || "hoje"}` : "Período completo";
+    const comp = creditsComposition;
+    const sum = (pick: (c: (typeof comp)[number]) => number | null | undefined) =>
+      comp.reduce((acc, c) => acc + Number(pick(c) ?? 0), 0);
+
+    const agentShare = sum((c) => c.agentShare);
+    return {
+      agentId: id,
+      agentName: agent.data?.full_name ?? "Agendista",
+      organizationName: organizationName ?? "Grupo Guerra",
+      seasonId: fSeason !== "__all__" ? fSeason : null,
+      seasonName: fSeason !== "__all__" ? seasonOptions.find((s) => s.id === fSeason)?.name ?? null : null,
+      periodLabel,
+      periodStart: fStart || null,
+      periodEnd: fEnd || null,
+      responsible: user?.email ?? "Grupo Guerra",
+      totals: {
+        companies: new Set(comp.map((c) => c.company)).size,
+        lectures: comp.length,
+        revenue: sum((c) => c.grossRevenue),
+        materials: sum((c) => c.materials),
+        fees: sum((c) => (c.cardFees ?? 0) + (c.ruleFee ?? 0)),
+        expenses: sum((c) => c.otherCosts),
+        netProfit: sum((c) => c.netProfit),
+        agentShare,
+        tithe: Math.round(agentShare * 10) / 100,
+        advances: advancesRows.reduce((acc, a) => acc + a.amount, 0),
+        credits: periodTotals.credits,
+        debits: periodTotals.debits,
+        openingBalance,
+        finalBalance: periodTotals.closing,
+      },
+      movements: filteredAsc.map((m) => ({
+        date: m.date, time: m.time, type: m.type, description: m.description,
+        company: m.companyName ?? null, lecture: m.lectureTitle ?? null,
+        credit: m.amount > 0 ? m.amount : 0,
+        debit: m.amount < 0 ? Math.abs(m.amount) : 0,
+        balance: m.balance,
+      })),
+      lectures: comp.map((c) => ({
+        date: c.date,
+        company: c.company,
+        lecture: c.lecture,
+        revenue: c.grossRevenue,
+        materials: c.materials,
+        fees: (c.cardFees ?? 0) + (c.ruleFee ?? 0) || null,
+        netProfit: c.netProfit,
+        agentShare: c.agentShare,
+      })),
+      advances: advancesRows,
+    };
+  };
+
+
+  const downloadStatement = async (fmt: "pdf" | "xlsx" | "csv") => {
+    const agentName = agent.data?.full_name ?? "Agendista";
+    const periodLabel = fStart || fEnd ? `${fStart || "início"} → ${fEnd || "hoje"}` : "Completo";
+    const rows: ExportMovement[] = filteredAsc.map((m) => ({
+      date: m.date, time: m.time, type: m.type, description: m.description,
+      company: m.companyName ?? null, lecture: m.lectureTitle ?? null,
+      credit: m.amount > 0 ? m.amount : 0, debit: m.amount < 0 ? Math.abs(m.amount) : 0,
+      balance: m.balance,
+    }));
+
+    // Resultado por empresa (créditos do período)
+    const companyMap = new Map<string, number>();
+    filteredAsc.forEach((m) => {
+      if (m.amount > 0) {
+        const key = m.companyName ?? "Sem empresa";
+        companyMap.set(key, (companyMap.get(key) ?? 0) + m.amount);
+      }
+    });
+    const companySummary = Array.from(companyMap.entries())
+      .map(([company, amount]) => ({ company, amount }))
+      .sort((a, b) => b.amount - a.amount);
 
     const payoutsRows = (payouts.data ?? [])
       .filter((p) => {
@@ -1079,6 +1143,10 @@ function AgentDetail() {
               </p>
             </div>
           )}
+
+          <div className="border-t border-border pt-6">
+            <AccountClosing agentId={id} userId={user?.id ?? ""} source={buildClosingSource} />
+          </div>
 
           <div className="border-t border-border pt-6">
             <AgentDocuments agentId={id} userId={user?.id ?? ""} />
