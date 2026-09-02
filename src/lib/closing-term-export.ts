@@ -5,6 +5,7 @@ import {
   GUERRA_MONOGRAM_RATIO,
   type ExportMovement,
   type AdvanceExportRow,
+  type CardEntry,
 } from "@/lib/agent-statement-export";
 
 /**
