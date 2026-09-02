@@ -453,7 +453,7 @@ export async function buildClosingTermPDF(d: ClosingTermData): Promise<Blob> {
 
   /* ---------------- SEÇÃO 8 — DÍZIMO ---------------- */
   y = space(y, 80);
-  y = section("7 · DÍZIMO", y);
+  y = section("8 · DÍZIMO", y);
   doc.setDrawColor(...GOLD);
   doc.setLineWidth(0.5);
   doc.roundedRect(M, y, W, 50, 4, 4, "S");
@@ -474,9 +474,9 @@ export async function buildClosingTermPDF(d: ClosingTermData): Promise<Blob> {
   );
   y += 66;
 
-  /* ---------------- SEÇÃO 8 — DOCUMENTOS EXTERNOS ---------------- */
+  /* ---------------- SEÇÃO 9 — DOCUMENTOS EXTERNOS ---------------- */
   y = space(y, 80);
-  y = section("8 · DOCUMENTOS EXTERNOS VINCULADOS", y);
+  y = section("9 · DOCUMENTOS EXTERNOS VINCULADOS", y);
   if (!d.externalDocs?.length) {
     y = emptyNote(doc, "Nenhum documento externo vinculado a esta conta.", M, y);
   } else {
@@ -492,9 +492,9 @@ export async function buildClosingTermPDF(d: ClosingTermData): Promise<Blob> {
     y += 8;
   }
 
-  /* ---------------- SEÇÃO 9 — OBSERVAÇÕES ---------------- */
+  /* ---------------- SEÇÃO 10 — OBSERVAÇÕES ---------------- */
   y = space(y, 80);
-  y = section("9 · OBSERVAÇÕES", y);
+  y = section("10 · OBSERVAÇÕES", y);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
   doc.setTextColor(...GRAPHITE);
