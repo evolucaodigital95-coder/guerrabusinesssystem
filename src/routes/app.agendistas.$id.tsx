@@ -772,6 +772,7 @@ function AgentDetail() {
         agentShare: c.agentShare,
       })),
       advances: advancesRows,
+      cards: cardEntries,
     };
   };
 
@@ -1036,6 +1037,7 @@ function AgentDetail() {
       payouts: payoutsRows,
       filters: filters.length ? filters : undefined,
       receipts,
+      cards: cardEntries.length ? cardEntries : undefined,
     };
 
     // Validação matemática — não mascarar divergência
