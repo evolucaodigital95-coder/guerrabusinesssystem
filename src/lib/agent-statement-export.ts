@@ -842,6 +842,116 @@ export async function exportStatementPDF(
     });
   }
 
+  /* ---------------- CARTÕES LANÇADOS (TODAS AS EMPRESAS) ---------------- */
+  if (ctx.cards?.length) {
+    doc.addPage();
+    let cy = 46;
+    sectionTitle(doc, "CARTÕES LANÇADOS — TODAS AS EMPRESAS", marginX, cy);
+    cy += 6;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(7.5);
+    doc.setTextColor(...MUTED);
+    doc.text(
+      "Transparência total: todos os pagamentos em cartão registrados no período, com bandeira, parcelamento, juros e valor líquido. As fotos anexadas aparecem logo abaixo.",
+      marginX, cy + 6,
+    );
+    cy += 20;
+
+    const sumC = (pick: (c: CardEntry) => number | null | undefined) =>
+      ctx.cards!.reduce((s, c) => s + Number(pick(c) ?? 0), 0);
+
+    autoTable(doc, {
+      startY: cy,
+      head: [["Data", "Empresa", "Palestra", "Bandeira", "Parc.", "Bruto", "Taxa %", "Juros", "Líquido"]],
+      body: ctx.cards.map((c) => [
+        formatDate(c.date),
+        c.company,
+        c.lecture ?? "—",
+        `${c.brand}${c.method ? ` · ${c.method}` : ""}`,
+        c.installments ? `${c.installments}x` : "1x",
+        { content: formatCurrency(c.amount), styles: { halign: "right" } },
+        { content: c.feePercent != null ? `${c.feePercent.toFixed(2)}%` : "—", styles: { halign: "right" } },
+        { content: c.feeAmount != null ? formatCurrency(c.feeAmount) : "—", styles: { halign: "right", textColor: DEBIT_RED } },
+        { content: c.netAmount != null ? formatCurrency(c.netAmount) : "—", styles: { halign: "right", fontStyle: "bold", textColor: NAVY } },
+      ]),
+      foot: [[
+        { content: "TOTAL", styles: { fontStyle: "bold", textColor: NAVY } },
+        "", "", "", "",
+        { content: formatCurrency(sumC((c) => c.amount)), styles: { halign: "right", fontStyle: "bold" } },
+        "",
+        { content: formatCurrency(sumC((c) => c.feeAmount)), styles: { halign: "right", fontStyle: "bold", textColor: DEBIT_RED } },
+        { content: formatCurrency(sumC((c) => c.netAmount ?? c.amount)), styles: { halign: "right", fontStyle: "bold", textColor: NAVY } },
+      ]],
+      styles: { fontSize: 7.6, cellPadding: 4, lineColor: [230, 230, 235], lineWidth: 0.25, overflow: "linebreak" },
+      headStyles: { fillColor: NAVY, textColor: 255, fontStyle: "bold", fontSize: 7 },
+      footStyles: { fillColor: LIGHT_GRAY },
+      alternateRowStyles: { fillColor: LIGHT_GRAY },
+      columnStyles: {
+        0: { cellWidth: 58 },
+        4: { cellWidth: 38, halign: "center" },
+        5: { cellWidth: 74, halign: "right" },
+        6: { cellWidth: 48, halign: "right" },
+        7: { cellWidth: 64, halign: "right" },
+        8: { cellWidth: 78, halign: "right" },
+      },
+      margin: { left: marginX, right: marginX },
+      theme: "plain",
+    });
+    cy = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 18;
+
+    // Fotos dos cartões
+    const withPhotos = ctx.cards.filter((c) => c.photos?.length);
+    if (withPhotos.length) {
+      const tW = 150, tH = 100, gap = 14;
+      const perRow = Math.max(1, Math.floor((contentW + gap) / (tW + gap)));
+      cy = ensureSpace(doc, cy, 40, pageH);
+      sectionTitle(doc, "FOTOS DOS CARTÕES", marginX, cy);
+      cy += 20;
+
+      for (const c of withPhotos) {
+        cy = ensureSpace(doc, cy, 40, pageH);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(8.5);
+        doc.setTextColor(...NAVY);
+        const label = `${c.company} · ${c.brand} ${c.installments ? `${c.installments}x` : "1x"} · ${formatCurrency(c.amount)}${c.date ? ` · ${formatDate(c.date)}` : ""}`;
+        doc.text(doc.splitTextToSize(label, contentW)[0] ?? "", marginX, cy);
+        cy += 12;
+
+        let col = 0;
+        for (const it of c.photos!) {
+          if (col === 0) cy = ensureSpace(doc, cy, tH + 40, pageH);
+          const x = marginX + col * (tW + gap);
+          doc.setDrawColor(215, 215, 220);
+          doc.setLineWidth(0.4);
+          doc.roundedRect(x, cy, tW, tH, 3, 3, "S");
+          if (it.dataUrl) {
+            try {
+              const fmt = (it.mimeType ?? "").toLowerCase().includes("png") ? "PNG" : "JPEG";
+              doc.addImage(it.dataUrl, fmt, x + 2, cy + 2, tW - 4, tH - 4, undefined, "FAST");
+            } catch { /* ignora imagem inválida */ }
+          } else {
+            doc.setFont("helvetica", "italic");
+            doc.setFontSize(8);
+            doc.setTextColor(...MUTED);
+            doc.text("Arquivo não-imagem", x + 10, cy + tH / 2);
+          }
+          doc.setFont("helvetica", "normal");
+          doc.setFontSize(7);
+          doc.setTextColor(...MUTED);
+          doc.text(doc.splitTextToSize(it.fileName, tW)[0] ?? "", x, cy + tH + 10);
+          if (it.url) {
+            doc.setTextColor(...GOLD);
+            doc.textWithLink("abrir", x, cy + tH + 19, { url: it.url });
+          }
+          col = (col + 1) % perRow;
+          if (col === 0) cy += tH + 28;
+        }
+        if (col !== 0) cy += tH + 28;
+        cy += 8;
+      }
+    }
+  }
+
   /* ---------------- COMPROVANTES POR EMPRESA ---------------- */
   if (ctx.receipts?.length) {
     // Sempre inicia em página nova para facilitar leitura/impressão
