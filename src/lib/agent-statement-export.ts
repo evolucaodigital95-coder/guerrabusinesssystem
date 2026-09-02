@@ -13,12 +13,13 @@ export const GUERRA_MONOGRAM_RATIO = 242 / 269;
  * O CDN de assets é servido a partir do mesmo origin, então uma única
  * requisição basta e o browser cacheia.
  */
-let __logoDataUrlPromise: Promise<string | null> | null = null;
-export function loadGuerraLogoDataUrl(): Promise<string | null> {
-  if (__logoDataUrlPromise) return __logoDataUrlPromise;
-  __logoDataUrlPromise = (async () => {
+const __imageCache = new Map<string, Promise<string | null>>();
+function loadImageDataUrl(url: string): Promise<string | null> {
+  const cached = __imageCache.get(url);
+  if (cached) return cached;
+  const p = (async () => {
     try {
-      const res = await fetch(grupoGuerraLogo);
+      const res = await fetch(url);
       if (!res.ok) return null;
       const blob = await res.blob();
       return await new Promise<string>((resolve, reject) => {
@@ -31,7 +32,18 @@ export function loadGuerraLogoDataUrl(): Promise<string | null> {
       return null;
     }
   })();
-  return __logoDataUrlPromise;
+  __imageCache.set(url, p);
+  return p;
+}
+
+/** Marca completa (monograma + wordmark) em azul-marinho, fundo transparente. */
+export function loadGuerraLogoDataUrl(): Promise<string | null> {
+  return loadImageDataUrl(grupoGuerraLogo);
+}
+
+/** Monograma GG isolado — usado quando o wordmark já aparece em texto. */
+export function loadGuerraMonogramDataUrl(): Promise<string | null> {
+  return loadImageDataUrl(grupoGuerraMonogram);
 }
 
 export type ExportMovement = {
