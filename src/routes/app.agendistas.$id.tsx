@@ -589,6 +589,65 @@ function AgentDetail() {
       }));
   }, [advances.data, fStart, fEnd]);
 
+  /**
+   * Fotografia dos valores JÁ APURADOS para o Termo de Fechamento.
+   * Não recalcula nada — apenas consolida o que o motor financeiro produziu.
+   */
+  const buildClosingSource = (): ClosingSource => {
+    const periodLabel = fStart || fEnd ? `${fStart || "início"} → ${fEnd || "hoje"}` : "Período completo";
+    const comp = creditsComposition;
+    const sum = (pick: (c: (typeof comp)[number]) => number | null | undefined) =>
+      comp.reduce((acc, c) => acc + Number(pick(c) ?? 0), 0);
+
+    const agentShare = sum((c) => c.agentShare);
+    return {
+      agentId: id,
+      agentName: agent.data?.full_name ?? "Agendista",
+      organizationName: organizationName ?? "Grupo Guerra",
+      seasonId: fSeason !== "__all__" ? fSeason : null,
+      seasonName: fSeason !== "__all__" ? seasonOptions.find((s) => s.id === fSeason)?.name ?? null : null,
+      periodLabel,
+      periodStart: fStart || null,
+      periodEnd: fEnd || null,
+      responsible: user?.email ?? "Grupo Guerra",
+      totals: {
+        companies: new Set(comp.map((c) => c.company)).size,
+        lectures: comp.length,
+        revenue: sum((c) => c.grossRevenue),
+        materials: sum((c) => c.materials),
+        fees: sum((c) => (c.cardFees ?? 0) + (c.ruleFee ?? 0)),
+        expenses: sum((c) => c.otherCosts),
+        netProfit: sum((c) => c.netProfit),
+        agentShare,
+        tithe: Math.round(agentShare * 10) / 100,
+        advances: advancesRows.reduce((acc, a) => acc + a.amount, 0),
+        credits: periodTotals.credits,
+        debits: periodTotals.debits,
+        openingBalance,
+        finalBalance: periodTotals.closing,
+      },
+      movements: filteredAsc.map((m) => ({
+        date: m.date, time: m.time, type: m.type, description: m.description,
+        company: m.companyName ?? null, lecture: m.lectureTitle ?? null,
+        credit: m.amount > 0 ? m.amount : 0,
+        debit: m.amount < 0 ? Math.abs(m.amount) : 0,
+        balance: m.balance,
+      })),
+      lectures: comp.map((c) => ({
+        date: c.date,
+        company: c.company,
+        lecture: c.lecture,
+        revenue: c.grossRevenue,
+        materials: c.materials,
+        fees: (c.cardFees ?? 0) + (c.ruleFee ?? 0) || null,
+        netProfit: c.netProfit,
+        agentShare: c.agentShare,
+      })),
+      advances: advancesRows,
+    };
+  };
+
+
   const downloadStatement = async (fmt: "pdf" | "xlsx" | "csv") => {
     const agentName = agent.data?.full_name ?? "Agendista";
     const periodLabel = fStart || fEnd ? `${fStart || "início"} → ${fEnd || "hoje"}` : "Completo";
