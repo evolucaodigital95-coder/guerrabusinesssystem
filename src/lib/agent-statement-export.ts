@@ -212,8 +212,35 @@ export function exportStatementCSV(ctx: ExportContext) {
     HEADERS.map(escape).join(";"),
     ...ctx.movements.map((m) => rowValues(m).map(escape).join(";")),
   ];
+  if (ctx.cards?.length) {
+    lines.push("", "CARTÕES LANÇADOS (TODAS AS EMPRESAS)");
+    lines.push(CARD_HEADERS.map(escape).join(";"));
+    ctx.cards.forEach((c) => lines.push(cardRowValues(c).map(escape).join(";")));
+  }
   const blob = new Blob(["\uFEFF" + lines.join("\n")], { type: "text/csv;charset=utf-8;" });
   triggerDownload(blob, `${safeFileBase(ctx.agentName)}-extrato.csv`);
+}
+
+const CARD_HEADERS = [
+  "Data", "Empresa", "Palestra", "Bandeira", "Forma", "Parcelas",
+  "Valor bruto", "Taxa %", "Juros (R$)", "Valor líquido", "Status", "Comprovantes",
+];
+
+function cardRowValues(c: CardEntry) {
+  return [
+    formatDate(c.date),
+    c.company,
+    c.lecture ?? "",
+    c.brand,
+    c.method ?? "",
+    c.installments ? `${c.installments}x` : "1x",
+    formatCurrency(c.amount),
+    c.feePercent != null ? `${c.feePercent.toFixed(2)}%` : "",
+    c.feeAmount != null ? formatCurrency(c.feeAmount) : "",
+    c.netAmount != null ? formatCurrency(c.netAmount) : "",
+    c.status ?? "",
+    String(c.photos?.length ?? 0),
+  ];
 }
 
 /* ============================================================
