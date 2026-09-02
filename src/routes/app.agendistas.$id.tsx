@@ -32,7 +32,8 @@ import {
   buildAgentStatement, calculateLecture, selectRule, advanceStatusLabel,
   type RuleSnapshot,
 } from "@/lib/finance-engine";
-import { exportStatementCSV, exportStatementXLSX, exportStatementPDF, type ExportMovement } from "@/lib/agent-statement-export";
+import { exportStatementCSV, exportStatementXLSX, exportStatementPDF, type ExportMovement, type CardEntry } from "@/lib/agent-statement-export";
+import { paymentMethodLabel } from "@/lib/finance";
 import { cn } from "@/lib/utils";
 import { openDoc } from "@/lib/doc-links";
 
@@ -138,6 +139,132 @@ function AgentDetail() {
       return data ?? [];
     },
   });
+
+  /**
+   * TODOS os cartões lançados nas palestras do agendista — de todas as empresas.
+   * Inclui lançamentos sem foto, com bandeira, parcelas, juros e valor líquido,
+   * além dos comprovantes anexados (assinados e convertidos para o PDF).
+   */
+  const cards = useQuery({
+    queryKey: ["agent-cards", id, organizationId],
+    enabled: !!id && !!organizationId,
+    queryFn: async (): Promise<CardEntry[]> => {
+      const { data: lecs, error: lecErr } = await supabase
+        .from("lectures")
+        .select("id, title, scheduled_at, company_id, companies:company_id ( legal_name )")
+        .eq("organization_id", organizationId!)
+        .eq("agent_id", id)
+        .is("archived_at", null);
+      if (lecErr) throw lecErr;
+      const lectureIds = (lecs ?? []).map((l) => l.id);
+      const lecById = new Map((lecs ?? []).map((l) => [l.id, l]));
+
+      const filters = [`agent_id.eq.${id}`];
+      if (lectureIds.length) filters.push(`lecture_id.in.(${lectureIds.join(",")})`);
+
+      const { data: movs, error } = await supabase
+        .from("financial_movements")
+        .select(
+          "id, lecture_id, company_id, amount, net_amount, occurs_on, description, status, payment_method, card_installments, card_fee_amount, card_fee_percent, card_brands:card_brand_id ( name ), companies:company_id ( legal_name ), lectures:lecture_id ( id, title, scheduled_at, companies:company_id ( legal_name ) )",
+        )
+        .eq("organization_id", organizationId!)
+        .not("card_brand_id", "is", null)
+        .is("archived_at", null)
+        .or(filters.join(","))
+        .order("occurs_on", { ascending: true });
+      if (error) throw error;
+
+      const rows = movs ?? [];
+      if (!rows.length) return [];
+
+      // Comprovantes (fotos) dos cartões
+      const movIds = rows.map((m) => m.id);
+      const { data: atts } = await supabase
+        .from("attachments")
+        .select("entity_id, file_name, mime_type, storage_path, size_bytes, created_at")
+        .eq("entity_type", "financial_movement")
+        .in("entity_id", movIds)
+        .is("archived_at", null)
+        .order("created_at", { ascending: true });
+
+      const paths = (atts ?? []).map((a) => a.storage_path);
+      const signed = paths.length
+        ? (await supabase.storage.from("crm-attachments").createSignedUrls(paths, 60 * 60)).data ?? []
+        : [];
+      const urlByPath = new Map<string, string>();
+      signed.forEach((s, i) => { if (s?.signedUrl) urlByPath.set(paths[i], s.signedUrl); });
+
+      const toDataUrl = async (url: string): Promise<string | null> => {
+        try {
+          const res = await fetch(url);
+          if (!res.ok) return null;
+          const blob = await res.blob();
+          return await new Promise<string | null>((resolve) => {
+            const r = new FileReader();
+            r.onloadend = () => resolve(typeof r.result === "string" ? r.result : null);
+            r.onerror = () => resolve(null);
+            r.readAsDataURL(blob);
+          });
+        } catch { return null; }
+      };
+      const isImage = (mime: string | null | undefined, name: string) =>
+        (mime ?? "").startsWith("image/") || /\.(png|jpe?g|webp|gif)$/i.test(name ?? "");
+
+      const photosByMov = new Map<string, CardEntry["photos"]>();
+      for (const a of atts ?? []) {
+        const url = urlByPath.get(a.storage_path) ?? null;
+        const dataUrl = isImage(a.mime_type, a.file_name ?? "") && url ? await toDataUrl(url) : null;
+        const arr = photosByMov.get(a.entity_id) ?? [];
+        arr.push({
+          fileName: a.file_name ?? "comprovante",
+          mimeType: a.mime_type,
+          sizeBytes: a.size_bytes,
+          createdAt: a.created_at,
+          dataUrl,
+          url,
+          source: "attachment",
+        });
+        photosByMov.set(a.entity_id, arr);
+      }
+
+      return rows.map((m) => {
+        const lec = (m.lectures as { id?: string; title?: string; scheduled_at?: string; companies?: { legal_name?: string } } | null)
+          ?? (m.lecture_id ? (lecById.get(m.lecture_id) as unknown as { title?: string; scheduled_at?: string; companies?: { legal_name?: string } } | undefined) ?? null : null);
+        const company =
+          lec?.companies?.legal_name
+          ?? (m.companies as { legal_name?: string } | null)?.legal_name
+          ?? "Sem empresa";
+        const amount = Number(m.amount ?? 0);
+        const fee = m.card_fee_amount != null ? Number(m.card_fee_amount) : null;
+        return {
+          date: m.occurs_on ?? lec?.scheduled_at ?? null,
+          company,
+          lecture: lec?.title ?? null,
+          brand: (m.card_brands as { name?: string } | null)?.name ?? "Cartão",
+          method: paymentMethodLabel(m.payment_method),
+          installments: m.card_installments ?? 1,
+          amount,
+          feePercent: m.card_fee_percent != null ? Number(m.card_fee_percent) : null,
+          feeAmount: fee,
+          netAmount: m.net_amount != null ? Number(m.net_amount) : fee != null ? amount - fee : null,
+          status: m.status ?? null,
+          description: m.description ?? null,
+          photos: photosByMov.get(m.id),
+        } satisfies CardEntry;
+      });
+    },
+  });
+
+  /** Cartões filtrados pelo período/empresa selecionados na tela. */
+  const cardEntries = useMemo(() => {
+    return (cards.data ?? []).filter((c) => {
+      const d = c.date ? c.date.slice(0, 10) : null;
+      if (fStart && (!d || d < fStart)) return false;
+      if (fEnd && (!d || d > fEnd)) return false;
+      return true;
+    });
+  }, [cards.data, fStart, fEnd]);
+
 
   const rules = useQuery({
     queryKey: ["financial_rules", organizationId],
@@ -645,6 +772,7 @@ function AgentDetail() {
         agentShare: c.agentShare,
       })),
       advances: advancesRows,
+      cards: cardEntries,
     };
   };
 
@@ -909,6 +1037,7 @@ function AgentDetail() {
       payouts: payoutsRows,
       filters: filters.length ? filters : undefined,
       receipts,
+      cards: cardEntries.length ? cardEntries : undefined,
     };
 
     // Validação matemática — não mascarar divergência

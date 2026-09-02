@@ -5,6 +5,7 @@ import {
   GUERRA_MONOGRAM_RATIO,
   type ExportMovement,
   type AdvanceExportRow,
+  type CardEntry,
 } from "@/lib/agent-statement-export";
 
 /**
@@ -63,6 +64,7 @@ export type ClosingTermData = {
   movements: ExportMovement[];
   lectures: ClosingLectureRow[];
   advances: AdvanceExportRow[];
+  cards?: CardEntry[];
   externalDocs?: { title: string; kind?: string | null; date?: string | null }[];
   notes?: string | null;
   thanksMessage: string;
@@ -356,9 +358,102 @@ export async function buildClosingTermPDF(d: ClosingTermData): Promise<Blob> {
     y = lastY() + 20;
   }
 
-  /* ---------------- SEÇÃO 7 — DÍZIMO ---------------- */
+  /* ---------------- SEÇÃO 7 — CARTÕES LANÇADOS ---------------- */
+  y = space(y, 120);
+  y = section("7 · CARTÕES LANÇADOS (TODAS AS EMPRESAS)", y);
+  if (!d.cards?.length) {
+    y = emptyNote(doc, "Nenhum pagamento em cartão registrado no período.", M, y);
+  } else {
+    const sumC = (pick: (c: CardEntry) => number | null | undefined) =>
+      d.cards!.reduce((s, c) => s + Number(pick(c) ?? 0), 0);
+    autoTable(doc, {
+      startY: y,
+      head: [["Data", "Empresa / Palestra", "Bandeira", "Parc.", "Bruto", "Juros", "Líquido"]],
+      body: d.cards.map((c) => [
+        formatDate(c.date),
+        [c.company, c.lecture].filter(Boolean).join(" · "),
+        c.brand,
+        c.installments ? `${c.installments}x` : "1x",
+        { content: formatCurrency(c.amount), styles: { halign: "right" } },
+        { content: c.feeAmount != null ? "-" + formatCurrency(c.feeAmount) : "—", styles: { halign: "right", textColor: RED } },
+        { content: formatCurrency(c.netAmount ?? c.amount), styles: { halign: "right", fontStyle: "bold", textColor: NAVY } },
+      ]),
+      foot: [[
+        { content: "TOTAL", styles: { fontStyle: "bold", textColor: NAVY } },
+        "", "", "",
+        { content: formatCurrency(sumC((c) => c.amount)), styles: { halign: "right", fontStyle: "bold" } },
+        { content: "-" + formatCurrency(sumC((c) => c.feeAmount)), styles: { halign: "right", fontStyle: "bold", textColor: RED } },
+        { content: formatCurrency(sumC((c) => c.netAmount ?? c.amount)), styles: { halign: "right", fontStyle: "bold", textColor: NAVY } },
+      ]],
+      styles: { fontSize: 7.4, cellPadding: 4, lineColor: [232, 232, 238], lineWidth: 0.25, overflow: "linebreak" },
+      headStyles: { fillColor: NAVY, textColor: 255, fontSize: 7, fontStyle: "bold" },
+      footStyles: { fillColor: LIGHT },
+      alternateRowStyles: { fillColor: LIGHT },
+      columnStyles: {
+        0: { cellWidth: 52 },
+        1: { cellWidth: 145 },
+        2: { cellWidth: 62 },
+        3: { cellWidth: 32, halign: "center" },
+        4: { cellWidth: 68, halign: "right" },
+        5: { cellWidth: 60, halign: "right" },
+        6: { cellWidth: 72, halign: "right" },
+      },
+      margin: { left: M, right: M },
+      theme: "plain",
+    });
+    y = lastY() + 18;
+
+    // Fotos dos cartões — página dedicada
+    const withPhotos = d.cards.filter((c) => c.photos?.some((p) => p.dataUrl || p.url));
+    if (withPhotos.length) {
+      doc.addPage();
+      let py = 56;
+      py = section("7.1 · FOTOS DOS CARTÕES", py);
+      const tW = (W - 14) / 2;
+      const tH = tW * 0.62;
+      for (const c of withPhotos) {
+        py = space(py, 30);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(8.4);
+        doc.setTextColor(...NAVY);
+        const label = `${c.company} · ${c.brand} ${c.installments ? `${c.installments}x` : "1x"} · ${formatCurrency(c.amount)}${c.date ? ` · ${formatDate(c.date)}` : ""}`;
+        doc.text(doc.splitTextToSize(label, W)[0] ?? "", M, py);
+        py += 12;
+        let col = 0;
+        for (const p of c.photos ?? []) {
+          if (col === 0) py = space(py, tH + 34);
+          const x = M + col * (tW + 14);
+          doc.setDrawColor(215, 215, 220);
+          doc.setLineWidth(0.4);
+          doc.roundedRect(x, py, tW, tH, 3, 3, "S");
+          if (p.dataUrl) {
+            try {
+              const fmt = (p.mimeType ?? "").toLowerCase().includes("png") ? "PNG" : "JPEG";
+              doc.addImage(p.dataUrl, fmt, x + 2, py + 2, tW - 4, tH - 4, undefined, "FAST");
+            } catch { /* ignora imagem inválida */ }
+          } else {
+            doc.setFont("helvetica", "italic");
+            doc.setFontSize(8);
+            doc.setTextColor(...MUTED);
+            doc.text("Arquivo não-imagem", x + 10, py + tH / 2);
+          }
+          doc.setFont("helvetica", "normal");
+          doc.setFontSize(7);
+          doc.setTextColor(...MUTED);
+          doc.text(doc.splitTextToSize(p.fileName, tW)[0] ?? "", x, py + tH + 10);
+          col = (col + 1) % 2;
+          if (col === 0) py += tH + 26;
+        }
+        if (col !== 0) py += tH + 26;
+        py += 6;
+      }
+      y = py + 10;
+    }
+  }
+
+  /* ---------------- SEÇÃO 8 — DÍZIMO ---------------- */
   y = space(y, 80);
-  y = section("7 · DÍZIMO", y);
+  y = section("8 · DÍZIMO", y);
   doc.setDrawColor(...GOLD);
   doc.setLineWidth(0.5);
   doc.roundedRect(M, y, W, 50, 4, 4, "S");
@@ -379,9 +474,9 @@ export async function buildClosingTermPDF(d: ClosingTermData): Promise<Blob> {
   );
   y += 66;
 
-  /* ---------------- SEÇÃO 8 — DOCUMENTOS EXTERNOS ---------------- */
+  /* ---------------- SEÇÃO 9 — DOCUMENTOS EXTERNOS ---------------- */
   y = space(y, 80);
-  y = section("8 · DOCUMENTOS EXTERNOS VINCULADOS", y);
+  y = section("9 · DOCUMENTOS EXTERNOS VINCULADOS", y);
   if (!d.externalDocs?.length) {
     y = emptyNote(doc, "Nenhum documento externo vinculado a esta conta.", M, y);
   } else {
@@ -397,9 +492,9 @@ export async function buildClosingTermPDF(d: ClosingTermData): Promise<Blob> {
     y += 8;
   }
 
-  /* ---------------- SEÇÃO 9 — OBSERVAÇÕES ---------------- */
+  /* ---------------- SEÇÃO 10 — OBSERVAÇÕES ---------------- */
   y = space(y, 80);
-  y = section("9 · OBSERVAÇÕES", y);
+  y = section("10 · OBSERVAÇÕES", y);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
   doc.setTextColor(...GRAPHITE);

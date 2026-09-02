@@ -18,7 +18,7 @@ import {
   buildClosingTermPDF, closingFileName, DEFAULT_THANKS_MESSAGE,
   type ClosingTermData, type ClosingLectureRow,
 } from "@/lib/closing-term-export";
-import type { ExportMovement, AdvanceExportRow } from "@/lib/agent-statement-export";
+import type { ExportMovement, AdvanceExportRow, CardEntry } from "@/lib/agent-statement-export";
 
 const BUCKET = "crm-attachments";
 
@@ -36,6 +36,7 @@ export type ClosingSource = {
   movements: ExportMovement[];
   lectures: ClosingLectureRow[];
   advances: AdvanceExportRow[];
+  cards?: CardEntry[];
   externalDocs?: { title: string; kind?: string | null; date?: string | null }[];
 };
 
@@ -163,6 +164,7 @@ export function AccountClosing({
         movements: snap.movements,
         lectures: snap.lectures,
         advances: snap.advances,
+        cards: snap.cards,
         externalDocs: snap.externalDocs,
         notes: notes.trim() || null,
         thanksMessage: thanks.trim() || DEFAULT_THANKS_MESSAGE,
