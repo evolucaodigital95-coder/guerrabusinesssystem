@@ -87,6 +87,7 @@ export async function buildClosingTermPDF(d: ClosingTermData): Promise<Blob> {
   const M = 42;
   const W = pageW - M * 2;
   const logo = await loadGuerraLogoDataUrl();
+  const monogram = (await loadGuerraMonogramDataUrl()) ?? logo;
 
   const lastY = () => (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY;
 
