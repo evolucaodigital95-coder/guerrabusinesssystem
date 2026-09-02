@@ -4,7 +4,7 @@ globalThis.fetch = ((u: any, o: any) => orig(typeof u === "string" && u.startsWi
 const origFetch = globalThis.fetch;
 globalThis.fetch = (async (u: any, ...r: any[]) => {
   if (typeof u === "string" && u.startsWith("/")) {
-    const f = Bun.file(process.cwd() + u.replace("/src/", "/src/"));
+    const f = Bun.file(u.startsWith("/dev-server") ? u : process.cwd() + u);
     return new Response(await f.arrayBuffer(), { headers: { "content-type": "image/png" } });
   }
   return origFetch(u, ...r);
