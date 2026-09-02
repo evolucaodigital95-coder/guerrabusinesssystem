@@ -787,6 +787,61 @@ function AgentDetail() {
           itemsByLecture.set(a.entity_id, arr);
         }
 
+        // Fotos/comprovantes dos CARTÕES lançados nas palestras do período
+        if (lectureIds.length) {
+          const { data: cardMovs } = await supabase
+            .from("financial_movements")
+            .select(
+              "id, lecture_id, amount, occurs_on, description, card_installments, card_fee_amount, card_brands:card_brand_id ( name )",
+            )
+            .in("lecture_id", lectureIds)
+            .not("card_brand_id", "is", null)
+            .is("archived_at", null);
+
+          const movIds = (cardMovs ?? []).map((m) => m.id);
+          if (movIds.length) {
+            const { data: cardAtts } = await supabase
+              .from("attachments")
+              .select("id, entity_id, file_name, mime_type, storage_path, size_bytes, created_at")
+              .eq("entity_type", "financial_movement")
+              .in("entity_id", movIds)
+              .is("archived_at", null)
+              .order("created_at", { ascending: true });
+
+            const cardPaths = (cardAtts ?? []).map((a) => a.storage_path);
+            const cardSigned = cardPaths.length
+              ? (await supabase.storage.from("crm-attachments").createSignedUrls(cardPaths, 60 * 60)).data ?? []
+              : [];
+            const cardUrlByPath = new Map<string, string>();
+            cardSigned.forEach((s, i) => { if (s?.signedUrl) cardUrlByPath.set(cardPaths[i], s.signedUrl); });
+
+            const movById = new Map((cardMovs ?? []).map((m) => [m.id, m]));
+            for (const a of cardAtts ?? []) {
+              const mov = movById.get(a.entity_id);
+              if (!mov?.lecture_id) continue;
+              const url = cardUrlByPath.get(a.storage_path) ?? null;
+              const img = isImage(a.mime_type, a.file_name ?? "");
+              const dataUrl = img && url ? await toDataUrl(url) : null;
+              const brand = (mov.card_brands as { name?: string } | null)?.name ?? "Cartão";
+              const parcels = mov.card_installments ? `${mov.card_installments}x` : "à vista";
+              const label = `Cartão ${brand} · ${parcels} · ${formatCurrency(Number(mov.amount ?? 0))}`;
+              const arr = itemsByLecture.get(mov.lecture_id) ?? [];
+              arr.push({
+                fileName: label,
+                mimeType: a.mime_type,
+                sizeBytes: a.size_bytes,
+                createdAt: a.created_at,
+                dataUrl,
+                url,
+                source: "attachment",
+              });
+              itemsByLecture.set(mov.lecture_id, arr);
+            }
+          }
+        }
+
+
+
         // Comprovantes de adiantamentos (receipt_url — link externo)
         const advWithReceipt = (advances.data ?? []).filter((a) =>
           !!a.receipt_url &&
