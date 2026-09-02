@@ -22,6 +22,7 @@ import { AdvanceFormDialog, type AdvanceRow } from "@/components/agendistas/adva
 import { RuleFormDialog, type RuleRow } from "@/components/agendistas/rule-form-dialog";
 import { AgentPayoutDialog } from "@/components/agendistas/agent-payout-dialog";
 import { AgentDocuments } from "@/components/agendistas/agent-documents";
+import { AccountClosing, type ClosingSource } from "@/components/agendistas/account-closing";
 
 import { AttachmentsTab } from "@/components/crm/attachments-tab";
 import { TimelineTab } from "@/components/shared/timeline-tab";
@@ -49,7 +50,7 @@ function AgentDetail() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
   const { user } = useSession();
-  const { organizationId } = useCurrentOrg();
+  const { organizationId, organizationName } = useCurrentOrg();
   const [editOpen, setEditOpen] = useState(false);
   const [advOpen, setAdvOpen] = useState(false);
   const [editingAdv, setEditingAdv] = useState<AdvanceRow | null>(null);
@@ -1142,6 +1143,10 @@ function AgentDetail() {
               </p>
             </div>
           )}
+
+          <div className="border-t border-border pt-6">
+            <AccountClosing agentId={id} userId={user?.id ?? ""} source={buildClosingSource} />
+          </div>
 
           <div className="border-t border-border pt-6">
             <AgentDocuments agentId={id} userId={user?.id ?? ""} />
