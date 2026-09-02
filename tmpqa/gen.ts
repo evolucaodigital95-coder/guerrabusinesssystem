@@ -1,6 +1,17 @@
 const orig = globalThis.fetch;
 globalThis.fetch = ((u: any, o: any) => orig(typeof u === "string" && u.startsWith("/") ? "http://localhost:8080" + u : u, o)) as any;
 
+if (typeof (globalThis as any).FileReader === "undefined") {
+  (globalThis as any).FileReader = class {
+    result: any = null; onload: any = null; onerror: any = null;
+    readAsDataURL(blob: any) {
+      blob.arrayBuffer().then((b: ArrayBuffer) => {
+        this.result = "data:image/png;base64," + Buffer.from(b).toString("base64");
+        this.onload?.();
+      });
+    }
+  };
+}
 import { buildClosingTermPDF, DEFAULT_THANKS_MESSAGE } from "@/lib/closing-term-export";
 import { exportStatementPDF } from "@/lib/agent-statement-export";
 import { writeFileSync } from "fs";
