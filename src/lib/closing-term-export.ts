@@ -1,7 +1,8 @@
 import { formatCurrency, formatDate } from "@/lib/crm";
 import {
   loadGuerraLogoDataUrl,
-  GUERRA_MARK_RATIO,
+  loadGuerraMonogramDataUrl,
+  GUERRA_MONOGRAM_RATIO,
   type ExportMovement,
   type AdvanceExportRow,
 } from "@/lib/agent-statement-export";
@@ -104,11 +105,11 @@ export async function buildClosingTermPDF(d: ClosingTermData): Promise<Blob> {
 
   /* ---------------- CAPA / CABEÇALHO ---------------- */
   let y = 56;
-  const markW = 74;
-  const markH = markW / GUERRA_MARK_RATIO;
-  if (logo) {
+  const markW = 46;
+  const markH = markW / GUERRA_MONOGRAM_RATIO;
+  if (monogram) {
     try {
-      doc.addImage(logo, "PNG", (pageW - markW) / 2, y, markW, markH, undefined, "FAST");
+      doc.addImage(monogram, "PNG", (pageW - markW) / 2, y, markW, markH, undefined, "FAST");
     } catch { /* segue sem marca */ }
     y += markH + 16;
   }

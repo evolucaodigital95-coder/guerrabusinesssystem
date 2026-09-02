@@ -1,9 +1,12 @@
 import { formatCurrency, formatDate } from "@/lib/crm";
 import * as XLSX from "xlsx";
 import grupoGuerraLogo from "@/assets/grupo-guerra-mark.png";
+import grupoGuerraMonogram from "@/assets/grupo-guerra-monogram.png";
 
 /** Proporção real da marca (599 x 376) — usada para nunca distorcer a logo. */
 export const GUERRA_MARK_RATIO = 599 / 375;
+/** Proporção do monograma GG isolado (242 x 269). */
+export const GUERRA_MONOGRAM_RATIO = 242 / 269;
 
 /**
  * Cache do dataURL da logo do Grupo Guerra para reuso entre gerações de PDF.
