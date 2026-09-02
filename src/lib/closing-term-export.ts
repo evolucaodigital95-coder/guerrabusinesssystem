@@ -79,6 +79,7 @@ export async function buildClosingTermPDF(d: ClosingTermData): Promise<Blob> {
   const { jsPDF } = await import("jspdf");
   const autoTable = (await import("jspdf-autotable")).default;
   const doc = new jsPDF({ unit: "pt", format: "a4", orientation: "portrait" });
+  installTextSanitizer(doc as unknown as { text: (...a: unknown[]) => unknown });
 
   const pageW = doc.internal.pageSize.getWidth();  // ~595
   const pageH = doc.internal.pageSize.getHeight(); // ~842
@@ -372,7 +373,7 @@ export async function buildClosingTermPDF(d: ClosingTermData): Promise<Blob> {
   doc.setTextColor(...MUTED);
   doc.text(
     doc.splitTextToSize("Valor informativo — não constitui despesa operacional e não é deduzido do saldo da conta corrente.", W - 190),
-    M + 170, y + 26,
+    M + 170, y + 28,
   );
   y += 66;
 
@@ -463,4 +464,14 @@ function emptyNote(doc: import("jspdf").jsPDF, text: string, x: number, y: numbe
   doc.setTextColor(...MUTED);
   doc.text(text, x, y);
   return y + 22;
+}
+
+/** jsPDF (WinAnsi) não possui glifos para setas — normaliza antes de imprimir. */
+function installTextSanitizer(doc: { text: (...a: unknown[]) => unknown }) {
+  const raw = doc.text.bind(doc) as (...a: unknown[]) => unknown;
+  const fix = (v: unknown): unknown =>
+    typeof v === "string"
+      ? v.replace(/[\u2192\u21D2\u27A1]/g, "-").replace(/[\u2190\u21D0]/g, "-")
+      : Array.isArray(v) ? v.map(fix) : v;
+  doc.text = ((t: unknown, ...rest: unknown[]) => raw(fix(t), ...rest)) as typeof doc.text;
 }

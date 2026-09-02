@@ -252,6 +252,7 @@ export async function exportStatementPDF(
   const { jsPDF } = await import("jspdf");
   const autoTable = (await import("jspdf-autotable")).default;
   const doc = new jsPDF({ unit: "pt", format: "a4", orientation: "landscape" });
+  installTextSanitizer(doc as unknown as { text: (...a: unknown[]) => unknown });
 
   const pageW = doc.internal.pageSize.getWidth();  // ~842
   const pageH = doc.internal.pageSize.getHeight(); // ~595
@@ -937,4 +938,14 @@ function triggerDownload(blob: Blob, filename: string) {
   a.click();
   a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 500);
+}
+
+/** jsPDF (WinAnsi) não possui glifos para setas — normaliza antes de imprimir. */
+function installTextSanitizer(doc: { text: (...a: unknown[]) => unknown }) {
+  const raw = doc.text.bind(doc) as (...a: unknown[]) => unknown;
+  const fix = (v: unknown): unknown =>
+    typeof v === "string"
+      ? v.replace(/[\u2192\u21D2\u27A1]/g, "-").replace(/[\u2190\u21D0]/g, "-")
+      : Array.isArray(v) ? v.map(fix) : v;
+  doc.text = ((t: unknown, ...rest: unknown[]) => raw(fix(t), ...rest)) as typeof doc.text;
 }
