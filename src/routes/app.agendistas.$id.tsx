@@ -32,7 +32,8 @@ import {
   buildAgentStatement, calculateLecture, selectRule, advanceStatusLabel,
   type RuleSnapshot,
 } from "@/lib/finance-engine";
-import { exportStatementCSV, exportStatementXLSX, exportStatementPDF, type ExportMovement } from "@/lib/agent-statement-export";
+import { exportStatementCSV, exportStatementXLSX, exportStatementPDF, type ExportMovement, type CardEntry } from "@/lib/agent-statement-export";
+import { paymentMethodLabel } from "@/lib/finance";
 import { cn } from "@/lib/utils";
 import { openDoc } from "@/lib/doc-links";
 
