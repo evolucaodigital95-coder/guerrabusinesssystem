@@ -1,9 +1,9 @@
 import { formatCurrency, formatDate } from "@/lib/crm";
 import * as XLSX from "xlsx";
-import grupoGuerraLogo from "@/assets/grupo-guerra-mark.png.asset.json";
+import grupoGuerraLogo from "@/assets/grupo-guerra-mark.png";
 
 /** Proporção real da marca (599 x 376) — usada para nunca distorcer a logo. */
-export const GUERRA_MARK_RATIO = 599 / 376;
+export const GUERRA_MARK_RATIO = 599 / 375;
 
 /**
  * Cache do dataURL da logo do Grupo Guerra para reuso entre gerações de PDF.
@@ -15,7 +15,7 @@ export function loadGuerraLogoDataUrl(): Promise<string | null> {
   if (__logoDataUrlPromise) return __logoDataUrlPromise;
   __logoDataUrlPromise = (async () => {
     try {
-      const res = await fetch(grupoGuerraLogo.url);
+      const res = await fetch(grupoGuerraLogo);
       if (!res.ok) return null;
       const blob = await res.blob();
       return await new Promise<string>((resolve, reject) => {
