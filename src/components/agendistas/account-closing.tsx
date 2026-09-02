@@ -235,13 +235,16 @@ export function AccountClosing({
           .eq("id", reissueOf.id);
       }
 
-      toast.success(`Fechamento ${closingNumber} v${version} arquivado.`);
+      toast.success(`Fechamento ${closingNumber} v${version} gerado e arquivado.`);
       qc.invalidateQueries({ queryKey: key });
       setOpen(false);
       setPreview(null);
       setReissueOf(null);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Falha ao registrar o fechamento");
+      console.error("[fechamento de conta]", e);
+      const msg = e instanceof Error ? e.message : "Falha ao registrar o fechamento";
+      if (generated) toast.error(`Documento gerado e baixado, mas não foi arquivado: ${msg}`);
+      else toast.error(msg);
     } finally {
       setSaving(false);
     }
