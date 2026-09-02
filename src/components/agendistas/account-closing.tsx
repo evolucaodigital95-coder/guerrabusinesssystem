@@ -117,12 +117,28 @@ export function AccountClosing({
     setOpen(true);
   }
 
+  function saveLocally(blob: Blob, fileName: string) {
+    try {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 4000);
+    } catch {
+      /* download opcional */
+    }
+  }
+
   async function confirmClosing() {
     if (!organizationId) return toast.error("Organização ativa não encontrada.");
     const snap = preview;
     if (!snap) return;
 
     setSaving(true);
+    let generated: { blob: Blob; fileName: string } | null = null;
     try {
       // 1) Número oficial (sequencial por organização)
       const { data: numberData, error: numberError } = await supabase.rpc("next_closing_number", {
@@ -152,9 +168,11 @@ export function AccountClosing({
         thanksMessage: thanks.trim() || DEFAULT_THANKS_MESSAGE,
       };
 
-      // 2) Gera o documento oficial
+      // 2) Gera o documento oficial — e entrega imediatamente ao usuário
       const blob = await buildClosingTermPDF(termData);
       const fileName = closingFileName(termData);
+      generated = { blob, fileName };
+      saveLocally(blob, fileName);
       const path = `${organizationId}/closings/${agentId}/${Date.now()}-${fileName}`;
 
       const up = await supabase.storage.from(BUCKET).upload(path, blob, {
