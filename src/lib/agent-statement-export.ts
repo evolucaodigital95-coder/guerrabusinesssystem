@@ -117,6 +117,24 @@ export type ReceiptGroup = {
   items: ReceiptItem[];
 };
 
+/** Cartão lançado — transparência total (todas as empresas, com ou sem comprovante). */
+export type CardEntry = {
+  date: string | null;
+  company: string;
+  lecture?: string | null;
+  brand: string;
+  method?: string | null;
+  installments: number | null;
+  amount: number;
+  feePercent: number | null;
+  feeAmount: number | null;
+  netAmount: number | null;
+  status?: string | null;
+  description?: string | null;
+  /** Fotos/comprovantes anexados ao lançamento do cartão */
+  photos?: ReceiptItem[];
+};
+
 export type ExportContext = {
   agentName: string;
   teamName?: string | null;
@@ -135,6 +153,7 @@ export type ExportContext = {
   payouts?: PayoutExportRow[];
   filters?: FilterInfo[];
   receipts?: ReceiptGroup[];
+  cards?: CardEntry[];
 };
 
 const HEADERS = ["Data", "Hora", "Tipo", "Descrição", "Empresa", "Palestra", "Crédito", "Débito", "Saldo"];
