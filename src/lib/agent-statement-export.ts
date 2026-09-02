@@ -300,6 +300,22 @@ export function exportStatementXLSX(ctx: ExportContext) {
     const rows4 = [["Data", "Valor", "Forma", "Descrição"], ...ctx.payouts.map((p) => [formatDate(p.date), p.amount, p.method ?? "", p.description ?? ""])];
     XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(rows4), "Pagamentos");
   }
+  if (ctx.cards?.length) {
+    const head = CARD_HEADERS;
+    const rows5 = ctx.cards.map((c) => [
+      formatDate(c.date), c.company, c.lecture ?? "", c.brand, c.method ?? "",
+      c.installments ? `${c.installments}x` : "1x",
+      c.amount,
+      c.feePercent ?? "",
+      c.feeAmount ?? "",
+      c.netAmount ?? "",
+      c.status ?? "",
+      c.photos?.length ?? 0,
+    ]);
+    const wsC = XLSX.utils.aoa_to_sheet([head, ...rows5]);
+    wsC["!cols"] = [{ wch: 12 }, { wch: 30 }, { wch: 28 }, { wch: 16 }, { wch: 14 }, { wch: 10 }, { wch: 14 }, { wch: 10 }, { wch: 14 }, { wch: 14 }, { wch: 12 }, { wch: 14 }];
+    XLSX.utils.book_append_sheet(wb, wsC, "Cartões");
+  }
   XLSX.writeFile(wb, `${safeFileBase(ctx.agentName)}-extrato.xlsx`);
 }
 
