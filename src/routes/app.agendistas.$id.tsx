@@ -507,6 +507,88 @@ function AgentDetail() {
     onError: (e) => toast.error(e instanceof Error ? e.message : "Erro"),
   });
 
+  /**
+   * Composição dos créditos a partir dos snapshots reais.
+   * Fonte única para o extrato (PDF/Excel/CSV) e para o Termo de Fechamento.
+   */
+  const creditsComposition = useMemo(() => {
+    return (snapshots.data ?? [])
+      .filter((s) => {
+        if (!fStart && !fEnd) return true;
+        const d = s.closed_at ? s.closed_at.slice(0, 10) : null;
+        if (fStart && (!d || d < fStart)) return false;
+        if (fEnd && (!d || d > fEnd)) return false;
+        return true;
+      })
+      .map((s) => {
+        const lec = s.lectures as { title?: string; scheduled_at?: string; companies?: { legal_name?: string } } | null;
+        type BreakdownLine = { label: string; amount: number; kind: string; hint?: string };
+        const bd = (s.breakdown ?? {}) as {
+          totals?: {
+            totalStock?: number; totalMaterials?: number;
+            totalCardFees?: number; fee?: number;
+            totalTaxes?: number; totalCosts?: number; totalOtherExpenses?: number;
+          };
+          lines?: BreakdownLine[];
+        };
+        const t = bd.totals ?? {};
+        const materials = t.totalStock ?? t.totalMaterials ?? (s.total_stock_cost != null ? Number(s.total_stock_cost) : null);
+        const snapCardFees = s.total_card_fees != null ? Number(s.total_card_fees) : null;
+        const cardFees = t.totalCardFees ?? snapCardFees;
+        const ruleFee = t.fee ?? null;
+        const otherCosts =
+          (t.totalTaxes ?? 0) + (t.totalCosts ?? 0) + (t.totalOtherExpenses ?? 0) || null;
+
+        const expenseLines = (bd.lines ?? [])
+          .filter((ln) => ln.kind === "out" && Number(ln.amount) < 0)
+          .map((ln) => {
+            const lbl = String(ln.label ?? "");
+            let category: "materials" | "cardFees" | "ruleFee" | "tax" | "cost" | "expense" = "expense";
+            if (/juros|cart[aã]o/i.test(lbl)) category = "cardFees";
+            else if (/taxa de regra|taxa da regra/i.test(lbl)) category = "ruleFee";
+            else if (/material|estoque/i.test(lbl)) category = "materials";
+            else if (/imposto|taxa/i.test(lbl)) category = "tax";
+            else if (/custo/i.test(lbl)) category = "cost";
+            return { label: lbl, amount: Math.abs(Number(ln.amount || 0)), category };
+          });
+
+        const agentShare = Number(s.agent_amount ?? 0);
+        return {
+          company: lec?.companies?.legal_name ?? "—",
+          lecture: lec?.title ?? "Palestra",
+          date: lec?.scheduled_at ?? s.closed_at ?? null,
+          grossRevenue: Number(s.gross_revenue ?? 0),
+          materials,
+          cardFees,
+          ruleFee,
+          fees: (cardFees ?? 0) + (ruleFee ?? 0) || null,
+          otherCosts,
+          netProfit: Number(s.net_profit ?? 0),
+          agentShare,
+          tithe: Math.round(agentShare * 10) / 100,
+          expenseLines,
+        };
+      });
+  }, [snapshots.data, fStart, fEnd]);
+
+  const advancesRows = useMemo(() => {
+    return (advances.data ?? [])
+      .filter((a) => {
+        if (!fStart && !fEnd) return true;
+        const d = a.granted_on;
+        if (fStart && (!d || d < fStart)) return false;
+        if (fEnd && (!d || d > fEnd)) return false;
+        return true;
+      })
+      .map((a) => ({
+        date: a.granted_on,
+        amount: Number(a.amount ?? 0),
+        source: a.source ?? null,
+        lecture: (a.lectures as { title?: string } | null)?.title ?? null,
+        notes: a.notes ?? null,
+      }));
+  }, [advances.data, fStart, fEnd]);
+
   const downloadStatement = async (fmt: "pdf" | "xlsx" | "csv") => {
     const agentName = agent.data?.full_name ?? "Agendista";
     const periodLabel = fStart || fEnd ? `${fStart || "início"} → ${fEnd || "hoje"}` : "Completo";

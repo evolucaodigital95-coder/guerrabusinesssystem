@@ -1,6 +1,9 @@
 import { formatCurrency, formatDate } from "@/lib/crm";
 import * as XLSX from "xlsx";
-import grupoGuerraLogo from "@/assets/grupo-guerra-logo.png.asset.json";
+import grupoGuerraLogo from "@/assets/grupo-guerra-mark.png.asset.json";
+
+/** Proporção real da marca (599 x 376) — usada para nunca distorcer a logo. */
+export const GUERRA_MARK_RATIO = 599 / 376;
 
 /**
  * Cache do dataURL da logo do Grupo Guerra para reuso entre gerações de PDF.
@@ -8,7 +11,7 @@ import grupoGuerraLogo from "@/assets/grupo-guerra-logo.png.asset.json";
  * requisição basta e o browser cacheia.
  */
 let __logoDataUrlPromise: Promise<string | null> | null = null;
-function loadGuerraLogoDataUrl(): Promise<string | null> {
+export function loadGuerraLogoDataUrl(): Promise<string | null> {
   if (__logoDataUrlPromise) return __logoDataUrlPromise;
   __logoDataUrlPromise = (async () => {
     try {
@@ -242,7 +245,10 @@ export function exportStatementXLSX(ctx: ExportContext) {
 /* ============================================================
  * PREMIUM EXECUTIVE PDF — Landscape "Private Banking"
  * ============================================================ */
-export async function exportStatementPDF(ctx: ExportContext) {
+export async function exportStatementPDF(
+  ctx: ExportContext,
+  opts?: { output?: "save" | "blob" },
+): Promise<Blob | void> {
   const { jsPDF } = await import("jspdf");
   const autoTable = (await import("jspdf-autotable")).default;
   const doc = new jsPDF({ unit: "pt", format: "a4", orientation: "landscape" });
@@ -261,15 +267,14 @@ export async function exportStatementPDF(ctx: ExportContext) {
   const drawWatermark = () => {
     doc.saveGraphicsState();
     // @ts-expect-error jspdf gState typing
-    doc.setGState(new doc.GState({ opacity: 0.05 }));
+    doc.setGState(new doc.GState({ opacity: 0.04 }));
     if (logoDataUrl) {
-      // Logo em marca d'água (centralizada)
-      const wmW = 260;
-      const wmH = 260;
+      // Marca d'água centralizada, respeitando a proporção original
+      const wmW = 300;
+      const wmH = wmW / GUERRA_MARK_RATIO;
       try {
         doc.addImage(logoDataUrl, "PNG", (pageW - wmW) / 2, (pageH - wmH) / 2, wmW, wmH, undefined, "FAST");
       } catch {
-        // fallback texto
         doc.setFont("helvetica", "bold");
         doc.setFontSize(110);
         doc.setTextColor(...NAVY);
@@ -300,21 +305,24 @@ export async function exportStatementPDF(ctx: ExportContext) {
 
   /* ---------------- HEADER (page 1) ---------------- */
   let y = 46;
-  // Logo do Grupo Guerra no cabeçalho
+  // Marca do Grupo Guerra (sem fundo) — alinhada à linha de base do texto
+  const markW = 62;
+  const markH = markW / GUERRA_MARK_RATIO;
+  const headerBaseline = y + 6;
   if (logoDataUrl) {
     try {
-      doc.addImage(logoDataUrl, "PNG", marginX, y - 8, 42, 42, undefined, "FAST");
+      doc.addImage(logoDataUrl, "PNG", marginX, headerBaseline - markH + 2, markW, markH, undefined, "FAST");
     } catch { /* segue sem logo */ }
   }
-  const brandX = marginX + 54;
+  const brandX = marginX + markW + 14;
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(18);
+  doc.setFontSize(17);
   doc.setTextColor(...NAVY);
-  doc.text("GRUPO GUERRA", brandX, y + 8, { charSpace: 1 });
+  doc.text("GRUPO GUERRA", brandX, headerBaseline, { charSpace: 1 });
   doc.setFont("helvetica", "normal");
   doc.setFontSize(7);
   doc.setTextColor(...MUTED);
-  doc.text("GUERRA BUSINESS SYSTEM · GBS", brandX, y + 22, { charSpace: 1.4 });
+  doc.text("GUERRA BUSINESS SYSTEM · GBS", brandX, headerBaseline + 13, { charSpace: 1.4 });
 
   doc.setFont("helvetica", "bold");
   doc.setFontSize(9);
@@ -551,100 +559,126 @@ export async function exportStatementPDF(ctx: ExportContext) {
     );
     y += 16;
 
+    /* Grade de 3 colunas com calhas fixas — mantém tudo alinhado */
+    const colInfoX = marginX + 16;
+    const colInfoW = 206;
+    const colDedX = marginX + 244;
+    const colDedW = 236;
+    const colTotLabelX = marginX + 512;
+    const colTotValueX = pageW - marginX - 16;
+
+    const ROW = 12;
+    const MAX_DED = 14;
+
     for (const c of ctx.creditsComposition) {
-      const lineCount = c.expenseLines?.length ?? 0;
-      const cardHeight = 100 + Math.min(lineCount, 12) * 10;
+      const dedLines = c.expenseLines ?? [];
+      const dedShown = Math.min(dedLines.length, MAX_DED);
+      const totalsRows = 8;
+
+      const headerOffset = 34;      // até a 1ª linha de conteúdo
+      const dedHeight = headerOffset + Math.max(dedShown, 1) * ROW + (dedLines.length > MAX_DED ? ROW : 0);
+      const totHeight = headerOffset + totalsRows * ROW + 6;
+      const infoHeight = c.date ? 104 : 78;
+      const cardHeight = Math.max(dedHeight, totHeight, infoHeight) + 12;
+
       y = ensureSpace(doc, y, cardHeight + 12, pageH);
 
-      // Card frame
+      // Moldura
       doc.setDrawColor(220, 220, 225);
       doc.setLineWidth(0.4);
       doc.roundedRect(marginX, y, contentW, cardHeight, 3, 3, "S");
 
-      // Left column — company/lecture
-      const leftX = marginX + 14;
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(7);
-      doc.setTextColor(...GOLD);
-      doc.text("EMPRESA", leftX, y + 16, { charSpace: 1.4 });
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(10);
-      doc.setTextColor(...NAVY);
-      const companyLines = doc.splitTextToSize(c.company.toUpperCase(), 240);
-      doc.text(companyLines[0] ?? "", leftX, y + 30);
+      const label = (text: string, x: number, ly: number) => {
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(6.8);
+        doc.setTextColor(...GOLD);
+        doc.text(text, x, ly, { charSpace: 1.4 });
+      };
 
+      /* Coluna 1 — identificação */
+      label("EMPRESA", colInfoX, y + 18);
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(7);
-      doc.setTextColor(...GOLD);
-      doc.text("PALESTRA", leftX, y + 48, { charSpace: 1.4 });
-      doc.setFont("helvetica", "normal");
       doc.setFontSize(9.5);
+      doc.setTextColor(...NAVY);
+      doc.text(doc.splitTextToSize(c.company.toUpperCase(), colInfoW)[0] ?? "", colInfoX, y + 31);
+
+      label("PALESTRA", colInfoX, y + 50);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
       doc.setTextColor(...GRAPHITE);
-      const lecLines = doc.splitTextToSize(c.lecture, 240);
-      doc.text(lecLines[0] ?? "", leftX, y + 62);
+      doc.text(doc.splitTextToSize(c.lecture, colInfoW)[0] ?? "", colInfoX, y + 63);
 
       if (c.date) {
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(7);
-        doc.setTextColor(...GOLD);
-        doc.text("DATA", leftX, y + 80, { charSpace: 1.4 });
+        label("DATA", colInfoX, y + 82);
         doc.setFont("helvetica", "normal");
         doc.setFontSize(9);
         doc.setTextColor(...GRAPHITE);
-        doc.text(formatDate(c.date), leftX, y + 92);
+        doc.text(formatDate(c.date), colInfoX, y + 95);
       }
 
-      // Middle column — expense line details
-      const midX = marginX + 280;
-      const midW = 200;
+      /* Coluna 2 — deduções detalhadas */
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(7);
+      doc.setFontSize(6.8);
       doc.setTextColor(...NAVY);
-      doc.text("DEDUÇÕES DETALHADAS", midX, y + 16, { charSpace: 1.4 });
+      doc.text("DEDUÇÕES DETALHADAS", colDedX, y + 18, { charSpace: 1.4 });
+      doc.setDrawColor(230, 230, 235);
+      doc.setLineWidth(0.3);
+      doc.line(colDedX, y + 23, colDedX + colDedW, y + 23);
 
-      let ey = y + 30;
-      if (c.expenseLines && c.expenseLines.length > 0) {
-        c.expenseLines.slice(0, 12).forEach((ln) => {
+      let ey = y + headerOffset + 2;
+      if (dedLines.length > 0) {
+        dedLines.slice(0, MAX_DED).forEach((ln) => {
           doc.setFont("helvetica", "normal");
-          doc.setFontSize(7.5);
+          doc.setFontSize(7.6);
           doc.setTextColor(...GRAPHITE);
-          const labelLines = doc.splitTextToSize(ln.label, midW - 60);
-          doc.text(labelLines[0] ?? "", midX, ey);
+          doc.text(doc.splitTextToSize(ln.label, colDedW - 74)[0] ?? "", colDedX, ey);
           doc.setTextColor(...DEBIT_RED);
-          doc.text("-" + formatCurrency(Math.abs(ln.amount)), midX + midW, ey, { align: "right" });
-          ey += 10;
+          doc.text("-" + formatCurrency(Math.abs(ln.amount)), colDedX + colDedW, ey, { align: "right" });
+          ey += ROW;
         });
-        if (c.expenseLines.length > 12) {
+        if (dedLines.length > MAX_DED) {
           doc.setFont("helvetica", "italic");
           doc.setFontSize(7);
           doc.setTextColor(...MUTED);
-          doc.text(`+ ${c.expenseLines.length - 12} outros lançamentos`, midX, ey);
+          doc.text(`+ ${dedLines.length - MAX_DED} outros lançamentos`, colDedX, ey);
         }
       } else {
         doc.setFont("helvetica", "italic");
         doc.setFontSize(8);
         doc.setTextColor(...MUTED);
-        doc.text("Sem deduções registradas.", midX, ey);
+        doc.text("Sem deduções registradas.", colDedX, ey);
       }
 
-      // Right column — breakdown totals
-      const rightX = pageW - marginX - 14;
-      const labelX = pageW - marginX - 220;
-      let ry = y + 16;
-      const putLine = (label: string, value: number | null, opts: { neg?: boolean; bold?: boolean; rule?: boolean } = {}) => {
+      /* Coluna 3 — apuração */
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(6.8);
+      doc.setTextColor(...NAVY);
+      doc.text("APURAÇÃO", colTotLabelX, y + 18, { charSpace: 1.4 });
+      doc.setDrawColor(230, 230, 235);
+      doc.setLineWidth(0.3);
+      doc.line(colTotLabelX, y + 23, colTotValueX, y + 23);
+
+      let ry = y + headerOffset + 2;
+      const putLine = (
+        text: string,
+        value: number | null,
+        opts: { neg?: boolean; bold?: boolean; rule?: boolean; muted?: boolean } = {},
+      ) => {
         if (opts.rule) {
+          ry += 3;
           doc.setDrawColor(...GOLD);
-          doc.setLineWidth(0.3);
-          doc.line(labelX, ry - 4, rightX, ry - 4);
+          doc.setLineWidth(0.5);
+          doc.line(colTotLabelX, ry - 9, colTotValueX, ry - 9);
         }
         doc.setFont("helvetica", opts.bold ? "bold" : "normal");
-        doc.setFontSize(8.5);
+        doc.setFontSize(8.2);
         doc.setTextColor(...(opts.bold ? NAVY : MUTED));
-        doc.text(label, labelX, ry);
-        doc.setTextColor(...(opts.bold ? NAVY : GRAPHITE));
+        doc.text(text, colTotLabelX, ry);
+        doc.setFont("helvetica", opts.bold ? "bold" : "normal");
+        doc.setTextColor(...(opts.bold ? NAVY : opts.muted ? MUTED : GRAPHITE));
         const txt = value == null ? "—" : (opts.neg ? "-" : "") + formatCurrency(Math.abs(value));
-        doc.text(txt, rightX, ry, { align: "right" });
-        ry += 11;
+        doc.text(txt, colTotValueX, ry, { align: "right" });
+        ry += ROW;
       };
       putLine("Valor bruto vendido", c.grossRevenue, { bold: true });
       putLine("(-) Materiais / Estoque", c.materials, { neg: true });
@@ -653,9 +687,9 @@ export async function exportStatementPDF(ctx: ExportContext) {
       putLine("(-) Outros custos operacionais", c.otherCosts, { neg: true });
       putLine("(=) Lucro líquido operacional", c.netProfit, { bold: true, rule: true });
       putLine("Participação do agendista", c.agentShare, { bold: true });
-      putLine("Dízimo sugerido (informativo)", c.tithe);
+      putLine("Dízimo sugerido (informativo)", c.tithe, { muted: true });
 
-      y += cardHeight + 10;
+      y += cardHeight + 12;
     }
   }
 
@@ -871,6 +905,7 @@ export async function exportStatementPDF(ctx: ExportContext) {
     drawFooter(i, totalPages);
   }
 
+  if (opts?.output === "blob") return doc.output("blob");
   doc.save(pdfFileName(ctx));
 }
 
