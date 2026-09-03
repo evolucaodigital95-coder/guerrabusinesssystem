@@ -772,9 +772,13 @@ function CentroPalestrante() {
               </Card>
 
               <Card>
-                <CardHeader>
-                  <CardTitle className="text-base flex items-center gap-2"><ArrowUpRight className="h-4 w-4 text-emerald-700" />Pagamentos recebidos</CardTitle>
+                <CardHeader className="flex-row items-center justify-between space-y-0">
+                  <CardTitle className="text-base flex items-center gap-2"><ArrowUpRight className="h-4 w-4 text-emerald-700" />Retiradas / pagamentos</CardTitle>
+                  <Button size="sm" variant="outline" className="gap-1.5" onClick={() => setPayoutOpen(true)} disabled={!organizationId || !userId}>
+                    <Plus className="h-3.5 w-3.5" /> Nova
+                  </Button>
                 </CardHeader>
+
                 <CardContent className="overflow-x-auto">
                   {(speakerPayouts.data ?? []).length === 0 ? <EmptyRow message="Sem pagamentos registrados." /> : (
                     <table className="w-full text-xs sm:text-sm">
