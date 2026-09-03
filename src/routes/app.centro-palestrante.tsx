@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   Download, FileText, FileSpreadsheet, Wallet, TrendingUp, Users,
-  Building2, Mic, MapPin, CalendarRange, Target, Info, ArrowUpRight, ArrowDownRight,
+  Building2, Mic, MapPin, CalendarRange, Target, Info, ArrowUpRight, ArrowDownRight, Plus,
 } from "lucide-react";
 import {
   BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -20,12 +20,16 @@ import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrentOrg } from "@/hooks/use-current-org";
+import { useSession } from "@/hooks/use-session";
+import { SpeakerAdvanceDialog } from "@/components/palestrante/speaker-advance-dialog";
+import { SpeakerPayoutDialog } from "@/components/palestrante/speaker-payout-dialog";
 import { formatCurrency, formatDate } from "@/lib/crm";
 import { cn } from "@/lib/utils";
 import {
   exportSpeakerCSV, exportSpeakerXLSX, exportSpeakerPDF,
   type SpeakerReportContext,
 } from "@/lib/speaker-report-export";
+import { buildSpeakerStatement } from "@/lib/finance-engine";
 
 export const Route = createFileRoute("/app/centro-palestrante")({
   head: () => ({
@@ -86,6 +90,10 @@ const TITHE = 0.10;
 
 function CentroPalestrante() {
   const { organizationId } = useCurrentOrg();
+  const { user } = useSession();
+  const userId = user?.id ?? "";
+  const [advanceOpen, setAdvanceOpen] = useState(false);
+  const [payoutOpen, setPayoutOpen] = useState(false);
   const [fStart, setFStart] = useState<string>("");
   const [fEnd, setFEnd] = useState<string>("");
   const [fCompany, setFCompany] = useState<string>("__all__");
@@ -150,6 +158,7 @@ function CentroPalestrante() {
         .eq("direction", "out")
         .in("status", ["paga", "parcial"])
         .in("category", ["Pró-labore", "Palestrante"])
+        .is("agent_id", null)
         .is("archived_at", null)
         .order("occurs_on", { ascending: false });
       if (error) throw error;
@@ -158,13 +167,14 @@ function CentroPalestrante() {
   });
 
   const advances = useQuery({
-    queryKey: ["cfp-advances", organizationId],
+    queryKey: ["cfp-speaker-advances", organizationId],
     enabled: !!organizationId,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("advances")
-        .select("id, amount, amount_amortized, granted_on, source, paid_by_label, status, notes, receipt_url, agents:agent_id ( full_name )")
+        .select("id, amount, amount_amortized, granted_on, source, paid_by_label, status, notes, receipt_url")
         .eq("organization_id", organizationId!)
+        .is("agent_id", null)
         .is("archived_at", null)
         .order("granted_on", { ascending: false });
       if (error) throw error;
@@ -286,6 +296,38 @@ function CentroPalestrante() {
       pessoasImpactadas: audience,
     };
   }, [filtered, speakerPayouts.data, advances.data, pending.data, thisMonth, thisYear]);
+
+  // Conta corrente do palestrante (créditos, adiantamentos e retiradas)
+  const account = useMemo(() => buildSpeakerStatement({
+    closedShares: filtered.map((r) => ({
+      lectureId: r.lecture_id,
+      lectureTitle: r.lectures?.title ?? "Palestra",
+      date: r.closed_at ? r.closed_at.slice(0, 10) : null,
+      amount: Number(r.gustavo_amount ?? 0),
+    })),
+    advances: (advances.data ?? []).map((a) => ({
+      id: a.id,
+      granted_on: a.granted_on ?? null,
+      amount: Number(a.amount ?? 0),
+      amount_amortized: Number(a.amount_amortized ?? 0),
+      source: a.source ?? null,
+      status: a.status ?? null,
+    })),
+    payouts: (speakerPayouts.data ?? []).map((p) => ({
+      id: p.id,
+      occurs_on: p.occurs_on ?? null,
+      amount: Number(p.amount ?? 0),
+      description: p.description ?? "Retirada do palestrante",
+    })),
+    titheRate: TITHE,
+  }), [filtered, advances.data, speakerPayouts.data]);
+
+  const accountLines = useMemo(() => {
+    const asc = [...account.lines].sort((a, b) => (a.date ?? "").localeCompare(b.date ?? ""));
+    let running = 0;
+    const withBalance = asc.map((l) => { running += l.amount; return { ...l, running }; });
+    return withBalance.reverse();
+  }, [account.lines]);
 
   // Extrato palestra a palestra
   const statement = useMemo(() => {
@@ -541,6 +583,7 @@ function CentroPalestrante() {
           <Tabs defaultValue="extrato" className="mt-4">
             <TabsList className="flex flex-wrap h-auto">
               <TabsTrigger value="extrato">Extrato</TabsTrigger>
+              <TabsTrigger value="conta">Conta Corrente</TabsTrigger>
               <TabsTrigger value="resultados">Resultados</TabsTrigger>
               <TabsTrigger value="evolucao">Evolução Mensal</TabsTrigger>
               <TabsTrigger value="rentabilidade">Rentabilidade</TabsTrigger>
@@ -742,22 +785,24 @@ function CentroPalestrante() {
             {/* Adiantamentos & Pagamentos */}
             <TabsContent value="adiantamentos" className="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
               <Card>
-                <CardHeader>
-                  <CardTitle className="text-base flex items-center gap-2"><ArrowDownRight className="h-4 w-4 text-rose-600" />Adiantamentos</CardTitle>
+                <CardHeader className="flex-row items-center justify-between space-y-0">
+                  <CardTitle className="text-base flex items-center gap-2"><ArrowDownRight className="h-4 w-4 text-rose-600" />Adiantamentos do palestrante</CardTitle>
+                  <Button size="sm" variant="outline" className="gap-1.5" onClick={() => setAdvanceOpen(true)} disabled={!organizationId || !userId}>
+                    <Plus className="h-3.5 w-3.5" /> Novo
+                  </Button>
                 </CardHeader>
                 <CardContent className="overflow-x-auto">
                   {(advances.data ?? []).length === 0 ? <EmptyRow message="Sem adiantamentos." /> : (
                     <table className="w-full text-xs sm:text-sm">
                       <thead>
                         <tr className="border-b text-muted-foreground uppercase text-[10px] tracking-wider">
-                          <Th>Data</Th><Th>Agendista</Th><Th right>Valor</Th><Th>Origem</Th><Th>Status</Th>
+                          <Th>Data</Th><Th right>Valor</Th><Th>Origem</Th><Th>Status</Th>
                         </tr>
                       </thead>
                       <tbody>
                         {(advances.data ?? []).map((a) => (
                           <tr key={a.id} className="border-b last:border-0">
                             <Td>{formatDate(a.granted_on)}</Td>
-                            <Td>{(a.agents as { full_name?: string } | null)?.full_name ?? "—"}</Td>
                             <Td right className="font-semibold text-rose-600">{formatCurrency(Number(a.amount ?? 0))}</Td>
                             <Td className="text-muted-foreground">{a.source ?? "—"}{a.paid_by_label ? ` · ${a.paid_by_label}` : ""}</Td>
                             <Td><Badge variant="outline">{a.status ?? "—"}</Badge></Td>
@@ -768,10 +813,15 @@ function CentroPalestrante() {
                   )}
                 </CardContent>
               </Card>
+
               <Card>
-                <CardHeader>
-                  <CardTitle className="text-base flex items-center gap-2"><ArrowUpRight className="h-4 w-4 text-emerald-700" />Pagamentos recebidos</CardTitle>
+                <CardHeader className="flex-row items-center justify-between space-y-0">
+                  <CardTitle className="text-base flex items-center gap-2"><ArrowUpRight className="h-4 w-4 text-emerald-700" />Retiradas / pagamentos</CardTitle>
+                  <Button size="sm" variant="outline" className="gap-1.5" onClick={() => setPayoutOpen(true)} disabled={!organizationId || !userId}>
+                    <Plus className="h-3.5 w-3.5" /> Nova
+                  </Button>
                 </CardHeader>
+
                 <CardContent className="overflow-x-auto">
                   {(speakerPayouts.data ?? []).length === 0 ? <EmptyRow message="Sem pagamentos registrados." /> : (
                     <table className="w-full text-xs sm:text-sm">
@@ -788,6 +838,57 @@ function CentroPalestrante() {
                             <Td className="text-muted-foreground">{p.payment_method ?? "—"}</Td>
                             <Td className="text-muted-foreground">{(p.accounts as { name?: string } | null)?.name ?? "—"}</Td>
                             <Td right className="font-semibold">{formatCurrency(Number(p.amount ?? 0))}</Td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Conta Corrente do Palestrante */}
+            <TabsContent value="conta" className="mt-4 space-y-4">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                <Kpi label="Créditos (lucro)" value={formatCurrency(account.totals.earned)} tone="positive" />
+                <Kpi label="Adiantamentos" value={formatCurrency(account.totals.advancesTotal)} tone="negative" />
+                <Kpi label="Retiradas" value={formatCurrency(account.totals.payoutsTotal)} tone="negative" />
+                <Kpi label="Saldo da conta" value={formatCurrency(account.totals.balance)} highlight tone={account.totals.balance >= 0 ? "positive" : "negative"} />
+              </div>
+              <Card>
+                <CardHeader className="flex-row items-center justify-between space-y-0">
+                  <CardTitle className="text-base">Extrato cronológico · {speakerName}</CardTitle>
+                  <div className="flex gap-2">
+                    <Button size="sm" variant="outline" className="gap-1.5" onClick={() => setAdvanceOpen(true)} disabled={!organizationId || !userId}>
+                      <Plus className="h-3.5 w-3.5" /> Adiantamento
+                    </Button>
+                    <Button size="sm" variant="navy" className="gap-1.5" onClick={() => setPayoutOpen(true)} disabled={!organizationId || !userId}>
+                      <Plus className="h-3.5 w-3.5" /> Retirada
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent className="overflow-x-auto">
+                  {account.lines.length === 0 ? <EmptyRow message="Nenhum lançamento na conta do palestrante." /> : (
+                    <table className="w-full text-xs sm:text-sm">
+                      <thead>
+                        <tr className="border-b text-muted-foreground uppercase text-[10px] tracking-wider">
+                          <Th>Data</Th><Th>Lançamento</Th><Th>Tipo</Th><Th right>Valor</Th><Th right>Saldo</Th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {accountLines.map((l) => (
+                          <tr key={l.id} className="border-b last:border-0 hover:bg-muted/40">
+                            <Td>{formatDate(l.date)}</Td>
+                            <Td>{l.description}</Td>
+                            <Td>
+                              <Badge variant="outline">
+                                {l.kind === "share" ? "Crédito" : l.kind === "advance" ? "Adiantamento" : "Retirada"}
+                              </Badge>
+                            </Td>
+                            <Td right className={cn("font-semibold tabular-nums", l.amount >= 0 ? "text-emerald-700 dark:text-emerald-400" : "text-rose-600")}>
+                              {formatCurrency(l.amount)}
+                            </Td>
+                            <Td right className="tabular-nums">{formatCurrency(l.running)}</Td>
                           </tr>
                         ))}
                       </tbody>
@@ -898,6 +999,25 @@ function CentroPalestrante() {
               </Card>
             </TabsContent>
           </Tabs>
+
+          {organizationId && userId && (
+            <>
+              <SpeakerAdvanceDialog
+                open={advanceOpen}
+                onOpenChange={setAdvanceOpen}
+                organizationId={organizationId}
+                userId={userId}
+              />
+              <SpeakerPayoutDialog
+                open={payoutOpen}
+                onOpenChange={setPayoutOpen}
+                organizationId={organizationId}
+                userId={userId}
+                speakerName={speakerName}
+                maxAmount={Math.max(0, account.totals.balance)}
+              />
+            </>
+          )}
         </>
       )}
     </div>
