@@ -742,22 +742,24 @@ function CentroPalestrante() {
             {/* Adiantamentos & Pagamentos */}
             <TabsContent value="adiantamentos" className="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
               <Card>
-                <CardHeader>
-                  <CardTitle className="text-base flex items-center gap-2"><ArrowDownRight className="h-4 w-4 text-rose-600" />Adiantamentos</CardTitle>
+                <CardHeader className="flex-row items-center justify-between space-y-0">
+                  <CardTitle className="text-base flex items-center gap-2"><ArrowDownRight className="h-4 w-4 text-rose-600" />Adiantamentos do palestrante</CardTitle>
+                  <Button size="sm" variant="outline" className="gap-1.5" onClick={() => setAdvanceOpen(true)} disabled={!organizationId || !userId}>
+                    <Plus className="h-3.5 w-3.5" /> Novo
+                  </Button>
                 </CardHeader>
                 <CardContent className="overflow-x-auto">
                   {(advances.data ?? []).length === 0 ? <EmptyRow message="Sem adiantamentos." /> : (
                     <table className="w-full text-xs sm:text-sm">
                       <thead>
                         <tr className="border-b text-muted-foreground uppercase text-[10px] tracking-wider">
-                          <Th>Data</Th><Th>Agendista</Th><Th right>Valor</Th><Th>Origem</Th><Th>Status</Th>
+                          <Th>Data</Th><Th right>Valor</Th><Th>Origem</Th><Th>Status</Th>
                         </tr>
                       </thead>
                       <tbody>
                         {(advances.data ?? []).map((a) => (
                           <tr key={a.id} className="border-b last:border-0">
                             <Td>{formatDate(a.granted_on)}</Td>
-                            <Td>{(a.agents as { full_name?: string } | null)?.full_name ?? "—"}</Td>
                             <Td right className="font-semibold text-rose-600">{formatCurrency(Number(a.amount ?? 0))}</Td>
                             <Td className="text-muted-foreground">{a.source ?? "—"}{a.paid_by_label ? ` · ${a.paid_by_label}` : ""}</Td>
                             <Td><Badge variant="outline">{a.status ?? "—"}</Badge></Td>
@@ -768,6 +770,7 @@ function CentroPalestrante() {
                   )}
                 </CardContent>
               </Card>
+
               <Card>
                 <CardHeader>
                   <CardTitle className="text-base flex items-center gap-2"><ArrowUpRight className="h-4 w-4 text-emerald-700" />Pagamentos recebidos</CardTitle>
