@@ -141,6 +141,7 @@ export function MovementFormDialog({
   const opt = TYPE_OPTIONS.find((t) => t.key === type)!;
   const isSaidaPalestra = type === "saida_palestra";
   const isEntrada = type === "entrada";
+  const isDevFornecedor = type === "devolucao_fornecedor";
   const isOut = opt.direction === "out";
 
   const validLines = lines.filter((l) => l.itemId && Number(l.qty) > 0);
