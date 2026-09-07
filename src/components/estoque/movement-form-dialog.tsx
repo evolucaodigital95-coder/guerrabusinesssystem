@@ -173,7 +173,8 @@ export function MovementFormDialog({
     mutationFn: async () => {
       if (validLines.length === 0) throw new Error("Adicione ao menos um item com quantidade.");
       if (isSaidaPalestra && !lectureId) throw new Error("Selecione a palestra vinculada à saída.");
-      if (!isEntrada && !isSaidaPalestra && !reason.trim()) throw new Error("Informe o motivo da movimentação.");
+      if (isDevFornecedor && !supplier.trim()) throw new Error("Informe para qual fornecedor está devolvendo.");
+      if (!isEntrada && !isSaidaPalestra && !isDevFornecedor && !reason.trim()) throw new Error("Informe o motivo da movimentação.");
 
 
       // Validações por linha
