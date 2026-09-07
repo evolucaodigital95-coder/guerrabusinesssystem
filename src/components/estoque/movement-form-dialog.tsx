@@ -308,6 +308,20 @@ export function MovementFormDialog({
               <Label>Fornecedor</Label>
               <Input value={supplier} onChange={(e) => setSupplier(e.target.value)} placeholder="Opcional — aplicado a todos os itens" />
             </div>
+          ) : isDevFornecedor ? (
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label>Fornecedor *</Label>
+                <Input value={supplier} onChange={(e) => setSupplier(e.target.value)} placeholder="Para quem você está devolvendo" />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Motivo</Label>
+                <Input value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Opcional — ex.: item com defeito, sobra de compra" />
+              </div>
+              <p className="md:col-span-2 text-[11px] text-muted-foreground">
+                Os itens abaixo serão retirados do seu estoque e registrados como devolvidos ao fornecedor.
+              </p>
+            </div>
           ) : (
             <div className="space-y-1.5">
               <Label>Motivo{isSaidaPalestra ? "" : " *"}</Label>
