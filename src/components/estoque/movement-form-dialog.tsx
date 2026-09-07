@@ -35,7 +35,8 @@ const TYPE_OPTIONS: { key: SimpleType; label: string; help: string; kind: Moveme
   { key: "saida_palestra",  label: "Saída para Palestra", help: "Consumo vinculado a uma palestra — custo automático pelo estoque.", kind: "saida",     direction: "out", status: "utilizado" },
   { key: "ajuste",          label: "Ajuste",              help: "Correção de inventário (positiva ou negativa).",                     kind: "ajuste",    direction: "in",  status: "utilizado" },
   { key: "perda",           label: "Perda / Avaria",      help: "Baixa por perda, dano ou vencimento.",                               kind: "baixa",     direction: "out", status: "utilizado" },
-  { key: "devolucao",       label: "Devolução",           help: "Retorno de material ao estoque.",                                    kind: "devolucao", direction: "in",  status: "utilizado" },
+  { key: "devolucao",       label: "Devolução ao estoque", help: "Material que voltou para o estoque (sobra de palestra).",           kind: "devolucao", direction: "in",  status: "utilizado" },
+  { key: "devolucao_fornecedor", label: "Devolução ao fornecedor", help: "Material devolvido ao fornecedor — sai do seu estoque.",     kind: "devolucao_fornecedor", direction: "out", status: "utilizado" },
 ];
 
 function emptyLine(itemId: string | null = null): Line {
