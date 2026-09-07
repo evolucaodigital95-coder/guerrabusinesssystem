@@ -60,6 +60,8 @@ type Mvt = {
 
 const ALL = "__all__";
 
+type MvtType = "entrada" | "saida_palestra" | "devolucao_fornecedor";
+
 function EstoquePage() {
   const { user } = useSession();
   const { organizationId, loading: orgLoading } = useCurrentOrg();
