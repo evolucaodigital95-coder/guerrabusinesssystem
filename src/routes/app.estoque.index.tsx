@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
-  Plus, Minus, Search, Package, AlertTriangle, Boxes, MapPin,
+  Plus, Minus, Search, Package, AlertTriangle, Boxes, MapPin, Undo2,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
