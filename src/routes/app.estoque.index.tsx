@@ -182,6 +182,9 @@ function EstoquePage() {
             <Button variant="ghost" className="rounded-full" onClick={() => openMovement("saida_palestra")} disabled={!organizationId}>
               <Minus className="mr-1.5 h-4 w-4" /> Saída
             </Button>
+            <Button variant="ghost" className="rounded-full" onClick={() => openMovement("devolucao_fornecedor")} disabled={!organizationId}>
+              <Undo2 className="mr-1.5 h-4 w-4" /> Devolução
+            </Button>
             <Button variant="navy" className="rounded-full" onClick={() => setItemOpen(true)} disabled={!organizationId}>
               <Plus className="mr-1.5 h-4 w-4" /> Novo material
             </Button>
