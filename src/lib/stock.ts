@@ -43,7 +43,8 @@ export const MOVEMENT_KINDS = [
   { key: "saida", label: "Saída", direction: "out" },
   { key: "reserva", label: "Reserva", direction: "out" },
   { key: "baixa", label: "Baixa", direction: "out" },
-  { key: "devolucao", label: "Devolução", direction: "in" },
+  { key: "devolucao", label: "Devolução ao estoque", direction: "in" },
+  { key: "devolucao_fornecedor", label: "Devolução ao fornecedor", direction: "out" },
   { key: "ajuste", label: "Ajuste", direction: "in" },
   { key: "cancelamento", label: "Cancelamento", direction: "in" },
 ] as const;
