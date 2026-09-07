@@ -21,7 +21,7 @@ import { calcOnHand, type MovementKind } from "@/lib/stock";
  * Suporta MÚLTIPLOS itens em uma única movimentação (ex.: uma saída com 5 livros e 10 folders).
  * O sistema calcula automaticamente o custo em saídas (custo médio / lote).
  */
-type SimpleType = "entrada" | "saida_palestra" | "ajuste" | "perda" | "devolucao";
+type SimpleType = "entrada" | "saida_palestra" | "ajuste" | "perda" | "devolucao" | "devolucao_fornecedor";
 
 type Line = {
   key: string;
