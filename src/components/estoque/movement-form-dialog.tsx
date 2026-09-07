@@ -21,7 +21,7 @@ import { calcOnHand, type MovementKind } from "@/lib/stock";
  * Suporta MÚLTIPLOS itens em uma única movimentação (ex.: uma saída com 5 livros e 10 folders).
  * O sistema calcula automaticamente o custo em saídas (custo médio / lote).
  */
-type SimpleType = "entrada" | "saida_palestra" | "ajuste" | "perda" | "devolucao";
+type SimpleType = "entrada" | "saida_palestra" | "ajuste" | "perda" | "devolucao" | "devolucao_fornecedor";
 
 type Line = {
   key: string;
@@ -35,7 +35,8 @@ const TYPE_OPTIONS: { key: SimpleType; label: string; help: string; kind: Moveme
   { key: "saida_palestra",  label: "Saída para Palestra", help: "Consumo vinculado a uma palestra — custo automático pelo estoque.", kind: "saida",     direction: "out", status: "utilizado" },
   { key: "ajuste",          label: "Ajuste",              help: "Correção de inventário (positiva ou negativa).",                     kind: "ajuste",    direction: "in",  status: "utilizado" },
   { key: "perda",           label: "Perda / Avaria",      help: "Baixa por perda, dano ou vencimento.",                               kind: "baixa",     direction: "out", status: "utilizado" },
-  { key: "devolucao",       label: "Devolução",           help: "Retorno de material ao estoque.",                                    kind: "devolucao", direction: "in",  status: "utilizado" },
+  { key: "devolucao",       label: "Devolução ao estoque", help: "Material que voltou para o estoque (sobra de palestra).",           kind: "devolucao", direction: "in",  status: "utilizado" },
+  { key: "devolucao_fornecedor", label: "Devolução ao fornecedor", help: "Material devolvido ao fornecedor — sai do seu estoque.",     kind: "devolucao_fornecedor", direction: "out", status: "utilizado" },
 ];
 
 function emptyLine(itemId: string | null = null): Line {
@@ -140,6 +141,7 @@ export function MovementFormDialog({
   const opt = TYPE_OPTIONS.find((t) => t.key === type)!;
   const isSaidaPalestra = type === "saida_palestra";
   const isEntrada = type === "entrada";
+  const isDevFornecedor = type === "devolucao_fornecedor";
   const isOut = opt.direction === "out";
 
   const validLines = lines.filter((l) => l.itemId && Number(l.qty) > 0);
@@ -171,7 +173,8 @@ export function MovementFormDialog({
     mutationFn: async () => {
       if (validLines.length === 0) throw new Error("Adicione ao menos um item com quantidade.");
       if (isSaidaPalestra && !lectureId) throw new Error("Selecione a palestra vinculada à saída.");
-      if (!isEntrada && !isSaidaPalestra && !reason.trim()) throw new Error("Informe o motivo da movimentação.");
+      if (isDevFornecedor && !supplier.trim()) throw new Error("Informe para qual fornecedor está devolvendo.");
+      if (!isEntrada && !isSaidaPalestra && !isDevFornecedor && !reason.trim()) throw new Error("Informe o motivo da movimentação.");
 
 
       // Validações por linha
@@ -214,7 +217,11 @@ export function MovementFormDialog({
           occurs_on: occursOn,
           occurs_at: new Date().toISOString(),
           lecture_id: isSaidaPalestra ? lectureId : null,
-          reason: (isEntrada ? supplier.trim() : reason.trim()) || null,
+          reason: (isEntrada
+            ? supplier.trim()
+            : isDevFornecedor
+              ? `Devolução ao fornecedor: ${supplier.trim()}${reason.trim() ? ` — ${reason.trim()}` : ""}`
+              : reason.trim()) || null,
           notes: notes.trim() || null,
           created_by: userId,
           updated_by: userId,
@@ -300,6 +307,20 @@ export function MovementFormDialog({
             <div className="space-y-1.5">
               <Label>Fornecedor</Label>
               <Input value={supplier} onChange={(e) => setSupplier(e.target.value)} placeholder="Opcional — aplicado a todos os itens" />
+            </div>
+          ) : isDevFornecedor ? (
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label>Fornecedor *</Label>
+                <Input value={supplier} onChange={(e) => setSupplier(e.target.value)} placeholder="Para quem você está devolvendo" />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Motivo</Label>
+                <Input value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Opcional — ex.: item com defeito, sobra de compra" />
+              </div>
+              <p className="md:col-span-2 text-[11px] text-muted-foreground">
+                Os itens abaixo serão retirados do seu estoque e registrados como devolvidos ao fornecedor.
+              </p>
             </div>
           ) : (
             <div className="space-y-1.5">

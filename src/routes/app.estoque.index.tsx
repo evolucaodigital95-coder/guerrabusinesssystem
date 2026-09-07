@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
-  Plus, Minus, Search, Package, AlertTriangle, Boxes, MapPin,
+  Plus, Minus, Search, Package, AlertTriangle, Boxes, MapPin, Undo2,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -60,17 +60,19 @@ type Mvt = {
 
 const ALL = "__all__";
 
+type MvtType = "entrada" | "saida_palestra" | "devolucao_fornecedor";
+
 function EstoquePage() {
   const { user } = useSession();
   const { organizationId, loading: orgLoading } = useCurrentOrg();
   const [itemOpen, setItemOpen] = useState(false);
   const [mvtOpen, setMvtOpen] = useState(false);
-  const [mvtType, setMvtType] = useState<"entrada" | "saida_palestra">("entrada");
+  const [mvtType, setMvtType] = useState<MvtType>("entrada");
   const [search, setSearch] = useState("");
   const [fCat, setFCat] = useState(ALL);
   const [fStatus, setFStatus] = useState(ALL);
 
-  function openMovement(type: "entrada" | "saida_palestra") {
+  function openMovement(type: MvtType) {
     setMvtType(type);
     setMvtOpen(true);
   }
@@ -179,6 +181,9 @@ function EstoquePage() {
             </Button>
             <Button variant="ghost" className="rounded-full" onClick={() => openMovement("saida_palestra")} disabled={!organizationId}>
               <Minus className="mr-1.5 h-4 w-4" /> Saída
+            </Button>
+            <Button variant="ghost" className="rounded-full" onClick={() => openMovement("devolucao_fornecedor")} disabled={!organizationId}>
+              <Undo2 className="mr-1.5 h-4 w-4" /> Devolução
             </Button>
             <Button variant="navy" className="rounded-full" onClick={() => setItemOpen(true)} disabled={!organizationId}>
               <Plus className="mr-1.5 h-4 w-4" /> Novo material
