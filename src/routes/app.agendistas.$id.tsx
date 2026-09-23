@@ -423,7 +423,9 @@ function AgentDetail() {
         date: s.closed_at ? s.closed_at.slice(0, 10) : null,
         time: s.closed_at ? new Date(s.closed_at).toTimeString().slice(0, 5) : null,
         type: "Comissão",
-        description: `Comissão · ${lec?.title ?? "Palestra"}`,
+        description:
+          `Comissão · ${lec?.title ?? "Palestra"}` +
+          (cardFeesValue > 0 ? ` · juros do cartão −${formatCurrency(cardFeesValue)}` : " · sem juros de cartão"),
         amount: Math.abs(Number(s.agent_amount ?? 0)),
         companyId: lec?.companies?.id ?? lec?.company_id ?? null,
         companyName: lec?.companies?.legal_name ?? null,
