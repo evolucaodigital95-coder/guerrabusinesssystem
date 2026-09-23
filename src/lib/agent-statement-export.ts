@@ -963,15 +963,15 @@ export async function exportStatementPDF(
     doc.setFontSize(7.5);
     doc.setTextColor(...MUTED);
     doc.text(
-      "Notas fiscais, recibos e comprovantes anexados às palestras e adiantamentos do período. Imagens exibidas em tamanho reduzido — arquivos PDF/DOC aparecem como links.",
+      "Notas fiscais, recibos, comprovantes de PIX, fotos de cartões e documentos anexados às palestras e adiantamentos do período. Imagens em proporção original — arquivos PDF/DOC aparecem como links.",
       marginX, ry + 6,
     );
     ry += 20;
 
-    const thumbW = 150;
-    const thumbH = 100;
-    const thumbGap = 14;
-    const thumbsPerRow = Math.max(1, Math.floor((contentW + thumbGap) / (thumbW + thumbGap)));
+    const thumbsPerRow = 2;
+    const thumbGap = 18;
+    const thumbW = (contentW - thumbGap * (thumbsPerRow - 1)) / thumbsPerRow;
+    const thumbH = thumbW * 0.68;
 
     for (const group of ctx.receipts) {
       if (!group.items?.length) continue;
