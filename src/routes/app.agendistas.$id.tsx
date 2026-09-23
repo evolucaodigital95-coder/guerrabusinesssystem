@@ -1580,6 +1580,21 @@ function AgentDetail() {
                               <Pencil className="h-3.5 w-3.5" /> Abrir / editar
                             </Link>
                           )}
+                          {s.lecture_id && (
+                            <ConfirmDialog
+                              title="Excluir palestra fechada?"
+                              description={<>A palestra <strong>{lec?.title ?? ""}</strong> e o fechamento financeiro dela serão apagados definitivamente. Use para remover duplicidades. Esta ação não pode ser desfeita.</>}
+                              confirmLabel="Excluir definitivamente"
+                              destructive
+                              pending={deleteClosedLecture.isPending}
+                              onConfirm={() => deleteClosedLecture.mutateAsync(s.lecture_id!).then(() => undefined)}
+                              trigger={
+                                <button className="inline-flex items-center gap-1.5 rounded-full border border-rose-200 px-3 py-1.5 text-xs text-rose-600 transition-colors hover:bg-rose-50">
+                                  <Trash2 className="h-3.5 w-3.5" /> Excluir
+                                </button>
+                              }
+                            />
+                          )}
                           <div className="text-right">
                             <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">Agendista</p>
                             <p className="font-serif text-xl text-[var(--gold)] tabular-nums">{formatCurrency(Number(s.agent_amount ?? 0))}</p>
