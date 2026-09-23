@@ -41,7 +41,7 @@ const QUICK_ACTIONS = [
   { label: "Saída de Estoque", icon: PackageMinus, to: "/app/estoque" },
   { label: "Registrar Pagamento", icon: Receipt, to: "/app/financeiro" },
   { label: "Registrar Acerto", icon: HandCoins, to: "/app/estoque" },
-  { label: "Gerar Relatório", icon: FileText, to: "/app/relatorios" },
+  { label: "Gerar Relatório", icon: FileText, to: "/app/inteligencia" },
   { label: "Abrir Agenda", icon: CalendarRange, to: "/app/agenda" },
 ];
 
