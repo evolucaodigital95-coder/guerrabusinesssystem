@@ -70,7 +70,8 @@ function AdminClienteDetail() {
   const { id } = Route.useParams();
   const { org, loading, settings, events, members, onboarding } = useAdminOrganization(id);
   const { data: plans } = usePlans();
-  const { updateSubscription } = usePlatformMutations();
+  const { updateSubscription, setOrganizationStatus } = usePlatformMutations();
+  const [orgReason, setOrgReason] = useState("");
 
   const sub = org?.subscription ?? null;
   const [planId, setPlanId] = useState<string>("");
