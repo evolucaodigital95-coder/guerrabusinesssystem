@@ -16,20 +16,14 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppIndexRouteImport } from './routes/app.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AppRoadmapRouteImport } from './routes/app.roadmap'
-import { Route as AppRelatoriosRouteImport } from './routes/app.relatorios'
 import { Route as AppPlanosRouteImport } from './routes/app.planos'
-import { Route as AppPerformanceRouteImport } from './routes/app.performance'
 import { Route as AppPendenciasRouteImport } from './routes/app.pendencias'
-import { Route as AppPainelDiretorRouteImport } from './routes/app.painel-diretor'
 import { Route as AppOrganizacaoRouteImport } from './routes/app.organizacao'
 import { Route as AppOnboardingRouteImport } from './routes/app.onboarding'
 import { Route as AppMetasRouteImport } from './routes/app.metas'
-import { Route as AppLegadoRouteImport } from './routes/app.legado'
 import { Route as AppInteligenciaRouteImport } from './routes/app.inteligencia'
-import { Route as AppIndicadoresRouteImport } from './routes/app.indicadores'
 import { Route as AppIaGuerraRouteImport } from './routes/app.ia-guerra'
 import { Route as AppHojeRouteImport } from './routes/app.hoje'
-import { Route as AppHistoriaRouteImport } from './routes/app.historia'
 import { Route as AppFinanceiroRouteImport } from './routes/app.financeiro'
 import { Route as AppDashboardRouteImport } from './routes/app.dashboard'
 import { Route as AppConfiguracoesRouteImport } from './routes/app.configuracoes'
@@ -94,29 +88,14 @@ const AppRoadmapRoute = AppRoadmapRouteImport.update({
   path: '/roadmap',
   getParentRoute: () => AppRoute,
 } as any)
-const AppRelatoriosRoute = AppRelatoriosRouteImport.update({
-  id: '/relatorios',
-  path: '/relatorios',
-  getParentRoute: () => AppRoute,
-} as any)
 const AppPlanosRoute = AppPlanosRouteImport.update({
   id: '/planos',
   path: '/planos',
   getParentRoute: () => AppRoute,
 } as any)
-const AppPerformanceRoute = AppPerformanceRouteImport.update({
-  id: '/performance',
-  path: '/performance',
-  getParentRoute: () => AppRoute,
-} as any)
 const AppPendenciasRoute = AppPendenciasRouteImport.update({
   id: '/pendencias',
   path: '/pendencias',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppPainelDiretorRoute = AppPainelDiretorRouteImport.update({
-  id: '/painel-diretor',
-  path: '/painel-diretor',
   getParentRoute: () => AppRoute,
 } as any)
 const AppOrganizacaoRoute = AppOrganizacaoRouteImport.update({
@@ -134,19 +113,9 @@ const AppMetasRoute = AppMetasRouteImport.update({
   path: '/metas',
   getParentRoute: () => AppRoute,
 } as any)
-const AppLegadoRoute = AppLegadoRouteImport.update({
-  id: '/legado',
-  path: '/legado',
-  getParentRoute: () => AppRoute,
-} as any)
 const AppInteligenciaRoute = AppInteligenciaRouteImport.update({
   id: '/inteligencia',
   path: '/inteligencia',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppIndicadoresRoute = AppIndicadoresRouteImport.update({
-  id: '/indicadores',
-  path: '/indicadores',
   getParentRoute: () => AppRoute,
 } as any)
 const AppIaGuerraRoute = AppIaGuerraRouteImport.update({
@@ -157,11 +126,6 @@ const AppIaGuerraRoute = AppIaGuerraRouteImport.update({
 const AppHojeRoute = AppHojeRouteImport.update({
   id: '/hoje',
   path: '/hoje',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppHistoriaRoute = AppHistoriaRouteImport.update({
-  id: '/historia',
-  path: '/historia',
   getParentRoute: () => AppRoute,
 } as any)
 const AppFinanceiroRoute = AppFinanceiroRouteImport.update({
@@ -321,20 +285,14 @@ export interface FileRoutesByFullPath {
   '/app/configuracoes': typeof AppConfiguracoesRoute
   '/app/dashboard': typeof AppDashboardRoute
   '/app/financeiro': typeof AppFinanceiroRoute
-  '/app/historia': typeof AppHistoriaRoute
   '/app/hoje': typeof AppHojeRoute
   '/app/ia-guerra': typeof AppIaGuerraRoute
-  '/app/indicadores': typeof AppIndicadoresRoute
   '/app/inteligencia': typeof AppInteligenciaRoute
-  '/app/legado': typeof AppLegadoRoute
   '/app/metas': typeof AppMetasRoute
   '/app/onboarding': typeof AppOnboardingRoute
   '/app/organizacao': typeof AppOrganizacaoRoute
-  '/app/painel-diretor': typeof AppPainelDiretorRoute
   '/app/pendencias': typeof AppPendenciasRoute
-  '/app/performance': typeof AppPerformanceRoute
   '/app/planos': typeof AppPlanosRoute
-  '/app/relatorios': typeof AppRelatoriosRoute
   '/app/roadmap': typeof AppRoadmapRoute
   '/admin/': typeof AdminIndexRoute
   '/app/': typeof AppIndexRoute
@@ -370,20 +328,14 @@ export interface FileRoutesByTo {
   '/app/configuracoes': typeof AppConfiguracoesRoute
   '/app/dashboard': typeof AppDashboardRoute
   '/app/financeiro': typeof AppFinanceiroRoute
-  '/app/historia': typeof AppHistoriaRoute
   '/app/hoje': typeof AppHojeRoute
   '/app/ia-guerra': typeof AppIaGuerraRoute
-  '/app/indicadores': typeof AppIndicadoresRoute
   '/app/inteligencia': typeof AppInteligenciaRoute
-  '/app/legado': typeof AppLegadoRoute
   '/app/metas': typeof AppMetasRoute
   '/app/onboarding': typeof AppOnboardingRoute
   '/app/organizacao': typeof AppOrganizacaoRoute
-  '/app/painel-diretor': typeof AppPainelDiretorRoute
   '/app/pendencias': typeof AppPendenciasRoute
-  '/app/performance': typeof AppPerformanceRoute
   '/app/planos': typeof AppPlanosRoute
-  '/app/relatorios': typeof AppRelatoriosRoute
   '/app/roadmap': typeof AppRoadmapRoute
   '/admin': typeof AdminIndexRoute
   '/app': typeof AppIndexRoute
@@ -422,20 +374,14 @@ export interface FileRoutesById {
   '/app/configuracoes': typeof AppConfiguracoesRoute
   '/app/dashboard': typeof AppDashboardRoute
   '/app/financeiro': typeof AppFinanceiroRoute
-  '/app/historia': typeof AppHistoriaRoute
   '/app/hoje': typeof AppHojeRoute
   '/app/ia-guerra': typeof AppIaGuerraRoute
-  '/app/indicadores': typeof AppIndicadoresRoute
   '/app/inteligencia': typeof AppInteligenciaRoute
-  '/app/legado': typeof AppLegadoRoute
   '/app/metas': typeof AppMetasRoute
   '/app/onboarding': typeof AppOnboardingRoute
   '/app/organizacao': typeof AppOrganizacaoRoute
-  '/app/painel-diretor': typeof AppPainelDiretorRoute
   '/app/pendencias': typeof AppPendenciasRoute
-  '/app/performance': typeof AppPerformanceRoute
   '/app/planos': typeof AppPlanosRoute
-  '/app/relatorios': typeof AppRelatoriosRoute
   '/app/roadmap': typeof AppRoadmapRoute
   '/admin/': typeof AdminIndexRoute
   '/app/': typeof AppIndexRoute
@@ -475,20 +421,14 @@ export interface FileRouteTypes {
     | '/app/configuracoes'
     | '/app/dashboard'
     | '/app/financeiro'
-    | '/app/historia'
     | '/app/hoje'
     | '/app/ia-guerra'
-    | '/app/indicadores'
     | '/app/inteligencia'
-    | '/app/legado'
     | '/app/metas'
     | '/app/onboarding'
     | '/app/organizacao'
-    | '/app/painel-diretor'
     | '/app/pendencias'
-    | '/app/performance'
     | '/app/planos'
-    | '/app/relatorios'
     | '/app/roadmap'
     | '/admin/'
     | '/app/'
@@ -524,20 +464,14 @@ export interface FileRouteTypes {
     | '/app/configuracoes'
     | '/app/dashboard'
     | '/app/financeiro'
-    | '/app/historia'
     | '/app/hoje'
     | '/app/ia-guerra'
-    | '/app/indicadores'
     | '/app/inteligencia'
-    | '/app/legado'
     | '/app/metas'
     | '/app/onboarding'
     | '/app/organizacao'
-    | '/app/painel-diretor'
     | '/app/pendencias'
-    | '/app/performance'
     | '/app/planos'
-    | '/app/relatorios'
     | '/app/roadmap'
     | '/admin'
     | '/app'
@@ -575,20 +509,14 @@ export interface FileRouteTypes {
     | '/app/configuracoes'
     | '/app/dashboard'
     | '/app/financeiro'
-    | '/app/historia'
     | '/app/hoje'
     | '/app/ia-guerra'
-    | '/app/indicadores'
     | '/app/inteligencia'
-    | '/app/legado'
     | '/app/metas'
     | '/app/onboarding'
     | '/app/organizacao'
-    | '/app/painel-diretor'
     | '/app/pendencias'
-    | '/app/performance'
     | '/app/planos'
-    | '/app/relatorios'
     | '/app/roadmap'
     | '/admin/'
     | '/app/'
@@ -670,13 +598,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppRoadmapRouteImport
       parentRoute: typeof AppRoute
     }
-    '/app/relatorios': {
-      id: '/app/relatorios'
-      path: '/relatorios'
-      fullPath: '/app/relatorios'
-      preLoaderRoute: typeof AppRelatoriosRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/app/planos': {
       id: '/app/planos'
       path: '/planos'
@@ -684,25 +605,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppPlanosRouteImport
       parentRoute: typeof AppRoute
     }
-    '/app/performance': {
-      id: '/app/performance'
-      path: '/performance'
-      fullPath: '/app/performance'
-      preLoaderRoute: typeof AppPerformanceRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/app/pendencias': {
       id: '/app/pendencias'
       path: '/pendencias'
       fullPath: '/app/pendencias'
       preLoaderRoute: typeof AppPendenciasRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/painel-diretor': {
-      id: '/app/painel-diretor'
-      path: '/painel-diretor'
-      fullPath: '/app/painel-diretor'
-      preLoaderRoute: typeof AppPainelDiretorRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/organizacao': {
@@ -726,25 +633,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppMetasRouteImport
       parentRoute: typeof AppRoute
     }
-    '/app/legado': {
-      id: '/app/legado'
-      path: '/legado'
-      fullPath: '/app/legado'
-      preLoaderRoute: typeof AppLegadoRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/app/inteligencia': {
       id: '/app/inteligencia'
       path: '/inteligencia'
       fullPath: '/app/inteligencia'
       preLoaderRoute: typeof AppInteligenciaRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/indicadores': {
-      id: '/app/indicadores'
-      path: '/indicadores'
-      fullPath: '/app/indicadores'
-      preLoaderRoute: typeof AppIndicadoresRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/ia-guerra': {
@@ -759,13 +652,6 @@ declare module '@tanstack/react-router' {
       path: '/hoje'
       fullPath: '/app/hoje'
       preLoaderRoute: typeof AppHojeRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/historia': {
-      id: '/app/historia'
-      path: '/historia'
-      fullPath: '/app/historia'
-      preLoaderRoute: typeof AppHistoriaRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/financeiro': {
@@ -995,20 +881,14 @@ interface AppRouteChildren {
   AppConfiguracoesRoute: typeof AppConfiguracoesRoute
   AppDashboardRoute: typeof AppDashboardRoute
   AppFinanceiroRoute: typeof AppFinanceiroRoute
-  AppHistoriaRoute: typeof AppHistoriaRoute
   AppHojeRoute: typeof AppHojeRoute
   AppIaGuerraRoute: typeof AppIaGuerraRoute
-  AppIndicadoresRoute: typeof AppIndicadoresRoute
   AppInteligenciaRoute: typeof AppInteligenciaRoute
-  AppLegadoRoute: typeof AppLegadoRoute
   AppMetasRoute: typeof AppMetasRoute
   AppOnboardingRoute: typeof AppOnboardingRoute
   AppOrganizacaoRoute: typeof AppOrganizacaoRoute
-  AppPainelDiretorRoute: typeof AppPainelDiretorRoute
   AppPendenciasRoute: typeof AppPendenciasRoute
-  AppPerformanceRoute: typeof AppPerformanceRoute
   AppPlanosRoute: typeof AppPlanosRoute
-  AppRelatoriosRoute: typeof AppRelatoriosRoute
   AppRoadmapRoute: typeof AppRoadmapRoute
   AppIndexRoute: typeof AppIndexRoute
   AppAgendistasIdRoute: typeof AppAgendistasIdRoute
@@ -1037,20 +917,14 @@ const AppRouteChildren: AppRouteChildren = {
   AppConfiguracoesRoute: AppConfiguracoesRoute,
   AppDashboardRoute: AppDashboardRoute,
   AppFinanceiroRoute: AppFinanceiroRoute,
-  AppHistoriaRoute: AppHistoriaRoute,
   AppHojeRoute: AppHojeRoute,
   AppIaGuerraRoute: AppIaGuerraRoute,
-  AppIndicadoresRoute: AppIndicadoresRoute,
   AppInteligenciaRoute: AppInteligenciaRoute,
-  AppLegadoRoute: AppLegadoRoute,
   AppMetasRoute: AppMetasRoute,
   AppOnboardingRoute: AppOnboardingRoute,
   AppOrganizacaoRoute: AppOrganizacaoRoute,
-  AppPainelDiretorRoute: AppPainelDiretorRoute,
   AppPendenciasRoute: AppPendenciasRoute,
-  AppPerformanceRoute: AppPerformanceRoute,
   AppPlanosRoute: AppPlanosRoute,
-  AppRelatoriosRoute: AppRelatoriosRoute,
   AppRoadmapRoute: AppRoadmapRoute,
   AppIndexRoute: AppIndexRoute,
   AppAgendistasIdRoute: AppAgendistasIdRoute,
