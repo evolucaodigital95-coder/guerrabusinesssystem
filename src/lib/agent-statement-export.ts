@@ -1108,6 +1108,37 @@ function sectionTitle(doc: import("jspdf").jsPDF, text: string, x: number, y: nu
   doc.line(x, y + 4, x + 44, y + 4);
 }
 
+/**
+ * Desenha a imagem dentro da moldura mantendo a proporção original (sem distorção),
+ * centralizada, com respiro interno — acabamento premium.
+ */
+function drawFittedImage(
+  doc: import("jspdf").jsPDF,
+  dataUrl: string,
+  mimeType: string | null | undefined,
+  boxX: number, boxY: number, boxW: number, boxH: number,
+): boolean {
+  const pad = 6;
+  const maxW = boxW - pad * 2;
+  const maxH = boxH - pad * 2;
+  try {
+    let fmt = (mimeType ?? "").toLowerCase().includes("png") ? "PNG" : "JPEG";
+    let w = maxW, h = maxH;
+    try {
+      const props = doc.getImageProperties(dataUrl);
+      if (props?.fileType) fmt = String(props.fileType).toUpperCase();
+      const ratio = props.width && props.height ? props.width / props.height : maxW / maxH;
+      if (maxW / maxH > ratio) { h = maxH; w = h * ratio; } else { w = maxW; h = w / ratio; }
+    } catch { /* usa a caixa inteira se não der para ler as dimensões */ }
+    const x = boxX + (boxW - w) / 2;
+    const y = boxY + (boxH - h) / 2;
+    doc.addImage(dataUrl, fmt, x, y, w, h, undefined, "FAST");
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function ensureSpace(doc: import("jspdf").jsPDF, y: number, needed: number, pageH: number): number {
   if (y + needed > pageH - 50) {
     doc.addPage();
