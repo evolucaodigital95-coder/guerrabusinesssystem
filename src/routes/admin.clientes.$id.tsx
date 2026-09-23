@@ -27,6 +27,7 @@ import {
   type SubscriptionStatus,
 } from "@/lib/platform";
 import { ROLE_LABEL, type OrgRole } from "@/lib/permissions";
+import { ORG_STATUS_LABEL } from "@/components/org-provider";
 
 export const Route = createFileRoute("/admin/clientes/$id")({
   head: () => ({
