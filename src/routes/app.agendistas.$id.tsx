@@ -972,9 +972,11 @@ function AgentDetail() {
               const url = cardUrlByPath.get(a.storage_path) ?? null;
               const img = isImage(a.mime_type, a.file_name ?? "");
               const dataUrl = img && url ? await toDataUrl(url) : null;
-              const brand = (mov.card_brands as { name?: string } | null)?.name ?? "Cartão";
+              const brand = (mov.card_brands as { name?: string } | null)?.name ?? null;
               const parcels = mov.card_installments ? `${mov.card_installments}x` : "à vista";
-              const label = `Cartão ${brand} · ${parcels} · ${formatCurrency(Number(mov.amount ?? 0))}`;
+              const label = brand
+                ? `Cartão ${brand} · ${parcels} · ${formatCurrency(Number(mov.amount ?? 0))}`
+                : `${mov.payment_method ? String(mov.payment_method).toUpperCase() : "Comprovante"} · ${mov.description ?? "Lançamento"} · ${formatCurrency(Number(mov.amount ?? 0))}`;
               const arr = itemsByLecture.get(mov.lecture_id) ?? [];
               arr.push({
                 fileName: label,
