@@ -701,6 +701,37 @@ function AgentDetail() {
     onError: (e) => toast.error(e instanceof Error ? e.message : "Erro"),
   });
 
+  /** Exclui definitivamente um movimento do extrato (adiantamento ou pagamento). */
+  const deleteMovement = useMutation({
+    mutationFn: async (movementId: string) => {
+      if (movementId.startsWith("adv-")) {
+        const advId = movementId.slice(4);
+        const { error } = await supabase.from("advances").delete().eq("id", advId);
+        if (error) throw error;
+        return;
+      }
+      if (movementId.startsWith("pay-")) {
+        const payId = movementId.slice(4);
+        const { error } = await supabase.from("financial_movements").delete().eq("id", payId);
+        if (error) throw error;
+        return;
+      }
+      throw new Error(
+        "Comissões vêm do fechamento da palestra. Reabra a palestra para recalcular o valor.",
+      );
+    },
+    onSuccess: () => {
+      toast.success("Movimento excluído do extrato");
+      qc.invalidateQueries({ queryKey: ["advances", id] });
+      qc.invalidateQueries({ queryKey: ["agent-payouts", id] });
+      qc.invalidateQueries({ queryKey: ["agent-snapshots", id] });
+      qc.invalidateQueries({ queryKey: ["movements"] });
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Erro ao excluir"),
+  });
+
+
+
   /**
    * Composição dos créditos a partir dos snapshots reais.
    * Fonte única para o extrato (PDF/Excel/CSV) e para o Termo de Fechamento.
@@ -1379,6 +1410,8 @@ function AgentDetail() {
                     <th className="px-4 py-3 text-right font-medium">Débito</th>
                     <th className="px-4 py-3 text-right font-medium">Saldo</th>
                     <th className="px-4 py-3 text-right font-medium">Origem</th>
+                    <th className="px-4 py-3 text-right font-medium">Ações</th>
+
                   </tr>
                 </thead>
                 <tbody>
@@ -1423,8 +1456,28 @@ function AgentDetail() {
                           </PopoverContent>
                         </Popover>
                       </td>
+                      <td className="px-4 py-3 text-right">
+                        {m.id.startsWith("share-") ? (
+                          <span className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Fechamento</span>
+                        ) : (
+                          <ConfirmDialog
+                            title="Excluir movimento?"
+                            description={`"${m.description}" (${formatCurrency(Math.abs(m.amount))}) será removido definitivamente do extrato e o saldo será recalculado.`}
+                            confirmLabel="Excluir"
+                            destructive
+                            pending={deleteMovement.isPending}
+                            onConfirm={() => deleteMovement.mutate(m.id)}
+                            trigger={
+                              <Button variant="ghost" size="sm" className="h-7 rounded-full text-xs text-rose-600 hover:text-rose-700">
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </Button>
+                            }
+                          />
+                        )}
+                      </td>
                     </tr>
                   ))}
+
                 </tbody>
               </table>
               <p className="border-t border-border/60 bg-muted/20 px-4 py-2 text-[11px] text-muted-foreground">
