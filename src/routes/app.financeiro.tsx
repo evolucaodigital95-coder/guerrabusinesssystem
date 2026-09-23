@@ -27,6 +27,7 @@ import { MovementFormDialog, type MovementRow } from "@/components/finance/movem
 import { AccountFormDialog, type AccountRow } from "@/components/finance/account-form-dialog";
 import { AttachmentsTab } from "@/components/crm/attachments-tab";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
+import { FinanceLecturesTab } from "@/components/finance/lectures-tab";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/app/financeiro")({
@@ -329,6 +330,7 @@ function FinancePage() {
         <TabsList className="bg-card/40">
           <TabsTrigger value="ledger">Movimentos</TabsTrigger>
           <TabsTrigger value="accounts">Contas</TabsTrigger>
+          <TabsTrigger value="lectures">Palestras</TabsTrigger>
         </TabsList>
 
         <TabsContent value="ledger" className="space-y-6">
@@ -551,6 +553,14 @@ function FinancePage() {
                 </tbody>
               </table>
             </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="lectures">
+          {organizationId && user ? (
+            <FinanceLecturesTab organizationId={organizationId} userId={user.id} />
+          ) : (
+            <ListSkeleton />
           )}
         </TabsContent>
 
