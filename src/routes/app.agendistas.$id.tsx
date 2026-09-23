@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ArrowLeft, Pencil, Plus, Calculator, ShieldCheck, FileText, History as HistoryIcon, Info, ExternalLink, Download, Filter, Wallet } from "lucide-react";
+import { ArrowLeft, Pencil, Plus, Calculator, ShieldCheck, FileText, History as HistoryIcon, Info, ExternalLink, Download, Filter, Wallet, Trash2, Archive } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -23,6 +23,8 @@ import { RuleFormDialog, type RuleRow } from "@/components/agendistas/rule-form-
 import { AgentPayoutDialog } from "@/components/agendistas/agent-payout-dialog";
 import { AgentDocuments } from "@/components/agendistas/agent-documents";
 import { AccountClosing, type ClosingSource } from "@/components/agendistas/account-closing";
+import { LectureFormDialog, type LectureRow } from "@/components/palestras/lecture-form-dialog";
+import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 
 import { AttachmentsTab } from "@/components/crm/attachments-tab";
 import { TimelineTab } from "@/components/shared/timeline-tab";
@@ -58,6 +60,8 @@ function AgentDetail() {
   const [ruleOpen, setRuleOpen] = useState(false);
   const [editingRule, setEditingRule] = useState<RuleRow | null>(null);
   const [payoutOpen, setPayoutOpen] = useState(false);
+  const [lectureEditOpen, setLectureEditOpen] = useState(false);
+  const [editingLecture, setEditingLecture] = useState<LectureRow | null>(null);
   const [notesDraft, setNotesDraft] = useState<string | null>(null);
   // Filtros do extrato
   const [fStart, setFStart] = useState<string>("");
@@ -132,7 +136,7 @@ function AgentDetail() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("lectures")
-        .select("id, title, scheduled_at, status, gross_revenue, financial_status, closed_at, company_id, companies:company_id ( id, legal_name )")
+        .select("id, title, theme, scheduled_at, scheduled_time, city, state, status, gross_revenue, financial_status, closed_at, company_id, contact_id, agent_id, season_id, campaign_id, project_id, expected_audience, actual_audience, notes, companies:company_id ( id, legal_name )")
         .eq("organization_id", organizationId!).is("archived_at", null)
         .order("scheduled_at", { ascending: false, nullsFirst: false });
       if (error) throw error;
@@ -580,6 +584,45 @@ function AgentDetail() {
       setNotesDraft(null);
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Erro"),
+  });
+
+  const invalidateLectures = () => {
+    qc.invalidateQueries({ queryKey: ["agent-lectures", id, organizationId] });
+    qc.invalidateQueries({ queryKey: ["agent-snapshots", id] });
+    qc.invalidateQueries({ queryKey: ["finance-lectures"] });
+    qc.invalidateQueries({ queryKey: ["lectures"] });
+    qc.invalidateQueries({ queryKey: ["movements"] });
+  };
+
+  const archiveLecture = useMutation({
+    mutationFn: async (lectureId: string) => {
+      if (!user) throw new Error("Sessão inválida");
+      const { error } = await supabase.from("lectures")
+        .update({ archived_at: new Date().toISOString(), updated_by: user.id })
+        .eq("id", lectureId);
+      if (error) throw error;
+    },
+    onSuccess: () => { toast.success("Palestra arquivada"); invalidateLectures(); },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Erro ao arquivar"),
+  });
+
+  const deleteLecture = useMutation({
+    mutationFn: async (lectureId: string) => {
+      const { count } = await supabase
+        .from("lecture_financial_snapshots")
+        .select("id", { count: "exact", head: true })
+        .eq("lecture_id", lectureId);
+      if ((count ?? 0) > 0) {
+        throw new Error("Esta palestra já tem fechamento financeiro. Arquive em vez de excluir.");
+      }
+      await supabase.from("financial_movements").update({ lecture_id: null }).eq("lecture_id", lectureId);
+      await supabase.from("advances").update({ lecture_id: null }).eq("lecture_id", lectureId);
+      await supabase.from("stock_movements").update({ lecture_id: null }).eq("lecture_id", lectureId);
+      const { error } = await supabase.from("lectures").delete().eq("id", lectureId);
+      if (error) throw error;
+    },
+    onSuccess: () => { toast.success("Palestra excluída definitivamente"); invalidateLectures(); },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Não foi possível excluir"),
   });
 
   const closeLecture = useMutation({
@@ -1459,6 +1502,14 @@ function AgentDetail() {
                           </p>
                         </div>
                         <div className="flex items-center gap-3">
+                          {s.lecture_id && (
+                            <Link
+                              to="/app/palestras/$id" params={{ id: s.lecture_id }}
+                              className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
+                            >
+                              <Pencil className="h-3.5 w-3.5" /> Abrir / editar
+                            </Link>
+                          )}
                           <div className="text-right">
                             <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">Agendista</p>
                             <p className="font-serif text-xl text-[var(--gold)] tabular-nums">{formatCurrency(Number(s.agent_amount ?? 0))}</p>
@@ -1496,13 +1547,56 @@ function AgentDetail() {
                         {l.gross_revenue ? ` · Receita ${formatCurrency(Number(l.gross_revenue))}` : " · sem receita definida"}
                       </p>
                     </div>
-                    <Button
-                      variant="navy" size="sm" className="rounded-full"
-                      onClick={() => closeLecture.mutate(l.id)}
-                      disabled={closeLecture.isPending || !l.gross_revenue}
-                    >
-                      <Calculator className="mr-1.5 h-4 w-4" /> Fechar e calcular
-                    </Button>
+                    <div className="flex items-center gap-1.5">
+                      <Button
+                        variant="outline" size="sm" className="rounded-full"
+                        onClick={() => {
+                          setEditingLecture({
+                            id: l.id, title: l.title, theme: l.theme, company_id: l.company_id,
+                            contact_id: l.contact_id, agent_id: l.agent_id, season_id: l.season_id,
+                            campaign_id: l.campaign_id, project_id: l.project_id, city: l.city, state: l.state,
+                            scheduled_at: l.scheduled_at, scheduled_time: l.scheduled_time,
+                            expected_audience: l.expected_audience, actual_audience: l.actual_audience,
+                            status: l.status, gross_revenue: l.gross_revenue, notes: l.notes,
+                          });
+                          setLectureEditOpen(true);
+                        }}
+                      >
+                        <Pencil className="mr-1.5 h-3.5 w-3.5" /> Editar
+                      </Button>
+                      <Button
+                        variant="navy" size="sm" className="rounded-full"
+                        onClick={() => closeLecture.mutate(l.id)}
+                        disabled={closeLecture.isPending || !l.gross_revenue}
+                      >
+                        <Calculator className="mr-1.5 h-4 w-4" /> Fechar e calcular
+                      </Button>
+                      <ConfirmDialog
+                        title="Arquivar esta palestra?"
+                        description="Ela some das listas, mas o histórico financeiro e a auditoria são preservados."
+                        confirmLabel="Arquivar"
+                        pending={archiveLecture.isPending}
+                        onConfirm={() => archiveLecture.mutate(l.id)}
+                        trigger={
+                          <Button variant="ghost" size="sm" className="text-muted-foreground">
+                            <Archive className="h-4 w-4" />
+                          </Button>
+                        }
+                      />
+                      <ConfirmDialog
+                        title="Excluir definitivamente?"
+                        description="A palestra será apagada. Lançamentos do razão ligados a ela ficam sem vínculo. Não é possível excluir palestras já fechadas financeiramente."
+                        confirmLabel="Excluir"
+                        destructive
+                        pending={deleteLecture.isPending}
+                        onConfirm={() => deleteLecture.mutate(l.id)}
+                        trigger={
+                          <Button variant="ghost" size="sm" className="text-rose-600">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        }
+                      />
+                    </div>
                   </div>
                 ))}
               </div>
@@ -1676,6 +1770,14 @@ function AgentDetail() {
             agentId={id} agentName={a.full_name}
             maxAmount={Math.max(0, statement.totals.balance)}
           />
+          <LectureFormDialog
+            open={lectureEditOpen}
+            onOpenChange={(v) => { setLectureEditOpen(v); if (!v) setEditingLecture(null); }}
+            organizationId={organizationId}
+            userId={user.id}
+            initial={editingLecture ?? undefined}
+          />
+
 
         </>
       )}
