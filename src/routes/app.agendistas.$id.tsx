@@ -434,13 +434,20 @@ function AgentDetail() {
         origin: {
           actorId: s.closed_by ?? null,
           createdAt: s.closed_at ?? null,
-          reason: `Fechamento financeiro da palestra · receita ${formatCurrency(Number(s.gross_revenue ?? 0))}`,
+          reason:
+            `Fechamento financeiro da palestra · receita ${formatCurrency(Number(s.gross_revenue ?? 0))}` +
+            ` · juros do cartão descontados ${formatCurrency(cardFeesValue)}`,
           docRoute: lec?.id ? `/app/palestras/${lec.id}` : undefined,
           docLabel: lec?.id ? "Abrir palestra" : undefined,
           extra: [
             { label: "Snapshot", value: s.id },
             { label: "Receita bruta", value: formatCurrency(Number(s.gross_revenue ?? 0)) },
+            { label: "Materiais/estoque (−)", value: formatCurrency(materialsValue) },
+            { label: "Juros do cartão (−)", value: formatCurrency(cardFeesValue) },
+            ...(ruleFeeValue ? [{ label: "Taxa de regra (−)", value: formatCurrency(ruleFeeValue) }] : []),
+            ...(otherValue ? [{ label: "Outros custos (−)", value: formatCurrency(otherValue) }] : []),
             { label: "Lucro líquido", value: formatCurrency(Number(s.net_profit ?? 0)) },
+            { label: "Parte do agendista", value: formatCurrency(Number(s.agent_amount ?? 0)) },
           ],
         },
       });
