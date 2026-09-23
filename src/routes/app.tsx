@@ -7,6 +7,8 @@ import {
   useNavigate,
 } from "@tanstack/react-router";
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { ORG_STATUS_LABEL } from "@/components/org-provider";
 import { LogOut, Menu, Moon, Search, Sun, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -65,7 +67,8 @@ function AppLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
   const { user } = useSession();
-  const { can, switching } = useCurrentOrg();
+  const queryClient = useQueryClient();
+  const { can, switching, organizationStatus, isOrgActive } = useCurrentOrg();
 
   const firstName =
     (user?.user_metadata?.full_name as string | undefined)?.split(" ")[0] ??
@@ -74,8 +77,10 @@ function AppLayout() {
   const initials = (firstName || "GG").slice(0, 2).toUpperCase();
 
   async function handleSignOut() {
+    await queryClient.cancelQueries();
+    queryClient.clear();
     await supabase.auth.signOut();
-    navigate({ to: "/" });
+    navigate({ to: "/", replace: true });
   }
 
   const sections = ["principal", "operação", "gestão", "inteligência", "sistema"] as const;
