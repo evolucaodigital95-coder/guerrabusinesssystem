@@ -1036,6 +1036,44 @@ function AgentDetail() {
           });
         }
 
+        // Documentos do agendista (PIX, contratos, recibos externos)
+        {
+          const { data: docs } = await supabase
+            .from("agent_documents")
+            .select("id, title, doc_type, doc_date, file_name, mime_type, storage_path, size_bytes, created_at")
+            .eq("agent_id", agentId)
+            .is("archived_at", null)
+            .order("created_at", { ascending: true });
+
+          const docPaths = (docs ?? []).map((d) => d.storage_path).filter(Boolean) as string[];
+          const docSigned = docPaths.length
+            ? (await supabase.storage.from("crm-attachments").createSignedUrls(docPaths, 60 * 60)).data ?? []
+            : [];
+          const docUrlByPath = new Map<string, string>();
+          docSigned.forEach((s, i) => { if (s?.signedUrl) docUrlByPath.set(docPaths[i], s.signedUrl); });
+
+          const docItems: ReceiptItem[] = [];
+          for (const d of docs ?? []) {
+            if (fStart && d.doc_date && d.doc_date < fStart) continue;
+            if (fEnd && d.doc_date && d.doc_date > fEnd) continue;
+            const url = d.storage_path ? docUrlByPath.get(d.storage_path) ?? null : null;
+            const img = isImage(d.mime_type, d.file_name ?? "");
+            const dataUrl = img && url ? await toDataUrl(url) : null;
+            docItems.push({
+              fileName: `${d.title ?? d.file_name ?? "Documento"}${d.doc_type ? ` · ${d.doc_type}` : ""}`,
+              mimeType: d.mime_type,
+              sizeBytes: d.size_bytes,
+              createdAt: d.doc_date ?? d.created_at,
+              dataUrl,
+              url,
+              source: "attachment",
+            });
+          }
+          if (docItems.length) {
+            groups.push({ company: "Documentos do agendista", lecture: null, date: null, items: docItems });
+          }
+        }
+
         if (groups.length) receipts = groups;
       } catch (e) {
         // Não bloqueia a exportação em caso de falha ao carregar comprovantes
