@@ -38,7 +38,7 @@ export const Route = createFileRoute("/")({
   component: LoginPage,
 });
 
-type Mode = "sign_in" | "sign_up";
+type Mode = "sign_in" | "sign_up" | "forgot";
 
 function LoginPage() {
   const navigate = useNavigate();
@@ -55,7 +55,14 @@ function LoginPage() {
     e.preventDefault();
     setBusy(true);
     try {
-      if (mode === "sign_up") {
+      if (mode === "forgot") {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/redefinir-senha`,
+        });
+        if (error) throw error;
+        toast.success("Enviamos um link de recuperação para o seu e-mail.");
+        setMode("sign_in");
+      } else if (mode === "sign_up") {
         const { error } = await supabase.auth.signUp({
           email,
           password,
