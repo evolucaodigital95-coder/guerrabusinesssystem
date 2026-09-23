@@ -404,6 +404,20 @@ function AgentDetail() {
     });
     (snapshots.data ?? []).forEach((s) => {
       const lec = s.lectures as LectureExpansion | null;
+      // Transparência: o que foi deduzido antes da divisão (juros do cartão inclusive)
+      const bdTotals = ((s.breakdown ?? {}) as {
+        totals?: {
+          totalStock?: number; totalMaterials?: number; totalCardFees?: number;
+          fee?: number; totalTaxes?: number; totalCosts?: number; totalOtherExpenses?: number;
+        };
+      }).totals ?? {};
+      const cardFeesValue = Number(
+        bdTotals.totalCardFees ?? (s.total_card_fees != null ? Number(s.total_card_fees) : 0),
+      );
+      const materialsValue = Number(bdTotals.totalStock ?? bdTotals.totalMaterials ?? s.total_stock_cost ?? 0);
+      const ruleFeeValue = Number(bdTotals.fee ?? 0);
+      const otherValue =
+        Number(bdTotals.totalTaxes ?? 0) + Number(bdTotals.totalCosts ?? 0) + Number(bdTotals.totalOtherExpenses ?? 0);
       out.push({
         id: `share-${s.id}`,
         date: s.closed_at ? s.closed_at.slice(0, 10) : null,
