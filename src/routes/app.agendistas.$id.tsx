@@ -1539,13 +1539,56 @@ function AgentDetail() {
                         {l.gross_revenue ? ` · Receita ${formatCurrency(Number(l.gross_revenue))}` : " · sem receita definida"}
                       </p>
                     </div>
-                    <Button
-                      variant="navy" size="sm" className="rounded-full"
-                      onClick={() => closeLecture.mutate(l.id)}
-                      disabled={closeLecture.isPending || !l.gross_revenue}
-                    >
-                      <Calculator className="mr-1.5 h-4 w-4" /> Fechar e calcular
-                    </Button>
+                    <div className="flex items-center gap-1.5">
+                      <Button
+                        variant="outline" size="sm" className="rounded-full"
+                        onClick={() => {
+                          setEditingLecture({
+                            id: l.id, title: l.title, theme: l.theme, company_id: l.company_id,
+                            contact_id: l.contact_id, agent_id: l.agent_id, season_id: l.season_id,
+                            campaign_id: l.campaign_id, project_id: l.project_id, city: l.city, state: l.state,
+                            scheduled_at: l.scheduled_at, scheduled_time: l.scheduled_time,
+                            expected_audience: l.expected_audience, actual_audience: l.actual_audience,
+                            status: l.status, gross_revenue: l.gross_revenue, notes: l.notes,
+                          });
+                          setLectureEditOpen(true);
+                        }}
+                      >
+                        <Pencil className="mr-1.5 h-3.5 w-3.5" /> Editar
+                      </Button>
+                      <Button
+                        variant="navy" size="sm" className="rounded-full"
+                        onClick={() => closeLecture.mutate(l.id)}
+                        disabled={closeLecture.isPending || !l.gross_revenue}
+                      >
+                        <Calculator className="mr-1.5 h-4 w-4" /> Fechar e calcular
+                      </Button>
+                      <ConfirmDialog
+                        title="Arquivar esta palestra?"
+                        description="Ela some das listas, mas o histórico financeiro e a auditoria são preservados."
+                        confirmLabel="Arquivar"
+                        pending={archiveLecture.isPending}
+                        onConfirm={() => archiveLecture.mutate(l.id)}
+                        trigger={
+                          <Button variant="ghost" size="sm" className="text-muted-foreground">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        }
+                      />
+                      <ConfirmDialog
+                        title="Excluir definitivamente?"
+                        description="A palestra será apagada. Lançamentos do razão ligados a ela ficam sem vínculo. Não é possível excluir palestras já fechadas financeiramente."
+                        confirmLabel="Excluir"
+                        destructive
+                        pending={deleteLecture.isPending}
+                        onConfirm={() => deleteLecture.mutate(l.id)}
+                        trigger={
+                          <Button variant="ghost" size="sm" className="text-rose-600">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        }
+                      />
+                    </div>
                   </div>
                 ))}
               </div>
