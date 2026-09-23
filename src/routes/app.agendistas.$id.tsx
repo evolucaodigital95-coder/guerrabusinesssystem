@@ -1502,6 +1502,14 @@ function AgentDetail() {
                           </p>
                         </div>
                         <div className="flex items-center gap-3">
+                          {s.lecture_id && (
+                            <Link
+                              to="/app/palestras/$id" params={{ id: s.lecture_id }}
+                              className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
+                            >
+                              <Pencil className="h-3.5 w-3.5" /> Abrir / editar
+                            </Link>
+                          )}
                           <div className="text-right">
                             <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">Agendista</p>
                             <p className="font-serif text-xl text-[var(--gold)] tabular-nums">{formatCurrency(Number(s.agent_amount ?? 0))}</p>
