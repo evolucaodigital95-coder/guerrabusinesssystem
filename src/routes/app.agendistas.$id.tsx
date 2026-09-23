@@ -1041,7 +1041,7 @@ function AgentDetail() {
           const { data: docs } = await supabase
             .from("agent_documents")
             .select("id, title, doc_type, doc_date, file_name, mime_type, storage_path, size_bytes, created_at")
-            .eq("agent_id", agentId)
+            .eq("agent_id", id)
             .is("archived_at", null)
             .order("created_at", { ascending: true });
 
