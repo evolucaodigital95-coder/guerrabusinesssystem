@@ -902,8 +902,10 @@ export async function exportStatementPDF(
     // Fotos dos cartões
     const withPhotos = ctx.cards.filter((c) => c.photos?.length);
     if (withPhotos.length) {
-      const tW = 150, tH = 100, gap = 14;
-      const perRow = Math.max(1, Math.floor((contentW + gap) / (tW + gap)));
+      const gap = 18;
+      const perRow = 3;
+      const tW = (contentW - gap * (perRow - 1)) / perRow;
+      const tH = tW * 0.72;
       cy = ensureSpace(doc, cy, 40, pageH);
       sectionTitle(doc, "FOTOS DOS CARTÕES", marginX, cy);
       cy += 20;
@@ -919,16 +921,14 @@ export async function exportStatementPDF(
 
         let col = 0;
         for (const it of c.photos!) {
-          if (col === 0) cy = ensureSpace(doc, cy, tH + 40, pageH);
+          if (col === 0) cy = ensureSpace(doc, cy, tH + 44, pageH);
           const x = marginX + col * (tW + gap);
+          doc.setFillColor(250, 250, 251);
           doc.setDrawColor(215, 215, 220);
           doc.setLineWidth(0.4);
-          doc.roundedRect(x, cy, tW, tH, 3, 3, "S");
+          doc.roundedRect(x, cy, tW, tH, 4, 4, "FD");
           if (it.dataUrl) {
-            try {
-              const fmt = (it.mimeType ?? "").toLowerCase().includes("png") ? "PNG" : "JPEG";
-              doc.addImage(it.dataUrl, fmt, x + 2, cy + 2, tW - 4, tH - 4, undefined, "FAST");
-            } catch { /* ignora imagem inválida */ }
+            drawFittedImage(doc, it.dataUrl, it.mimeType, x, cy, tW, tH);
           } else {
             doc.setFont("helvetica", "italic");
             doc.setFontSize(8);
@@ -944,9 +944,9 @@ export async function exportStatementPDF(
             doc.textWithLink("abrir", x, cy + tH + 19, { url: it.url });
           }
           col = (col + 1) % perRow;
-          if (col === 0) cy += tH + 28;
+          if (col === 0) cy += tH + 30;
         }
-        if (col !== 0) cy += tH + 28;
+        if (col !== 0) cy += tH + 30;
         cy += 8;
       }
     }
@@ -963,15 +963,15 @@ export async function exportStatementPDF(
     doc.setFontSize(7.5);
     doc.setTextColor(...MUTED);
     doc.text(
-      "Notas fiscais, recibos e comprovantes anexados às palestras e adiantamentos do período. Imagens exibidas em tamanho reduzido — arquivos PDF/DOC aparecem como links.",
+      "Notas fiscais, recibos, comprovantes de PIX, fotos de cartões e documentos anexados às palestras e adiantamentos do período. Imagens em proporção original — arquivos PDF/DOC aparecem como links.",
       marginX, ry + 6,
     );
     ry += 20;
 
-    const thumbW = 150;
-    const thumbH = 100;
-    const thumbGap = 14;
-    const thumbsPerRow = Math.max(1, Math.floor((contentW + thumbGap) / (thumbW + thumbGap)));
+    const thumbsPerRow = 2;
+    const thumbGap = 18;
+    const thumbW = (contentW - thumbGap * (thumbsPerRow - 1)) / thumbsPerRow;
+    const thumbH = thumbW * 0.68;
 
     for (const group of ctx.receipts) {
       if (!group.items?.length) continue;
@@ -1028,13 +1028,12 @@ export async function exportStatementPDF(
           }
           const x = marginX + col * (thumbW + thumbGap);
           // Moldura
+          doc.setFillColor(250, 250, 251);
           doc.setDrawColor(215, 215, 220);
           doc.setLineWidth(0.4);
-          doc.roundedRect(x, ry, thumbW, thumbH, 3, 3, "S");
-          try {
-            const fmt = (it.mimeType ?? "").toLowerCase().includes("png") ? "PNG" : "JPEG";
-            doc.addImage(it.dataUrl!, fmt, x + 2, ry + 2, thumbW - 4, thumbH - 4, undefined, "FAST");
-          } catch {
+          doc.roundedRect(x, ry, thumbW, thumbH, 4, 4, "FD");
+          const ok = drawFittedImage(doc, it.dataUrl!, it.mimeType, x, ry, thumbW, thumbH);
+          if (!ok) {
             doc.setFont("helvetica", "italic");
             doc.setFontSize(8);
             doc.setTextColor(...MUTED);
@@ -1106,6 +1105,37 @@ function sectionTitle(doc: import("jspdf").jsPDF, text: string, x: number, y: nu
   doc.setDrawColor(...GOLD);
   doc.setLineWidth(0.6);
   doc.line(x, y + 4, x + 44, y + 4);
+}
+
+/**
+ * Desenha a imagem dentro da moldura mantendo a proporção original (sem distorção),
+ * centralizada, com respiro interno — acabamento premium.
+ */
+function drawFittedImage(
+  doc: import("jspdf").jsPDF,
+  dataUrl: string,
+  mimeType: string | null | undefined,
+  boxX: number, boxY: number, boxW: number, boxH: number,
+): boolean {
+  const pad = 6;
+  const maxW = boxW - pad * 2;
+  const maxH = boxH - pad * 2;
+  try {
+    let fmt = (mimeType ?? "").toLowerCase().includes("png") ? "PNG" : "JPEG";
+    let w = maxW, h = maxH;
+    try {
+      const props = doc.getImageProperties(dataUrl);
+      if (props?.fileType) fmt = String(props.fileType).toUpperCase();
+      const ratio = props.width && props.height ? props.width / props.height : maxW / maxH;
+      if (maxW / maxH > ratio) { h = maxH; w = h * ratio; } else { w = maxW; h = w / ratio; }
+    } catch { /* usa a caixa inteira se não der para ler as dimensões */ }
+    const x = boxX + (boxW - w) / 2;
+    const y = boxY + (boxH - h) / 2;
+    doc.addImage(dataUrl, fmt, x, y, w, h, undefined, "FAST");
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 function ensureSpace(doc: import("jspdf").jsPDF, y: number, needed: number, pageH: number): number {

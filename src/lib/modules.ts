@@ -176,49 +176,13 @@ export const MODULES: ModuleDef[] = [
 
   // INTELIGÊNCIA
   {
-    to: "/app/painel-diretor",
-    label: "Painel do Diretor",
-    icon: Crown,
-    section: "inteligência",
-    description: "Visão executiva consolidada — rentabilidade, ranking e alertas.",
-    emptyMessage: "Feche palestras para alimentar o painel executivo.",
-    primaryAction: "Ver painel",
-  },
-  {
-    to: "/app/indicadores",
-    label: "Indicadores",
-    icon: BarChart3,
-    section: "inteligência",
-    description: "Painel executivo com KPIs consolidados em tempo real.",
-    emptyMessage: "Sem dados suficientes para gerar KPIs.",
-    primaryAction: "Atualizar",
-  },
-  {
     to: "/app/inteligencia",
-    label: "Centro de Inteligência",
+    label: "Central de Inteligência",
     icon: BrainCircuit,
     section: "inteligência",
-    description: "BI executivo — gráficos, filtros e exportações.",
+    description: "Painel do diretor, indicadores, análises, rankings e relatórios em um só lugar.",
     emptyMessage: "Cadastre dados operacionais para alimentar a inteligência.",
     primaryAction: "Explorar",
-  },
-  {
-    to: "/app/performance",
-    label: "Performance",
-    icon: Trophy,
-    section: "inteligência",
-    description: "Rankings por agendista, empresa, cidade, campanha e temporada.",
-    emptyMessage: "Feche palestras para gerar rankings.",
-    primaryAction: "Ver rankings",
-  },
-  {
-    to: "/app/relatorios",
-    label: "Relatórios",
-    icon: BarChart3,
-    section: "inteligência",
-    description: "Análises consolidadas e exportações.",
-    emptyMessage: "Nenhum relatório gerado ainda.",
-    primaryAction: "Gerar Relatório",
   },
   {
     to: "/app/centro-palestrante",
@@ -247,24 +211,7 @@ export const MODULES: ModuleDef[] = [
     emptyMessage: "Nenhum conteúdo cadastrado ainda.",
     primaryAction: "Novo conteúdo",
   },
-  {
-    to: "/app/historia",
-    label: "História",
-    icon: BookOpen,
-    section: "inteligência",
-    description: "Linha do tempo e marcos da jornada.",
-    emptyMessage: "Sua história está esperando para ser contada.",
-    primaryAction: "Novo marco",
-  },
-  {
-    to: "/app/legado",
-    label: "Legado",
-    icon: Crown,
-    section: "inteligência",
-    description: "Princípios, valores e o que fica.",
-    emptyMessage: "Registre os pilares do seu legado.",
-    primaryAction: "Novo pilar",
-  },
+
 
   // SISTEMA
   {

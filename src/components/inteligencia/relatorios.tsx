@@ -1,4 +1,3 @@
-import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Download, Filter } from "lucide-react";
@@ -18,15 +17,6 @@ import { formatCurrency, formatDate } from "@/lib/crm";
 import { exportCSV, exportXLSX, exportPDF, type ReportColumn } from "@/lib/report-export";
 import { ListSkeleton } from "@/components/shared/list-skeleton";
 
-export const Route = createFileRoute("/app/relatorios")({
-  head: () => ({
-    meta: [
-      { title: "Relatórios — GBS" },
-      { name: "description", content: "Central de exportação: relatórios tabulares filtráveis em CSV, XLSX e PDF Premium." },
-    ],
-  }),
-  component: RelatoriosPage,
-});
 
 type Kind = "financeiro" | "palestras" | "empresas" | "agendistas" | "estoque";
 
@@ -35,7 +25,7 @@ function daysAgoISO(n: number) {
   const d = new Date(); d.setDate(d.getDate() - n); return d.toISOString().slice(0, 10);
 }
 
-function RelatoriosPage() {
+export function RelatoriosPage() {
   const { organizationId } = useCurrentOrg();
   const [tab, setTab] = useState<Kind>("financeiro");
   const [start, setStart] = useState(daysAgoISO(90));

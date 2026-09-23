@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,15 +7,6 @@ import { PageHeader } from "@/components/page-shell";
 import { Trophy } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/app/performance")({
-  head: () => ({
-    meta: [
-      { title: "Performance — GBS" },
-      { name: "description", content: "Rankings automáticos por agendista, empresa, cidade, campanha, temporada e palestra." },
-    ],
-  }),
-  component: PerformancePage,
-});
 
 type Tab = "agendistas" | "empresas" | "cidades" | "campanhas" | "temporadas" | "palestras";
 
@@ -76,7 +67,7 @@ function useRankings(org: string | null) {
   });
 }
 
-function PerformancePage() {
+export function PerformancePage() {
   const { organizationId } = useCurrentOrg();
   const [tab, setTab] = useState<Tab>("agendistas");
   const { data, isLoading } = useRankings(organizationId);

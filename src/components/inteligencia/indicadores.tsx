@@ -1,18 +1,9 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrentOrg } from "@/hooks/use-current-org";
 import { PageHeader } from "@/components/page-shell";
 
-export const Route = createFileRoute("/app/indicadores")({
-  head: () => ({
-    meta: [
-      { title: "Indicadores — GBS" },
-      { name: "description", content: "Painel executivo com KPIs consolidados em tempo real." },
-    ],
-  }),
-  component: IndicadoresPage,
-});
 
 const BRL = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 const NUM = new Intl.NumberFormat("pt-BR");
@@ -87,7 +78,7 @@ function Kpi({ label, value, hint, to }: { label: string; value: string; hint?: 
   return to ? <Link to={to}>{inner}</Link> : inner;
 }
 
-function IndicadoresPage() {
+export function IndicadoresPage() {
   const { organizationId } = useCurrentOrg();
   const { data, isLoading } = useKpis(organizationId);
 

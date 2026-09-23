@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -10,17 +10,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useCurrentOrg } from "@/hooks/use-current-org";
 import { PageHeader } from "@/components/page-shell";
 
-export const Route = createFileRoute("/app/painel-diretor")({
-  head: () => ({
-    meta: [
-      { title: "Painel do Diretor — GBS" },
-      { name: "description", content: "Visão executiva consolidada: rentabilidade, ranking e alertas estratégicos." },
-      { property: "og:title", content: "Painel do Diretor — GBS" },
-      { property: "og:description", content: "Visão executiva consolidada do Grupo Guerra." },
-    ],
-  }),
-  component: PainelDiretorPage,
-});
 
 const BRL = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 const NUM = new Intl.NumberFormat("pt-BR");
@@ -194,7 +183,7 @@ function ChartCard({ title, subtitle, children, height = 260 }: { title: string;
   );
 }
 
-function PainelDiretorPage() {
+export function PainelDiretorPage() {
   const { organizationId, loading } = useCurrentOrg();
   const { data, isLoading } = useDirector(organizationId);
 

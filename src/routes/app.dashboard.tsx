@@ -830,7 +830,7 @@ function DashboardPage() {
         description="Situação da temporada, agenda do dia, riscos, pendências e decisões — tudo calculado automaticamente a partir dos dados reais."
         actions={
           <Link
-            to="/app/painel-diretor"
+            to="/app/inteligencia"
             className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-xs font-medium hover:border-foreground/30"
           >
             <TrendingUp className="h-3.5 w-3.5" /> Painel do Diretor

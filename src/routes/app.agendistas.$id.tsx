@@ -404,12 +404,28 @@ function AgentDetail() {
     });
     (snapshots.data ?? []).forEach((s) => {
       const lec = s.lectures as LectureExpansion | null;
+      // Transparência: o que foi deduzido antes da divisão (juros do cartão inclusive)
+      const bdTotals = ((s.breakdown ?? {}) as {
+        totals?: {
+          totalStock?: number; totalMaterials?: number; totalCardFees?: number;
+          fee?: number; totalTaxes?: number; totalCosts?: number; totalOtherExpenses?: number;
+        };
+      }).totals ?? {};
+      const cardFeesValue = Number(
+        bdTotals.totalCardFees ?? (s.total_card_fees != null ? Number(s.total_card_fees) : 0),
+      );
+      const materialsValue = Number(bdTotals.totalStock ?? bdTotals.totalMaterials ?? s.total_stock_cost ?? 0);
+      const ruleFeeValue = Number(bdTotals.fee ?? 0);
+      const otherValue =
+        Number(bdTotals.totalTaxes ?? 0) + Number(bdTotals.totalCosts ?? 0) + Number(bdTotals.totalOtherExpenses ?? 0);
       out.push({
         id: `share-${s.id}`,
         date: s.closed_at ? s.closed_at.slice(0, 10) : null,
         time: s.closed_at ? new Date(s.closed_at).toTimeString().slice(0, 5) : null,
         type: "Comissão",
-        description: `Comissão · ${lec?.title ?? "Palestra"}`,
+        description:
+          `Comissão · ${lec?.title ?? "Palestra"}` +
+          (cardFeesValue > 0 ? ` · juros do cartão −${formatCurrency(cardFeesValue)}` : " · sem juros de cartão"),
         amount: Math.abs(Number(s.agent_amount ?? 0)),
         companyId: lec?.companies?.id ?? lec?.company_id ?? null,
         companyName: lec?.companies?.legal_name ?? null,
@@ -420,13 +436,20 @@ function AgentDetail() {
         origin: {
           actorId: s.closed_by ?? null,
           createdAt: s.closed_at ?? null,
-          reason: `Fechamento financeiro da palestra · receita ${formatCurrency(Number(s.gross_revenue ?? 0))}`,
+          reason:
+            `Fechamento financeiro da palestra · receita ${formatCurrency(Number(s.gross_revenue ?? 0))}` +
+            ` · juros do cartão descontados ${formatCurrency(cardFeesValue)}`,
           docRoute: lec?.id ? `/app/palestras/${lec.id}` : undefined,
           docLabel: lec?.id ? "Abrir palestra" : undefined,
           extra: [
             { label: "Snapshot", value: s.id },
             { label: "Receita bruta", value: formatCurrency(Number(s.gross_revenue ?? 0)) },
+            { label: "Materiais/estoque (−)", value: formatCurrency(materialsValue) },
+            { label: "Juros do cartão (−)", value: formatCurrency(cardFeesValue) },
+            ...(ruleFeeValue ? [{ label: "Taxa de regra (−)", value: formatCurrency(ruleFeeValue) }] : []),
+            ...(otherValue ? [{ label: "Outros custos (−)", value: formatCurrency(otherValue) }] : []),
             { label: "Lucro líquido", value: formatCurrency(Number(s.net_profit ?? 0)) },
+            { label: "Parte do agendista", value: formatCurrency(Number(s.agent_amount ?? 0)) },
           ],
         },
       });
@@ -915,15 +938,14 @@ function AgentDetail() {
           itemsByLecture.set(a.entity_id, arr);
         }
 
-        // Fotos/comprovantes dos CARTÕES lançados nas palestras do período
+        // Comprovantes de TODOS os lançamentos das palestras do período (cartões, PIX, recibos, etc.)
         if (lectureIds.length) {
           const { data: cardMovs } = await supabase
             .from("financial_movements")
             .select(
-              "id, lecture_id, amount, occurs_on, description, card_installments, card_fee_amount, card_brands:card_brand_id ( name )",
+              "id, lecture_id, amount, occurs_on, description, payment_method, card_installments, card_fee_amount, card_brands:card_brand_id ( name )",
             )
             .in("lecture_id", lectureIds)
-            .not("card_brand_id", "is", null)
             .is("archived_at", null);
 
           const movIds = (cardMovs ?? []).map((m) => m.id);
@@ -950,9 +972,11 @@ function AgentDetail() {
               const url = cardUrlByPath.get(a.storage_path) ?? null;
               const img = isImage(a.mime_type, a.file_name ?? "");
               const dataUrl = img && url ? await toDataUrl(url) : null;
-              const brand = (mov.card_brands as { name?: string } | null)?.name ?? "Cartão";
+              const brand = (mov.card_brands as { name?: string } | null)?.name ?? null;
               const parcels = mov.card_installments ? `${mov.card_installments}x` : "à vista";
-              const label = `Cartão ${brand} · ${parcels} · ${formatCurrency(Number(mov.amount ?? 0))}`;
+              const label = brand
+                ? `Cartão ${brand} · ${parcels} · ${formatCurrency(Number(mov.amount ?? 0))}`
+                : `${mov.payment_method ? String(mov.payment_method).toUpperCase() : "Comprovante"} · ${mov.description ?? "Lançamento"} · ${formatCurrency(Number(mov.amount ?? 0))}`;
               const arr = itemsByLecture.get(mov.lecture_id) ?? [];
               arr.push({
                 fileName: label,
@@ -1010,6 +1034,44 @@ function AgentDetail() {
               source: "advance",
             })),
           });
+        }
+
+        // Documentos do agendista (PIX, contratos, recibos externos)
+        {
+          const { data: docs } = await supabase
+            .from("agent_documents")
+            .select("id, title, doc_type, doc_date, file_name, mime_type, storage_path, size_bytes, created_at")
+            .eq("agent_id", id)
+            .is("archived_at", null)
+            .order("created_at", { ascending: true });
+
+          const docPaths = (docs ?? []).map((d) => d.storage_path).filter(Boolean) as string[];
+          const docSigned = docPaths.length
+            ? (await supabase.storage.from("crm-attachments").createSignedUrls(docPaths, 60 * 60)).data ?? []
+            : [];
+          const docUrlByPath = new Map<string, string>();
+          docSigned.forEach((s, i) => { if (s?.signedUrl) docUrlByPath.set(docPaths[i], s.signedUrl); });
+
+          const docItems: ReceiptItem[] = [];
+          for (const d of docs ?? []) {
+            if (fStart && d.doc_date && d.doc_date < fStart) continue;
+            if (fEnd && d.doc_date && d.doc_date > fEnd) continue;
+            const url = d.storage_path ? docUrlByPath.get(d.storage_path) ?? null : null;
+            const img = isImage(d.mime_type, d.file_name ?? "");
+            const dataUrl = img && url ? await toDataUrl(url) : null;
+            docItems.push({
+              fileName: `${d.title ?? d.file_name ?? "Documento"}${d.doc_type ? ` · ${d.doc_type}` : ""}`,
+              mimeType: d.mime_type,
+              sizeBytes: d.size_bytes,
+              createdAt: d.doc_date ?? d.created_at,
+              dataUrl,
+              url,
+              source: "attachment",
+            });
+          }
+          if (docItems.length) {
+            groups.push({ company: "Documentos do agendista", lecture: null, date: null, items: docItems });
+          }
         }
 
         if (groups.length) receipts = groups;
