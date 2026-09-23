@@ -27,6 +27,7 @@ import {
   type SubscriptionStatus,
 } from "@/lib/platform";
 import { ROLE_LABEL, type OrgRole } from "@/lib/permissions";
+import { ORG_STATUS_LABEL } from "@/components/org-provider";
 
 export const Route = createFileRoute("/admin/clientes/$id")({
   head: () => ({
@@ -70,7 +71,8 @@ function AdminClienteDetail() {
   const { id } = Route.useParams();
   const { org, loading, settings, events, members, onboarding } = useAdminOrganization(id);
   const { data: plans } = usePlans();
-  const { updateSubscription } = usePlatformMutations();
+  const { updateSubscription, setOrganizationStatus } = usePlatformMutations();
+  const [orgReason, setOrgReason] = useState("");
 
   const sub = org?.subscription ?? null;
   const [planId, setPlanId] = useState<string>("");
@@ -165,6 +167,55 @@ function AdminClienteDetail() {
           <Field label="Nome fantasia" value={settings?.trade_name ?? settings?.display_name ?? "—"} />
           <Field label="Cidade / UF" value={[settings?.city, settings?.state].filter(Boolean).join(" / ") || "—"} />
           <Field label="Telefone" value={settings?.phone ?? "—"} />
+
+          <div className="rounded-xl border border-border bg-card p-5 sm:col-span-2 lg:col-span-3">
+            <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+              Status da organização
+            </div>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Organização suspensa ou cancelada continua podendo consultar e exportar os dados, mas
+              não pode criar nem alterar registros. Nenhum dado é apagado.
+            </p>
+            <div className="mt-4 flex flex-wrap items-center gap-3">
+              <Badge variant="outline">{ORG_STATUS_LABEL[org.orgStatus]}</Badge>
+              {org.statusReason && (
+                <span className="text-xs text-muted-foreground">Motivo: {org.statusReason}</span>
+              )}
+            </div>
+            <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_auto]">
+              <Input
+                value={orgReason}
+                onChange={(e) => setOrgReason(e.target.value)}
+                placeholder="Motivo (registrado na auditoria)"
+              />
+              <div className="flex flex-wrap gap-2">
+                {(["active", "suspended", "canceled"] as const)
+                  .filter((s) => s !== org.orgStatus)
+                  .map((s) => (
+                    <Button
+                      key={s}
+                      variant={s === "active" ? "default" : "outline"}
+                      disabled={setOrganizationStatus.isPending}
+                      onClick={async () => {
+                        try {
+                          await setOrganizationStatus.mutateAsync({
+                            organizationId: org.id,
+                            status: s,
+                            reason: orgReason || null,
+                          });
+                          setOrgReason("");
+                          toast.success(`Organização marcada como ${ORG_STATUS_LABEL[s]}.`);
+                        } catch (e) {
+                          toast.error((e as Error).message);
+                        }
+                      }}
+                    >
+                      {s === "active" ? "Reativar" : s === "suspended" ? "Suspender" : "Cancelar"}
+                    </Button>
+                  ))}
+              </div>
+            </div>
+          </div>
         </TabsContent>
 
         <TabsContent value="assinatura" className="mt-6">

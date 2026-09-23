@@ -95,6 +95,8 @@ export type AdminOrganization = {
   subscription: Subscription | null;
   plan: Plan | null;
   status: SubscriptionStatus;
+  orgStatus: "active" | "suspended" | "canceled";
+  statusReason: string | null;
 };
 
 /** Visão administrativa de todas as organizações (somente admin global — RLS garante). */
@@ -103,7 +105,10 @@ export function useAdminOrganizations() {
     queryKey: ["admin", "organizations"],
     queryFn: async (): Promise<AdminOrganization[]> => {
       const [orgs, subs, plans, members, companies, lectures, profiles] = await Promise.all([
-        supabase.from("organizations").select("id, name, created_at, created_by").is("archived_at", null),
+        supabase
+          .from("organizations")
+          .select("id, name, created_at, created_by, status, status_reason")
+          .is("archived_at", null),
         supabase.from("subscriptions").select("*"),
         supabase.from("plans").select("*"),
         supabase.from("organization_members").select("organization_id, user_id, role").is("archived_at", null),
@@ -140,6 +145,8 @@ export function useAdminOrganizations() {
           subscription: sub,
           plan,
           status: resolveSubscriptionState(sub, plan).status,
+          orgStatus: (o.status ?? "active") as "active" | "suspended" | "canceled",
+          statusReason: o.status_reason ?? null,
         };
       });
     },
@@ -320,7 +327,39 @@ export function usePlatformMutations() {
     onSuccess: invalidate,
   });
 
-  return { savePlan, archivePlan, updateSubscription };
+  /** Suspende, cancela ou reativa uma organização inteira (somente admin da plataforma). */
+  const setOrganizationStatus = useMutation({
+    mutationFn: async (input: {
+      organizationId: string;
+      status: "active" | "suspended" | "canceled";
+      reason?: string | null;
+    }) => {
+      const { error } = await supabase
+        .from("organizations")
+        .update({
+          status: input.status,
+          status_reason: input.reason ?? null,
+          status_changed_at: new Date().toISOString(),
+          updated_by: user?.id ?? null,
+        } as never)
+        .eq("id", input.organizationId);
+      if (error) throw error;
+      await logPlatformAction(
+        user!.id,
+        `organization.${input.status}`,
+        "organization",
+        input.organizationId,
+        input.organizationId,
+        { status: input.status, reason: input.reason ?? null },
+      );
+    },
+    onSuccess: () => {
+      invalidate();
+      qc.invalidateQueries({ queryKey: ["memberships"] });
+    },
+  });
+
+  return { savePlan, archivePlan, updateSubscription, setOrganizationStatus };
 }
 
 export function usePlatformAudit(limit = 100) {

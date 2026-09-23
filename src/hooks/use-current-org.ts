@@ -12,6 +12,8 @@ export function useCurrentOrg() {
     switching: ctx.switching,
     organizationId: ctx.organizationId,
     organizationName: ctx.organizationName,
+    organizationStatus: ctx.organizationStatus,
+    isOrgActive: ctx.isOrgActive,
     role: ctx.role,
     memberships: ctx.memberships,
     setActiveOrg: ctx.setActiveOrg,
@@ -22,5 +24,5 @@ export function useCurrentOrg() {
 /** Atalho para checagem de permissão na interface. */
 export function usePermissions() {
   const ctx = useOrgContext();
-  return { role: ctx.role, can: ctx.can };
+  return { role: ctx.role, can: ctx.can, isOrgActive: ctx.isOrgActive };
 }

@@ -6,9 +6,18 @@ import { hasPermission, type OrgRole, type Permission } from "@/lib/permissions"
 
 const STORAGE_KEY = "gbs.active-organization";
 
+export type OrgStatus = "active" | "suspended" | "canceled";
+
+export const ORG_STATUS_LABEL: Record<OrgStatus, string> = {
+  active: "Ativa",
+  suspended: "Suspensa",
+  canceled: "Cancelada",
+};
+
 export type Membership = {
   organizationId: string;
   organizationName: string;
+  organizationStatus: OrgStatus;
   role: OrgRole;
 };
 
@@ -18,6 +27,8 @@ type OrgContextValue = {
   memberships: Membership[];
   organizationId: string | null;
   organizationName: string | null;
+  organizationStatus: OrgStatus | null;
+  isOrgActive: boolean;
   role: OrgRole | null;
   setActiveOrg: (id: string) => void;
   can: (permission: Permission) => boolean;
@@ -46,17 +57,20 @@ export function OrgProvider({ children }: { children: ReactNode }) {
     queryFn: async (): Promise<Membership[]> => {
       const { data, error } = await supabase
         .from("organization_members")
-        .select("organization_id, role, organizations:organization_id ( id, name )")
+        .select("organization_id, role, organizations:organization_id ( id, name, status )")
         .eq("user_id", user!.id)
         .is("archived_at", null)
         .order("created_at", { ascending: true });
       if (error) throw error;
-      return (data ?? []).map((m) => ({
-        organizationId: m.organization_id,
-        organizationName:
-          (m.organizations as { name?: string } | null)?.name ?? "Organização",
-        role: m.role as OrgRole,
-      }));
+      return (data ?? []).map((m) => {
+        const org = m.organizations as { name?: string; status?: string } | null;
+        return {
+          organizationId: m.organization_id,
+          organizationName: org?.name ?? "Organização",
+          organizationStatus: (org?.status as OrgStatus) ?? "active",
+          role: m.role as OrgRole,
+        };
+      });
     },
   });
 
@@ -96,15 +110,22 @@ export function OrgProvider({ children }: { children: ReactNode }) {
   const active = memberships.find((m) => m.organizationId === activeId) ?? null;
   const role = active?.role ?? null;
 
+  const status = active?.organizationStatus ?? null;
+  const isOrgActive = status === "active";
+
   const value: OrgContextValue = {
     loading: sessionLoading || query.isLoading,
     switching,
     memberships,
     organizationId: active?.organizationId ?? null,
     organizationName: active?.organizationName ?? null,
+    organizationStatus: status,
+    isOrgActive,
     role,
     setActiveOrg,
-    can: (permission: Permission) => hasPermission(role, permission),
+    // Organização suspensa/cancelada fica somente leitura (o banco também bloqueia).
+    can: (permission: Permission) =>
+      hasPermission(role, permission) && (permission === "view" || isOrgActive),
   };
 
   return <OrgContext.Provider value={value}>{children}</OrgContext.Provider>;
@@ -120,6 +141,8 @@ export function useOrgContext(): OrgContextValue {
       memberships: [],
       organizationId: null,
       organizationName: null,
+      organizationStatus: null,
+      isOrgActive: false,
       role: null,
       setActiveOrg: () => {},
       can: () => false,
