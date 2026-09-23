@@ -79,7 +79,7 @@ function LoginPage() {
         navigate({ to: "/app/hoje" });
       }
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Falha ao autenticar");
+      toast.error(authErrorMessage(err));
     } finally {
       setBusy(false);
     }
@@ -131,13 +131,21 @@ function LoginPage() {
             <GbsMark />
           </div>
           <p className="text-[10px] uppercase tracking-[0.32em] text-muted-foreground">
-            {mode === "sign_in" ? "Acessar" : "Criar conta"}
+            {mode === "sign_in" ? "Acessar" : mode === "sign_up" ? "Criar conta" : "Recuperar acesso"}
           </p>
           <h2 className="mt-3 font-serif text-3xl text-foreground">
-            {mode === "sign_in" ? "Bem-vindo de volta" : "Crie sua conta"}
+            {mode === "sign_in"
+              ? "Bem-vindo de volta"
+              : mode === "sign_up"
+                ? "Crie sua conta"
+                : "Esqueci minha senha"}
           </h2>
           <p className="mt-2 text-sm text-muted-foreground">
-            {mode === "sign_in" ? "Entre para continuar." : "Comece com seu workspace privado."}
+            {mode === "sign_in"
+              ? "Entre para continuar."
+              : mode === "sign_up"
+                ? "Comece com seu workspace privado."
+                : "Informe seu e-mail e enviaremos um link para criar uma nova senha."}
           </p>
 
           <form onSubmit={handleSubmit} className="mt-8 space-y-4">
@@ -151,22 +159,45 @@ function LoginPage() {
               <Label htmlFor="email">Email</Label>
               <Input id="email" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Senha</Label>
-              <Input id="password" type="password" autoComplete={mode === "sign_in" ? "current-password" : "new-password"} value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
-            </div>
+            {mode !== "forgot" && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password">Senha</Label>
+                  {mode === "sign_in" && (
+                    <button
+                      type="button"
+                      onClick={() => setMode("forgot")}
+                      className="text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+                    >
+                      Esqueci minha senha
+                    </button>
+                  )}
+                </div>
+                <Input id="password" type="password" autoComplete={mode === "sign_in" ? "current-password" : "new-password"} value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
+              </div>
+            )}
             <Button type="submit" variant="navy" className="w-full rounded-full" disabled={busy}>
-              {busy ? "Aguarde..." : mode === "sign_in" ? "Entrar" : "Criar conta"}
+              {busy
+                ? "Aguarde..."
+                : mode === "sign_in"
+                  ? "Entrar"
+                  : mode === "sign_up"
+                    ? "Criar conta"
+                    : "Enviar link de recuperação"}
             </Button>
           </form>
 
-          <div className="my-6 flex items-center gap-3 text-[10px] uppercase tracking-[0.28em] text-muted-foreground">
-            <span className="h-px flex-1 bg-border" /> ou <span className="h-px flex-1 bg-border" />
-          </div>
+          {mode !== "forgot" && (
+            <>
+              <div className="my-6 flex items-center gap-3 text-[10px] uppercase tracking-[0.28em] text-muted-foreground">
+                <span className="h-px flex-1 bg-border" /> ou <span className="h-px flex-1 bg-border" />
+              </div>
 
-          <Button type="button" variant="outline" className="w-full rounded-full" onClick={handleGoogle} disabled={busy}>
-            Continuar com Google
-          </Button>
+              <Button type="button" variant="outline" className="w-full rounded-full" onClick={handleGoogle} disabled={busy}>
+                Continuar com Google
+              </Button>
+            </>
+          )}
 
           <p className="mt-8 text-center text-sm text-muted-foreground">
             {mode === "sign_in" ? (
