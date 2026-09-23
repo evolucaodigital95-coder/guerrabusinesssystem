@@ -8,6 +8,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useCurrentOrg } from "@/hooks/use-current-org";
+import { ORG_STATUS_LABEL } from "@/components/org-provider";
 import { ROLE_LABEL } from "@/lib/permissions";
 import { cn } from "@/lib/utils";
 
@@ -80,7 +81,11 @@ export function OrgSwitcher({ className }: { className?: string }) {
             />
             <span className="min-w-0">
               <span className="block truncate">{m.organizationName}</span>
-              <span className="block text-[11px] text-muted-foreground">{ROLE_LABEL[m.role]}</span>
+              <span className="block text-[11px] text-muted-foreground">
+                {ROLE_LABEL[m.role]}
+                {m.organizationStatus !== "active" &&
+                  ` · ${ORG_STATUS_LABEL[m.organizationStatus]}`}
+              </span>
             </span>
           </DropdownMenuItem>
         ))}
