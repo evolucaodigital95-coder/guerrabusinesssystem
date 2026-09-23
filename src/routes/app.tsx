@@ -258,6 +258,9 @@ function AppLayout() {
                 <DropdownMenuLabel className="truncate">{user?.email}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
+                  <Link to="/app/minha-conta">Minha conta</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
                   <Link to="/app/configuracoes">Configurações</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem onSelect={handleSignOut}>
@@ -267,6 +270,13 @@ function AppLayout() {
             </DropdownMenu>
           </div>
         </header>
+
+        {organizationStatus && !isOrgActive && (
+          <div className="border-b border-amber-500/30 bg-amber-500/10 px-6 py-3 text-sm text-foreground md:px-12">
+            Esta organização está <strong>{ORG_STATUS_LABEL[organizationStatus]}</strong>. Os dados
+            continuam disponíveis para consulta e exportação, mas novas alterações estão bloqueadas.
+          </div>
+        )}
 
         <main className="min-w-0 flex-1 px-6 py-10 md:px-12 md:py-14">
           {switching ? (
