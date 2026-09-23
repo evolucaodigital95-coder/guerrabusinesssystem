@@ -110,15 +110,22 @@ export function OrgProvider({ children }: { children: ReactNode }) {
   const active = memberships.find((m) => m.organizationId === activeId) ?? null;
   const role = active?.role ?? null;
 
+  const status = active?.organizationStatus ?? null;
+  const isOrgActive = status === "active";
+
   const value: OrgContextValue = {
     loading: sessionLoading || query.isLoading,
     switching,
     memberships,
     organizationId: active?.organizationId ?? null,
     organizationName: active?.organizationName ?? null,
+    organizationStatus: status,
+    isOrgActive,
     role,
     setActiveOrg,
-    can: (permission: Permission) => hasPermission(role, permission),
+    // Organização suspensa/cancelada fica somente leitura (o banco também bloqueia).
+    can: (permission: Permission) =>
+      hasPermission(role, permission) && (permission === "view" || isOrgActive),
   };
 
   return <OrgContext.Provider value={value}>{children}</OrgContext.Provider>;
@@ -134,6 +141,8 @@ export function useOrgContext(): OrgContextValue {
       memberships: [],
       organizationId: null,
       organizationName: null,
+      organizationStatus: null,
+      isOrgActive: false,
       role: null,
       setActiveOrg: () => {},
       can: () => false,
