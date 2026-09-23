@@ -95,6 +95,8 @@ export type AdminOrganization = {
   subscription: Subscription | null;
   plan: Plan | null;
   status: SubscriptionStatus;
+  orgStatus: "active" | "suspended" | "canceled";
+  statusReason: string | null;
 };
 
 /** Visão administrativa de todas as organizações (somente admin global — RLS garante). */
@@ -103,7 +105,10 @@ export function useAdminOrganizations() {
     queryKey: ["admin", "organizations"],
     queryFn: async (): Promise<AdminOrganization[]> => {
       const [orgs, subs, plans, members, companies, lectures, profiles] = await Promise.all([
-        supabase.from("organizations").select("id, name, created_at, created_by").is("archived_at", null),
+        supabase
+          .from("organizations")
+          .select("id, name, created_at, created_by, status, status_reason")
+          .is("archived_at", null),
         supabase.from("subscriptions").select("*"),
         supabase.from("plans").select("*"),
         supabase.from("organization_members").select("organization_id, user_id, role").is("archived_at", null),
