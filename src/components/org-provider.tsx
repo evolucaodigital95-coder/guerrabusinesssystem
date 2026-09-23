@@ -6,9 +6,18 @@ import { hasPermission, type OrgRole, type Permission } from "@/lib/permissions"
 
 const STORAGE_KEY = "gbs.active-organization";
 
+export type OrgStatus = "active" | "suspended" | "canceled";
+
+export const ORG_STATUS_LABEL: Record<OrgStatus, string> = {
+  active: "Ativa",
+  suspended: "Suspensa",
+  canceled: "Cancelada",
+};
+
 export type Membership = {
   organizationId: string;
   organizationName: string;
+  organizationStatus: OrgStatus;
   role: OrgRole;
 };
 
@@ -18,6 +27,8 @@ type OrgContextValue = {
   memberships: Membership[];
   organizationId: string | null;
   organizationName: string | null;
+  organizationStatus: OrgStatus | null;
+  isOrgActive: boolean;
   role: OrgRole | null;
   setActiveOrg: (id: string) => void;
   can: (permission: Permission) => boolean;
