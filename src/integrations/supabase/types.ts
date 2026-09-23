@@ -2133,8 +2133,10 @@ export type Database = {
           created_at: string
           created_by: string | null
           id: string
+          joined_at: string
           organization_id: string
           role: Database["public"]["Enums"]["org_role"]
+          status: Database["public"]["Enums"]["member_status"]
           updated_at: string
           updated_by: string | null
           user_id: string
@@ -2144,8 +2146,10 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           id?: string
+          joined_at?: string
           organization_id: string
           role?: Database["public"]["Enums"]["org_role"]
+          status?: Database["public"]["Enums"]["member_status"]
           updated_at?: string
           updated_by?: string | null
           user_id: string
@@ -2155,8 +2159,10 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           id?: string
+          joined_at?: string
           organization_id?: string
           role?: Database["public"]["Enums"]["org_role"]
+          status?: Database["public"]["Enums"]["member_status"]
           updated_at?: string
           updated_by?: string | null
           user_id?: string
@@ -2346,6 +2352,9 @@ export type Database = {
           id: string
           name: string
           slug: string | null
+          status: Database["public"]["Enums"]["org_status"]
+          status_changed_at: string
+          status_reason: string | null
           updated_at: string
           updated_by: string | null
         }
@@ -2357,6 +2366,9 @@ export type Database = {
           id?: string
           name: string
           slug?: string | null
+          status?: Database["public"]["Enums"]["org_status"]
+          status_changed_at?: string
+          status_reason?: string | null
           updated_at?: string
           updated_by?: string | null
         }
@@ -2368,6 +2380,9 @@ export type Database = {
           id?: string
           name?: string
           slug?: string | null
+          status?: Database["public"]["Enums"]["org_status"]
+          status_changed_at?: string
+          status_reason?: string | null
           updated_at?: string
           updated_by?: string | null
         }
@@ -3591,7 +3606,9 @@ export type Database = {
       next_closing_number: { Args: { _org: string }; Returns: string }
     }
     Enums: {
+      member_status: "active" | "inactive"
       org_role: "owner" | "admin" | "member" | "viewer"
+      org_status: "active" | "suspended" | "canceled"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -3719,7 +3736,9 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      member_status: ["active", "inactive"],
       org_role: ["owner", "admin", "member", "viewer"],
+      org_status: ["active", "suspended", "canceled"],
     },
   },
 } as const
