@@ -1571,7 +1571,7 @@ function AgentDetail() {
                         onConfirm={() => archiveLecture.mutate(l.id)}
                         trigger={
                           <Button variant="ghost" size="sm" className="text-muted-foreground">
-                            <Trash2 className="h-4 w-4" />
+                            <Archive className="h-4 w-4" />
                           </Button>
                         }
                       />
@@ -1762,6 +1762,14 @@ function AgentDetail() {
             agentId={id} agentName={a.full_name}
             maxAmount={Math.max(0, statement.totals.balance)}
           />
+          <LectureFormDialog
+            open={lectureEditOpen}
+            onOpenChange={(v) => { setLectureEditOpen(v); if (!v) setEditingLecture(null); }}
+            organizationId={organizationId}
+            userId={user.id}
+            initial={editingLecture ?? undefined}
+          />
+
 
         </>
       )}
