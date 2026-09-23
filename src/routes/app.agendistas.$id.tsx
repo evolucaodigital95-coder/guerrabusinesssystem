@@ -625,6 +625,23 @@ function AgentDetail() {
     onError: (e) => toast.error(e instanceof Error ? e.message : "Não foi possível excluir"),
   });
 
+  // Exclusão de palestra FECHADA (duplicidade): remove o snapshot de fechamento
+  // junto, desvincula movimentos e apaga a palestra.
+  const deleteClosedLecture = useMutation({
+    mutationFn: async (lectureId: string) => {
+      const { error: snapErr } = await supabase
+        .from("lecture_financial_snapshots").delete().eq("lecture_id", lectureId);
+      if (snapErr) throw snapErr;
+      await supabase.from("financial_movements").update({ lecture_id: null }).eq("lecture_id", lectureId);
+      await supabase.from("advances").update({ lecture_id: null }).eq("lecture_id", lectureId);
+      await supabase.from("stock_movements").update({ lecture_id: null }).eq("lecture_id", lectureId);
+      const { error } = await supabase.from("lectures").delete().eq("id", lectureId);
+      if (error) throw error;
+    },
+    onSuccess: () => { toast.success("Palestra e fechamento excluídos"); invalidateLectures(); },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Não foi possível excluir"),
+  });
+
   const closeLecture = useMutation({
     mutationFn: async (lectureId: string) => {
       if (!organizationId || !user) throw new Error("Sessão inválida");
