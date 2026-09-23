@@ -1456,8 +1456,29 @@ function AgentDetail() {
                           </PopoverContent>
                         </Popover>
                       </td>
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        {m.id.startsWith("share-") ? (
+                          <span className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Fechamento</span>
+                        ) : (
+                          <ConfirmDialog
+                            title="Excluir movimento?"
+                            description={`"${m.description}" (${formatCurrency(Math.abs(m.amount))}) será removido definitivamente do extrato e o saldo será recalculado.`}
+                            confirmLabel="Excluir"
+                            destructive
+                            pending={deleteMovement.isPending}
+                            onConfirm={() => deleteMovement.mutate(m.id)}
+                            trigger={
+                              <Button variant="ghost" size="sm" className="h-7 rounded-full text-xs text-rose-600 hover:text-rose-700">
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </Button>
+                            }
+                          />
+                        )}
+                      </td>
                     </tr>
                   ))}
+
                 </tbody>
               </table>
               <p className="border-t border-border/60 bg-muted/20 px-4 py-2 text-[11px] text-muted-foreground">
