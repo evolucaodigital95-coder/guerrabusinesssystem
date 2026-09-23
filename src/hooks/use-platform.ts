@@ -327,7 +327,39 @@ export function usePlatformMutations() {
     onSuccess: invalidate,
   });
 
-  return { savePlan, archivePlan, updateSubscription };
+  /** Suspende, cancela ou reativa uma organização inteira (somente admin da plataforma). */
+  const setOrganizationStatus = useMutation({
+    mutationFn: async (input: {
+      organizationId: string;
+      status: "active" | "suspended" | "canceled";
+      reason?: string | null;
+    }) => {
+      const { error } = await supabase
+        .from("organizations")
+        .update({
+          status: input.status,
+          status_reason: input.reason ?? null,
+          status_changed_at: new Date().toISOString(),
+          updated_by: user?.id ?? null,
+        } as never)
+        .eq("id", input.organizationId);
+      if (error) throw error;
+      await logPlatformAction(
+        user!.id,
+        `organization.${input.status}`,
+        "organization",
+        input.organizationId,
+        input.organizationId,
+        { status: input.status, reason: input.reason ?? null },
+      );
+    },
+    onSuccess: () => {
+      invalidate();
+      qc.invalidateQueries({ queryKey: ["memberships"] });
+    },
+  });
+
+  return { savePlan, archivePlan, updateSubscription, setOrganizationStatus };
 }
 
 export function usePlatformAudit(limit = 100) {
