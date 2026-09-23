@@ -938,15 +938,14 @@ function AgentDetail() {
           itemsByLecture.set(a.entity_id, arr);
         }
 
-        // Fotos/comprovantes dos CARTÕES lançados nas palestras do período
+        // Comprovantes de TODOS os lançamentos das palestras do período (cartões, PIX, recibos, etc.)
         if (lectureIds.length) {
           const { data: cardMovs } = await supabase
             .from("financial_movements")
             .select(
-              "id, lecture_id, amount, occurs_on, description, card_installments, card_fee_amount, card_brands:card_brand_id ( name )",
+              "id, lecture_id, amount, occurs_on, description, payment_method, card_installments, card_fee_amount, card_brands:card_brand_id ( name )",
             )
             .in("lecture_id", lectureIds)
-            .not("card_brand_id", "is", null)
             .is("archived_at", null);
 
           const movIds = (cardMovs ?? []).map((m) => m.id);
