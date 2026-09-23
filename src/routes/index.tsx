@@ -8,6 +8,7 @@ import { GbsMark } from "@/components/gbs-mark";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { useSession } from "@/hooks/use-session";
+import { authErrorMessage } from "@/lib/auth-messages";
 
 export const Route = createFileRoute("/")({
   head: () => ({
