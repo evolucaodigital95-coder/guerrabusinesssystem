@@ -1,49 +1,58 @@
-# Reestruturação Estratégica do GBS
+# GBS — Fase SaaS Foundation
 
-Sem alterar identidade visual, banco de dados, regras financeiras ou relacionamentos. Nenhuma funcionalidade existente será removida — apenas realocada e/ou ocultada do menu.
+Auditei o que já existe antes de propor mudanças. Boa parte da fundação já está pronta: organização ativa com seletor, permissões por papel, convites, onboarding, configurações e identidade da organização, planos/assinaturas e a área GBS Admin. O plano abaixo cobre apenas as lacunas reais.
 
-## 1. Menu lateral (src/lib/modules.ts + src/routes/app.tsx)
+## Já existe e será reaproveitado (sem reescrever)
+- Organização ativa com seletor no topo e na barra lateral, memória da última escolha e limpeza total dos dados ao trocar.
+- Membros da organização com papel e data de entrada.
+- Papéis e matriz de permissões (Proprietário, Administrador, Editor, Visualizador).
+- Convites por e-mail com papel, status e validade.
+- Configurações da organização: dados da empresa, logo, cores, moeda e módulos.
+- Planos, assinaturas e status (teste, ativa, atrasada, cancelada) + limites já previstos no plano.
+- GBS Admin separado (clientes, planos, auditoria).
+- Auditoria automática das alterações e isolamento por organização em todas as tabelas.
 
-Reorganizar seções e ordem exatamente conforme solicitado:
+## Lacunas que serão implementadas
 
-- **PRINCIPAL**: Dashboard
-- **OPERAÇÃO**: Empresas (CRM), Palestras, Financeiro, Agendistas, Estoque, Temporadas, Campanhas, Projetos, Agenda *(nova)*
-- **GESTÃO**: Indicadores *(nova, renomeada da atual "Centro de Inteligência")*, Relatórios, Metas *(nova)*, Performance *(nova)*
-- **INTELIGÊNCIA**: IA Guerra, Central de Conteúdo *(rename de Biblioteca)*
-- **SISTEMA**: Auditoria, Configurações
+### 1. Acesso e conta (maior lacuna)
+- "Esqueci minha senha" na tela de entrada, com envio de link por e-mail.
+- Nova página de redefinição de senha, que abre pelo link recebido e leva à entrada ao concluir.
+- Nova página **Minha conta**: nome, e-mail, foto, organizações e papel (somente leitura), troca de senha e encerrar sessão.
+- Mensagens de erro em português claro (e-mail/senha inválidos, e-mail não confirmado, link expirado).
+- Encerramento de sessão limpando todo o cache, sem voltar pelo botão "voltar".
 
-Remover do menu (rotas permanecem acessíveis por URL para não perder dados): **Hoje**, **História**, **Legado**, **Roadmap**, **Centro do Palestrante** (fica acessível por link direto no Dashboard e Financeiro).
+### 2. Situação da organização
+- Cada organização passa a ter situação: **Ativa**, **Suspensa** ou **Cancelada** (nenhum dado é apagado).
+- Organização suspensa/cancelada: leitura e exportação continuam, criação/edição/exclusão bloqueadas no banco, com aviso no topo.
+- Membros ganham situação (ativo/inativo) explícita; membro inativo não acessa a organização.
+- Alteração de situação feita pelo GBS Admin e registrada na auditoria.
 
-## 2. Novas rotas
+### 3. Correções de segurança encontradas
+- **Envio de arquivos**: hoje qualquer membro, incluindo Visualizador, pode enviar e sobrescrever arquivos. Será restrito a quem tem permissão de escrita.
+- Revisão completa das regras de acesso de todas as tabelas com dados de organização (leitura, criação, edição, exclusão), confirmando que nenhuma permite ver dados de outra empresa.
+- Verificação de que nenhum arquivo de uma organização é acessível por outra.
 
-Criar arquivos vazios/wireframes funcionais usando dados reais do Supabase:
+### 4. Marca por organização nos documentos
+- Os documentos e PDFs passam a usar logo, nome e cores da organização ativa, mantendo a identidade Grupo Guerra para a organização do Grupo Guerra. Sem mudar layout nem valores.
 
-- `src/routes/app.agenda.tsx` — Painel operacional (Hoje / Amanhã / Semana / Mês) baseado em `lectures` com filtros de data. Cada card mostra empresa, cidade, contato, telefone, agendista, palestrante, status, link para abrir a palestra.
-- `src/routes/app.indicadores.tsx` — Painel executivo com KPIs: Empresas Ativas, Novas Empresas (mês), Palestras, Receita, Lucro, Ticket Médio, Pessoas Impactadas, Valor em Estoque, Valor Utilizado, Saldo a Acertar (usa `supplier-accounts.ts`), Agendistas, Taxa de Conversão.
-- `src/routes/app.metas.tsx` — Metas por temporada usando campos existentes em `seasons` (goal_revenue, goal_lectures etc.) + cálculo do realizado. Barras de progresso: Meta / Realizado / % / Falta.
-- `src/routes/app.performance.tsx` — Rankings automáticos (Agendistas, Empresas, Cidades, Campanhas, Temporadas, Palestras) — Receita, Lucro, Pessoas, Materiais, Ticket Médio a partir de `lecture_financial_snapshots`.
+### 5. Navegação e experiência
+- Topo padronizado: logo, nome da organização e menu do usuário com Minha conta, tema e sair.
+- Itens de menu escondidos conforme o papel (a autorização real continua no banco).
 
-## 3. Central de Conteúdo (rename da Biblioteca)
+## Testes que vou executar
+- Criação de duas organizações de teste com dados distintos e verificação, direta no banco e pela interface, de que uma nunca enxerga a outra em CRM, financeiro, estoque, palestras, agendistas, documentos, conta corrente e fechamentos.
+- Tentativa de acesso direto a registros de outra organização (deve ser bloqueado).
+- Visualizador tentando criar, editar, excluir e enviar arquivo (deve ser bloqueado no banco, não só na tela).
+- Troca de organização verificando que nenhum dado antigo permanece.
+- Entrada, sessão persistente, saída, recuperação e redefinição de senha.
+- Organização suspensa tentando gravar dados.
+- Ao final, os dados de teste são removidos.
 
-- Atualizar label em `modules.ts` e rota `src/routes/app.biblioteca.tsx` (mantém URL para não quebrar links) renderizando uma UI de repositório com categorias fixas (Slides, Livros, Propostas, Contratos, Autorizações, Modelos PDF, Identidade Visual, Logos, Fotos, Vídeos, Treinamentos, Documentos), pesquisa, filtros, favoritos e recentes. Reutiliza `attachments` (bucket `crm-attachments`) com `entity_kind='content'` — sem alterar schema.
+## Não será feito nesta fase
+Cobrança real, publicação nas lojas, novos módulos, mudanças no motor financeiro, nos cálculos, nas comissões, nos snapshots ou nos fechamentos. Nenhum dado fictício permanece no sistema.
 
-## 4. Dashboard — atalhos rápidos
-
-Adicionar seção "Atalhos" no topo do `app.dashboard.tsx`: Nova Empresa, Nova Palestra, Novo Lançamento, Nova Entrada de Estoque, Novo Agendista, Registrar Pagamento, Registrar Acerto com Fornecedor. Cada botão navega para o módulo com estado inicial abrindo o diálogo apropriado (via query param `?new=1`).
-
-## 5. IA Guerra executiva
-
-`app.ia-guerra.tsx` deixa de ser placeholder. Cria chat simples que consulta o gateway Lovable AI (Gemini) com um contexto injetado no system prompt contendo um snapshot resumido em tempo real (faturamento do mês, top empresas, saldo com fornecedor, palestras pendentes, estoque). Usa `createServerFn` para não expor chave. Escopo mínimo nesta fase — o suficiente para responder às perguntas de exemplo do briefing.
-
-## 6. Relatórios
-
-Reorganizar `app.relatorios.tsx` em 9 abas/categorias (Financeiro, Empresas, Palestras, Agendistas, Estoque, Fornecedores, Performance, Temporadas, Campanhas). Reaproveita `report-export.ts` (PDF/XLSX/CSV).
-
-## Fora de escopo desta entrega
-
-- Nenhum ajuste em `finance-engine.ts`, snapshots, triggers de auditoria ou motores existentes.
-- Sem migração de banco. Metas usam colunas já existentes em `seasons`; se algum campo faltar, o card mostra "Definir meta" e link para editar a temporada (sem criar coluna nova).
-
-## Entrega
-
-Ao final: lista de arquivos novos/alterados, rotas criadas, confirmação de que Financeiro, Palestras, Estoque e Livro Razão não foram tocados, e verificação com build/typecheck.
+## Detalhes técnicos
+- Migração: `organizations.status` (enum `org_status`), `organization_members.status` + `joined_at`; funções `private.is_org_active`, `private.can_write` passa a exigir organização ativa e membro ativo; políticas de `storage.objects` de INSERT/UPDATE migradas de `is_org_member` para `can_write`.
+- Novas rotas: `/redefinir-senha`, `/app/minha-conta`. Ajustes em `src/routes/index.tsx` (link de recuperação), `src/routes/app.tsx` (menu do usuário, aviso de organização suspensa), `src/components/org-provider.tsx` (expor situação da organização).
+- Branding: helper `useOrgBranding` alimentando os exportadores de PDF existentes por parâmetro, sem alterar cálculos.
+- Relatório final `RELATORIO-SAAS-FOUNDATION.md` com os 13 itens pedidos, incluindo falhas encontradas.
