@@ -1456,7 +1456,6 @@ function AgentDetail() {
                           </PopoverContent>
                         </Popover>
                       </td>
-                      </td>
                       <td className="px-4 py-3 text-right">
                         {m.id.startsWith("share-") ? (
                           <span className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Fechamento</span>
