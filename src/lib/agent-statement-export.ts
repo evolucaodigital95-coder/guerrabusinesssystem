@@ -1028,13 +1028,12 @@ export async function exportStatementPDF(
           }
           const x = marginX + col * (thumbW + thumbGap);
           // Moldura
+          doc.setFillColor(250, 250, 251);
           doc.setDrawColor(215, 215, 220);
           doc.setLineWidth(0.4);
-          doc.roundedRect(x, ry, thumbW, thumbH, 3, 3, "S");
-          try {
-            const fmt = (it.mimeType ?? "").toLowerCase().includes("png") ? "PNG" : "JPEG";
-            doc.addImage(it.dataUrl!, fmt, x + 2, ry + 2, thumbW - 4, thumbH - 4, undefined, "FAST");
-          } catch {
+          doc.roundedRect(x, ry, thumbW, thumbH, 4, 4, "FD");
+          const ok = drawFittedImage(doc, it.dataUrl!, it.mimeType, x, ry, thumbW, thumbH);
+          if (!ok) {
             doc.setFont("helvetica", "italic");
             doc.setFontSize(8);
             doc.setTextColor(...MUTED);
