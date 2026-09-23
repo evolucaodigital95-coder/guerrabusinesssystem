@@ -60,6 +60,8 @@ function AgentDetail() {
   const [ruleOpen, setRuleOpen] = useState(false);
   const [editingRule, setEditingRule] = useState<RuleRow | null>(null);
   const [payoutOpen, setPayoutOpen] = useState(false);
+  const [lectureEditOpen, setLectureEditOpen] = useState(false);
+  const [editingLecture, setEditingLecture] = useState<LectureRow | null>(null);
   const [notesDraft, setNotesDraft] = useState<string | null>(null);
   // Filtros do extrato
   const [fStart, setFStart] = useState<string>("");
