@@ -701,6 +701,37 @@ function AgentDetail() {
     onError: (e) => toast.error(e instanceof Error ? e.message : "Erro"),
   });
 
+  /** Exclui definitivamente um movimento do extrato (adiantamento ou pagamento). */
+  const deleteMovement = useMutation({
+    mutationFn: async (movementId: string) => {
+      if (movementId.startsWith("adv-")) {
+        const advId = movementId.slice(4);
+        const { error } = await supabase.from("advances").delete().eq("id", advId);
+        if (error) throw error;
+        return;
+      }
+      if (movementId.startsWith("pay-")) {
+        const payId = movementId.slice(4);
+        const { error } = await supabase.from("financial_movements").delete().eq("id", payId);
+        if (error) throw error;
+        return;
+      }
+      throw new Error(
+        "Comissões vêm do fechamento da palestra. Reabra a palestra para recalcular o valor.",
+      );
+    },
+    onSuccess: () => {
+      toast.success("Movimento excluído do extrato");
+      qc.invalidateQueries({ queryKey: ["advances", id] });
+      qc.invalidateQueries({ queryKey: ["agent-payouts", id] });
+      qc.invalidateQueries({ queryKey: ["agent-snapshots", id] });
+      qc.invalidateQueries({ queryKey: ["movements"] });
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Erro ao excluir"),
+  });
+
+
+
   /**
    * Composição dos créditos a partir dos snapshots reais.
    * Fonte única para o extrato (PDF/Excel/CSV) e para o Termo de Fechamento.
