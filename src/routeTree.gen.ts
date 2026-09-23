@@ -21,6 +21,7 @@ import { Route as AppPlanosRouteImport } from './routes/app.planos'
 import { Route as AppPendenciasRouteImport } from './routes/app.pendencias'
 import { Route as AppOrganizacaoRouteImport } from './routes/app.organizacao'
 import { Route as AppOnboardingRouteImport } from './routes/app.onboarding'
+import { Route as AppMinhaContaRouteImport } from './routes/app.minha-conta'
 import { Route as AppMetasRouteImport } from './routes/app.metas'
 import { Route as AppInteligenciaRouteImport } from './routes/app.inteligencia'
 import { Route as AppIaGuerraRouteImport } from './routes/app.ia-guerra'
@@ -112,6 +113,11 @@ const AppOrganizacaoRoute = AppOrganizacaoRouteImport.update({
 const AppOnboardingRoute = AppOnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppMinhaContaRoute = AppMinhaContaRouteImport.update({
+  id: '/minha-conta',
+  path: '/minha-conta',
   getParentRoute: () => AppRoute,
 } as any)
 const AppMetasRoute = AppMetasRouteImport.update({
@@ -296,6 +302,7 @@ export interface FileRoutesByFullPath {
   '/app/ia-guerra': typeof AppIaGuerraRoute
   '/app/inteligencia': typeof AppInteligenciaRoute
   '/app/metas': typeof AppMetasRoute
+  '/app/minha-conta': typeof AppMinhaContaRoute
   '/app/onboarding': typeof AppOnboardingRoute
   '/app/organizacao': typeof AppOrganizacaoRoute
   '/app/pendencias': typeof AppPendenciasRoute
@@ -340,6 +347,7 @@ export interface FileRoutesByTo {
   '/app/ia-guerra': typeof AppIaGuerraRoute
   '/app/inteligencia': typeof AppInteligenciaRoute
   '/app/metas': typeof AppMetasRoute
+  '/app/minha-conta': typeof AppMinhaContaRoute
   '/app/onboarding': typeof AppOnboardingRoute
   '/app/organizacao': typeof AppOrganizacaoRoute
   '/app/pendencias': typeof AppPendenciasRoute
@@ -387,6 +395,7 @@ export interface FileRoutesById {
   '/app/ia-guerra': typeof AppIaGuerraRoute
   '/app/inteligencia': typeof AppInteligenciaRoute
   '/app/metas': typeof AppMetasRoute
+  '/app/minha-conta': typeof AppMinhaContaRoute
   '/app/onboarding': typeof AppOnboardingRoute
   '/app/organizacao': typeof AppOrganizacaoRoute
   '/app/pendencias': typeof AppPendenciasRoute
@@ -435,6 +444,7 @@ export interface FileRouteTypes {
     | '/app/ia-guerra'
     | '/app/inteligencia'
     | '/app/metas'
+    | '/app/minha-conta'
     | '/app/onboarding'
     | '/app/organizacao'
     | '/app/pendencias'
@@ -479,6 +489,7 @@ export interface FileRouteTypes {
     | '/app/ia-guerra'
     | '/app/inteligencia'
     | '/app/metas'
+    | '/app/minha-conta'
     | '/app/onboarding'
     | '/app/organizacao'
     | '/app/pendencias'
@@ -525,6 +536,7 @@ export interface FileRouteTypes {
     | '/app/ia-guerra'
     | '/app/inteligencia'
     | '/app/metas'
+    | '/app/minha-conta'
     | '/app/onboarding'
     | '/app/organizacao'
     | '/app/pendencias'
@@ -644,6 +656,13 @@ declare module '@tanstack/react-router' {
       path: '/onboarding'
       fullPath: '/app/onboarding'
       preLoaderRoute: typeof AppOnboardingRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/minha-conta': {
+      id: '/app/minha-conta'
+      path: '/minha-conta'
+      fullPath: '/app/minha-conta'
+      preLoaderRoute: typeof AppMinhaContaRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/metas': {
@@ -905,6 +924,7 @@ interface AppRouteChildren {
   AppIaGuerraRoute: typeof AppIaGuerraRoute
   AppInteligenciaRoute: typeof AppInteligenciaRoute
   AppMetasRoute: typeof AppMetasRoute
+  AppMinhaContaRoute: typeof AppMinhaContaRoute
   AppOnboardingRoute: typeof AppOnboardingRoute
   AppOrganizacaoRoute: typeof AppOrganizacaoRoute
   AppPendenciasRoute: typeof AppPendenciasRoute
@@ -941,6 +961,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppIaGuerraRoute: AppIaGuerraRoute,
   AppInteligenciaRoute: AppInteligenciaRoute,
   AppMetasRoute: AppMetasRoute,
+  AppMinhaContaRoute: AppMinhaContaRoute,
   AppOnboardingRoute: AppOnboardingRoute,
   AppOrganizacaoRoute: AppOrganizacaoRoute,
   AppPendenciasRoute: AppPendenciasRoute,

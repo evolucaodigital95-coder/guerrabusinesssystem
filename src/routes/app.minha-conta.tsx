@@ -102,9 +102,8 @@ function MinhaContaPage() {
     try {
       const { error } = await supabase.auth.updateUser({
         password: newPassword,
-        // @ts-expect-error — suportado pelo backend para troca de senha autenticada
         current_password: currentPassword,
-      });
+      } as Parameters<typeof supabase.auth.updateUser>[0]);
       if (error) throw error;
       setCurrentPassword("");
       setNewPassword("");
