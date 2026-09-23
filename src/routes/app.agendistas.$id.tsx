@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ArrowLeft, Pencil, Plus, Calculator, ShieldCheck, FileText, History as HistoryIcon, Info, ExternalLink, Download, Filter, Wallet } from "lucide-react";
+import { ArrowLeft, Pencil, Plus, Calculator, ShieldCheck, FileText, History as HistoryIcon, Info, ExternalLink, Download, Filter, Wallet, Trash2 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -23,6 +23,8 @@ import { RuleFormDialog, type RuleRow } from "@/components/agendistas/rule-form-
 import { AgentPayoutDialog } from "@/components/agendistas/agent-payout-dialog";
 import { AgentDocuments } from "@/components/agendistas/agent-documents";
 import { AccountClosing, type ClosingSource } from "@/components/agendistas/account-closing";
+import { LectureFormDialog, type LectureRow } from "@/components/palestras/lecture-form-dialog";
+import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 
 import { AttachmentsTab } from "@/components/crm/attachments-tab";
 import { TimelineTab } from "@/components/shared/timeline-tab";
@@ -132,7 +134,7 @@ function AgentDetail() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("lectures")
-        .select("id, title, scheduled_at, status, gross_revenue, financial_status, closed_at, company_id, companies:company_id ( id, legal_name )")
+        .select("id, title, theme, scheduled_at, scheduled_time, city, state, status, gross_revenue, financial_status, closed_at, company_id, contact_id, agent_id, season_id, campaign_id, project_id, expected_audience, actual_audience, notes, companies:company_id ( id, legal_name )")
         .eq("organization_id", organizationId!).is("archived_at", null)
         .order("scheduled_at", { ascending: false, nullsFirst: false });
       if (error) throw error;
