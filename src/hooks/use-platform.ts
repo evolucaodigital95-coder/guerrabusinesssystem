@@ -145,6 +145,8 @@ export function useAdminOrganizations() {
           subscription: sub,
           plan,
           status: resolveSubscriptionState(sub, plan).status,
+          orgStatus: (o.status ?? "active") as "active" | "suspended" | "canceled",
+          statusReason: o.status_reason ?? null,
         };
       });
     },
