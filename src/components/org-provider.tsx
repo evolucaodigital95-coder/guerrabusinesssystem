@@ -46,17 +46,20 @@ export function OrgProvider({ children }: { children: ReactNode }) {
     queryFn: async (): Promise<Membership[]> => {
       const { data, error } = await supabase
         .from("organization_members")
-        .select("organization_id, role, organizations:organization_id ( id, name )")
+        .select("organization_id, role, organizations:organization_id ( id, name, status )")
         .eq("user_id", user!.id)
         .is("archived_at", null)
         .order("created_at", { ascending: true });
       if (error) throw error;
-      return (data ?? []).map((m) => ({
-        organizationId: m.organization_id,
-        organizationName:
-          (m.organizations as { name?: string } | null)?.name ?? "Organização",
-        role: m.role as OrgRole,
-      }));
+      return (data ?? []).map((m) => {
+        const org = m.organizations as { name?: string; status?: string } | null;
+        return {
+          organizationId: m.organization_id,
+          organizationName: org?.name ?? "Organização",
+          organizationStatus: (org?.status as OrgStatus) ?? "active",
+          role: m.role as OrgRole,
+        };
+      });
     },
   });
 
