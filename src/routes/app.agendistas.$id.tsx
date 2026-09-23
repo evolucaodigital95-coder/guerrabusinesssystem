@@ -586,6 +586,45 @@ function AgentDetail() {
     onError: (e) => toast.error(e instanceof Error ? e.message : "Erro"),
   });
 
+  const invalidateLectures = () => {
+    qc.invalidateQueries({ queryKey: ["agent-lectures", id, organizationId] });
+    qc.invalidateQueries({ queryKey: ["agent-snapshots", id] });
+    qc.invalidateQueries({ queryKey: ["finance-lectures"] });
+    qc.invalidateQueries({ queryKey: ["lectures"] });
+    qc.invalidateQueries({ queryKey: ["movements"] });
+  };
+
+  const archiveLecture = useMutation({
+    mutationFn: async (lectureId: string) => {
+      if (!user) throw new Error("Sessão inválida");
+      const { error } = await supabase.from("lectures")
+        .update({ archived_at: new Date().toISOString(), updated_by: user.id })
+        .eq("id", lectureId);
+      if (error) throw error;
+    },
+    onSuccess: () => { toast.success("Palestra arquivada"); invalidateLectures(); },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Erro ao arquivar"),
+  });
+
+  const deleteLecture = useMutation({
+    mutationFn: async (lectureId: string) => {
+      const { count } = await supabase
+        .from("lecture_financial_snapshots")
+        .select("id", { count: "exact", head: true })
+        .eq("lecture_id", lectureId);
+      if ((count ?? 0) > 0) {
+        throw new Error("Esta palestra já tem fechamento financeiro. Arquive em vez de excluir.");
+      }
+      await supabase.from("financial_movements").update({ lecture_id: null }).eq("lecture_id", lectureId);
+      await supabase.from("advances").update({ lecture_id: null }).eq("lecture_id", lectureId);
+      await supabase.from("stock_movements").update({ lecture_id: null }).eq("lecture_id", lectureId);
+      const { error } = await supabase.from("lectures").delete().eq("id", lectureId);
+      if (error) throw error;
+    },
+    onSuccess: () => { toast.success("Palestra excluída definitivamente"); invalidateLectures(); },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Não foi possível excluir"),
+  });
+
   const closeLecture = useMutation({
     mutationFn: async (lectureId: string) => {
       if (!organizationId || !user) throw new Error("Sessão inválida");
