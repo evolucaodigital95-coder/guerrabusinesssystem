@@ -1410,6 +1410,8 @@ function AgentDetail() {
                     <th className="px-4 py-3 text-right font-medium">Débito</th>
                     <th className="px-4 py-3 text-right font-medium">Saldo</th>
                     <th className="px-4 py-3 text-right font-medium">Origem</th>
+                    <th className="px-4 py-3 text-right font-medium">Ações</th>
+
                   </tr>
                 </thead>
                 <tbody>
