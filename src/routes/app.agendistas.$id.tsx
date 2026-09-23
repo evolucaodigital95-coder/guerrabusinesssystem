@@ -625,6 +625,23 @@ function AgentDetail() {
     onError: (e) => toast.error(e instanceof Error ? e.message : "Não foi possível excluir"),
   });
 
+  // Exclusão de palestra FECHADA (duplicidade): remove o snapshot de fechamento
+  // junto, desvincula movimentos e apaga a palestra.
+  const deleteClosedLecture = useMutation({
+    mutationFn: async (lectureId: string) => {
+      const { error: snapErr } = await supabase
+        .from("lecture_financial_snapshots").delete().eq("lecture_id", lectureId);
+      if (snapErr) throw snapErr;
+      await supabase.from("financial_movements").update({ lecture_id: null }).eq("lecture_id", lectureId);
+      await supabase.from("advances").update({ lecture_id: null }).eq("lecture_id", lectureId);
+      await supabase.from("stock_movements").update({ lecture_id: null }).eq("lecture_id", lectureId);
+      const { error } = await supabase.from("lectures").delete().eq("id", lectureId);
+      if (error) throw error;
+    },
+    onSuccess: () => { toast.success("Palestra e fechamento excluídos"); invalidateLectures(); },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Não foi possível excluir"),
+  });
+
   const closeLecture = useMutation({
     mutationFn: async (lectureId: string) => {
       if (!organizationId || !user) throw new Error("Sessão inválida");
@@ -1562,6 +1579,21 @@ function AgentDetail() {
                             >
                               <Pencil className="h-3.5 w-3.5" /> Abrir / editar
                             </Link>
+                          )}
+                          {s.lecture_id && (
+                            <ConfirmDialog
+                              title="Excluir palestra fechada?"
+                              description={<>A palestra <strong>{lec?.title ?? ""}</strong> e o fechamento financeiro dela serão apagados definitivamente. Use para remover duplicidades. Esta ação não pode ser desfeita.</>}
+                              confirmLabel="Excluir definitivamente"
+                              destructive
+                              pending={deleteClosedLecture.isPending}
+                              onConfirm={() => deleteClosedLecture.mutateAsync(s.lecture_id!).then(() => undefined)}
+                              trigger={
+                                <button className="inline-flex items-center gap-1.5 rounded-full border border-rose-200 px-3 py-1.5 text-xs text-rose-600 transition-colors hover:bg-rose-50">
+                                  <Trash2 className="h-3.5 w-3.5" /> Excluir
+                                </button>
+                              }
+                            />
                           )}
                           <div className="text-right">
                             <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">Agendista</p>
