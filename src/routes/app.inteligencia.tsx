@@ -15,11 +15,51 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { isSettled } from "@/lib/finance";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PainelDiretorPage } from "@/components/inteligencia/painel-diretor";
+import { IndicadoresPage } from "@/components/inteligencia/indicadores";
+import { PerformancePage } from "@/components/inteligencia/performance";
+import { RelatoriosPage } from "@/components/inteligencia/relatorios";
 
 export const Route = createFileRoute("/app/inteligencia")({
-  head: () => ({ meta: [{ title: "Centro de Inteligência — GBS" }] }),
-  component: IntelligencePage,
+  head: () => ({
+    meta: [
+      { title: "Inteligência — GBS" },
+      { name: "description", content: "Painel do diretor, indicadores, análises, rankings e relatórios em uma única central." },
+      { property: "og:title", content: "Inteligência — GBS" },
+      { property: "og:description", content: "Central única de inteligência do Grupo Guerra." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
+  component: InteligenciaHub,
 });
+
+function InteligenciaHub() {
+  return (
+    <div className="mx-auto max-w-7xl space-y-6">
+      <PageHeader
+        eyebrow="Inteligência"
+        title="Central de Inteligência"
+        description="Visão do diretor, indicadores, análises, rankings e relatórios — tudo reunido em um só lugar."
+      />
+      <Tabs defaultValue="diretor" className="space-y-6">
+        <TabsList className="flex w-full flex-wrap justify-start bg-card/40">
+          <TabsTrigger value="diretor">Painel do Diretor</TabsTrigger>
+          <TabsTrigger value="indicadores">Indicadores</TabsTrigger>
+          <TabsTrigger value="analises">Análises</TabsTrigger>
+          <TabsTrigger value="performance">Performance</TabsTrigger>
+          <TabsTrigger value="relatorios">Relatórios</TabsTrigger>
+        </TabsList>
+        <TabsContent value="diretor"><PainelDiretorPage /></TabsContent>
+        <TabsContent value="indicadores"><IndicadoresPage /></TabsContent>
+        <TabsContent value="analises"><IntelligencePage /></TabsContent>
+        <TabsContent value="performance"><PerformancePage /></TabsContent>
+        <TabsContent value="relatorios"><RelatoriosPage /></TabsContent>
+      </Tabs>
+    </div>
+  );
+}
 
 const BRL = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
 const BRL2 = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
