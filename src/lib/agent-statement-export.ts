@@ -902,8 +902,10 @@ export async function exportStatementPDF(
     // Fotos dos cartões
     const withPhotos = ctx.cards.filter((c) => c.photos?.length);
     if (withPhotos.length) {
-      const tW = 150, tH = 100, gap = 14;
-      const perRow = Math.max(1, Math.floor((contentW + gap) / (tW + gap)));
+      const gap = 18;
+      const perRow = 3;
+      const tW = (contentW - gap * (perRow - 1)) / perRow;
+      const tH = tW * 0.72;
       cy = ensureSpace(doc, cy, 40, pageH);
       sectionTitle(doc, "FOTOS DOS CARTÕES", marginX, cy);
       cy += 20;
@@ -919,16 +921,14 @@ export async function exportStatementPDF(
 
         let col = 0;
         for (const it of c.photos!) {
-          if (col === 0) cy = ensureSpace(doc, cy, tH + 40, pageH);
+          if (col === 0) cy = ensureSpace(doc, cy, tH + 44, pageH);
           const x = marginX + col * (tW + gap);
+          doc.setFillColor(250, 250, 251);
           doc.setDrawColor(215, 215, 220);
           doc.setLineWidth(0.4);
-          doc.roundedRect(x, cy, tW, tH, 3, 3, "S");
+          doc.roundedRect(x, cy, tW, tH, 4, 4, "FD");
           if (it.dataUrl) {
-            try {
-              const fmt = (it.mimeType ?? "").toLowerCase().includes("png") ? "PNG" : "JPEG";
-              doc.addImage(it.dataUrl, fmt, x + 2, cy + 2, tW - 4, tH - 4, undefined, "FAST");
-            } catch { /* ignora imagem inválida */ }
+            drawFittedImage(doc, it.dataUrl, it.mimeType, x, cy, tW, tH);
           } else {
             doc.setFont("helvetica", "italic");
             doc.setFontSize(8);
@@ -944,9 +944,9 @@ export async function exportStatementPDF(
             doc.textWithLink("abrir", x, cy + tH + 19, { url: it.url });
           }
           col = (col + 1) % perRow;
-          if (col === 0) cy += tH + 28;
+          if (col === 0) cy += tH + 30;
         }
-        if (col !== 0) cy += tH + 28;
+        if (col !== 0) cy += tH + 30;
         cy += 8;
       }
     }
