@@ -1,50 +1,21 @@
 import { formatCurrency, formatDate } from "@/lib/crm";
 import * as XLSX from "xlsx";
-import grupoGuerraLogo from "@/assets/grupo-guerra-mark.png";
-import grupoGuerraMonogram from "@/assets/grupo-guerra-monogram.png";
+import {
+  resolveDocBrand,
+  loadGuerraLogoDataUrl,
+  loadGuerraMonogramDataUrl,
+  GUERRA_MARK_RATIO,
+  GUERRA_MONOGRAM_RATIO,
+  type DocBrand,
+} from "@/lib/doc-brand";
 
-/** Proporção real da marca (599 x 376) — usada para nunca distorcer a logo. */
-export const GUERRA_MARK_RATIO = 599 / 375;
-/** Proporção do monograma GG isolado (242 x 269). */
-export const GUERRA_MONOGRAM_RATIO = 242 / 269;
-
-/**
- * Cache do dataURL da logo do Grupo Guerra para reuso entre gerações de PDF.
- * O CDN de assets é servido a partir do mesmo origin, então uma única
- * requisição basta e o browser cacheia.
- */
-const __imageCache = new Map<string, Promise<string | null>>();
-function loadImageDataUrl(url: string): Promise<string | null> {
-  const cached = __imageCache.get(url);
-  if (cached) return cached;
-  const p = (async () => {
-    try {
-      const res = await fetch(url);
-      if (!res.ok) return null;
-      const blob = await res.blob();
-      return await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onerror = () => reject(reader.error);
-        reader.onload = () => resolve(String(reader.result ?? ""));
-        reader.readAsDataURL(blob);
-      });
-    } catch {
-      return null;
-    }
-  })();
-  __imageCache.set(url, p);
-  return p;
-}
-
-/** Marca completa (monograma + wordmark) em azul-marinho, fundo transparente. */
-export function loadGuerraLogoDataUrl(): Promise<string | null> {
-  return loadImageDataUrl(grupoGuerraLogo);
-}
-
-/** Monograma GG isolado — usado quando o wordmark já aparece em texto. */
-export function loadGuerraMonogramDataUrl(): Promise<string | null> {
-  return loadImageDataUrl(grupoGuerraMonogram);
-}
+export {
+  loadGuerraLogoDataUrl,
+  loadGuerraMonogramDataUrl,
+  GUERRA_MARK_RATIO,
+  GUERRA_MONOGRAM_RATIO,
+};
+export type { DocBrand };
 
 export type ExportMovement = {
   date: string | null;
