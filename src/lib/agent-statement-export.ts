@@ -129,6 +129,14 @@ export type ExportContext = {
   brand?: DocBrand;
 };
 
+function titleCase(v: string) {
+  return v
+    .toLowerCase()
+    .split(/\s+/)
+    .map((w) => (w ? w[0].toUpperCase() + w.slice(1) : w))
+    .join(" ");
+}
+
 const HEADERS = ["Data", "Hora", "Tipo", "Descrição", "Empresa", "Palestra", "Crédito", "Débito", "Saldo"];
 
 // Brand palette
@@ -159,7 +167,7 @@ export function exportStatementCSV(ctx: ExportContext) {
   const meta = [
     ["GBS — Extrato da Conta Corrente do Agendista"],
     ["Agendista", ctx.agentName],
-    ["Equipe", ctx.teamName ?? "Grupo Guerra"],
+    ["Equipe", ctx.teamName ?? ctx.brand?.name ?? "Grupo Guerra"],
     ["Período", ctx.periodLabel],
     ["Emissão", ctx.emittedAt],
     ["Saldo inicial", formatCurrency(ctx.openingBalance)],
@@ -224,7 +232,7 @@ export function exportStatementXLSX(ctx: ExportContext) {
   const rows: (string | number)[][] = [
     ["GBS — Extrato da Conta Corrente do Agendista"],
     ["Agendista", ctx.agentName],
-    ["Equipe", ctx.teamName ?? "Grupo Guerra"],
+    ["Equipe", ctx.teamName ?? ctx.brand?.name ?? "Grupo Guerra"],
     ["Período", ctx.periodLabel],
     ["Emissão", ctx.emittedAt],
     ["Saldo inicial", ctx.openingBalance],
@@ -412,7 +420,7 @@ export async function exportStatementPDF(
   const metaLeft = marginX;
   const metaRightX = marginX + 380;
   const metaPairs: [string, string][] = [
-    ["Equipe", ctx.teamName?.trim() || "Grupo Guerra"],
+    ["Equipe", ctx.teamName?.trim() || titleCase(brand.name)],
     ["Período", ctx.periodLabel],
     ["Emitido em", ctx.emittedAt],
     ["Documento", documentId],
