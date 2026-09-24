@@ -16,6 +16,7 @@ import {
 import { formatCurrency, formatDate } from "@/lib/crm";
 import { exportCSV, exportXLSX, exportPDF, type ReportColumn } from "@/lib/report-export";
 import { ListSkeleton } from "@/components/shared/list-skeleton";
+import { useDocBrand } from "@/hooks/use-doc-brand";
 
 
 type Kind = "financeiro" | "palestras" | "empresas" | "agendistas" | "estoque";

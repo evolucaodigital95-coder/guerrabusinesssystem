@@ -30,6 +30,7 @@ import {
   type SpeakerReportContext,
 } from "@/lib/speaker-report-export";
 import { buildSpeakerStatement } from "@/lib/finance-engine";
+import { useDocBrand } from "@/hooks/use-doc-brand";
 
 export const Route = createFileRoute("/app/centro-palestrante")({
   head: () => ({
