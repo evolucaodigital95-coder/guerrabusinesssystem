@@ -1,6 +1,7 @@
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { rgbToHex, type DocBrand } from "@/lib/doc-brand";
 
 export type ReportColumn<T> = {
   key: keyof T | string;
@@ -44,15 +45,25 @@ export function exportXLSX<T>(name: string, cols: ReportColumn<T>[], rows: T[]) 
   XLSX.writeFile(wb, `${fileStem(name)}.xlsx`);
 }
 
-export function exportPDF<T>(name: string, cols: ReportColumn<T>[], rows: T[], subtitle?: string) {
+export function exportPDF<T>(
+  name: string,
+  cols: ReportColumn<T>[],
+  rows: T[],
+  subtitle?: string,
+  brand?: DocBrand,
+) {
   const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" });
-  const gold = "#B8892A";
-  const navy = "#0B1B3F";
+  const custom = brand && !brand.isDefault;
+  const gold = custom ? rgbToHex(brand.accent) : "#B8892A";
+  const navy = custom ? rgbToHex(brand.primary) : "#0B1B3F";
+  const brandName = brand
+    ? brand.name.toLowerCase().split(/\s+/).map((w) => (w ? w[0].toUpperCase() + w.slice(1) : w)).join(" ")
+    : "Grupo Guerra";
 
   doc.setFillColor(navy);
   doc.rect(0, 0, doc.internal.pageSize.getWidth(), 64, "F");
   doc.setTextColor("#FFFFFF");
-  doc.setFont("helvetica", "bold").setFontSize(16).text("GBS · Guerra Business System", 40, 28);
+  doc.setFont("helvetica", "bold").setFontSize(16).text(custom ? `${brandName} · GBS` : "GBS · Guerra Business System", 40, 28);
   doc.setFont("helvetica", "normal").setFontSize(11).text(name, 40, 46);
   doc.setFontSize(9).setTextColor("#D9C79A")
     .text(new Date().toLocaleString("pt-BR"), doc.internal.pageSize.getWidth() - 40, 46, { align: "right" });
@@ -77,7 +88,7 @@ export function exportPDF<T>(name: string, cols: ReportColumn<T>[], rows: T[], s
     doc.setFontSize(8).setTextColor("#888")
       .text(`Página ${i} de ${pageCount}`, doc.internal.pageSize.getWidth() - 40,
         doc.internal.pageSize.getHeight() - 20, { align: "right" });
-    doc.text("Grupo Guerra — Confidencial", 40, doc.internal.pageSize.getHeight() - 20);
+    doc.text(`${brandName} — Confidencial`, 40, doc.internal.pageSize.getHeight() - 20);
   }
 
   doc.save(`${fileStem(name)}.pdf`);

@@ -1,6 +1,7 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
+import { rgbToHex, type DocBrand } from "@/lib/doc-brand";
 import type {
   SupplierAggregate, BookConsumption, CompanyConsumption, Settlement,
 } from "@/lib/supplier-accounts";
@@ -20,12 +21,19 @@ export type SupplierReport = {
   books: BookConsumption[];
   companies: CompanyConsumption[];
   settlements: Array<Settlement & { userName?: string | null }>;
+  /** Identidade visual da organização ativa (apresentação apenas). */
+  brand?: DocBrand;
 };
+
+const titleCase = (v: string) =>
+  v.toLowerCase().split(/\s+/).map((w) => (w ? w[0].toUpperCase() + w.slice(1) : w)).join(" ");
 
 export function exportSupplierPDF(report: SupplierReport) {
   const doc = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
-  const navy = "#0B1B3F";
-  const gold = "#B8892A";
+  const brand = report.brand;
+  const navy = brand && !brand.isDefault ? rgbToHex(brand.primary) : "#0B1B3F";
+  const gold = brand && !brand.isDefault ? rgbToHex(brand.accent) : "#B8892A";
+  const brandName = brand ? titleCase(brand.name) : "Grupo Guerra";
   const W = doc.internal.pageSize.getWidth();
   const H = doc.internal.pageSize.getHeight();
 
@@ -33,7 +41,7 @@ export function exportSupplierPDF(report: SupplierReport) {
   doc.setFillColor(navy);
   doc.rect(0, 0, W, 96, "F");
   doc.setTextColor("#FFFFFF");
-  doc.setFont("helvetica", "bold").setFontSize(16).text("GBS · Guerra Business System", 40, 34);
+  doc.setFont("helvetica", "bold").setFontSize(16).text(brand && !brand.isDefault ? `${brandName} · GBS` : "GBS · Guerra Business System", 40, 34);
   doc.setFont("helvetica", "normal").setFontSize(11).text("Prestação de Contas do Fornecedor", 40, 54);
   doc.setFontSize(9).setTextColor("#D9C79A")
     .text(new Date().toLocaleString("pt-BR"), W - 40, 34, { align: "right" });
@@ -125,7 +133,7 @@ export function exportSupplierPDF(report: SupplierReport) {
   for (let i = 1; i <= pages; i++) {
     doc.setPage(i);
     doc.setFontSize(8).setTextColor("#888")
-      .text("Grupo Guerra — Documento confidencial", 40, H - 20)
+      .text(`${brandName} — Documento confidencial`, 40, H - 20)
       .text(`Página ${i} de ${pages}`, W - 40, H - 20, { align: "right" });
   }
 

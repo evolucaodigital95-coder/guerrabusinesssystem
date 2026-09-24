@@ -4,34 +4,16 @@
  */
 import * as XLSX from "xlsx";
 import { formatCurrency, formatDate } from "@/lib/crm";
-import grupoGuerraLogo from "@/assets/grupo-guerra-logo.png.asset.json";
+import { resolveDocBrand, type DocBrand } from "@/lib/doc-brand";
 
 const NAVY: [number, number, number] = [15, 39, 71];
 const GOLD: [number, number, number] = [200, 164, 90];
+const titleCase = (v: string) =>
+  v.toLowerCase().split(/\s+/).map((w) => (w ? w[0].toUpperCase() + w.slice(1) : w)).join(" ");
 const GRAPHITE: [number, number, number] = [47, 47, 47];
 const LIGHT_GRAY: [number, number, number] = [244, 245, 247];
 const MUTED: [number, number, number] = [130, 130, 138];
 
-let __logoDataUrlPromise: Promise<string | null> | null = null;
-function loadLogoDataUrl(): Promise<string | null> {
-  if (__logoDataUrlPromise) return __logoDataUrlPromise;
-  __logoDataUrlPromise = (async () => {
-    try {
-      const res = await fetch(grupoGuerraLogo.url);
-      if (!res.ok) return null;
-      const blob = await res.blob();
-      return await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onerror = () => reject(reader.error);
-        reader.onload = () => resolve(String(reader.result ?? ""));
-        reader.readAsDataURL(blob);
-      });
-    } catch {
-      return null;
-    }
-  })();
-  return __logoDataUrlPromise;
-}
 
 export type SpeakerKPIs = {
   saldoAtual: number;
@@ -96,6 +78,8 @@ export type SpeakerReportContext = {
   byCity: ByCityRow[];
   bySeason: BySeasonRow[];
   filters?: { label: string; value: string }[];
+  /** Identidade visual da organização ativa (apresentação apenas). */
+  brand?: DocBrand;
 };
 
 function fileStem(name: string) {
@@ -110,7 +94,7 @@ export function exportSpeakerCSV(ctx: SpeakerReportContext) {
   };
   const header = ["Data", "Empresa", "Palestra", "Valor Vendido", "Materiais", "Juros/Taxas", "Outros Custos", "Lucro Líquido", "Parte Palestrante", "Dízimo", "Saldo Acumulado"];
   const lines = [
-    ["Centro Financeiro do Palestrante — Grupo Guerra"],
+    [`Centro Financeiro do Palestrante — ${titleCase(ctx.brand?.name ?? "Grupo Guerra")}`],
     ["Palestrante", ctx.speakerName],
     ["Período", ctx.periodLabel],
     ["Emissão", ctx.emittedAt],
@@ -191,7 +175,10 @@ export async function exportSpeakerPDF(ctx: SpeakerReportContext) {
   const contentW = pageW - marginX * 2;
   const documentId = `GBS-CFP-${Date.now().toString(36).toUpperCase()}`;
 
-  const logo = await loadLogoDataUrl();
+  const brand = ctx.brand ?? (await resolveDocBrand(null));
+  const NAVY = brand.primary;
+  const GOLD = brand.accent;
+  const logo = brand.logoDataUrl;
 
   const drawWatermark = () => {
     doc.saveGraphicsState();
@@ -201,7 +188,7 @@ export async function exportSpeakerPDF(ctx: SpeakerReportContext) {
       try { doc.addImage(logo, "PNG", (pageW - 260) / 2, (pageH - 260) / 2, 260, 260, undefined, "FAST"); } catch { /* noop */ }
     } else {
       doc.setFont("helvetica", "bold"); doc.setFontSize(110); doc.setTextColor(...NAVY);
-      doc.text("GRUPO GUERRA", pageW / 2, pageH / 2 + 30, { align: "center", angle: 22 });
+      doc.text(brand.name, pageW / 2, pageH / 2 + 30, { align: "center", angle: 22 });
     }
     doc.restoreGraphicsState();
   };
@@ -209,7 +196,7 @@ export async function exportSpeakerPDF(ctx: SpeakerReportContext) {
     doc.setDrawColor(...GOLD); doc.setLineWidth(0.6);
     doc.line(marginX, pageH - 36, pageW - marginX, pageH - 36);
     doc.setFont("helvetica", "normal"); doc.setFontSize(8); doc.setTextColor(...MUTED);
-    doc.text("Centro Financeiro do Palestrante — Grupo Guerra", marginX, pageH - 22);
+    doc.text(`Centro Financeiro do Palestrante — ${titleCase(brand.name)}`, marginX, pageH - 22);
     doc.text("Documento executivo confidencial", pageW / 2, pageH - 22, { align: "center" });
     doc.text(`Página ${n} de ${tot}`, pageW - marginX, pageH - 22, { align: "right" });
     doc.setFontSize(7); doc.text(`Doc. ${documentId}`, pageW - marginX, pageH - 12, { align: "right" });
@@ -227,7 +214,7 @@ export async function exportSpeakerPDF(ctx: SpeakerReportContext) {
   if (logo) { try { doc.addImage(logo, "PNG", marginX, y - 8, 42, 42, undefined, "FAST"); } catch { /* noop */ } }
   const bx = marginX + 54;
   doc.setFont("helvetica", "bold"); doc.setFontSize(18); doc.setTextColor(...NAVY);
-  doc.text("GRUPO GUERRA", bx, y + 8, { charSpace: 1 });
+  doc.text(brand.name, bx, y + 8, { charSpace: 1 });
   doc.setFont("helvetica", "normal"); doc.setFontSize(7); doc.setTextColor(...MUTED);
   doc.text("CENTRO FINANCEIRO DO PALESTRANTE · GBS", bx, y + 22, { charSpace: 1.4 });
 
