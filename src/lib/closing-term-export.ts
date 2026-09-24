@@ -70,12 +70,16 @@ export type ClosingTermData = {
   brand?: DocBrand;
 };
 
+const THANKS_BODY =
+  " agradecemos por todo o comprometimento, dedicação e trabalho realizado durante este período. Cada resultado construído foi fruto de esforço, responsabilidade e parceria. Nosso reconhecimento e nossa gratidão por fazer parte dessa história.";
+
+/** Mensagem institucional padrão, já com o nome da organização ativa. */
 export function defaultThanksMessage(orgName?: string | null) {
-  return `Em nome ${/^(a|o)\s/i.test(orgName ?? "") ? "d" + (orgName ?? "") : "d" + ("a " + (orgName ?? "organização"))}, agradecemos por todo o comprometimento, dedicação e trabalho realizado durante este período. Cada resultado construído foi fruto de esforço, responsabilidade e parceria. Nosso reconhecimento e nossa gratidão por fazer parte dessa história.`;
+  const name = orgName?.trim() || "Grupo Guerra";
+  return `Em nome de ${name},${THANKS_BODY}`;
 }
 
-export const DEFAULT_THANKS_MESSAGE =
-  "Em nome do Grupo Guerra, agradecemos por todo o comprometimento, dedicação e trabalho realizado durante este período. Cada resultado construído foi fruto de esforço, responsabilidade e parceria. Nosso reconhecimento e nossa gratidão por fazer parte dessa história.";
+export const DEFAULT_THANKS_MESSAGE = `Em nome do Grupo Guerra,${THANKS_BODY}`;
 
 export function closingFileName(d: ClosingTermData) {
   const safe = d.agentName.replace(/[^a-zA-Z0-9-_]+/g, "_").replace(/^_+|_+$/g, "").slice(0, 40);
