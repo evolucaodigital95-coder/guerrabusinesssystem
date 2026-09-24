@@ -1,12 +1,10 @@
 import { formatCurrency, formatDate } from "@/lib/crm";
 import {
-  loadGuerraLogoDataUrl,
-  loadGuerraMonogramDataUrl,
-  GUERRA_MONOGRAM_RATIO,
   type ExportMovement,
   type AdvanceExportRow,
   type CardEntry,
 } from "@/lib/agent-statement-export";
+import { resolveDocBrand, type DocBrand } from "@/lib/doc-brand";
 
 /**
  * TERMO DE FECHAMENTO E PRESTAÇÃO DE CONTAS — documento oficial do Grupo Guerra.
@@ -16,8 +14,8 @@ import {
  * Nenhum cálculo financeiro é refeito aqui.
  */
 
-const NAVY: [number, number, number] = [15, 39, 71];
-const GOLD: [number, number, number] = [200, 164, 90];
+const DEFAULT_NAVY: [number, number, number] = [15, 39, 71];
+const DEFAULT_GOLD: [number, number, number] = [200, 164, 90];
 const GRAPHITE: [number, number, number] = [47, 47, 47];
 const LIGHT: [number, number, number] = [244, 245, 247];
 const MUTED: [number, number, number] = [130, 130, 138];
@@ -68,10 +66,20 @@ export type ClosingTermData = {
   externalDocs?: { title: string; kind?: string | null; date?: string | null }[];
   notes?: string | null;
   thanksMessage: string;
+  /** Identidade visual da organização ativa (apresentação apenas). */
+  brand?: DocBrand;
 };
 
-export const DEFAULT_THANKS_MESSAGE =
-  "Em nome do Grupo Guerra, agradecemos por todo o comprometimento, dedicação e trabalho realizado durante este período. Cada resultado construído foi fruto de esforço, responsabilidade e parceria. Nosso reconhecimento e nossa gratidão por fazer parte dessa história.";
+const THANKS_BODY =
+  " agradecemos por todo o comprometimento, dedicação e trabalho realizado durante este período. Cada resultado construído foi fruto de esforço, responsabilidade e parceria. Nosso reconhecimento e nossa gratidão por fazer parte dessa história.";
+
+/** Mensagem institucional padrão, já com o nome da organização ativa. */
+export function defaultThanksMessage(orgName?: string | null) {
+  const name = orgName?.trim() || "Grupo Guerra";
+  return `Em nome de ${name},${THANKS_BODY}`;
+}
+
+export const DEFAULT_THANKS_MESSAGE = `Em nome do Grupo Guerra,${THANKS_BODY}`;
 
 export function closingFileName(d: ClosingTermData) {
   const safe = d.agentName.replace(/[^a-zA-Z0-9-_]+/g, "_").replace(/^_+|_+$/g, "").slice(0, 40);
@@ -88,8 +96,13 @@ export async function buildClosingTermPDF(d: ClosingTermData): Promise<Blob> {
   const pageH = doc.internal.pageSize.getHeight(); // ~842
   const M = 42;
   const W = pageW - M * 2;
-  const logo = await loadGuerraLogoDataUrl();
-  const monogram = (await loadGuerraMonogramDataUrl()) ?? logo;
+  const brand = d.brand ?? (await resolveDocBrand(null));
+  // Paleta da organização ativa (sombreia a paleta padrão apenas nesta função).
+  const NAVY = brand.primary ?? DEFAULT_NAVY;
+  const GOLD = brand.accent ?? DEFAULT_GOLD;
+  const logo = brand.logoDataUrl;
+  const monogram = brand.monogramDataUrl ?? logo;
+  const monogramRatio = brand.monogramRatio;
 
   const lastY = () => (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY;
 
@@ -109,7 +122,7 @@ export async function buildClosingTermPDF(d: ClosingTermData): Promise<Blob> {
   /* ---------------- CAPA / CABEÇALHO ---------------- */
   let y = 56;
   const markW = 46;
-  const markH = markW / GUERRA_MONOGRAM_RATIO;
+  const markH = markW / monogramRatio;
   if (monogram) {
     try {
       doc.addImage(monogram, "PNG", (pageW - markW) / 2, y, markW, markH, undefined, "FAST");
@@ -120,12 +133,12 @@ export async function buildClosingTermPDF(d: ClosingTermData): Promise<Blob> {
   doc.setFont("helvetica", "bold");
   doc.setFontSize(16);
   doc.setTextColor(...NAVY);
-  doc.text("GRUPO GUERRA", pageW / 2, y, { align: "center", charSpace: 2 });
+  doc.text(brand.name, pageW / 2, y, { align: "center", charSpace: 2 });
   y += 12;
   doc.setFont("helvetica", "normal");
   doc.setFontSize(7);
   doc.setTextColor(...MUTED);
-  doc.text("GUERRA BUSINESS SYSTEM · ARQUIVO OFICIAL", pageW / 2, y, { align: "center", charSpace: 1.6 });
+  doc.text(`${brand.tagline} · ARQUIVO OFICIAL`, pageW / 2, y, { align: "center", charSpace: 1.6 });
   y += 22;
 
   doc.setDrawColor(...GOLD);
@@ -512,7 +525,7 @@ export async function buildClosingTermPDF(d: ClosingTermData): Promise<Blob> {
   doc.setFont("helvetica", "bold");
   doc.setFontSize(6.8);
   doc.setTextColor(...GOLD);
-  doc.text("MENSAGEM DO GRUPO GUERRA", M + 20, y + 22, { charSpace: 1.6 });
+  doc.text(`MENSAGEM · ${brand.name}`, M + 20, y + 22, { charSpace: 1.6 });
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
   doc.setTextColor(255, 255, 255);
@@ -522,7 +535,7 @@ export async function buildClosingTermPDF(d: ClosingTermData): Promise<Blob> {
   /* ---------------- ASSINATURAS ---------------- */
   y = space(y, 70);
   const sigW = (W - 40) / 2;
-  [["Grupo Guerra", d.responsible], ["Agendista", d.agentName]].forEach(([role, name], i) => {
+  [[titleCaseName(brand.name), d.responsible], ["Agendista", d.agentName]].forEach(([role, name], i) => {
     const x = M + i * (sigW + 40);
     doc.setDrawColor(...GRAPHITE);
     doc.setLineWidth(0.5);
@@ -553,6 +566,10 @@ export async function buildClosingTermPDF(d: ClosingTermData): Promise<Blob> {
   }
 
   return doc.output("blob");
+}
+
+function titleCaseName(v: string) {
+  return v.toLowerCase().split(/\s+/).map((w) => (w ? w[0].toUpperCase() + w.slice(1) : w)).join(" ");
 }
 
 function emptyNote(doc: import("jspdf").jsPDF, text: string, x: number, y: number) {

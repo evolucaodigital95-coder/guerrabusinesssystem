@@ -16,6 +16,7 @@ import {
 import { formatCurrency, formatDate } from "@/lib/crm";
 import { exportCSV, exportXLSX, exportPDF, type ReportColumn } from "@/lib/report-export";
 import { ListSkeleton } from "@/components/shared/list-skeleton";
+import { useDocBrand } from "@/hooks/use-doc-brand";
 
 
 type Kind = "financeiro" | "palestras" | "empresas" | "agendistas" | "estoque";
@@ -82,6 +83,7 @@ export function RelatoriosPage() {
 function ExportBar<T>({ name, rows, cols, subtitle }: {
   name: string; rows: T[]; cols: ReportColumn<T>[]; subtitle?: string;
 }) {
+  const getDocBrand = useDocBrand();
   return (
     <div className="flex flex-wrap items-center justify-between gap-3">
       <p className="text-xs text-muted-foreground">
@@ -94,7 +96,7 @@ function ExportBar<T>({ name, rows, cols, subtitle }: {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={() => exportPDF(name, cols, rows, subtitle)}>PDF Premium</DropdownMenuItem>
+          <DropdownMenuItem onClick={async () => exportPDF(name, cols, rows, subtitle, await getDocBrand())}>PDF Premium</DropdownMenuItem>
           <DropdownMenuItem onClick={() => exportXLSX(name, cols, rows)}>Excel (.xlsx)</DropdownMenuItem>
           <DropdownMenuItem onClick={() => exportCSV(name, cols, rows)}>CSV</DropdownMenuItem>
         </DropdownMenuContent>
