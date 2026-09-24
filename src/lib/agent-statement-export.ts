@@ -125,6 +125,8 @@ export type ExportContext = {
   filters?: FilterInfo[];
   receipts?: ReceiptGroup[];
   cards?: CardEntry[];
+  /** Identidade visual da organização ativa (apresentação apenas). */
+  brand?: DocBrand;
 };
 
 const HEADERS = ["Data", "Hora", "Tipo", "Descrição", "Empresa", "Palestra", "Crédito", "Débito", "Saldo"];
@@ -308,10 +310,15 @@ export async function exportStatementPDF(
   const contentW = pageW - marginX * 2;            // ~762
 
   const documentId = ctx.documentId ?? `GBS-${Date.now().toString(36).toUpperCase()}`;
-  const watermark = (ctx.teamName?.trim() || "GRUPO GUERRA").toUpperCase();
+  const brand = ctx.brand ?? (await resolveDocBrand(null));
+  // Paleta da organização ativa (sombreia a paleta padrão apenas nesta função).
+  const NAVY = brand.primary;
+  const GOLD = brand.accent;
+  const watermark = (ctx.teamName?.trim() || brand.name).toUpperCase();
 
-  // Logo Grupo Guerra — pré-carregada uma única vez
-  const logoDataUrl = await loadGuerraLogoDataUrl();
+  // Logo da organização — pré-carregada uma única vez
+  const logoDataUrl = brand.logoDataUrl;
+  const logoRatio = brand.logoRatio;
 
   const drawWatermark = () => {
     doc.saveGraphicsState();
@@ -320,7 +327,7 @@ export async function exportStatementPDF(
     if (logoDataUrl) {
       // Marca d'água centralizada, respeitando a proporção original
       const wmW = 300;
-      const wmH = wmW / GUERRA_MARK_RATIO;
+      const wmH = wmW / logoRatio;
       try {
         doc.addImage(logoDataUrl, "PNG", (pageW - wmW) / 2, (pageH - wmH) / 2, wmW, wmH, undefined, "FAST");
       } catch {
@@ -345,7 +352,7 @@ export async function exportStatementPDF(
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8);
     doc.setTextColor(...MUTED);
-    doc.text("Powered by Grupo Guerra", marginX, pageH - 22);
+    doc.text(`Powered by ${titleCase(brand.name)}`, marginX, pageH - 22);
     doc.text("Documento financeiro confidencial", pageW / 2, pageH - 22, { align: "center" });
     doc.text(`Página ${pageNum} de ${totalPages}`, pageW - marginX, pageH - 22, { align: "right" });
     doc.setFontSize(7);
@@ -354,9 +361,9 @@ export async function exportStatementPDF(
 
   /* ---------------- HEADER (page 1) ---------------- */
   let y = 46;
-  // Marca do Grupo Guerra (sem fundo) — alinhada à linha de base do texto
+  // Marca da organização (sem fundo) — alinhada à linha de base do texto
   const markW = 62;
-  const markH = markW / GUERRA_MARK_RATIO;
+  const markH = markW / logoRatio;
   const headerBaseline = y + 6;
   if (logoDataUrl) {
     try {
@@ -367,11 +374,11 @@ export async function exportStatementPDF(
   doc.setFont("helvetica", "bold");
   doc.setFontSize(17);
   doc.setTextColor(...NAVY);
-  doc.text("GRUPO GUERRA", brandX, headerBaseline, { charSpace: 1 });
+  doc.text(brand.name, brandX, headerBaseline, { charSpace: 1 });
   doc.setFont("helvetica", "normal");
   doc.setFontSize(7);
   doc.setTextColor(...MUTED);
-  doc.text("GUERRA BUSINESS SYSTEM · GBS", brandX, headerBaseline + 13, { charSpace: 1.4 });
+  doc.text(brand.tagline, brandX, headerBaseline + 13, { charSpace: 1.4 });
 
   doc.setFont("helvetica", "bold");
   doc.setFontSize(9);
