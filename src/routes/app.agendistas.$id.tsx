@@ -34,6 +34,7 @@ import {
   buildAgentStatement, calculateLecture, selectRule, advanceStatusLabel,
   type RuleSnapshot,
 } from "@/lib/finance-engine";
+import { useDocBrand } from "@/hooks/use-doc-brand";
 import { exportStatementCSV, exportStatementXLSX, exportStatementPDF, type ExportMovement, type CardEntry } from "@/lib/agent-statement-export";
 import { paymentMethodLabel } from "@/lib/finance";
 import { cn } from "@/lib/utils";
@@ -1201,6 +1202,7 @@ function AgentDetail() {
     }
 
     try {
+      ctx.brand = await getDocBrand();
       if (fmt === "csv") exportStatementCSV(ctx);
       else if (fmt === "xlsx") exportStatementXLSX(ctx);
       else await exportStatementPDF(ctx);

@@ -492,6 +492,7 @@ function CentroPalestrante() {
     return `até ${formatDate(fEnd)}`;
   }, [fStart, fEnd]);
 
+  const getDocBrand = useDocBrand();
   const buildReport = (): SpeakerReportContext => ({
     speakerName,
     periodLabel,
@@ -520,13 +521,13 @@ function CentroPalestrante() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => exportSpeakerPDF(buildReport())}>
+              <DropdownMenuItem onClick={async () => { await exportSpeakerPDF({ ...buildReport(), brand: await getDocBrand() }); }}>
                 <FileText className="mr-2 h-4 w-4" /> PDF Executivo
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => exportSpeakerXLSX(buildReport())}>
+              <DropdownMenuItem onClick={async () => exportSpeakerXLSX({ ...buildReport(), brand: await getDocBrand() })}>
                 <FileSpreadsheet className="mr-2 h-4 w-4" /> Excel (XLSX)
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => exportSpeakerCSV(buildReport())}>
+              <DropdownMenuItem onClick={async () => exportSpeakerCSV({ ...buildReport(), brand: await getDocBrand() })}>
                 <FileText className="mr-2 h-4 w-4" /> CSV
               </DropdownMenuItem>
             </DropdownMenuContent>

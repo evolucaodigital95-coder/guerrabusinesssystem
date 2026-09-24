@@ -14,6 +14,7 @@ import {
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { useCurrentOrg } from "@/hooks/use-current-org";
 import { formatCurrency, formatDate } from "@/lib/crm";
+import { useDocBrand } from "@/hooks/use-doc-brand";
 import {
   buildClosingTermPDF, closingFileName, DEFAULT_THANKS_MESSAGE,
   type ClosingTermData, type ClosingLectureRow,
@@ -168,6 +169,7 @@ export function AccountClosing({
         externalDocs: snap.externalDocs,
         notes: notes.trim() || null,
         thanksMessage: thanks.trim() || DEFAULT_THANKS_MESSAGE,
+        brand: await getDocBrand(),
       };
 
       // 2) Gera o documento oficial — e entrega imediatamente ao usuário

@@ -285,7 +285,7 @@ export function SupplierAccountsTab({
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => { const rep = buildReport(r.supplier); if (rep) exportSupplierPDF(rep); }}>
+                            <DropdownMenuItem onClick={async () => { const rep = buildReport(r.supplier); if (rep) exportSupplierPDF({ ...rep, brand: await getDocBrand() }); }}>
                               <FileText className="mr-2 h-3.5 w-3.5" /> PDF
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => { const rep = buildReport(r.supplier); if (rep) exportSupplierXLSX(rep); }}>
