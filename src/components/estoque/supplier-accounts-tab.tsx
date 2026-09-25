@@ -38,6 +38,7 @@ export function SupplierAccountsTab({
   organizationId: string;
   userId: string;
 }) {
+  const getDocBrand = useDocBrand();
   const [seasonId, setSeasonId] = useState<string>(ALL);
   const [settleOpen, setSettleOpen] = useState(false);
   const [editing, setEditing] = useState<Settlement | null>(null);

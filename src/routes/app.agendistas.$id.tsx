@@ -892,6 +892,7 @@ function AgentDetail() {
   };
 
 
+  const getDocBrand = useDocBrand();
   const downloadStatement = async (fmt: "pdf" | "xlsx" | "csv") => {
     const agentName = agent.data?.full_name ?? "Agendista";
     const periodLabel = fStart || fEnd ? `${fStart || "início"} → ${fEnd || "hoje"}` : "Completo";
