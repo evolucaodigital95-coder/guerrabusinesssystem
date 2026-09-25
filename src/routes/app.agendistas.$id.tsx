@@ -35,7 +35,7 @@ import {
   type RuleSnapshot,
 } from "@/lib/finance-engine";
 import { useDocBrand } from "@/hooks/use-doc-brand";
-import { exportStatementCSV, exportStatementXLSX, exportStatementPDF, type ExportMovement, type CardEntry } from "@/lib/agent-statement-export";
+import { exportStatementCSV, exportStatementXLSX, exportStatementPDF, type ExportContext, type ExportMovement, type CardEntry } from "@/lib/agent-statement-export";
 import { paymentMethodLabel } from "@/lib/finance";
 import { cn } from "@/lib/utils";
 import { openDoc } from "@/lib/doc-links";
@@ -1174,7 +1174,7 @@ function AgentDetail() {
       }
     }
 
-    const ctx = {
+    const ctx: ExportContext = {
       agentName,
       teamName: null as string | null,
       periodLabel,

@@ -88,6 +88,7 @@ export function AccountClosing({
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [notes, setNotes] = useState("");
+  const getDocBrand = useDocBrand();
   const [thanks, setThanks] = useState(DEFAULT_THANKS_MESSAGE);
   const [reissueOf, setReissueOf] = useState<ClosingRow | null>(null);
   const [preview, setPreview] = useState<ClosingSource | null>(null);
