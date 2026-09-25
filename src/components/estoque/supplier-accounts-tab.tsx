@@ -24,9 +24,9 @@ import {
   type Movement, type Batch, type Item, type Lecture, type Company, type Settlement,
 } from "@/lib/supplier-accounts";
 import {
-import { useDocBrand } from "@/hooks/use-doc-brand";
   exportSupplierPDF, exportSupplierXLSX, exportSupplierCSV,
 } from "@/lib/supplier-report-export";
+import { useDocBrand } from "@/hooks/use-doc-brand";
 
 type Season = { id: string; name: string };
 
@@ -38,6 +38,7 @@ export function SupplierAccountsTab({
   organizationId: string;
   userId: string;
 }) {
+  const getDocBrand = useDocBrand();
   const [seasonId, setSeasonId] = useState<string>(ALL);
   const [settleOpen, setSettleOpen] = useState(false);
   const [editing, setEditing] = useState<Settlement | null>(null);
