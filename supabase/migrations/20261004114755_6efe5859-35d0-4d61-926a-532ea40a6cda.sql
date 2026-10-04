@@ -1,0 +1,2 @@
+ALTER TABLE public.account_closings DROP CONSTRAINT IF EXISTS account_closings_number_unique;
+CREATE UNIQUE INDEX IF NOT EXISTS account_closings_number_unique ON public.account_closings USING btree (organization_id, closing_number, version);

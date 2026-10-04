@@ -77,8 +77,19 @@ Feita no banco, na organização de teste. O fluxo na tela não foi refeito, par
 ## 16. Dados temporários
 Organizações, agendistas, membros, fechamentos, contadores, auditoria e arquivo de teste foram removidos. Contagem final no banco: 0 em todos.
 
-## PENDÊNCIA FUTURA
-- **Reemissão de fechamento:** o índice único atual (`organização + número`) impede gravar a versão v2 com o mesmo número, então o botão "Reemitir" falharia ao arquivar. Nenhuma reemissão foi usada até hoje. A correção sugerida é tornar a unicidade `organização + número + versão`. Não foi implementada aqui.
+## PENDÊNCIA FUTURA — RESOLVIDA (04/10/2026)
+- **Reemissão de fechamento:** a unicidade de `account_closings` deixou de ser `organização + número` e passou a ser `organização + número + versão`. A v2 pode agora ser arquivada com o mesmo número da v1, mantendo o histórico imutável (v1 marcada como cancelada com o motivo "Substituída pela versão v2").
+- Nenhuma regra financeira, de permissão ou de acesso foi alterada. Os 8 fechamentos existentes do Grupo Guerra permanecem intactos.
+
+### Testes executados (organização temporária ZZ-TESTE Reemissao, removida ao final)
+| Teste | Resultado |
+|---|---|
+| Reemissão: v2 gravada com o mesmo número `GG-2026-AG-0001` e `supersedes_id` da v1 | PASS — v1 e v2 arquivadas |
+| Duplicata: mesma organização + número + versão | PASS — bloqueada pelo banco (erro 23505, índice `account_closings_number_unique`) |
+| Validação de reemissão do gatilho (número igual ao do original da própria organização) | PASS — mantida sem alteração |
+
+### Limpeza
+Contagem final no banco: 0 organizações, agendistas, fechamentos, contadores e registros de auditoria de teste (os 8 fechamentos reais preservados).
 
 ---
 **SEGURANÇA DA NUMERAÇÃO: PASS**
