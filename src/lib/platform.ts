@@ -16,7 +16,8 @@ export type SubscriptionStatus =
   | "past_due"
   | "suspended"
   | "canceled"
-  | "expired";
+  | "expired"
+  | "incomplete";
 
 export const SUBSCRIPTION_STATUS_LABEL: Record<SubscriptionStatus, string> = {
   trial: "Trial",
@@ -25,6 +26,7 @@ export const SUBSCRIPTION_STATUS_LABEL: Record<SubscriptionStatus, string> = {
   suspended: "Suspensa",
   canceled: "Cancelada",
   expired: "Expirada",
+  incomplete: "Incompleta",
 };
 
 export const SUBSCRIPTION_STATUS_TONE: Record<SubscriptionStatus, string> = {
@@ -34,11 +36,17 @@ export const SUBSCRIPTION_STATUS_TONE: Record<SubscriptionStatus, string> = {
   suspended: "border-orange-500/30 bg-orange-500/10 text-orange-600 dark:text-orange-300",
   canceled: "border-muted-foreground/30 bg-muted text-muted-foreground",
   expired: "border-destructive/30 bg-destructive/10 text-destructive",
+  incomplete: "border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-300",
 };
 
 /** Recursos controláveis por plano. */
 export type FeatureKey =
   | "crm"
+  | "contatos"
+  | "agendistas"
+  | "documentos"
+  | "arquivo_oficial"
+  | "exportacoes"
   | "palestras"
   | "financeiro"
   | "estoque"
@@ -57,7 +65,12 @@ export type FeatureKey =
   | "export_excel";
 
 export const FEATURE_LABEL: Record<FeatureKey, string> = {
-  crm: "CRM",
+  crm: "CRM e Empresas",
+  contatos: "Contatos",
+  agendistas: "Agendistas",
+  documentos: "Documentos",
+  arquivo_oficial: "Arquivo oficial",
+  exportacoes: "Exportações",
   palestras: "Palestras",
   financeiro: "Financeiro",
   estoque: "Estoque",
@@ -82,8 +95,12 @@ export const FEATURE_KEYS = Object.keys(FEATURE_LABEL) as FeatureKey[];
 export type LimitKey =
   | "users"
   | "companies"
+  | "contacts"
   | "lectures_per_month"
   | "agents"
+  | "campaigns"
+  | "projects"
+  | "seasons"
   | "speakers"
   | "storage_mb"
   | "ai_requests";
@@ -91,8 +108,12 @@ export type LimitKey =
 export const LIMIT_LABEL: Record<LimitKey, string> = {
   users: "Usuários",
   companies: "Empresas",
+  contacts: "Contatos",
   lectures_per_month: "Palestras por mês",
   agents: "Agendistas",
+  campaigns: "Campanhas",
+  projects: "Projetos",
+  seasons: "Temporadas",
   speakers: "Palestrantes",
   storage_mb: "Armazenamento (MB)",
   ai_requests: "Requisições de IA",
@@ -108,8 +129,8 @@ export type Plan = {
   code: string;
   name: string;
   description: string | null;
-  price_monthly: number;
-  price_yearly: number;
+  price_monthly: number | null;
+  price_yearly: number | null;
   currency: string;
   status: string;
   trial_days: number;
@@ -118,6 +139,8 @@ export type Plan = {
   display_order: number;
   highlight: boolean;
   is_trial_default: boolean;
+  is_active?: boolean;
+  slug?: string | null;
   archived_at: string | null;
 };
 
@@ -145,7 +168,91 @@ export type Subscription = {
   external_reference: string | null;
   notes: string | null;
   created_at: string;
+  trial_started_at?: string | null;
+  pending_plan_id?: string | null;
+  pending_change_at?: string | null;
+  cancel_requested_at?: string | null;
+  cancel_effective_at?: string | null;
+  limit_overrides?: PlanLimits | null;
+  current_period_start?: string | null;
+  current_period_end?: string | null;
+  cancel_at_period_end?: boolean | null;
 };
+
+/** Limites mostrados no consumo (mesma lista validada no banco). */
+export const USAGE_KEYS: LimitKey[] = [
+  "users",
+  "companies",
+  "contacts",
+  "lectures_per_month",
+  "agents",
+  "campaigns",
+  "projects",
+  "seasons",
+  "storage_mb",
+];
+
+export type UsageLevel = "normal" | "aviso" | "atencao" | "limite";
+
+/** 70% aviso · 85% atenção · 100% limite (bloqueio de novos cadastros). */
+export function usageLevel(used: number, limit: number | null): UsageLevel {
+  if (limit === null) return "normal";
+  if (limit <= 0 || used >= limit) return "limite";
+  const pct = used / limit;
+  if (pct >= 0.85) return "atencao";
+  if (pct >= 0.7) return "aviso";
+  return "normal";
+}
+
+export const USAGE_LEVEL_LABEL: Record<UsageLevel, string> = {
+  normal: "Normal",
+  aviso: "Aviso",
+  atencao: "Atenção",
+  limite: "Limite atingido",
+};
+
+/** Estado comercial lido do banco (fonte única de verdade). */
+export type CommercialState = {
+  organization_id: string;
+  billing_exempt: boolean;
+  status: SubscriptionStatus;
+  stored_status: SubscriptionStatus | null;
+  subscription: Subscription | null;
+  plan: Plan | null;
+  pending_plan: Plan | null;
+  limits: Partial<Record<LimitKey, number | null>>;
+  usage: Partial<Record<LimitKey, number>>;
+};
+
+const LIMIT_NOUN: Partial<Record<LimitKey, string>> = {
+  users: "usuários",
+  companies: "empresas",
+  contacts: "contatos",
+  lectures_per_month: "palestras no mês",
+  agents: "agendistas",
+  campaigns: "campanhas",
+  projects: "projetos",
+  seasons: "temporadas",
+};
+
+/** Traduz os bloqueios comerciais do banco para linguagem de cliente. */
+export function commercialErrorMessage(raw: string | null | undefined): string | null {
+  if (!raw || !raw.includes("GBS_")) return null;
+  const limit = raw.match(/GBS_LIMIT_REACHED:(\w+)/);
+  if (limit) {
+    const noun = LIMIT_NOUN[limit[1] as LimitKey] ?? "registros";
+    return `Você atingiu o limite de ${noun} do seu plano. Faça upgrade para continuar.`;
+  }
+  const feature = raw.match(/GBS_FEATURE_UNAVAILABLE:(\w+)/);
+  if (feature) {
+    const label = FEATURE_LABEL[feature[1] as FeatureKey] ?? "Este recurso";
+    return `${label} não está disponível no seu plano. Conheça os planos para liberar.`;
+  }
+  if (raw.includes("GBS_SUBSCRIPTION_BLOCKED"))
+    return "Sua assinatura não permite novos cadastros no momento. Seus dados continuam guardados.";
+  if (raw.includes("GBS_FORBIDDEN")) return "Você não tem autorização para esta ação.";
+  return "Não foi possível concluir a operação.";
+}
 
 export const NOT_AVAILABLE = "NÃO DISPONÍVEL";
 
@@ -170,7 +277,7 @@ export type SubscriptionState = {
   warning: string | null;
 };
 
-const BLOCKING: SubscriptionStatus[] = ["expired", "canceled", "suspended"];
+const BLOCKING: SubscriptionStatus[] = ["expired", "canceled", "suspended", "incomplete"];
 
 export function resolveSubscriptionState(
   subscription: Subscription | null,
