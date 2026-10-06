@@ -4,6 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/hooks/use-session";
 import { useCurrentOrg } from "@/hooks/use-current-org";
 import {
+  type CommercialState,
+  type PlanLimits,
   resolveSubscriptionState,
   type Plan,
   type Subscription,
@@ -81,6 +83,26 @@ export function useSubscriptionAccess(): SubscriptionState & { loading: boolean 
   );
 
   return { ...state, loading: orgLoading || query.isLoading };
+}
+
+/** Estado comercial completo (plano, status efetivo, limites e consumo) lido do banco. */
+export function useCommercialState(orgId?: string | null) {
+  const { organizationId } = useCurrentOrg();
+  const id = orgId ?? organizationId;
+  return useQuery({
+    queryKey: ["subscription", "commercial", id],
+    enabled: !!id,
+    queryFn: async (): Promise<CommercialState> => {
+      const { data, error } = await (supabase.rpc as any)("get_org_commercial_state", { _org: id });
+      if (error) throw error;
+      const v = data as any;
+      return {
+        ...v,
+        plan: v?.plan ? asPlan(v.plan) : null,
+        pending_plan: v?.pending_plan ? asPlan(v.pending_plan) : null,
+      } as CommercialState;
+    },
+  });
 }
 
 export type AdminOrganization = {
@@ -289,41 +311,36 @@ export function usePlatformMutations() {
     onSuccess: invalidate,
   });
 
-  const updateSubscription = useMutation({
-    mutationFn: async (input: {
-      subscription: Subscription;
-      changes: Partial<Subscription>;
-      event: string;
-    }) => {
-      const { subscription, changes, event } = input;
-      const { error } = await supabase
-        .from("subscriptions")
-        .update({ ...(changes as any), updated_by: user?.id ?? null })
-        .eq("id", subscription.id);
-      if (error) throw error;
+  const rpc = async (fn: string, args: Record<string, unknown>) => {
+    const { data, error } = await (supabase.rpc as any)(fn, args);
+    if (error) throw error;
+    return data;
+  };
 
-      await supabase.from("subscription_events").insert({
-        organization_id: subscription.organization_id,
-        subscription_id: subscription.id,
-        event,
-        from_status: subscription.status,
-        to_status: (changes.status as string) ?? subscription.status,
-        from_plan_id: subscription.plan_id,
-        to_plan_id: (changes.plan_id as string) ?? subscription.plan_id,
-        source: "admin",
-        actor_id: user?.id ?? null,
-        payload: changes as any,
-      });
-
-      await logPlatformAction(
-        user!.id,
-        `subscription.${event}`,
-        "subscription",
-        subscription.id,
-        subscription.organization_id,
-        changes as Record<string, unknown>,
-      );
-    },
+  /** Ações comerciais do GBS Admin — histórico e auditoria são gravados no banco. */
+  const changePlan = useMutation({
+    mutationFn: (i: { organizationId: string; planId: string; apply: "now" | "scheduled"; period?: string }) =>
+      rpc("admin_change_plan", { _org: i.organizationId, _plan: i.planId, _apply: i.apply, _period: i.period ?? null }),
+    onSuccess: invalidate,
+  });
+  const setTrial = useMutation({
+    mutationFn: (i: { organizationId: string; days: number; restart: boolean }) =>
+      rpc("admin_set_trial", { _org: i.organizationId, _days: i.days, _restart: i.restart }),
+    onSuccess: invalidate,
+  });
+  const setSubscriptionStatus = useMutation({
+    mutationFn: (i: { organizationId: string; status: SubscriptionStatus; reason?: string | null; effectiveAt?: string | null }) =>
+      rpc("admin_set_subscription_status", {
+        _org: i.organizationId,
+        _status: i.status,
+        _reason: i.reason ?? null,
+        _effective_at: i.effectiveAt ?? null,
+      }),
+    onSuccess: invalidate,
+  });
+  const setLimits = useMutation({
+    mutationFn: (i: { organizationId: string; overrides: PlanLimits }) =>
+      rpc("admin_set_limits", { _org: i.organizationId, _overrides: i.overrides }),
     onSuccess: invalidate,
   });
 
@@ -359,7 +376,7 @@ export function usePlatformMutations() {
     },
   });
 
-  return { savePlan, archivePlan, updateSubscription, setOrganizationStatus };
+  return { savePlan, archivePlan, changePlan, setTrial, setSubscriptionStatus, setLimits, setOrganizationStatus };
 }
 
 export function usePlatformAudit(limit = 100) {

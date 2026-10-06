@@ -2404,11 +2404,13 @@ export type Database = {
           gateway_product_id: string | null
           highlight: boolean
           id: string
+          is_active: boolean
           is_trial_default: boolean
           limits: Json
           name: string
-          price_monthly: number
-          price_yearly: number
+          price_monthly: number | null
+          price_yearly: number | null
+          slug: string | null
           status: string
           trial_days: number
           updated_at: string
@@ -2429,11 +2431,13 @@ export type Database = {
           gateway_product_id?: string | null
           highlight?: boolean
           id?: string
+          is_active?: boolean
           is_trial_default?: boolean
           limits?: Json
           name: string
-          price_monthly?: number
-          price_yearly?: number
+          price_monthly?: number | null
+          price_yearly?: number | null
+          slug?: string | null
           status?: string
           trial_days?: number
           updated_at?: string
@@ -2454,11 +2458,13 @@ export type Database = {
           gateway_product_id?: string | null
           highlight?: boolean
           id?: string
+          is_active?: boolean
           is_trial_default?: boolean
           limits?: Json
           name?: string
-          price_monthly?: number
-          price_yearly?: number
+          price_monthly?: number | null
+          price_yearly?: number | null
+          slug?: string | null
           status?: string
           trial_days?: number
           updated_at?: string
@@ -3209,7 +3215,10 @@ export type Database = {
       subscriptions: {
         Row: {
           cancel_at_period_end: boolean
+          cancel_effective_at: string | null
           cancel_reason: string | null
+          cancel_requested_at: string | null
+          cancel_requested_by: string | null
           canceled_at: string | null
           contracted_price: number | null
           created_at: string
@@ -3218,7 +3227,11 @@ export type Database = {
           current_period_end: string | null
           current_period_start: string | null
           ends_at: string | null
+          external_customer_id: string | null
+          external_payment_id: string | null
+          external_price_id: string | null
           external_reference: string | null
+          external_subscription_id: string | null
           gateway: string | null
           gateway_checkout_url: string | null
           gateway_customer_id: string | null
@@ -3231,20 +3244,28 @@ export type Database = {
           grace_period_days: number
           id: string
           last_synced_at: string | null
+          limit_overrides: Json
           next_renewal_at: string | null
           notes: string | null
           organization_id: string
+          pending_change_at: string | null
+          pending_plan_id: string | null
           period: string
           plan_id: string | null
+          provider: string | null
           started_at: string
           status: string
           trial_ends_at: string | null
+          trial_started_at: string | null
           updated_at: string
           updated_by: string | null
         }
         Insert: {
           cancel_at_period_end?: boolean
+          cancel_effective_at?: string | null
           cancel_reason?: string | null
+          cancel_requested_at?: string | null
+          cancel_requested_by?: string | null
           canceled_at?: string | null
           contracted_price?: number | null
           created_at?: string
@@ -3253,7 +3274,11 @@ export type Database = {
           current_period_end?: string | null
           current_period_start?: string | null
           ends_at?: string | null
+          external_customer_id?: string | null
+          external_payment_id?: string | null
+          external_price_id?: string | null
           external_reference?: string | null
+          external_subscription_id?: string | null
           gateway?: string | null
           gateway_checkout_url?: string | null
           gateway_customer_id?: string | null
@@ -3266,20 +3291,28 @@ export type Database = {
           grace_period_days?: number
           id?: string
           last_synced_at?: string | null
+          limit_overrides?: Json
           next_renewal_at?: string | null
           notes?: string | null
           organization_id: string
+          pending_change_at?: string | null
+          pending_plan_id?: string | null
           period?: string
           plan_id?: string | null
+          provider?: string | null
           started_at?: string
           status?: string
           trial_ends_at?: string | null
+          trial_started_at?: string | null
           updated_at?: string
           updated_by?: string | null
         }
         Update: {
           cancel_at_period_end?: boolean
+          cancel_effective_at?: string | null
           cancel_reason?: string | null
+          cancel_requested_at?: string | null
+          cancel_requested_by?: string | null
           canceled_at?: string | null
           contracted_price?: number | null
           created_at?: string
@@ -3288,7 +3321,11 @@ export type Database = {
           current_period_end?: string | null
           current_period_start?: string | null
           ends_at?: string | null
+          external_customer_id?: string | null
+          external_payment_id?: string | null
+          external_price_id?: string | null
           external_reference?: string | null
+          external_subscription_id?: string | null
           gateway?: string | null
           gateway_checkout_url?: string | null
           gateway_customer_id?: string | null
@@ -3301,14 +3338,19 @@ export type Database = {
           grace_period_days?: number
           id?: string
           last_synced_at?: string | null
+          limit_overrides?: Json
           next_renewal_at?: string | null
           notes?: string | null
           organization_id?: string
+          pending_change_at?: string | null
+          pending_plan_id?: string | null
           period?: string
           plan_id?: string | null
+          provider?: string | null
           started_at?: string
           status?: string
           trial_ends_at?: string | null
+          trial_started_at?: string | null
           updated_at?: string
           updated_by?: string | null
         }
@@ -3318,6 +3360,13 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: true
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscriptions_pending_plan_id_fkey"
+            columns: ["pending_plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
             referencedColumns: ["id"]
           },
           {
@@ -3602,7 +3651,29 @@ export type Database = {
       }
     }
     Functions: {
+      admin_change_plan: {
+        Args: { _apply?: string; _org: string; _period?: string; _plan: string }
+        Returns: Json
+      }
+      admin_set_limits: {
+        Args: { _org: string; _overrides: Json }
+        Returns: Json
+      }
+      admin_set_subscription_status: {
+        Args: {
+          _effective_at?: string
+          _org: string
+          _reason?: string
+          _status: string
+        }
+        Returns: Json
+      }
+      admin_set_trial: {
+        Args: { _days: number; _org: string; _restart?: boolean }
+        Returns: Json
+      }
       compute_stock_avg_cost: { Args: { p_item: string }; Returns: number }
+      get_org_commercial_state: { Args: { _org: string }; Returns: Json }
       next_closing_number: { Args: { _org: string }; Returns: string }
     }
     Enums: {
