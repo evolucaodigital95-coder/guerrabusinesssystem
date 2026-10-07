@@ -15,7 +15,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useAdminOrganization, usePlans, usePlatformMutations } from "@/hooks/use-platform";
+import { useAdminOrganization, usePlatformMutations } from "@/hooks/use-platform";
+import { AdminSubscriptionPanel } from "@/components/platform/admin-subscription-panel";
 import {
   dateTime,
   money,
@@ -40,24 +41,6 @@ export const Route = createFileRoute("/admin/clientes/$id")({
   component: AdminClienteDetail,
 });
 
-const STATUSES: SubscriptionStatus[] = [
-  "trial",
-  "active",
-  "past_due",
-  "suspended",
-  "canceled",
-  "expired",
-];
-
-const EVENT_FOR_STATUS: Record<SubscriptionStatus, string> = {
-  trial: "trial_started",
-  active: "activated",
-  past_due: "status_changed",
-  suspended: "suspended",
-  canceled: "canceled",
-  expired: "expired",
-};
-
 function Field({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="rounded-xl border border-border bg-card p-4">
@@ -71,18 +54,8 @@ function AdminClienteDetail() {
   const { id } = Route.useParams();
   const { org, loading, settings, events, members, onboarding } = useAdminOrganization(id);
   const { data: plans } = usePlans();
-  const { updateSubscription, setOrganizationStatus } = usePlatformMutations();
+  const { setOrganizationStatus } = usePlatformMutations();
   const [orgReason, setOrgReason] = useState("");
-
-  const sub = org?.subscription ?? null;
-  const [planId, setPlanId] = useState<string>("");
-  const [status, setStatus] = useState<string>("");
-  const [period, setPeriod] = useState<string>("");
-  const [price, setPrice] = useState<string>("");
-  const [renewal, setRenewal] = useState<string>("");
-  const [trialEnds, setTrialEnds] = useState<string>("");
-  const [reason, setReason] = useState("");
-  const [dirty, setDirty] = useState(false);
 
   if (loading) {
     return <div className="py-20 text-center text-sm text-muted-foreground">Carregando…</div>;
@@ -96,40 +69,6 @@ function AdminClienteDetail() {
         </Link>
       </div>
     );
-  }
-
-  const current = {
-    planId: planId || sub?.plan_id || "",
-    status: (status || sub?.status || "trial") as SubscriptionStatus,
-    period: period || sub?.period || "monthly",
-    price: price !== "" ? price : sub?.contracted_price != null ? String(sub.contracted_price) : "",
-    renewal: renewal || (sub?.next_renewal_at ? sub.next_renewal_at.slice(0, 10) : ""),
-    trialEnds: trialEnds || (sub?.trial_ends_at ? sub.trial_ends_at.slice(0, 10) : ""),
-  };
-
-  async function handleSave() {
-    if (!sub) return;
-    const changes: Record<string, unknown> = {
-      plan_id: current.planId || null,
-      status: current.status,
-      period: current.period,
-      contracted_price: current.price === "" ? null : Number(current.price),
-      next_renewal_at: current.renewal ? new Date(current.renewal).toISOString() : null,
-      trial_ends_at: current.trialEnds ? new Date(current.trialEnds).toISOString() : null,
-    };
-    if (current.status === "canceled") {
-      changes.canceled_at = new Date().toISOString();
-      changes.cancel_reason = reason || null;
-    }
-    const event =
-      current.planId !== sub.plan_id ? "plan_changed" : EVENT_FOR_STATUS[current.status];
-    try {
-      await updateSubscription.mutateAsync({ subscription: sub, changes, event });
-      toast.success("Assinatura atualizada e registrada na auditoria.");
-      setDirty(false);
-    } catch (e) {
-      toast.error((e as Error).message);
-    }
   }
 
   return (
@@ -219,146 +158,7 @@ function AdminClienteDetail() {
         </TabsContent>
 
         <TabsContent value="assinatura" className="mt-6">
-          {!sub ? (
-            <div className="rounded-2xl border border-border bg-card p-8 text-sm text-muted-foreground">
-              Esta organização ainda não possui registro de assinatura.
-            </div>
-          ) : (
-            <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
-              <div className="grid gap-4 rounded-2xl border border-border bg-card p-6 sm:grid-cols-2">
-                <div className="grid gap-2">
-                  <Label>Plano</Label>
-                  <Select
-                    value={current.planId}
-                    onValueChange={(v) => {
-                      setPlanId(v);
-                      setDirty(true);
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecionar plano" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {(plans ?? []).map((p) => (
-                        <SelectItem key={p.id} value={p.id}>
-                          {p.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid gap-2">
-                  <Label>Status</Label>
-                  <Select
-                    value={current.status}
-                    onValueChange={(v) => {
-                      setStatus(v);
-                      setDirty(true);
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {STATUSES.map((s) => (
-                        <SelectItem key={s} value={s}>
-                          {SUBSCRIPTION_STATUS_LABEL[s]}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid gap-2">
-                  <Label>Período</Label>
-                  <Select
-                    value={current.period}
-                    onValueChange={(v) => {
-                      setPeriod(v);
-                      setDirty(true);
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="monthly">Mensal</SelectItem>
-                      <SelectItem value="yearly">Anual</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid gap-2">
-                  <Label>Preço contratado</Label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    value={current.price}
-                    onChange={(e) => {
-                      setPrice(e.target.value);
-                      setDirty(true);
-                    }}
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label>Fim do trial</Label>
-                  <Input
-                    type="date"
-                    value={current.trialEnds}
-                    onChange={(e) => {
-                      setTrialEnds(e.target.value);
-                      setDirty(true);
-                    }}
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label>Próxima renovação</Label>
-                  <Input
-                    type="date"
-                    value={current.renewal}
-                    onChange={(e) => {
-                      setRenewal(e.target.value);
-                      setDirty(true);
-                    }}
-                  />
-                </div>
-                {current.status === "canceled" && (
-                  <div className="grid gap-2 sm:col-span-2">
-                    <Label>Motivo do cancelamento</Label>
-                    <Textarea value={reason} onChange={(e) => setReason(e.target.value)} rows={2} />
-                  </div>
-                )}
-                <div className="sm:col-span-2">
-                  <Button
-                    variant="navy"
-                    disabled={!dirty || updateSubscription.isPending}
-                    onClick={handleSave}
-                  >
-                    {updateSubscription.isPending ? "Salvando…" : "Salvar assinatura"}
-                  </Button>
-                  <p className="mt-3 text-xs text-muted-foreground">
-                    Toda alteração gera evento no histórico e registro na auditoria da plataforma.
-                  </p>
-                </div>
-              </div>
-
-              <div className="grid gap-4 self-start">
-                <Field label="Início" value={shortDate(sub.started_at)} />
-                <Field label="Cancelada em" value={shortDate(sub.canceled_at)} />
-                <Field label="Preço atual" value={money(sub.contracted_price ?? null)} />
-                <Field
-                  label="Gateway"
-                  value={<span className="text-muted-foreground">{sub.gateway ?? NOT_AVAILABLE}</span>}
-                />
-                <Field
-                  label="ID no gateway"
-                  value={
-                    <span className="text-muted-foreground">
-                      {sub.gateway_subscription_id ?? NOT_AVAILABLE}
-                    </span>
-                  }
-                />
-              </div>
-            </div>
-          )}
+          <AdminSubscriptionPanel organizationId={org.id} />
         </TabsContent>
 
         <TabsContent value="usuarios" className="mt-6">
@@ -386,19 +186,8 @@ function AdminClienteDetail() {
           </div>
         </TabsContent>
 
-        <TabsContent value="uso" className="mt-6 grid gap-4 sm:grid-cols-3">
-          <Field label="Usuários" value={org.usersCount} />
-          <Field label="Empresas" value={org.companiesCount} />
-          <Field label="Palestras" value={org.lecturesCount} />
-          <Field
-            label="Armazenamento"
-            value={<span className="text-muted-foreground">{NOT_AVAILABLE}</span>}
-          />
-          <Field
-            label="Requisições de IA"
-            value={<span className="text-muted-foreground">{NOT_AVAILABLE}</span>}
-          />
-          <Field label="Limite de usuários do plano" value={org.plan?.limits?.users ?? "Ilimitado"} />
+        <TabsContent value="uso" className="mt-6">
+          <p className="text-sm text-muted-foreground">O consumo detalhado está na aba Assinatura.</p>
         </TabsContent>
 
         <TabsContent value="historico" className="mt-6">
