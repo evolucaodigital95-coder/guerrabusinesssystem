@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import { Lock, ShieldAlert, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useSubscriptionAccess } from "@/hooks/use-platform";
+import { usePlans, useSubscriptionAccess } from "@/hooks/use-platform";
 import { FEATURE_LABEL, planAllowsFeature, type FeatureKey } from "@/lib/platform";
 import { cn } from "@/lib/utils";
 
@@ -79,7 +79,11 @@ export function FeatureGate({
   children: ReactNode;
 }) {
   const { plan, loading } = useSubscriptionAccess();
+  const plans = usePlans();
   if (loading || planAllowsFeature(plan, feature)) return <>{children}</>;
+  const target = (plans.data ?? []).find(
+    (p) => p.is_active !== false && p.display_order > (plan?.display_order ?? -1) && planAllowsFeature(p, feature),
+  );
 
   return (
     <div className="mx-auto grid max-w-md place-items-center gap-4 py-20 text-center">
@@ -89,7 +93,7 @@ export function FeatureGate({
           {FEATURE_LABEL[feature]} não está no seu plano
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Este recurso está disponível em outro plano do GBS.
+          {target ? `Recurso disponível no plano ${target.name}.` : "Este recurso está disponível em outro plano do GBS."}
         </p>
       </div>
       <Button asChild variant="outline" size="sm">
