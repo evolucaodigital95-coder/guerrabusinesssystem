@@ -53,7 +53,6 @@ function Field({ label, value }: { label: string; value: React.ReactNode }) {
 function AdminClienteDetail() {
   const { id } = Route.useParams();
   const { org, loading, settings, events, members, onboarding } = useAdminOrganization(id);
-  const { data: plans } = usePlans();
   const { setOrganizationStatus } = usePlatformMutations();
   const [orgReason, setOrgReason] = useState("");
 
