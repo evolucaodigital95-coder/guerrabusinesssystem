@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AuditHistory } from "@/components/shared/audit-history";
 import {
   Select,
   SelectContent,
@@ -53,6 +54,7 @@ import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { FinanceLecturesTab } from "@/components/finance/lectures-tab";
 import { cn } from "@/lib/utils";
 
+import { useQuickAction } from "@/lib/quick-actions";
 export const Route = createFileRoute("/app/financeiro")({
   validateSearch: (search) => ({
     lancamento: typeof search.lancamento === "string" ? search.lancamento : undefined,
@@ -123,6 +125,10 @@ function FinancePage() {
   const [openAcc, setOpenAcc] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [editing, setEditing] = useState<MovementRow | null>(null);
+  useQuickAction("lancamento", () => {
+    setEditing(null);
+    setOpenMov(true);
+  });
   const [editingAccount, setEditingAccount] = useState<AccountRow | null>(null);
 
   // filters
@@ -1313,7 +1319,11 @@ function MovementSheet({
                 <Paperclip className="mr-1.5 h-3.5 w-3.5" /> Comprovantes
               </TabsTrigger>
               <TabsTrigger value="timeline">Timeline</TabsTrigger>
+              <TabsTrigger value="history">Histórico</TabsTrigger>
             </TabsList>
+            <TabsContent value="history" className="mt-4">
+              <AuditHistory organizationId={organizationId} entityIds={[movement.id]} />
+            </TabsContent>
             <TabsContent value="attachments" className="mt-4">
               <AttachmentsTab
                 entityType="financial_movement"

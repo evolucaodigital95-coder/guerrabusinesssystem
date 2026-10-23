@@ -355,6 +355,8 @@ export function LectureWizardDialog({
     }
     if (from === 2) {
       if (!f.gross_revenue || Number(f.gross_revenue) <= 0) return "Informe o valor vendido.";
+      if (f.finance_status === "recebido" && !f.account_id)
+        return "Informe a conta em que o dinheiro entrou.";
       if (isCard(f.payment_method) && hasBrands && !f.card_brand_id)
         return "Selecione a bandeira do cartão.";
       if (isCard(f.payment_method) && !hasBrands && !f.card_fee_percent)
@@ -433,14 +435,47 @@ export function LectureWizardDialog({
       if (lecErr) throw lecErr;
       const lectureId = lecture!.id as string;
 
-      // 2) Cria lançamento financeiro (Entrada)
+      // Se uma etapa seguinte falhar, arquiva o que já foi criado para não
+      // deixar palestra/estoque órfãos (e evitar duplicidade ao tentar de novo).
+      const rollback = async () => {
+        const archived = { archived_at: new Date().toISOString(), updated_by: userId };
+        await supabase.from("stock_movements").update(archived).eq("lecture_id", lectureId);
+        await supabase.from("lectures").update(archived).eq("id", lectureId);
+      };
+
+      // 2) Baixa de estoque (uma linha por material, gravadas juntas).
+      // Vem antes do financeiro: é a etapa que o banco pode recusar por falta de saldo.
+      const matRows = f.materials
+        .filter((l) => l.itemId && Number(l.qty) > 0)
+        .map((l) => ({
+          organization_id: organizationId,
+          stock_item_id: l.itemId!,
+          kind: "saida" as const,
+          direction: "out" as const,
+          status: "utilizado",
+          quantity: Number(l.qty),
+          occurs_on: f.scheduled_at,
+          occurs_at: new Date().toISOString(),
+          lecture_id: lectureId,
+          created_by: userId,
+          updated_by: userId,
+        }));
+      if (matRows.length > 0) {
+        const { error: stErr } = await supabase.from("stock_movements").insert(matRows);
+        if (stErr) {
+          await rollback();
+          throw stErr;
+        }
+      }
+
+      // 3) Cria lançamento financeiro (Entrada)
       const cardPayment = isCard(f.payment_method);
       const isRecebido = f.finance_status === "recebido";
       const finMov = {
         organization_id: organizationId,
         direction: "in" as const,
         status: f.finance_status,
-        category: "palestra",
+        category: "Palestra",
         description: `Palestra · ${f.title.trim()}`,
         amount: isRecebido ? gross : null,
         expected_amount: !isRecebido ? gross : null,
@@ -462,27 +497,9 @@ export function LectureWizardDialog({
         updated_by: userId,
       };
       const { error: finErr } = await supabase.from("financial_movements").insert(finMov);
-      if (finErr) throw finErr;
-
-      // 3) Baixa de estoque (uma linha por material)
-      const matRows = f.materials
-        .filter((l) => l.itemId && Number(l.qty) > 0)
-        .map((l) => ({
-          organization_id: organizationId,
-          stock_item_id: l.itemId!,
-          kind: "saida" as const,
-          direction: "out" as const,
-          status: "utilizado",
-          quantity: Number(l.qty),
-          occurs_on: f.scheduled_at,
-          occurs_at: new Date().toISOString(),
-          lecture_id: lectureId,
-          created_by: userId,
-          updated_by: userId,
-        }));
-      if (matRows.length > 0) {
-        const { error: stErr } = await supabase.from("stock_movements").insert(matRows);
-        if (stErr) throw stErr;
+      if (finErr) {
+        await rollback();
+        throw finErr;
       }
 
       return lectureId;

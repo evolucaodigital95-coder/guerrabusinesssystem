@@ -25,6 +25,7 @@ import { MovementFormDialog } from "@/components/estoque/movement-form-dialog";
 import { SupplierAccountsTab } from "@/components/estoque/supplier-accounts-tab";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
+import { useQuickAction } from "@/lib/quick-actions";
 export const Route = createFileRoute("/app/estoque/")({
   head: () => ({
     meta: [
@@ -80,6 +81,8 @@ function EstoquePage() {
     setMvtType(type);
     setMvtOpen(true);
   }
+  useQuickAction("entrada-estoque", () => openMovement("entrada"));
+  useQuickAction("saida-estoque", () => openMovement("saida_palestra"));
 
   const items = useQuery({
     queryKey: ["stock-items", organizationId],

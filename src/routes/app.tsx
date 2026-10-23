@@ -9,20 +9,14 @@ import {
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
-  Briefcase,
   ChevronsUpDown,
   LogOut,
   Menu,
-  Mic,
   Moon,
-  Plus,
   Search,
   Settings,
   Sun,
-  UserCog,
   UserRound,
-  Users,
-  Wallet,
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -45,6 +39,8 @@ import { OrgSwitcher } from "@/components/org-switcher";
 import { useCurrentOrg } from "@/hooks/use-current-org";
 import { OnboardingGate } from "@/components/onboarding/onboarding-gate";
 import { SubscriptionBanner } from "@/components/subscription-guard";
+import { QuickActionsFab } from "@/components/quick-actions-fab";
+import { CommandPalette } from "@/components/command-palette";
 
 export const Route = createFileRoute("/app")({
   component: AppRoute,
@@ -81,6 +77,7 @@ const SECTION_LABEL: Record<(typeof SECTIONS)[number], string> = {
 
 function AppLayout() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [paletteOpen, setPaletteOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
@@ -92,17 +89,17 @@ function AppLayout() {
   const firstName = fullName.split(" ")[0] || user?.email?.split("@")[0] || "";
   const initials = (firstName || "GG").slice(0, 2).toUpperCase();
 
-  // ⌘K / Ctrl+K abre a busca global.
+  // ⌘K / Ctrl+K abre a paleta de comandos.
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
-        navigate({ to: "/app/busca" });
+        setPaletteOpen((v) => !v);
       }
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [navigate]);
+  }, []);
 
   // Fecha o menu móvel ao trocar de página.
   useEffect(() => setMobileOpen(false), [pathname]);
@@ -247,7 +244,7 @@ function AppLayout() {
 
           <button
             type="button"
-            onClick={() => navigate({ to: "/app/busca" })}
+            onClick={() => setPaletteOpen(true)}
             className="group flex h-9 flex-1 items-center gap-2.5 rounded-lg border border-border bg-card px-3 text-left text-sm text-muted-foreground shadow-[var(--shadow-elegant)] transition-colors duration-150 hover:border-foreground/20 hover:text-foreground md:max-w-md"
           >
             <Search className="h-3.5 w-3.5" />
@@ -258,47 +255,6 @@ function AppLayout() {
           </button>
 
           <div className="ml-auto flex items-center gap-1.5">
-            {can("create") && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="brand" size="sm" className="h-9 px-3">
-                    <Plus />
-                    <span className="hidden md:inline">Novo</span>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
-                    Criar
-                  </DropdownMenuLabel>
-                  <DropdownMenuItem asChild>
-                    <Link to="/app/crm">
-                      <Users /> Empresa
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/app/palestras">
-                      <Mic /> Palestra
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/app/financeiro" search={{ lancamento: undefined }}>
-                      <Wallet /> Lançamento
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/app/agendistas">
-                      <UserCog /> Agendista
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/app/projetos">
-                      <Briefcase /> Projeto
-                    </Link>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
-
             <Button
               variant="ghost"
               size="icon"
@@ -331,6 +287,9 @@ function AppLayout() {
           )}
         </main>
       </div>
+
+      {can("create") && <QuickActionsFab />}
+      <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} canCreate={can("create")} />
 
       {mobileOpen && (
         <div

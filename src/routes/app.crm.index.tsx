@@ -15,6 +15,7 @@ import { useCurrentOrg } from "@/hooks/use-current-org";
 import { LIFECYCLE_STAGES, formatDate } from "@/lib/crm";
 import { cn } from "@/lib/utils";
 
+import { useQuickAction } from "@/lib/quick-actions";
 export const Route = createFileRoute("/app/crm/")({
   head: () => ({
     meta: [
@@ -45,6 +46,7 @@ function CrmPage() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"all" | "favorites">("all");
   const [open, setOpen] = useState(false);
+  useQuickAction("empresa", () => setOpen(true));
   const queryClient = useQueryClient();
 
   const companies = useQuery({

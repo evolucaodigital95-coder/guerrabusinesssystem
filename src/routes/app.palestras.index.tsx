@@ -23,6 +23,7 @@ import { LectureFormDialog } from "@/components/palestras/lecture-form-dialog";
 import { LectureWizardDialog } from "@/components/palestras/lecture-wizard-dialog";
 import { Sparkles } from "lucide-react";
 
+import { useQuickAction } from "@/lib/quick-actions";
 export const Route = createFileRoute("/app/palestras/")({
   head: () => ({
     meta: [
@@ -61,6 +62,7 @@ function PalestrasPage() {
   const { organizationId, loading: orgLoading } = useCurrentOrg();
   const [open, setOpen] = useState(false);
   const [wizardOpen, setWizardOpen] = useState(false);
+  useQuickAction("palestra", () => setWizardOpen(true));
   const [search, setSearch] = useState("");
   const [fStatus, setFStatus] = useState<string>(ALL);
 

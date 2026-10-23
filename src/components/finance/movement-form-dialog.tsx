@@ -14,6 +14,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -190,17 +200,62 @@ export function MovementFormDialog({
   const statuses = statusOptions(direction);
   const cardPayment = direction === "in" && isCardPayment(f.payment_method);
 
+  // Lançamento parecido já existente — exige confirmação antes de gravar.
+  const [duplicate, setDuplicate] = useState<{ description: string | null } | null>(null);
+
   const save = useMutation({
-    mutationFn: async () => {
+    mutationFn: async ({ allowDuplicate = false }: { allowDuplicate?: boolean } = {}) => {
       if (!f.description?.trim()) throw new Error("Descreva o lançamento.");
+
+      const amount = parseMoney(f.amount);
+      const expected = parseMoney(f.expected_amount);
+      if (Number.isNaN(amount) || Number.isNaN(expected))
+        throw new Error("Valor inválido. Use apenas números, por exemplo 1500.50.");
+      if ((amount ?? 0) < 0 || (expected ?? 0) < 0)
+        throw new Error(
+          "Os valores não podem ser negativos — o tipo (entrada/saída) já define o sinal.",
+        );
+      const status = f.status || statuses[0].key;
+      const settled = status === "recebido" || status === "paga" || status === "parcial";
+      if (settled && !(amount && amount > 0))
+        throw new Error(
+          direction === "in"
+            ? "Informe o valor recebido para marcar como recebido."
+            : "Informe o valor pago para marcar como pago.",
+        );
+      if (!settled && !(amount && amount > 0) && !(expected && expected > 0))
+        throw new Error("Informe o valor previsto ou o valor realizado.");
+      if ((status === "recebido" || status === "paga") && !f.account_id)
+        throw new Error(
+          direction === "in"
+            ? "Informe a conta em que o dinheiro entrou."
+            : "Informe a conta de onde o dinheiro saiu.",
+        );
+
+      if (!isEdit && !allowDuplicate) {
+        const value = amount && amount > 0 ? amount : expected;
+        const column = amount && amount > 0 ? "amount" : "expected_amount";
+        const { data: twins, error: dupErr } = await supabase
+          .from("financial_movements")
+          .select("id, description")
+          .eq("organization_id", organizationId)
+          .eq("direction", direction)
+          .eq("occurs_on", f.occurs_on || today)
+          .eq(column, value!)
+          .is("archived_at", null)
+          .limit(1);
+        if (dupErr) throw dupErr;
+        if (twins && twins.length > 0) throw new DuplicateMovementError(twins[0].description);
+      }
+
       const payload = {
         organization_id: organizationId,
         direction,
-        status: f.status || statuses[0].key,
+        status,
         category: f.category || null,
         description: f.description.trim(),
-        amount: f.amount ? Number(f.amount) : null,
-        expected_amount: f.expected_amount ? Number(f.expected_amount) : null,
+        amount,
+        expected_amount: expected,
         expected_date: f.expected_date || null,
         settled_at: f.settled_at || null,
         occurs_on: f.occurs_on || today,
@@ -258,12 +313,18 @@ export function MovementFormDialog({
       });
       onOpenChange(false);
     },
-    onError: (e) => toast.error(e instanceof Error ? e.message : "Erro"),
+    onError: (e) => {
+      if (e instanceof DuplicateMovementError) {
+        setDuplicate({ description: e.existingDescription });
+        return;
+      }
+      toast.error(e instanceof Error ? e.message : "Erro");
+    },
   });
 
   function submit(e: FormEvent) {
     e.preventDefault();
-    save.mutate();
+    save.mutate({});
   }
   function set<K extends keyof MovementRow>(k: K, v: MovementRow[K]) {
     setF((p) => ({ ...p, [k]: v }));
@@ -351,6 +412,8 @@ export function MovementFormDialog({
             <Input
               type="number"
               step="0.01"
+              min="0"
+              inputMode="decimal"
               value={f.expected_amount ?? ""}
               onChange={(e) => set("expected_amount", e.target.value)}
             />
@@ -360,6 +423,8 @@ export function MovementFormDialog({
             <Input
               type="number"
               step="0.01"
+              min="0"
+              inputMode="decimal"
               value={f.amount ?? ""}
               onChange={(e) => set("amount", e.target.value)}
             />
@@ -591,6 +656,51 @@ export function MovementFormDialog({
           </DialogFooter>
         </form>
       </DialogContent>
+
+      <AlertDialog open={!!duplicate} onOpenChange={(v) => !v && setDuplicate(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Possível lançamento duplicado</AlertDialogTitle>
+            <AlertDialogDescription>
+              Já existe {direction === "in" ? "uma entrada" : "uma saída"} com o mesmo valor nesta
+              data
+              {duplicate?.description ? (
+                <>
+                  : <strong className="text-foreground">“{duplicate.description}”</strong>
+                </>
+              ) : null}
+              . Confira antes de registrar de novo.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Voltar e conferir</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setDuplicate(null);
+                save.mutate({ allowDuplicate: true });
+              }}
+            >
+              Registrar mesmo assim
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
+}
+
+class DuplicateMovementError extends Error {
+  constructor(public existingDescription: string | null) {
+    super("Possível lançamento duplicado");
+  }
+}
+
+/** "" / null → null; aceita "1500.50" e "1.500,50". Retorna NaN se inválido. */
+function parseMoney(v: number | string | null | undefined): number | null {
+  if (v === null || v === undefined || v === "") return null;
+  if (typeof v === "number") return v;
+  const s = v.trim();
+  const normalized = s.includes(",") ? s.replace(/\./g, "").replace(",", ".") : s;
+  const n = Number(normalized);
+  return Number.isFinite(n) ? n : Number.NaN;
 }

@@ -19,6 +19,9 @@ export const Route = createFileRoute("/app/busca")({
       },
     ],
   }),
+  validateSearch: (search: Record<string, unknown>): { q?: string } => ({
+    q: typeof search.q === "string" ? search.q : undefined,
+  }),
   component: BuscaPage,
 });
 
@@ -35,7 +38,8 @@ type Result = {
 
 function BuscaPage() {
   const { organizationId, loading } = useCurrentOrg();
-  const [q, setQ] = useState("");
+  const initial = Route.useSearch().q ?? "";
+  const [q, setQ] = useState(initial);
   const query = q.trim();
 
   const results = useQuery({
