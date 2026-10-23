@@ -32,6 +32,7 @@ import { PainelDiretorPage } from "@/components/inteligencia/painel-diretor";
 import { IndicadoresPage } from "@/components/inteligencia/indicadores";
 import { PerformancePage } from "@/components/inteligencia/performance";
 import { RelatoriosPage } from "@/components/inteligencia/relatorios";
+import { OperationsDashboard } from "@/components/dashboard/operations-dashboard";
 import { NUM } from "@/lib/format";
 
 export const Route = createFileRoute("/app/inteligencia")({
@@ -58,27 +59,22 @@ function InteligenciaHub() {
       <PageHeader
         eyebrow="Inteligência"
         title="Central de Inteligência"
-        description="Visão do diretor, indicadores, análises, rankings e relatórios — tudo reunido em um só lugar."
+        description="Visão geral do negócio, análises com filtros, rankings e relatórios para exportar."
       />
       <NestedPageHeaders value={true}>
-        <Tabs defaultValue="diretor" className="space-y-6">
+        <Tabs defaultValue="geral" className="space-y-6">
           <TabsList className="flex w-full flex-wrap justify-start bg-card/40">
-            <TabsTrigger value="diretor">Painel do Diretor</TabsTrigger>
-            <TabsTrigger value="indicadores">Indicadores</TabsTrigger>
-            <TabsTrigger value="analises">Análises</TabsTrigger>
-            <TabsTrigger value="performance">Performance</TabsTrigger>
+            <TabsTrigger value="geral">Visão geral</TabsTrigger>
+            <TabsTrigger value="analises">Análises e rankings</TabsTrigger>
             <TabsTrigger value="relatorios">Relatórios</TabsTrigger>
           </TabsList>
-          <TabsContent value="diretor">
+          <TabsContent value="geral" className="space-y-14">
             <PainelDiretorPage />
-          </TabsContent>
-          <TabsContent value="indicadores">
             <IndicadoresPage />
           </TabsContent>
-          <TabsContent value="analises">
+          <TabsContent value="analises" className="space-y-14">
             <IntelligencePage />
-          </TabsContent>
-          <TabsContent value="performance">
+            <OperationsDashboard view="rankings" />
             <PerformancePage />
           </TabsContent>
           <TabsContent value="relatorios">

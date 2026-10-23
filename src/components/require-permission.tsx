@@ -16,7 +16,7 @@ export function AccessDenied({ reason }: { reason?: string }) {
         </p>
       </div>
       <Button asChild variant="outline" size="sm">
-        <Link to="/app/dashboard">Voltar ao Dashboard</Link>
+        <Link to="/app/hoje">Voltar ao Início</Link>
       </Button>
     </div>
   );

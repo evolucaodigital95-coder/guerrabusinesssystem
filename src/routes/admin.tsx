@@ -53,7 +53,7 @@ function AdminRoute() {
           </p>
         </div>
         <Button asChild variant="outline" size="sm">
-          <Link to="/app/dashboard">Voltar ao GBS</Link>
+          <Link to="/app/hoje">Voltar ao GBS</Link>
         </Button>
       </div>
     );
@@ -64,7 +64,7 @@ function AdminRoute() {
       <header className="sticky top-0 z-30 border-b border-border bg-background/80 backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-7xl items-center gap-6 px-6">
           <Link
-            to="/app/dashboard"
+            to="/app/hoje"
             className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="h-3.5 w-3.5" /> GBS
