@@ -2,7 +2,12 @@ import { useState, type FormEvent } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
-  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,7 +21,11 @@ import { useAutomation } from "@/hooks/use-automation";
  * ligada ao lote. Assim mantemos rastreabilidade total.
  */
 export function BatchFormDialog({
-  open, onOpenChange, organizationId, userId, stockItemId,
+  open,
+  onOpenChange,
+  organizationId,
+  userId,
+  stockItemId,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
@@ -99,8 +108,13 @@ export function BatchFormDialog({
     onError: (e) => toast.error(e instanceof Error ? e.message : "Erro"),
   });
 
-  function set<K extends keyof typeof f>(k: K, v: string) { setF((p) => ({ ...p, [k]: v })); }
-  function submit(e: FormEvent) { e.preventDefault(); save.mutate(); }
+  function set<K extends keyof typeof f>(k: K, v: string) {
+    setF((p) => ({ ...p, [k]: v }));
+  }
+  function submit(e: FormEvent) {
+    e.preventDefault();
+    save.mutate();
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -114,19 +128,39 @@ export function BatchFormDialog({
         <form onSubmit={submit} className="grid grid-cols-1 gap-3 md:grid-cols-2">
           <div className="space-y-1.5">
             <Label>Quantidade *</Label>
-            <Input type="number" step="0.001" min="0" value={f.initial_quantity} onChange={(e) => set("initial_quantity", e.target.value)} required />
+            <Input
+              type="number"
+              step="0.001"
+              min="0"
+              value={f.initial_quantity}
+              onChange={(e) => set("initial_quantity", e.target.value)}
+              required
+            />
           </div>
           <div className="space-y-1.5">
             <Label>Valor unitário</Label>
-            <Input type="number" step="0.01" value={f.unit_cost} onChange={(e) => set("unit_cost", e.target.value)} />
+            <Input
+              type="number"
+              step="0.01"
+              value={f.unit_cost}
+              onChange={(e) => set("unit_cost", e.target.value)}
+            />
           </div>
           <div className="space-y-1.5">
             <Label>Código do lote</Label>
-            <Input value={f.code} onChange={(e) => set("code", e.target.value)} placeholder="Opcional" />
+            <Input
+              value={f.code}
+              onChange={(e) => set("code", e.target.value)}
+              placeholder="Opcional"
+            />
           </div>
           <div className="space-y-1.5">
             <Label>Data de entrada</Label>
-            <Input type="date" value={f.received_on} onChange={(e) => set("received_on", e.target.value)} />
+            <Input
+              type="date"
+              value={f.received_on}
+              onChange={(e) => set("received_on", e.target.value)}
+            />
           </div>
           <div className="space-y-1.5 md:col-span-2">
             <Label>Fornecedor</Label>
@@ -134,15 +168,21 @@ export function BatchFormDialog({
           </div>
           <div className="space-y-1.5 md:col-span-2">
             <Label>Comprovante (URL)</Label>
-            <Input value={f.proof_url} onChange={(e) => set("proof_url", e.target.value)} placeholder="https://…" />
+            <Input
+              value={f.proof_url}
+              onChange={(e) => set("proof_url", e.target.value)}
+              placeholder="https://…"
+            />
           </div>
           <div className="space-y-1.5 md:col-span-2">
             <Label>Observações</Label>
             <Textarea rows={2} value={f.notes} onChange={(e) => set("notes", e.target.value)} />
           </div>
           <DialogFooter className="md:col-span-2">
-            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Cancelar</Button>
-            <Button type="submit" variant="navy" disabled={save.isPending}>
+            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
+              Cancelar
+            </Button>
+            <Button type="submit" variant="brand" disabled={save.isPending}>
               {save.isPending ? "Salvando…" : "Registrar entrada"}
             </Button>
           </DialogFooter>

@@ -55,7 +55,7 @@ function priorityClasses(p: Priority) {
     return { chip: "border-destructive/30 text-destructive", card: "border-destructive/25" };
   if (p === "medio")
     return {
-      chip: "border-[color:var(--gold)]/50 text-[color:var(--gold)]",
+      chip: "border-[color:var(--gold)]/50 text-gold-ink",
       card: "border-[color:var(--gold)]/35",
     };
   return { chip: "border-border text-muted-foreground", card: "border-border" };
@@ -96,7 +96,7 @@ export function AssistantGuerra({
       {/* cabeçalho + filtros */}
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <div className="flex items-center gap-3 text-[10px] uppercase tracking-[0.28em] text-muted-foreground">
+          <div className="flex items-center gap-3 text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
             <span aria-hidden className="h-px w-6" style={{ background: "var(--gold)" }} />
             Assistente Guerra
           </div>
@@ -192,7 +192,7 @@ export function AssistantGuerra({
                   : "border-border"
             }`}
           >
-            <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+            <div className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
               {s.label}
             </div>
             <div className="mt-3 font-display text-2xl leading-none tabular-nums">{s.value}</div>
@@ -256,7 +256,7 @@ export function AssistantGuerra({
                     </div>
                     <div className="flex items-center justify-between gap-3">
                       <span
-                        className={`rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-wider ${c.chip}`}
+                        className={`rounded-full border px-2 py-0.5 text-[11px] uppercase tracking-wider ${c.chip}`}
                       >
                         {PRIORITY_LABEL[a.priority]}
                       </span>

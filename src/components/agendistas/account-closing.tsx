@@ -1,7 +1,16 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Archive, Download, Eye, FileCheck2, Lock, RotateCcw, ShieldCheck, XCircle } from "lucide-react";
+import {
+  Archive,
+  Download,
+  Eye,
+  FileCheck2,
+  Lock,
+  RotateCcw,
+  ShieldCheck,
+  XCircle,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -9,15 +18,23 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { useCurrentOrg } from "@/hooks/use-current-org";
 import { formatCurrency, formatDate } from "@/lib/crm";
 import { useDocBrand } from "@/hooks/use-doc-brand";
 import {
-  buildClosingTermPDF, closingFileName, DEFAULT_THANKS_MESSAGE,
-  type ClosingTermData, type ClosingLectureRow,
+  buildClosingTermPDF,
+  closingFileName,
+  DEFAULT_THANKS_MESSAGE,
+  type ClosingTermData,
+  type ClosingLectureRow,
 } from "@/lib/closing-term-export";
 import type { ExportMovement, AdvanceExportRow, CardEntry } from "@/lib/agent-statement-export";
 
@@ -280,7 +297,11 @@ export function AccountClosing({
     if (!row.storage_path) return toast.error("Documento não disponível.");
     const { data, error } = await supabase.storage
       .from(BUCKET)
-      .createSignedUrl(row.storage_path, 60, download ? { download: row.file_name ?? true } : undefined);
+      .createSignedUrl(
+        row.storage_path,
+        60,
+        download ? { download: row.file_name ?? true } : undefined,
+      );
     if (error) return toast.error(error.message);
     window.open(data.signedUrl, "_blank");
   }
@@ -292,14 +313,17 @@ export function AccountClosing({
     <section className="space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">Arquivo oficial</p>
+          <p className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
+            Arquivo oficial
+          </p>
           <h3 className="mt-1 font-serif text-lg text-foreground">Fechamentos de conta</h3>
           <p className="text-xs text-muted-foreground">
-            Cada fechamento congela os valores apurados e gera um Termo oficial em PDF, arquivado permanentemente.
+            Cada fechamento congela os valores apurados e gera um Termo oficial em PDF, arquivado
+            permanentemente.
           </p>
         </div>
         {canWrite && (
-          <Button variant="navy" size="sm" className="rounded-full" onClick={() => startClosing()}>
+          <Button variant="brand" size="sm" onClick={() => startClosing()}>
             <Lock className="mr-1.5 h-4 w-4" /> Fechar conta
           </Button>
         )}
@@ -309,7 +333,7 @@ export function AccountClosing({
         <div className="overflow-x-auto rounded-2xl border border-border bg-card/40">
           <table className="w-full min-w-[880px] text-sm">
             <thead>
-              <tr className="border-b border-border text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+              <tr className="border-b border-border text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
                 <th className="px-4 py-3 text-left">Documento</th>
                 <th className="px-4 py-3 text-left">Período</th>
                 <th className="px-4 py-3 text-center">Palestras</th>
@@ -327,9 +351,10 @@ export function AccountClosing({
                       <FileCheck2 className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
                       <div className="min-w-0">
                         <p className="font-medium text-foreground">
-                          {row.closing_number} <span className="text-muted-foreground">· v{row.version}</span>
+                          {row.closing_number}{" "}
+                          <span className="text-muted-foreground">· v{row.version}</span>
                         </p>
-                        <p className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
+                        <p className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
                           Emitido em {formatDate(row.closed_at)}
                         </p>
                         {row.cancel_reason && (
@@ -338,9 +363,12 @@ export function AccountClosing({
                       </div>
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-muted-foreground">{row.period_label ?? "Completo"}</td>
+                  <td className="px-4 py-3 text-muted-foreground">
+                    {row.period_label ?? "Completo"}
+                  </td>
                   <td className="px-4 py-3 text-center tabular-nums text-muted-foreground">
-                    {row.lectures_count} <span className="text-[10px]">· {row.companies_count} emp.</span>
+                    {row.lectures_count}{" "}
+                    <span className="text-[10px]">· {row.companies_count} emp.</span>
                   </td>
                   <td className="px-4 py-3 text-right tabular-nums text-foreground">
                     {formatCurrency(Number(row.agent_share))}
@@ -350,7 +378,11 @@ export function AccountClosing({
                   </td>
                   <td className="px-4 py-3">
                     <Badge variant="outline" className={STATUS_STYLE[row.status] ?? ""}>
-                      {row.status === "oficial" ? "Oficial" : row.status === "cancelado" ? "Cancelado" : "Rascunho"}
+                      {row.status === "oficial"
+                        ? "Oficial"
+                        : row.status === "cancelado"
+                          ? "Cancelado"
+                          : "Rascunho"}
                     </Badge>
                   </td>
                   <td className="px-4 py-3">
@@ -398,7 +430,8 @@ export function AccountClosing({
           <Archive className="mx-auto h-6 w-6 text-muted-foreground" />
           <h4 className="mt-3 font-serif text-lg text-foreground">Nenhum fechamento arquivado</h4>
           <p className="mx-auto mt-1.5 max-w-md text-sm text-muted-foreground">
-            Ao fechar a conta, o GBS gera o Termo oficial de prestação de contas e o guarda permanentemente aqui.
+            Ao fechar a conta, o GBS gera o Termo oficial de prestação de contas e o guarda
+            permanentemente aqui.
           </p>
         </div>
       )}
@@ -419,12 +452,15 @@ export function AccountClosing({
           {preview && (
             <div className="space-y-4">
               <div className="rounded-xl border border-border bg-muted/30 p-4">
-                <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+                <p className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
                   {preview.agentName} · {preview.periodLabel}
                 </p>
                 <dl className="mt-3 grid gap-x-6 gap-y-2 sm:grid-cols-2">
                   {[
-                    ["Palestras / Empresas", `${preview.totals.lectures} / ${preview.totals.companies}`],
+                    [
+                      "Palestras / Empresas",
+                      `${preview.totals.lectures} / ${preview.totals.companies}`,
+                    ],
                     ["Receita bruta", formatCurrency(preview.totals.revenue)],
                     ["Materiais", `- ${formatCurrency(preview.totals.materials)}`],
                     ["Juros e taxas", `- ${formatCurrency(preview.totals.fees)}`],
@@ -443,28 +479,28 @@ export function AccountClosing({
 
               <div className="grid gap-3 sm:grid-cols-2">
                 <div>
-                  <Label className="text-[10px] uppercase">Período (referência)</Label>
+                  <Label className="text-[11px] uppercase">Período (referência)</Label>
                   <Input value={preview.periodLabel} readOnly className="bg-muted/40" />
                 </div>
                 <div>
-                  <Label className="text-[10px] uppercase">Responsável</Label>
+                  <Label className="text-[11px] uppercase">Responsável</Label>
                   <Input value={preview.responsible} readOnly className="bg-muted/40" />
                 </div>
               </div>
 
               <div>
-                <Label className="text-[10px] uppercase">Observações do fechamento</Label>
+                <Label className="text-[11px] uppercase">Observações do fechamento</Label>
                 <Textarea rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} />
               </div>
               <div>
-                <Label className="text-[10px] uppercase">Mensagem de agradecimento</Label>
+                <Label className="text-[11px] uppercase">Mensagem de agradecimento</Label>
                 <Textarea rows={4} value={thanks} onChange={(e) => setThanks(e.target.value)} />
               </div>
 
               <p className="flex items-start gap-2 rounded-lg border border-border bg-card/40 p-3 text-xs text-muted-foreground">
-                <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" />
-                O fechamento é apenas documental: registra e arquiva a prestação de contas. Nenhum lançamento é criado
-                e o saldo da conta corrente permanece inalterado.
+                <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" />O fechamento é apenas documental:
+                registra e arquiva a prestação de contas. Nenhum lançamento é criado e o saldo da
+                conta corrente permanece inalterado.
               </p>
             </div>
           )}
@@ -473,7 +509,7 @@ export function AccountClosing({
             <Button variant="outline" disabled={saving} onClick={() => setOpen(false)}>
               Cancelar
             </Button>
-            <Button variant="navy" disabled={saving} onClick={confirmClosing}>
+            <Button variant="brand" disabled={saving} onClick={confirmClosing}>
               {saving ? "Gerando documento…" : "Confirmar e arquivar"}
             </Button>
           </DialogFooter>

@@ -169,7 +169,7 @@ function MinhaContaPage() {
                   O e-mail de acesso é definido no cadastro e não pode ser alterado aqui.
                 </p>
               </div>
-              <Button type="submit" variant="navy" size="sm" disabled={savingProfile}>
+              <Button type="submit" variant="brand" size="sm" disabled={savingProfile}>
                 {savingProfile ? "Salvando…" : "Salvar perfil"}
               </Button>
             </form>
@@ -217,7 +217,7 @@ function MinhaContaPage() {
                   required
                 />
               </div>
-              <Button type="submit" variant="navy" size="sm" disabled={savingPassword}>
+              <Button type="submit" variant="brand" size="sm" disabled={savingPassword}>
                 {savingPassword ? "Alterando…" : "Alterar senha"}
               </Button>
             </form>

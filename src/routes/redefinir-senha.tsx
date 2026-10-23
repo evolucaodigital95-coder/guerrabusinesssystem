@@ -103,7 +103,7 @@ function ResetPasswordPage() {
               Este link é inválido ou já expirou. Solicite um novo link de recuperação na tela de
               entrada.
             </p>
-            <Button variant="outline" className="rounded-full" onClick={() => navigate({ to: "/" })}>
+            <Button variant="outline" onClick={() => navigate({ to: "/" })}>
               Voltar para a entrada
             </Button>
           </div>
@@ -133,7 +133,7 @@ function ResetPasswordPage() {
                 onChange={(e) => setConfirm(e.target.value)}
               />
             </div>
-            <Button type="submit" variant="navy" className="w-full rounded-full" disabled={busy}>
+            <Button type="submit" variant="brand" className="w-full" disabled={busy}>
               {busy ? "Salvando…" : "Salvar nova senha"}
             </Button>
           </form>

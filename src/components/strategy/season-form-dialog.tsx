@@ -7,9 +7,20 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { SEASON_STATUS } from "@/lib/strategy";
 
 export type SeasonRow = {
@@ -22,7 +33,11 @@ export type SeasonRow = {
 };
 
 export function SeasonFormDialog({
-  open, onOpenChange, organizationId, userId, initial,
+  open,
+  onOpenChange,
+  organizationId,
+  userId,
+  initial,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
@@ -32,7 +47,11 @@ export function SeasonFormDialog({
 }) {
   const qc = useQueryClient();
   const [f, setF] = useState<SeasonRow>({
-    name: "", description: "", status: "planejamento", starts_on: null, ends_on: null,
+    name: "",
+    description: "",
+    status: "planejamento",
+    starts_on: null,
+    ends_on: null,
   });
 
   useEffect(() => {
@@ -86,37 +105,66 @@ export function SeasonFormDialog({
             Ciclo comercial que organiza palestras, campanhas, projetos e financeiro.
           </DialogDescription>
         </DialogHeader>
-        <form className="grid gap-3" onSubmit={(e) => { e.preventDefault(); save.mutate(); }}>
+        <form
+          className="grid gap-3"
+          onSubmit={(e) => {
+            e.preventDefault();
+            save.mutate();
+          }}
+        >
           <div className="space-y-1.5">
             <Label>Nome</Label>
             <Input required value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} />
           </div>
           <div className="space-y-1.5">
             <Label>Descrição</Label>
-            <Textarea rows={3} value={f.description ?? ""} onChange={(e) => setF({ ...f, description: e.target.value })} />
+            <Textarea
+              rows={3}
+              value={f.description ?? ""}
+              onChange={(e) => setF({ ...f, description: e.target.value })}
+            />
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label>Início</Label>
-              <Input type="date" value={f.starts_on ?? ""} onChange={(e) => setF({ ...f, starts_on: e.target.value })} />
+              <Input
+                type="date"
+                value={f.starts_on ?? ""}
+                onChange={(e) => setF({ ...f, starts_on: e.target.value })}
+              />
             </div>
             <div className="space-y-1.5">
               <Label>Encerramento</Label>
-              <Input type="date" value={f.ends_on ?? ""} onChange={(e) => setF({ ...f, ends_on: e.target.value })} />
+              <Input
+                type="date"
+                value={f.ends_on ?? ""}
+                onChange={(e) => setF({ ...f, ends_on: e.target.value })}
+              />
             </div>
           </div>
           <div className="space-y-1.5">
             <Label>Status</Label>
-            <Select value={f.status ?? "planejamento"} onValueChange={(v) => setF({ ...f, status: v })}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+            <Select
+              value={f.status ?? "planejamento"}
+              onValueChange={(v) => setF({ ...f, status: v })}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
-                {SEASON_STATUS.map((s) => <SelectItem key={s.key} value={s.key}>{s.label}</SelectItem>)}
+                {SEASON_STATUS.map((s) => (
+                  <SelectItem key={s.key} value={s.key}>
+                    {s.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
           <DialogFooter>
-            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Cancelar</Button>
-            <Button type="submit" variant="navy" disabled={save.isPending}>
+            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
+              Cancelar
+            </Button>
+            <Button type="submit" variant="brand" disabled={save.isPending}>
               {save.isPending ? "Salvando…" : "Salvar"}
             </Button>
           </DialogFooter>

@@ -5,7 +5,7 @@ export function StagePipeline({ stage }: { stage: string | null | undefined }) {
   const current = stageIndex(stage);
   return (
     <div className="rounded-2xl border border-border bg-card/40 p-5">
-      <p className="text-[10px] font-medium uppercase tracking-[0.22em] text-muted-foreground">
+      <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
         Etapa do relacionamento
       </p>
       <ol className="mt-5 flex flex-wrap items-center gap-x-2 gap-y-3">
@@ -19,7 +19,7 @@ export function StagePipeline({ stage }: { stage: string | null | undefined }) {
                   className={cn(
                     "grid h-6 w-6 place-items-center rounded-full border text-[10px] font-semibold transition-colors",
                     reached
-                      ? "border-transparent bg-[var(--navy)] text-[var(--navy-foreground)]"
+                      ? "border-transparent bg-[var(--ink)] text-[var(--ink-foreground)]"
                       : "border-border bg-background text-muted-foreground",
                     isCurrent && "ring-2 ring-offset-2 ring-offset-background",
                   )}
@@ -27,12 +27,14 @@ export function StagePipeline({ stage }: { stage: string | null | undefined }) {
                 >
                   {i + 1}
                 </span>
-                <span className={cn("text-xs", reached ? "text-foreground" : "text-muted-foreground")}>
+                <span
+                  className={cn("text-xs", reached ? "text-foreground" : "text-muted-foreground")}
+                >
                   {s.label}
                 </span>
               </div>
               {i < LIFECYCLE_STAGES.length - 1 && (
-                <span className={cn("h-px w-6", reached ? "bg-[var(--navy)]/40" : "bg-border")} />
+                <span className={cn("h-px w-6", reached ? "bg-[var(--ink)]/40" : "bg-border")} />
               )}
             </li>
           );

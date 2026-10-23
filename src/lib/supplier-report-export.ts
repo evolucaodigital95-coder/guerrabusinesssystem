@@ -3,10 +3,13 @@ import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
 import { rgbToHex, type DocBrand } from "@/lib/doc-brand";
 import type {
-  SupplierAggregate, BookConsumption, CompanyConsumption, Settlement,
+  SupplierAggregate,
+  BookConsumption,
+  CompanyConsumption,
+  Settlement,
 } from "@/lib/supplier-accounts";
+import { BRL } from "@/lib/format";
 
-const BRL = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 const NUM = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 3 });
 
 function stamp(name: string) {
@@ -26,7 +29,11 @@ export type SupplierReport = {
 };
 
 const titleCase = (v: string) =>
-  v.toLowerCase().split(/\s+/).map((w) => (w ? w[0].toUpperCase() + w.slice(1) : w)).join(" ");
+  v
+    .toLowerCase()
+    .split(/\s+/)
+    .map((w) => (w ? w[0].toUpperCase() + w.slice(1) : w))
+    .join(" ");
 
 export function exportSupplierPDF(report: SupplierReport) {
   const doc = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
@@ -41,11 +48,25 @@ export function exportSupplierPDF(report: SupplierReport) {
   doc.setFillColor(navy);
   doc.rect(0, 0, W, 96, "F");
   doc.setTextColor("#FFFFFF");
-  doc.setFont("helvetica", "bold").setFontSize(16).text(brand && !brand.isDefault ? `${brandName} · GBS` : "GBS · Guerra Business System", 40, 34);
-  doc.setFont("helvetica", "normal").setFontSize(11).text("Prestação de Contas do Fornecedor", 40, 54);
-  doc.setFontSize(9).setTextColor("#D9C79A")
+  doc
+    .setFont("helvetica", "bold")
+    .setFontSize(16)
+    .text(
+      brand && !brand.isDefault ? `${brandName} · GBS` : "GBS · Guerra Business System",
+      40,
+      34,
+    );
+  doc
+    .setFont("helvetica", "normal")
+    .setFontSize(11)
+    .text("Prestação de Contas do Fornecedor", 40, 54);
+  doc
+    .setFontSize(9)
+    .setTextColor("#D9C79A")
     .text(new Date().toLocaleString("pt-BR"), W - 40, 34, { align: "right" });
-  doc.setFontSize(10).setTextColor("#FFFFFF")
+  doc
+    .setFontSize(10)
+    .setTextColor("#FFFFFF")
     .text(`Fornecedor: ${report.supplier}`, 40, 76)
     .text(`Temporada: ${report.seasonName}`, W - 40, 76, { align: "right" });
 
@@ -81,10 +102,17 @@ export function exportSupplierPDF(report: SupplierReport) {
     ]),
     styles: { fontSize: 9, cellPadding: 4 },
     headStyles: { fillColor: navy, textColor: "#FFFFFF" },
-    columnStyles: { 1: { halign: "right" }, 2: { halign: "right" }, 3: { halign: "right", fontStyle: "bold" } },
+    columnStyles: {
+      1: { halign: "right" },
+      2: { halign: "right" },
+      3: { halign: "right", fontStyle: "bold" },
+    },
     margin: { left: 40, right: 40 },
     didDrawPage: () => {
-      doc.setFontSize(10).setTextColor(navy).setFont("helvetica", "bold")
+      doc
+        .setFontSize(10)
+        .setTextColor(navy)
+        .setFont("helvetica", "bold")
         .text("Detalhamento por Livro", 40, cur.finalY + 12);
     },
   });
@@ -101,7 +129,10 @@ export function exportSupplierPDF(report: SupplierReport) {
     columnStyles: { 1: { halign: "right", fontStyle: "bold" } },
     margin: { left: 40, right: 40 },
     didDrawPage: () => {
-      doc.setFontSize(10).setTextColor(navy).setFont("helvetica", "bold")
+      doc
+        .setFontSize(10)
+        .setTextColor(navy)
+        .setFont("helvetica", "bold")
         .text("Detalhamento por Empresa", 40, cur2.finalY + 12);
     },
   });
@@ -124,7 +155,10 @@ export function exportSupplierPDF(report: SupplierReport) {
     columnStyles: { 1: { halign: "right" } },
     margin: { left: 40, right: 40 },
     didDrawPage: () => {
-      doc.setFontSize(10).setTextColor(navy).setFont("helvetica", "bold")
+      doc
+        .setFontSize(10)
+        .setTextColor(navy)
+        .setFont("helvetica", "bold")
         .text("Histórico dos Acertos", 40, cur3.finalY + 12);
     },
   });
@@ -132,7 +166,9 @@ export function exportSupplierPDF(report: SupplierReport) {
   const pages = doc.getNumberOfPages();
   for (let i = 1; i <= pages; i++) {
     doc.setPage(i);
-    doc.setFontSize(8).setTextColor("#888")
+    doc
+      .setFontSize(8)
+      .setTextColor("#888")
       .text(`${brandName} — Documento confidencial`, 40, H - 20)
       .text(`Página ${i} de ${pages}`, W - 40, H - 20, { align: "right" });
   }
@@ -177,7 +213,13 @@ export function exportSupplierXLSX(report: SupplierReport) {
     wb,
     XLSX.utils.aoa_to_sheet([
       ["Data", "Valor Pago", "Forma", "Comprovante", "Observação"],
-      ...report.settlements.map((s) => [s.paid_on, Number(s.amount_paid), s.payment_method ?? "", s.receipt_number ?? "", s.notes ?? ""]),
+      ...report.settlements.map((s) => [
+        s.paid_on,
+        Number(s.amount_paid),
+        s.payment_method ?? "",
+        s.receipt_number ?? "",
+        s.notes ?? "",
+      ]),
     ]),
     "Acertos",
   );
@@ -208,11 +250,19 @@ export function exportSupplierCSV(report: SupplierReport) {
   push(["ACERTOS"]);
   push(["Data", "Valor", "Forma", "Comprovante", "Observacao"]);
   report.settlements.forEach((s) =>
-    push([s.paid_on, Number(s.amount_paid), s.payment_method ?? "", s.receipt_number ?? "", s.notes ?? ""]),
+    push([
+      s.paid_on,
+      Number(s.amount_paid),
+      s.payment_method ?? "",
+      s.receipt_number ?? "",
+      s.notes ?? "",
+    ]),
   );
   const blob = new Blob(["\uFEFF" + lines.join("\n")], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
-  a.href = url; a.download = `${stamp(`prestacao-${report.supplier}`)}.csv`; a.click();
+  a.href = url;
+  a.download = `${stamp(`prestacao-${report.supplier}`)}.csv`;
+  a.click();
   URL.revokeObjectURL(url);
 }

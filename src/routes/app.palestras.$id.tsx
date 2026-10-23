@@ -3,9 +3,25 @@ import { useMemo, useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
-  ArrowLeft, Pencil, Plus, MapPin, Users, Calendar, Building2, UserCircle2,
-  ShieldCheck, History as HistoryIcon, Paperclip, Package, Wallet, Activity,
-  Calculator, Info, ExternalLink, Lock, Unlock,
+  ArrowLeft,
+  Pencil,
+  Plus,
+  MapPin,
+  Users,
+  Calendar,
+  Building2,
+  UserCircle2,
+  ShieldCheck,
+  History as HistoryIcon,
+  Paperclip,
+  Package,
+  Wallet,
+  Activity,
+  Calculator,
+  Info,
+  ExternalLink,
+  Lock,
+  Unlock,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -15,10 +31,18 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import { PageHeader } from "@/components/page-shell";
 import { supabase } from "@/integrations/supabase/client";
@@ -26,7 +50,12 @@ import { useAutomation } from "@/hooks/use-automation";
 import { useSession } from "@/hooks/use-session";
 import { useCurrentOrg } from "@/hooks/use-current-org";
 import { formatCurrency, formatDate } from "@/lib/crm";
-import { LECTURE_STATUS, LECTURE_TIMELINE_KINDS, lectureStatusLabel, lectureTimelineLabel } from "@/lib/lectures";
+import {
+  LECTURE_STATUS,
+  LECTURE_TIMELINE_KINDS,
+  lectureStatusLabel,
+  lectureTimelineLabel,
+} from "@/lib/lectures";
 import { LectureFormDialog, type LectureRow } from "@/components/palestras/lecture-form-dialog";
 import { AttachmentsTab } from "@/components/crm/attachments-tab";
 import { NotesTab } from "@/components/shared/notes-tab";
@@ -35,17 +64,26 @@ import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CalcBreakdown } from "@/components/finance/calc-breakdown";
 import { ReconciliationPanel } from "@/components/finance/reconciliation-panel";
-import { calculateLecture, selectRule, BUCKET_LABEL, type RuleSnapshot, type ExpenseBucket, type LectureExpenseInput } from "@/lib/finance-engine";
+import {
+  calculateLecture,
+  selectRule,
+  BUCKET_LABEL,
+  type RuleSnapshot,
+  type ExpenseBucket,
+  type LectureExpenseInput,
+} from "@/lib/finance-engine";
 import { paymentMethodLabel } from "@/lib/finance";
 import { cn } from "@/lib/utils";
 import { openDoc } from "@/lib/doc-links";
-
 
 export const Route = createFileRoute("/app/palestras/$id")({
   head: () => ({
     meta: [
       { title: "Palestra — GBS" },
-      { name: "description", content: "Resumo, timeline, financeiro, estoque e auditoria da palestra." },
+      {
+        name: "description",
+        content: "Resumo, timeline, financeiro, estoque e auditoria da palestra.",
+      },
     ],
   }),
   component: PalestraDetail,
@@ -67,7 +105,8 @@ function PalestraDetail() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("lectures")
-        .select(`
+        .select(
+          `
           *,
           companies:company_id ( id, legal_name, trade_name ),
           contacts:contact_id ( id, full_name, email, phone ),
@@ -75,7 +114,10 @@ function PalestraDetail() {
           seasons:season_id ( id, name ),
           campaigns:campaign_id ( id, name ),
           projects:project_id ( id, name )
-        `).eq("id", id).maybeSingle();
+        `,
+        )
+        .eq("id", id)
+        .maybeSingle();
       if (error) throw error;
       return data;
     },
@@ -87,8 +129,11 @@ function PalestraDetail() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("financial_movements")
-        .select("id, direction, status, category, description, amount, expected_amount, occurs_on, payment_method, card_fee_amount, net_amount")
-        .eq("lecture_id", id).is("archived_at", null)
+        .select(
+          "id, direction, status, category, description, amount, expected_amount, occurs_on, payment_method, card_fee_amount, net_amount",
+        )
+        .eq("lecture_id", id)
+        .is("archived_at", null)
         .order("occurs_on", { ascending: false, nullsFirst: false });
       if (error) throw error;
       return data ?? [];
@@ -101,8 +146,11 @@ function PalestraDetail() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("stock_movements")
-        .select("id, direction, kind, status, quantity, unit_cost, total_cost, reason, occurs_on, notes, stock_items:stock_item_id ( id, name, unit )")
-        .eq("lecture_id", id).is("archived_at", null)
+        .select(
+          "id, direction, kind, status, quantity, unit_cost, total_cost, reason, occurs_on, notes, stock_items:stock_item_id ( id, name, unit )",
+        )
+        .eq("lecture_id", id)
+        .is("archived_at", null)
         .not("status", "in", "(cancelado,estornado)")
 
         .order("occurs_on", { ascending: false, nullsFirst: false });
@@ -117,8 +165,14 @@ function PalestraDetail() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("lecture_financial_snapshots")
-        .select("id, agent_amount, gustavo_amount, net_profit, gross_revenue, total_expenses, total_advances, total_card_fees, total_stock_cost, closed_at")
-        .eq("lecture_id", id).is("archived_at", null).order("closed_at", { ascending: false }).limit(1).maybeSingle();
+        .select(
+          "id, agent_amount, gustavo_amount, net_profit, gross_revenue, total_expenses, total_advances, total_card_fees, total_stock_cost, closed_at",
+        )
+        .eq("lecture_id", id)
+        .is("archived_at", null)
+        .order("closed_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
       if (error) throw error;
       return data;
     },
@@ -130,9 +184,13 @@ function PalestraDetail() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("timeline_events")
-        .select("id, kind, title, body, occurs_at, created_at, created_by, profiles:created_by ( full_name, email )")
-        .eq("entity_type", "lecture").eq("entity_id", id)
-        .is("archived_at", null).order("occurs_at", { ascending: false });
+        .select(
+          "id, kind, title, body, occurs_at, created_at, created_by, profiles:created_by ( full_name, email )",
+        )
+        .eq("entity_type", "lecture")
+        .eq("entity_id", id)
+        .is("archived_at", null)
+        .order("occurs_at", { ascending: false });
       if (error) throw error;
       return data ?? [];
     },
@@ -144,8 +202,12 @@ function PalestraDetail() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("audit_log")
-        .select("id, entity_type, entity_id, action, diff, created_at, actor_id, profiles:actor_id ( full_name, email )")
-        .eq("entity_id", id).order("created_at", { ascending: false }).limit(100);
+        .select(
+          "id, entity_type, entity_id, action, diff, created_at, actor_id, profiles:actor_id ( full_name, email )",
+        )
+        .eq("entity_id", id)
+        .order("created_at", { ascending: false })
+        .limit(100);
       if (error) throw error;
       return data ?? [];
     },
@@ -153,26 +215,43 @@ function PalestraDetail() {
 
   const setStatus = useMutation({
     mutationFn: async (status: string) => {
-      const { error } = await supabase.from("lectures").update({ status, updated_by: user?.id }).eq("id", id);
+      const { error } = await supabase
+        .from("lectures")
+        .update({ status, updated_by: user?.id })
+        .eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => { toast.success("Status atualizado"); qc.invalidateQueries({ queryKey: ["lecture", id] }); },
+    onSuccess: () => {
+      toast.success("Status atualizado");
+      qc.invalidateQueries({ queryKey: ["lecture", id] });
+    },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Erro"),
   });
 
   const saveAudience = useMutation({
     mutationFn: async (value: number) => {
-      const { error } = await supabase.from("lectures").update({ actual_audience: value, updated_by: user?.id }).eq("id", id);
+      const { error } = await supabase
+        .from("lectures")
+        .update({ actual_audience: value, updated_by: user?.id })
+        .eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => { toast.success("Público real atualizado"); qc.invalidateQueries({ queryKey: ["lecture", id] }); setAudienceDraft(""); },
+    onSuccess: () => {
+      toast.success("Público real atualizado");
+      qc.invalidateQueries({ queryKey: ["lecture", id] });
+      setAudienceDraft("");
+    },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Erro"),
   });
 
   const finance = useMemo(() => {
     const list = movements.data ?? [];
-    const income = list.filter((m) => m.direction === "in").reduce((s, m) => s + Number(m.amount ?? m.expected_amount ?? 0), 0);
-    const expense = list.filter((m) => m.direction === "out").reduce((s, m) => s + Number(m.amount ?? m.expected_amount ?? 0), 0);
+    const income = list
+      .filter((m) => m.direction === "in")
+      .reduce((s, m) => s + Number(m.amount ?? m.expected_amount ?? 0), 0);
+    const expense = list
+      .filter((m) => m.direction === "out")
+      .reduce((s, m) => s + Number(m.amount ?? m.expected_amount ?? 0), 0);
     return { income, expense, count: list.length };
   }, [movements.data]);
 
@@ -190,7 +269,12 @@ function PalestraDetail() {
 
   const l = lecture.data;
   const company = l.companies as { id?: string; legal_name?: string; trade_name?: string } | null;
-  const contact = l.contacts as { id?: string; full_name?: string; email?: string; phone?: string } | null;
+  const contact = l.contacts as {
+    id?: string;
+    full_name?: string;
+    email?: string;
+    phone?: string;
+  } | null;
   const agent = l.agents as { id?: string; full_name?: string } | null;
   const season = l.seasons as { id?: string; name?: string } | null;
   const campaign = l.campaigns as { id?: string; name?: string } | null;
@@ -198,7 +282,10 @@ function PalestraDetail() {
 
   return (
     <div className="space-y-8">
-      <Link to="/app/palestras" className="inline-flex items-center text-xs uppercase tracking-[0.22em] text-muted-foreground hover:text-foreground">
+      <Link
+        to="/app/palestras"
+        className="inline-flex items-center text-xs uppercase tracking-[0.12em] text-muted-foreground hover:text-foreground"
+      >
         <ArrowLeft className="mr-1.5 h-3.5 w-3.5" /> Palestras
       </Link>
 
@@ -209,15 +296,27 @@ function PalestraDetail() {
         actions={
           <div className="flex items-center gap-2">
             <Select value={l.status ?? "lead"} onValueChange={(v) => setStatus.mutate(v)}>
-              <SelectTrigger className="w-[220px] rounded-full"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="w-[220px]">
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
-                {LECTURE_STATUS.map((s) => <SelectItem key={s.key} value={s.key}>{s.label}</SelectItem>)}
+                {LECTURE_STATUS.map((s) => (
+                  <SelectItem key={s.key} value={s.key}>
+                    {s.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
-            <Button variant="outline" className="rounded-full" onClick={() => setEdit(true)}>
+            <Button variant="outline" onClick={() => setEdit(true)}>
               <Pencil className="mr-1.5 h-4 w-4" /> Editar
             </Button>
-            <ArchiveButton table="lectures" id={id} label="esta palestra" listQueryKey="lectures" backTo="/app/palestras" />
+            <ArchiveButton
+              table="lectures"
+              id={id}
+              label="esta palestra"
+              listQueryKey="lectures"
+              backTo="/app/palestras"
+            />
           </div>
         }
       />
@@ -226,29 +325,64 @@ function PalestraDetail() {
       <div className="grid gap-3 md:grid-cols-3 xl:grid-cols-6">
         {company?.id ? (
           <Link to="/app/crm/$id" params={{ id: company.id }}>
-            <RelCard icon={<Building2 className="h-3.5 w-3.5" />} label="Empresa" value={company?.legal_name ?? "—"} />
+            <RelCard
+              icon={<Building2 className="h-3.5 w-3.5" />}
+              label="Empresa"
+              value={company?.legal_name ?? "—"}
+            />
           </Link>
         ) : (
           <RelCard icon={<Building2 className="h-3.5 w-3.5" />} label="Empresa" value="—" />
         )}
-        <RelCard icon={<UserCircle2 className="h-3.5 w-3.5" />} label="Contato" value={contact?.full_name ?? "—"} />
+        <RelCard
+          icon={<UserCircle2 className="h-3.5 w-3.5" />}
+          label="Contato"
+          value={contact?.full_name ?? "—"}
+        />
         {agent?.id ? (
           <Link to="/app/agendistas/$id" params={{ id: agent.id }}>
-            <RelCard icon={<Users className="h-3.5 w-3.5" />} label="Agendista" value={agent?.full_name ?? "—"} />
+            <RelCard
+              icon={<Users className="h-3.5 w-3.5" />}
+              label="Agendista"
+              value={agent?.full_name ?? "—"}
+            />
           </Link>
         ) : (
           <RelCard icon={<Users className="h-3.5 w-3.5" />} label="Agendista" value="—" />
         )}
-        <RelCard icon={<Calendar className="h-3.5 w-3.5" />} label="Temporada" value={season?.name ?? "—"} />
-        <RelCard icon={<Activity className="h-3.5 w-3.5" />} label="Campanha" value={campaign?.name ?? "—"} />
-        <RelCard icon={<Activity className="h-3.5 w-3.5" />} label="Projeto" value={project?.name ?? "—"} />
+        <RelCard
+          icon={<Calendar className="h-3.5 w-3.5" />}
+          label="Temporada"
+          value={season?.name ?? "—"}
+        />
+        <RelCard
+          icon={<Activity className="h-3.5 w-3.5" />}
+          label="Campanha"
+          value={campaign?.name ?? "—"}
+        />
+        <RelCard
+          icon={<Activity className="h-3.5 w-3.5" />}
+          label="Projeto"
+          value={project?.name ?? "—"}
+        />
       </div>
 
       {/* Cards executivos */}
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <KPI label="Data" value={`${formatDate(l.scheduled_at)}${l.scheduled_time ? ` · ${l.scheduled_time.slice(0,5)}` : ""}`} />
-        <KPI label="Local" value={[l.city, l.state].filter(Boolean).join(" / ") || "—"} icon={<MapPin className="h-3.5 w-3.5" />} />
-        <KPI label="Público real / previsto" value={`${l.actual_audience ?? "—"} / ${l.expected_audience ?? "—"}`} icon={<Users className="h-3.5 w-3.5" />} />
+        <KPI
+          label="Data"
+          value={`${formatDate(l.scheduled_at)}${l.scheduled_time ? ` · ${l.scheduled_time.slice(0, 5)}` : ""}`}
+        />
+        <KPI
+          label="Local"
+          value={[l.city, l.state].filter(Boolean).join(" / ") || "—"}
+          icon={<MapPin className="h-3.5 w-3.5" />}
+        />
+        <KPI
+          label="Público real / previsto"
+          value={`${l.actual_audience ?? "—"} / ${l.expected_audience ?? "—"}`}
+          icon={<Users className="h-3.5 w-3.5" />}
+        />
         <KPI label="Receita bruta" value={formatCurrency(Number(l.gross_revenue ?? 0))} />
       </div>
 
@@ -256,49 +390,83 @@ function PalestraDetail() {
         <TabsList className="bg-card/40">
           <TabsTrigger value="overview">Visão geral</TabsTrigger>
           <TabsTrigger value="timeline">Timeline</TabsTrigger>
-          <TabsTrigger value="financeiro"><Wallet className="mr-1.5 h-3.5 w-3.5" />Financeiro</TabsTrigger>
-          <TabsTrigger value="fechamento"><Calculator className="mr-1.5 h-3.5 w-3.5" />Fechamento Financeiro</TabsTrigger>
+          <TabsTrigger value="financeiro">
+            <Wallet className="mr-1.5 h-3.5 w-3.5" />
+            Financeiro
+          </TabsTrigger>
+          <TabsTrigger value="fechamento">
+            <Calculator className="mr-1.5 h-3.5 w-3.5" />
+            Fechamento Financeiro
+          </TabsTrigger>
 
-          <TabsTrigger value="estoque"><Package className="mr-1.5 h-3.5 w-3.5" />Estoque</TabsTrigger>
+          <TabsTrigger value="estoque">
+            <Package className="mr-1.5 h-3.5 w-3.5" />
+            Estoque
+          </TabsTrigger>
           <TabsTrigger value="impacto">Pessoas impactadas</TabsTrigger>
           <TabsTrigger value="notas">Notas</TabsTrigger>
-          <TabsTrigger value="anexos"><Paperclip className="mr-1.5 h-3.5 w-3.5" />Anexos</TabsTrigger>
-          <TabsTrigger value="auditoria"><ShieldCheck className="mr-1.5 h-3.5 w-3.5" />Auditoria</TabsTrigger>
+          <TabsTrigger value="anexos">
+            <Paperclip className="mr-1.5 h-3.5 w-3.5" />
+            Anexos
+          </TabsTrigger>
+          <TabsTrigger value="auditoria">
+            <ShieldCheck className="mr-1.5 h-3.5 w-3.5" />
+            Auditoria
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
           {l.notes && (
             <div className="rounded-2xl border border-border bg-card/40 p-5">
-              <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">Observações</p>
+              <p className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
+                Observações
+              </p>
               <p className="mt-2 whitespace-pre-wrap text-sm text-foreground">{l.notes}</p>
             </div>
           )}
           <div className="rounded-2xl border border-border bg-card/40 p-5">
-            <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">Endereço completo</p>
+            <p className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
+              Endereço completo
+            </p>
             <p className="mt-2 text-sm text-foreground">{l.address ?? "—"}</p>
-            <p className="mt-1 text-xs text-muted-foreground">{[l.city, l.state].filter(Boolean).join(" — ") || "Sem localização definida"}</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {[l.city, l.state].filter(Boolean).join(" — ") || "Sem localização definida"}
+            </p>
           </div>
         </TabsContent>
 
         <TabsContent value="timeline" className="space-y-4">
           <div className="flex justify-end">
-            <Button variant="outline" className="rounded-full" onClick={() => setEventOpen(true)}>
+            <Button variant="outline" onClick={() => setEventOpen(true)}>
               <Plus className="mr-1.5 h-4 w-4" /> Registrar evento
             </Button>
           </div>
           {(events.data ?? []).length === 0 ? (
-            <Empty title="Sem eventos" subtitle="Registre os marcos: contato, negociação, fechamento, pagamento, palestra, fotos, depoimento, pós-venda." />
+            <Empty
+              title="Sem eventos"
+              subtitle="Registre os marcos: contato, negociação, fechamento, pagamento, palestra, fotos, depoimento, pós-venda."
+            />
           ) : (
             <ol className="relative space-y-5 border-l border-border pl-6">
               {(events.data ?? []).map((ev) => {
                 const profile = ev.profiles as { full_name?: string; email?: string } | null;
                 return (
                   <li key={ev.id} className="relative">
-                    <span className="absolute -left-[27px] top-2 h-2 w-2 rounded-full" style={{ background: "var(--gold)" }} />
-                    <p className="text-sm text-foreground">{ev.title ?? lectureTimelineLabel(ev.kind)}</p>
-                    {ev.body && <p className="mt-1 whitespace-pre-wrap text-xs text-muted-foreground">{ev.body}</p>}
-                    <p className="mt-1.5 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-                      {formatDate(ev.occurs_at)} · {lectureTimelineLabel(ev.kind)}{profile ? ` · ${profile.full_name ?? profile.email}` : ""}
+                    <span
+                      className="absolute -left-[27px] top-2 h-2 w-2 rounded-full"
+                      style={{ background: "var(--gold)" }}
+                    />
+                    <p className="text-sm text-foreground">
+                      {ev.title ?? lectureTimelineLabel(ev.kind)}
+                    </p>
+                    {ev.body && (
+                      <p className="mt-1 whitespace-pre-wrap text-xs text-muted-foreground">
+                        {ev.body}
+                      </p>
+                    )}
+                    <p className="mt-1.5 text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
+                      {formatDate(ev.occurs_at)} · {lectureTimelineLabel(ev.kind)}
+                      {profile ? ` · ${profile.full_name ?? profile.email}` : ""}
                     </p>
                   </li>
                 );
@@ -315,23 +483,44 @@ function PalestraDetail() {
           </div>
           {snapshot.data && (
             <div className="rounded-2xl border border-border bg-card/40 p-5">
-              <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">Snapshot de fechamento</p>
+              <p className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
+                Snapshot de fechamento
+              </p>
               <div className="mt-3 grid gap-3 md:grid-cols-4 text-sm">
-                <Field label="Lucro líquido" value={formatCurrency(Number(snapshot.data.net_profit))} />
-                <Field label="Taxas cartão" value={formatCurrency(Number(snapshot.data.total_card_fees ?? 0))} />
-                <Field label="Materiais" value={formatCurrency(Number(snapshot.data.total_stock_cost ?? 0))} />
-                <Field label="Gustavo" value={formatCurrency(Number(snapshot.data.gustavo_amount))} />
-                <Field label="Agendista" value={formatCurrency(Number(snapshot.data.agent_amount))} accent="gold" />
+                <Field
+                  label="Lucro líquido"
+                  value={formatCurrency(Number(snapshot.data.net_profit))}
+                />
+                <Field
+                  label="Taxas cartão"
+                  value={formatCurrency(Number(snapshot.data.total_card_fees ?? 0))}
+                />
+                <Field
+                  label="Materiais"
+                  value={formatCurrency(Number(snapshot.data.total_stock_cost ?? 0))}
+                />
+                <Field
+                  label="Gustavo"
+                  value={formatCurrency(Number(snapshot.data.gustavo_amount))}
+                />
+                <Field
+                  label="Agendista"
+                  value={formatCurrency(Number(snapshot.data.agent_amount))}
+                  accent="gold"
+                />
                 <Field label="Fechada em" value={formatDate(snapshot.data.closed_at)} />
               </div>
             </div>
           )}
           {(movements.data ?? []).length === 0 ? (
-            <Empty title="Sem lançamentos vinculados" subtitle="Vincule receitas, despesas, custos e comprovantes a esta palestra no módulo Financeiro." />
+            <Empty
+              title="Sem lançamentos vinculados"
+              subtitle="Vincule receitas, despesas, custos e comprovantes a esta palestra no módulo Financeiro."
+            />
           ) : (
             <div className="overflow-hidden rounded-2xl border border-border bg-card/40">
               <table className="w-full text-sm">
-                <thead className="bg-muted/40 text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
+                <thead className="bg-muted/40 text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
                   <tr>
                     <th className="px-4 py-3 text-left font-medium">Data</th>
                     <th className="px-4 py-3 text-left font-medium">Descrição</th>
@@ -346,13 +535,24 @@ function PalestraDetail() {
                     const value = m.amount ?? m.expected_amount;
                     return (
                       <tr key={m.id} className="border-t border-border/70">
-                        <td className="px-4 py-3 text-muted-foreground">{formatDate(m.occurs_on)}</td>
+                        <td className="px-4 py-3 text-muted-foreground">
+                          {formatDate(m.occurs_on)}
+                        </td>
                         <td className="px-4 py-3 text-foreground">{m.description ?? "—"}</td>
                         <td className="px-4 py-3 text-muted-foreground">{m.category ?? "—"}</td>
-                        <td className={cn("px-4 py-3 text-right tabular-nums", isIn ? "text-emerald-600" : "text-rose-600")}>
+                        <td
+                          className={cn(
+                            "px-4 py-3 text-right tabular-nums",
+                            isIn ? "text-emerald-600" : "text-rose-600",
+                          )}
+                        >
                           {isIn ? "+" : "−"} {formatCurrency(Number(value ?? 0))}
                         </td>
-                        <td className="px-4 py-3"><Badge variant="outline" className="font-normal">{m.status ?? "—"}</Badge></td>
+                        <td className="px-4 py-3">
+                          <Badge variant="outline" className="font-normal">
+                            {m.status ?? "—"}
+                          </Badge>
+                        </td>
                       </tr>
                     );
                   })}
@@ -375,15 +575,16 @@ function PalestraDetail() {
           )}
         </TabsContent>
 
-
-
         <TabsContent value="estoque" className="space-y-4">
           {(stock.data ?? []).length === 0 ? (
-            <Empty title="Sem movimentações de estoque" subtitle="Reservas, consumos e baixas vinculadas à palestra aparecem aqui." />
+            <Empty
+              title="Sem movimentações de estoque"
+              subtitle="Reservas, consumos e baixas vinculadas à palestra aparecem aqui."
+            />
           ) : (
             <div className="overflow-hidden rounded-2xl border border-border bg-card/40">
               <table className="w-full text-sm">
-                <thead className="bg-muted/40 text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
+                <thead className="bg-muted/40 text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
                   <tr>
                     <th className="px-4 py-3 text-left font-medium">Data</th>
                     <th className="px-4 py-3 text-left font-medium">Item</th>
@@ -397,11 +598,19 @@ function PalestraDetail() {
                     const item = s.stock_items as { name?: string; unit?: string } | null;
                     return (
                       <tr key={s.id} className="border-t border-border/70">
-                        <td className="px-4 py-3 text-muted-foreground">{formatDate(s.occurs_on)}</td>
+                        <td className="px-4 py-3 text-muted-foreground">
+                          {formatDate(s.occurs_on)}
+                        </td>
                         <td className="px-4 py-3 text-foreground">{item?.name ?? "—"}</td>
                         <td className="px-4 py-3 text-muted-foreground">{s.reason ?? "—"}</td>
-                        <td className={cn("px-4 py-3 text-right tabular-nums", s.direction === "in" ? "text-emerald-600" : "text-rose-600")}>
-                          {s.direction === "in" ? "+" : "−"} {Number(s.quantity ?? 0)} {item?.unit ?? ""}
+                        <td
+                          className={cn(
+                            "px-4 py-3 text-right tabular-nums",
+                            s.direction === "in" ? "text-emerald-600" : "text-rose-600",
+                          )}
+                        >
+                          {s.direction === "in" ? "+" : "−"} {Number(s.quantity ?? 0)}{" "}
+                          {item?.unit ?? ""}
                         </td>
                         <td className="px-4 py-3 text-right tabular-nums text-muted-foreground">
                           {s.direction === "out" ? formatCurrency(Number(s.total_cost ?? 0)) : "—"}
@@ -417,44 +626,68 @@ function PalestraDetail() {
 
         <TabsContent value="impacto" className="space-y-4">
           <div className="rounded-2xl border border-border bg-card/40 p-5">
-            <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">Pessoas impactadas nesta palestra</p>
-            <p className="mt-3 font-serif text-4xl text-foreground tabular-nums">{l.actual_audience ?? "—"}</p>
-            <p className="mt-2 text-xs text-muted-foreground">Previsto: {l.expected_audience ?? "—"}</p>
+            <p className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
+              Pessoas impactadas nesta palestra
+            </p>
+            <p className="mt-3 font-serif text-4xl text-foreground tabular-nums">
+              {l.actual_audience ?? "—"}
+            </p>
+            <p className="mt-2 text-xs text-muted-foreground">
+              Previsto: {l.expected_audience ?? "—"}
+            </p>
             <div className="mt-5 flex flex-wrap items-end gap-3">
               <div>
-                <Label className="text-[10px] uppercase tracking-[0.22em]">Atualizar público real</Label>
+                <Label className="text-[11px] uppercase tracking-[0.12em]">
+                  Atualizar público real
+                </Label>
                 <Input
-                  type="number" className="mt-1 w-40"
-                  value={audienceDraft} onChange={(e) => setAudienceDraft(e.target.value)}
+                  type="number"
+                  className="mt-1 w-40"
+                  value={audienceDraft}
+                  onChange={(e) => setAudienceDraft(e.target.value)}
                   placeholder={String(l.actual_audience ?? "")}
                 />
               </div>
-              <Button variant="navy" className="rounded-full" disabled={!audienceDraft || saveAudience.isPending}
-                onClick={() => saveAudience.mutate(Number(audienceDraft))}>
+              <Button
+                variant="brand"
+                disabled={!audienceDraft || saveAudience.isPending}
+                onClick={() => saveAudience.mutate(Number(audienceDraft))}
+              >
                 Salvar
               </Button>
             </div>
-            <p className="mt-6 text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
-              Estrutura preparada para somar automaticamente por: dia · semana · mês · temporada · ano · histórico.
+            <p className="mt-6 text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
+              Estrutura preparada para somar automaticamente por: dia · semana · mês · temporada ·
+              ano · histórico.
             </p>
           </div>
         </TabsContent>
 
         <TabsContent value="notas">
           {organizationId && user && (
-            <NotesTab entityType="lecture" entityId={id} organizationId={organizationId} userId={user.id} />
+            <NotesTab
+              entityType="lecture"
+              entityId={id}
+              organizationId={organizationId}
+              userId={user.id}
+            />
           )}
         </TabsContent>
 
         <TabsContent value="anexos">
           {organizationId && user && (
-            <AttachmentsTab entityType="lecture" entityId={id} organizationId={organizationId} userId={user.id} />
+            <AttachmentsTab
+              entityType="lecture"
+              entityId={id}
+              organizationId={organizationId}
+              userId={user.id}
+            />
           )}
         </TabsContent>
 
         <TabsContent value="auditoria">
           <div className="rounded-2xl border border-border bg-card/40 p-5">
-            <p className="mb-3 flex items-center gap-2 text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+            <p className="mb-3 flex items-center gap-2 text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
               <ShieldCheck className="h-3.5 w-3.5" /> Trilha completa — nada é apagado
             </p>
             {(audit.data ?? []).length === 0 ? (
@@ -463,23 +696,33 @@ function PalestraDetail() {
               <ol className="space-y-3">
                 {(audit.data ?? []).map((ev) => {
                   const profile = ev.profiles as { full_name?: string; email?: string } | null;
-                  const diff = ev.diff as { changes?: Record<string, { old: unknown; new: unknown }> } | null;
+                  const diff = ev.diff as {
+                    changes?: Record<string, { old: unknown; new: unknown }>;
+                  } | null;
                   return (
-                    <li key={ev.id} className="rounded-xl border border-border/70 bg-background/40 p-3">
+                    <li
+                      key={ev.id}
+                      className="rounded-xl border border-border/70 bg-background/40 p-3"
+                    >
                       <div className="flex flex-wrap items-baseline justify-between gap-2">
                         <p className="text-sm text-foreground">
                           <HistoryIcon className="mr-1.5 inline h-3.5 w-3.5 text-muted-foreground" />
                           <span className="capitalize">{ev.action}</span> · {ev.entity_type}
                         </p>
-                        <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-                          {profile?.full_name ?? profile?.email ?? "Sistema"} · {formatDate(ev.created_at)}
+                        <p className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
+                          {profile?.full_name ?? profile?.email ?? "Sistema"} ·{" "}
+                          {formatDate(ev.created_at)}
                         </p>
                       </div>
                       {diff?.changes && (
                         <ul className="mt-2 space-y-1 text-xs">
                           {Object.entries(diff.changes).map(([k, v]) => (
                             <li key={k} className="text-muted-foreground">
-                              <span className="text-foreground">{k}:</span> <span className="line-through opacity-60">{String(v.old ?? "—")}</span> → {String(v.new ?? "—")}
+                              <span className="text-foreground">{k}:</span>{" "}
+                              <span className="line-through opacity-60">
+                                {String(v.old ?? "—")}
+                              </span>{" "}
+                              → {String(v.new ?? "—")}
                             </li>
                           ))}
                         </ul>
@@ -496,13 +739,18 @@ function PalestraDetail() {
       {organizationId && user && (
         <>
           <LectureFormDialog
-            open={edit} onOpenChange={setEdit}
-            organizationId={organizationId} userId={user.id}
+            open={edit}
+            onOpenChange={setEdit}
+            organizationId={organizationId}
+            userId={user.id}
             initial={l as LectureRow}
           />
           <EventDialog
-            open={eventOpen} onOpenChange={setEventOpen}
-            organizationId={organizationId} userId={user.id} lectureId={id}
+            open={eventOpen}
+            onOpenChange={setEventOpen}
+            organizationId={organizationId}
+            userId={user.id}
+            lectureId={id}
           />
         </>
       )}
@@ -510,9 +758,18 @@ function PalestraDetail() {
   );
 }
 
-function EventDialog({ open, onOpenChange, organizationId, userId, lectureId }: {
-  open: boolean; onOpenChange: (v: boolean) => void;
-  organizationId: string; userId: string; lectureId: string;
+function EventDialog({
+  open,
+  onOpenChange,
+  organizationId,
+  userId,
+  lectureId,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  organizationId: string;
+  userId: string;
+  lectureId: string;
 }) {
   const [kind, setKind] = useState<string>("first_contact");
   const [title, setTitle] = useState("");
@@ -524,24 +781,32 @@ function EventDialog({ open, onOpenChange, organizationId, userId, lectureId }: 
     mutationFn: async () => {
       const { error } = await supabase.from("timeline_events").insert({
         organization_id: organizationId,
-        entity_type: "lecture", entity_id: lectureId,
-        kind, title: title.trim() || lectureTimelineLabel(kind),
+        entity_type: "lecture",
+        entity_id: lectureId,
+        kind,
+        title: title.trim() || lectureTimelineLabel(kind),
         body: body.trim() || null,
         occurs_at: new Date(`${occurredAt}T12:00:00`).toISOString(),
-        created_by: userId, updated_by: userId,
+        created_by: userId,
+        updated_by: userId,
       });
       if (error) throw error;
     },
     onSuccess: () => {
       toast.success("Evento registrado");
       qc.invalidateQueries({ queryKey: ["lecture-timeline", lectureId] });
-      setTitle(""); setBody(""); setKind("first_contact");
+      setTitle("");
+      setBody("");
+      setKind("first_contact");
       onOpenChange(false);
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Erro"),
   });
 
-  function submit(e: FormEvent) { e.preventDefault(); create.mutate(); }
+  function submit(e: FormEvent) {
+    e.preventDefault();
+    create.mutate();
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -553,15 +818,25 @@ function EventDialog({ open, onOpenChange, organizationId, userId, lectureId }: 
           <div className="space-y-1.5">
             <Label>Tipo</Label>
             <Select value={kind} onValueChange={setKind}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
-                {LECTURE_TIMELINE_KINDS.map((k) => <SelectItem key={k.key} value={k.key}>{k.label}</SelectItem>)}
+                {LECTURE_TIMELINE_KINDS.map((k) => (
+                  <SelectItem key={k.key} value={k.key}>
+                    {k.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-1.5">
             <Label>Título</Label>
-            <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder={lectureTimelineLabel(kind)} />
+            <Input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder={lectureTimelineLabel(kind)}
+            />
           </div>
           <div className="space-y-1.5">
             <Label>Detalhes</Label>
@@ -572,8 +847,12 @@ function EventDialog({ open, onOpenChange, organizationId, userId, lectureId }: 
             <Input type="date" value={occurredAt} onChange={(e) => setOccurredAt(e.target.value)} />
           </div>
           <DialogFooter>
-            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Cancelar</Button>
-            <Button type="submit" variant="navy" disabled={create.isPending}>Registrar</Button>
+            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
+              Cancelar
+            </Button>
+            <Button type="submit" variant="brand" disabled={create.isPending}>
+              Registrar
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>
@@ -584,7 +863,10 @@ function EventDialog({ open, onOpenChange, organizationId, userId, lectureId }: 
 function RelCard({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
   return (
     <div className="h-full rounded-2xl border border-border bg-card/40 p-4 transition-colors hover:bg-card/70">
-      <p className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.22em] text-muted-foreground">{icon}{label}</p>
+      <p className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
+        {icon}
+        {label}
+      </p>
       <p className="mt-2 truncate text-sm text-foreground">{value}</p>
     </div>
   );
@@ -593,7 +875,10 @@ function RelCard({ icon, label, value }: { icon: React.ReactNode; label: string;
 function KPI({ label, value, icon }: { label: string; value: string; icon?: React.ReactNode }) {
   return (
     <div className="rounded-2xl border border-border bg-card/40 p-5">
-      <p className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.22em] text-muted-foreground">{icon}{label}</p>
+      <p className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
+        {icon}
+        {label}
+      </p>
       <p className="mt-3 font-serif text-xl text-foreground tabular-nums">{value}</p>
     </div>
   );
@@ -602,8 +887,12 @@ function KPI({ label, value, icon }: { label: string; value: string; icon?: Reac
 function Field({ label, value, accent }: { label: string; value: string; accent?: "gold" }) {
   return (
     <div>
-      <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">{label}</p>
-      <p className={cn("mt-1 tabular-nums", accent === "gold" ? "text-[var(--gold)]" : "text-foreground")}>{value}</p>
+      <p className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">{label}</p>
+      <p
+        className={cn("mt-1 tabular-nums", accent === "gold" ? "text-gold-ink" : "text-foreground")}
+      >
+        {value}
+      </p>
     </div>
   );
 }
@@ -644,7 +933,12 @@ type EnrichedExpense = LectureExpenseInput & {
 };
 
 function FechamentoFinanceiroTab({
-  lectureId, organizationId, userId, grossRevenueDefault, agentId, seasonId,
+  lectureId,
+  organizationId,
+  userId,
+  grossRevenueDefault,
+  agentId,
+  seasonId,
 }: {
   lectureId: string;
   organizationId: string;
@@ -661,8 +955,11 @@ function FechamentoFinanceiroTab({
     queryFn: async () => {
       const { data, error } = await supabase
         .from("financial_movements")
-        .select("id, direction, status, category, description, amount, expected_amount, occurs_on, occurs_time, created_at, created_by, account_id, payment_method, card_brand_id, card_installments, card_fee_percent, card_fee_amount, net_amount, accounts:account_id ( id, name ), card_brands:card_brand_id ( id, name, kind )")
-        .eq("lecture_id", lectureId).is("archived_at", null);
+        .select(
+          "id, direction, status, category, description, amount, expected_amount, occurs_on, occurs_time, created_at, created_by, account_id, payment_method, card_brand_id, card_installments, card_fee_percent, card_fee_amount, net_amount, accounts:account_id ( id, name ), card_brands:card_brand_id ( id, name, kind )",
+        )
+        .eq("lecture_id", lectureId)
+        .is("archived_at", null);
       if (error) throw error;
       return data ?? [];
     },
@@ -673,8 +970,11 @@ function FechamentoFinanceiroTab({
     queryFn: async () => {
       const { data, error } = await supabase
         .from("stock_movements")
-        .select("id, direction, quantity, reason, occurs_on, notes, kind, unit_cost, total_cost, created_at, created_by, stock_items:stock_item_id ( id, name, unit, average_cost )")
-        .eq("lecture_id", lectureId).is("archived_at", null)
+        .select(
+          "id, direction, quantity, reason, occurs_on, notes, kind, unit_cost, total_cost, created_at, created_by, stock_items:stock_item_id ( id, name, unit, average_cost )",
+        )
+        .eq("lecture_id", lectureId)
+        .is("archived_at", null)
         .not("status", "in", "(cancelado,estornado)");
 
       if (error) throw error;
@@ -688,8 +988,11 @@ function FechamentoFinanceiroTab({
     queryFn: async () => {
       const { data, error } = await supabase
         .from("advances")
-        .select("id, amount, amount_amortized, granted_on, granted_time, source, paid_by_label, status, lecture_id, notes, created_at, created_by")
-        .eq("agent_id", agentId!).is("archived_at", null)
+        .select(
+          "id, amount, amount_amortized, granted_on, granted_time, source, paid_by_label, status, lecture_id, notes, created_at, created_by",
+        )
+        .eq("agent_id", agentId!)
+        .is("archived_at", null)
         .neq("status", "cancelado");
       if (error) throw error;
       return data ?? [];
@@ -701,8 +1004,10 @@ function FechamentoFinanceiroTab({
     queryFn: async () => {
       const { data, error } = await supabase
         .from("financial_rules")
-        .select("*").eq("organization_id", organizationId)
-        .is("archived_at", null).order("created_at", { ascending: false });
+        .select("*")
+        .eq("organization_id", organizationId)
+        .is("archived_at", null)
+        .order("created_at", { ascending: false });
       if (error) throw error;
       return data ?? [];
     },
@@ -713,9 +1018,14 @@ function FechamentoFinanceiroTab({
     queryFn: async () => {
       const { data, error } = await supabase
         .from("lecture_financial_snapshots")
-        .select("id, agent_id, agent_amount, gustavo_amount, net_profit, gross_revenue, total_expenses, total_advances, total_card_fees, total_stock_cost, rule_snapshot, inputs, breakdown, closed_at, closed_by")
-        .eq("lecture_id", lectureId).is("archived_at", null)
-        .order("closed_at", { ascending: false }).limit(1).maybeSingle();
+        .select(
+          "id, agent_id, agent_amount, gustavo_amount, net_profit, gross_revenue, total_expenses, total_advances, total_card_fees, total_stock_cost, rule_snapshot, inputs, breakdown, closed_at, closed_by",
+        )
+        .eq("lecture_id", lectureId)
+        .is("archived_at", null)
+        .order("closed_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
       if (error) throw error;
       return data;
     },
@@ -735,7 +1045,10 @@ function FechamentoFinanceiroTab({
     queryKey: ["profiles-by-ids", actorIds.join(",")],
     enabled: actorIds.length > 0,
     queryFn: async () => {
-      const { data, error } = await supabase.from("profiles").select("id, full_name, email").in("id", actorIds);
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id, full_name, email")
+        .in("id", actorIds);
       if (error) throw error;
       const m = new Map<string, { full_name: string | null; email: string | null }>();
       (data ?? []).forEach((p) => m.set(p.id, { full_name: p.full_name, email: p.email }));
@@ -794,10 +1107,11 @@ function FechamentoFinanceiroTab({
   // Expenses (financial out) categorized
   const expensesFromMovs: EnrichedExpense[] = useMemo(() => {
     return (movements.data ?? [])
-      .filter((m) =>
-        m.direction === "out"
-        && !CANCEL_STATUS.includes(m.status ?? "")
-        && !EXCLUDED_CATEGORIES.includes(m.category ?? "")
+      .filter(
+        (m) =>
+          m.direction === "out" &&
+          !CANCEL_STATUS.includes(m.status ?? "") &&
+          !EXCLUDED_CATEGORIES.includes(m.category ?? ""),
       )
       .map((m) => ({
         id: m.id,
@@ -819,12 +1133,17 @@ function FechamentoFinanceiroTab({
     return (stockMoves.data ?? [])
       .filter((m) => m.direction === "out")
       .map((m) => {
-        const item = m.stock_items as { id?: string; name?: string; unit?: string; average_cost?: number | null } | null;
+        const item = m.stock_items as {
+          id?: string;
+          name?: string;
+          unit?: string;
+          average_cost?: number | null;
+        } | null;
         const qty = Number(m.quantity ?? 0);
         const cost =
-          Number(m.total_cost ?? 0)
-          || qty * Number(m.unit_cost ?? 0)
-          || qty * Number(item?.average_cost ?? 0);
+          Number(m.total_cost ?? 0) ||
+          qty * Number(m.unit_cost ?? 0) ||
+          qty * Number(item?.average_cost ?? 0);
         return {
           id: m.id,
           source: "stock_movement" as const,
@@ -849,7 +1168,10 @@ function FechamentoFinanceiroTab({
   // Advances: linked to this lecture + open advances of the agent
   const advancesForCalc = useMemo(() => {
     return (lectureAdvances.data ?? [])
-      .filter((a) => a.lecture_id === lectureId || (a.status !== "abatido_total" && a.lecture_id === null))
+      .filter(
+        (a) =>
+          a.lecture_id === lectureId || (a.status !== "abatido_total" && a.lecture_id === null),
+      )
       .map((a) => ({
         id: a.id,
         amount: Math.max(0, Number(a.amount ?? 0) - Number(a.amount_amortized ?? 0)),
@@ -863,10 +1185,15 @@ function FechamentoFinanceiroTab({
   }, [lectureAdvances.data, lectureId]);
 
   // Rule
-  const activeRule: RuleSnapshot = useMemo(() => selectRule({
-    rules: (rules.data ?? []) as unknown as Parameters<typeof selectRule>[0]["rules"],
-    agentId, seasonId,
-  }), [rules.data, agentId, seasonId]);
+  const activeRule: RuleSnapshot = useMemo(
+    () =>
+      selectRule({
+        rules: (rules.data ?? []) as unknown as Parameters<typeof selectRule>[0]["rules"],
+        agentId,
+        seasonId,
+      }),
+    [rules.data, agentId, seasonId],
+  );
 
   // Snapshot is the audit record; DISPLAY totals are ALWAYS derived live so that
   // subtotal-per-row always matches the rows shown. Snapshot preserves the rule
@@ -899,7 +1226,11 @@ function FechamentoFinanceiroTab({
       if (!agentId) throw new Error("Vincule um agendista antes de fechar.");
 
       const breakdown = calculateLecture({
-        grossRevenue, cardFees, expenses, advances: advancesForCalc, rule: activeRule,
+        grossRevenue,
+        cardFees,
+        expenses,
+        advances: advancesForCalc,
+        rule: activeRule,
       });
 
       const { error: insErr } = await supabase.from("lecture_financial_snapshots").insert({
@@ -908,7 +1239,9 @@ function FechamentoFinanceiroTab({
         agent_id: agentId,
         rule_id: activeRule.id ?? null,
         rule_snapshot: JSON.parse(JSON.stringify(activeRule)),
-        inputs: JSON.parse(JSON.stringify({ grossRevenue, cardFees, expenses, advances: advancesForCalc })),
+        inputs: JSON.parse(
+          JSON.stringify({ grossRevenue, cardFees, expenses, advances: advancesForCalc }),
+        ),
         breakdown: JSON.parse(JSON.stringify(breakdown)),
         gross_revenue: grossRevenue,
         total_expenses: breakdown.totals.totalExpenses,
@@ -928,18 +1261,24 @@ function FechamentoFinanceiroTab({
         if (!original) continue;
         const newAmortized = Number(original.amount_amortized ?? 0) + a.amount;
         const fullyAmortized = newAmortized >= Number(original.amount ?? 0);
-        await supabase.from("advances").update({
-          amount_amortized: newAmortized,
-          status: fullyAmortized ? "abatido_total" : "abatido_parcial",
-          updated_by: userId,
-        }).eq("id", a.id);
+        await supabase
+          .from("advances")
+          .update({
+            amount_amortized: newAmortized,
+            status: fullyAmortized ? "abatido_total" : "abatido_parcial",
+            updated_by: userId,
+          })
+          .eq("id", a.id);
       }
 
-      await supabase.from("lectures").update({
-        financial_status: "closed",
-        closed_at: new Date().toISOString(),
-        closed_by: userId,
-      }).eq("id", lectureId);
+      await supabase
+        .from("lectures")
+        .update({
+          financial_status: "closed",
+          closed_at: new Date().toISOString(),
+          closed_by: userId,
+        })
+        .eq("id", lectureId);
     },
     onSuccess: () => {
       toast.success("Fechamento concluído. Snapshot salvo permanentemente.");
@@ -970,7 +1309,11 @@ function FechamentoFinanceiroTab({
       if (archErr) throw archErr;
 
       const breakdown = calculateLecture({
-        grossRevenue, cardFees, expenses, advances: advancesForCalc, rule: activeRule,
+        grossRevenue,
+        cardFees,
+        expenses,
+        advances: advancesForCalc,
+        rule: activeRule,
       });
       const { error: insErr } = await supabase.from("lecture_financial_snapshots").insert({
         organization_id: organizationId,
@@ -978,7 +1321,9 @@ function FechamentoFinanceiroTab({
         agent_id: agentId,
         rule_id: activeRule.id ?? null,
         rule_snapshot: JSON.parse(JSON.stringify(activeRule)),
-        inputs: JSON.parse(JSON.stringify({ grossRevenue, cardFees, expenses, advances: advancesForCalc })),
+        inputs: JSON.parse(
+          JSON.stringify({ grossRevenue, cardFees, expenses, advances: advancesForCalc }),
+        ),
         breakdown: JSON.parse(JSON.stringify(breakdown)),
         gross_revenue: grossRevenue,
         total_expenses: breakdown.totals.totalExpenses,
@@ -1023,32 +1368,40 @@ function FechamentoFinanceiroTab({
         const current = (lectureAdvances.data ?? []).find((x) => x.id === a.id);
         if (!current) continue;
         const restored = Math.max(0, Number(current.amount_amortized ?? 0) - Number(a.amount ?? 0));
-        await supabase.from("advances").update({
-          amount_amortized: restored,
-          status: restored <= 0 ? "aberto" : "abatido_parcial",
-          updated_by: userId,
-        }).eq("id", a.id);
+        await supabase
+          .from("advances")
+          .update({
+            amount_amortized: restored,
+            status: restored <= 0 ? "aberto" : "abatido_parcial",
+            updated_by: userId,
+          })
+          .eq("id", a.id);
       }
 
-      const { error: lecErr } = await supabase.from("lectures").update({
-        financial_status: "review",
-        closed_at: null,
-        closed_by: null,
-        reopened_at: new Date().toISOString(),
-        reopened_by: userId,
-        reopen_reason: reason.trim() || null,
-        updated_by: userId,
-      }).eq("id", lectureId);
+      const { error: lecErr } = await supabase
+        .from("lectures")
+        .update({
+          financial_status: "review",
+          closed_at: null,
+          closed_by: null,
+          reopened_at: new Date().toISOString(),
+          reopened_by: userId,
+          reopen_reason: reason.trim() || null,
+          updated_by: userId,
+        })
+        .eq("id", lectureId);
       if (lecErr) throw lecErr;
 
       await supabase.from("timeline_events").insert({
         organization_id: organizationId,
-        entity_type: "lecture", entity_id: lectureId,
+        entity_type: "lecture",
+        entity_id: lectureId,
         kind: "closing",
         title: "Fechamento reaberto",
         body: reason.trim() || "Sem motivo informado.",
         occurs_at: new Date().toISOString(),
-        created_by: userId, updated_by: userId,
+        created_by: userId,
+        updated_by: userId,
       });
     },
     onSuccess: () => {
@@ -1063,7 +1416,12 @@ function FechamentoFinanceiroTab({
     onError: (e) => toast.error(e instanceof Error ? e.message : "Erro ao reabrir"),
   });
 
-  const loading = movements.isLoading || stockMoves.isLoading || lectureAdvances.isLoading || rules.isLoading || snapshot.isLoading;
+  const loading =
+    movements.isLoading ||
+    stockMoves.isLoading ||
+    lectureAdvances.isLoading ||
+    rules.isLoading ||
+    snapshot.isLoading;
   if (loading) return <p className="text-sm text-muted-foreground">Carregando motor financeiro…</p>;
 
   const ruleInUse: RuleSnapshot = isClosed
@@ -1075,18 +1433,23 @@ function FechamentoFinanceiroTab({
       {/* Cabeçalho do motor */}
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-card/40 p-5">
         <div>
-          <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">Motor Financeiro</p>
+          <p className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
+            Motor Financeiro
+          </p>
           <p className="mt-1 font-serif text-xl text-foreground">
             {isClosed ? "Fechamento concluído" : "Fechamento em aberto"}
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
-            Regra: <span className="text-foreground">{ruleInUse.name ?? "—"}</span> ·
-            Gustavo {pctStr(ruleInUse.gustavo_share)} · Agendista {pctStr(ruleInUse.agent_share)}
-            {ruleInUse.fee_percent || ruleInUse.fee_fixed ? ` · Taxa ${pctStr(ruleInUse.fee_percent)}${ruleInUse.fee_fixed ? ` + ${formatCurrency(ruleInUse.fee_fixed)}` : ""}` : ""}
+            Regra: <span className="text-foreground">{ruleInUse.name ?? "—"}</span> · Gustavo{" "}
+            {pctStr(ruleInUse.gustavo_share)} · Agendista {pctStr(ruleInUse.agent_share)}
+            {ruleInUse.fee_percent || ruleInUse.fee_fixed
+              ? ` · Taxa ${pctStr(ruleInUse.fee_percent)}${ruleInUse.fee_fixed ? ` + ${formatCurrency(ruleInUse.fee_fixed)}` : ""}`
+              : ""}
           </p>
           {isClosed && (
             <p className="mt-1 text-[11px] text-muted-foreground">
-              <Lock className="mr-1 inline h-3 w-3" /> Snapshot congelado em {formatDate(snapshot.data!.closed_at)} por {actorName(snapshot.data!.closed_by)}.
+              <Lock className="mr-1 inline h-3 w-3" /> Snapshot congelado em{" "}
+              {formatDate(snapshot.data!.closed_at)} por {actorName(snapshot.data!.closed_by)}.
             </p>
           )}
         </div>
@@ -1095,11 +1458,15 @@ function FechamentoFinanceiroTab({
             title="Cálculo do fechamento"
             subtitle={`Regra: ${ruleInUse.name ?? "—"}`}
             lines={calc.lines}
-            footer={isClosed
-              ? <>Snapshot permanente — não muda mesmo se a regra for alterada.</>
-              : <>Pré-cálculo dinâmico — torna-se permanente após o fechamento.</>}
+            footer={
+              isClosed ? (
+                <>Snapshot permanente — não muda mesmo se a regra for alterada.</>
+              ) : (
+                <>Pré-cálculo dinâmico — torna-se permanente após o fechamento.</>
+              )
+            }
             trigger={
-              <Button variant="outline" size="sm" className="rounded-full">
+              <Button variant="outline" size="sm">
                 <Calculator className="mr-1.5 h-4 w-4" /> Ver Cálculo
               </Button>
             }
@@ -1113,7 +1480,8 @@ function FechamentoFinanceiroTab({
               onConfirm={() => close.mutate()}
               trigger={
                 <Button
-                  variant="navy" size="sm" className="rounded-full"
+                  variant="brand"
+                  size="sm"
                   disabled={close.isPending || !grossRevenue || !agentId}
                 >
                   <Lock className="mr-1.5 h-4 w-4" /> Fechar palestra
@@ -1129,25 +1497,34 @@ function FechamentoFinanceiroTab({
               pending={recalc.isPending}
               onConfirm={() => recalc.mutate()}
               trigger={
-                <Button variant="outline" size="sm" className="rounded-full" disabled={recalc.isPending}>
+                <Button variant="outline" size="sm" disabled={recalc.isPending}>
                   <Calculator className="mr-1.5 h-4 w-4" /> Recalcular fechamento
                 </Button>
               }
             />
           )}
           {isClosed && (
-            <ReopenDialog pending={reopen.isPending} onConfirm={(reason) => reopen.mutate(reason)} />
+            <ReopenDialog
+              pending={reopen.isPending}
+              onConfirm={(reason) => reopen.mutate(reason)}
+            />
           )}
         </div>
       </div>
 
       {isClosed && snapshotDivergent && (
         <div className="rounded-2xl border border-amber-500/40 bg-amber-500/10 px-5 py-3 text-[13px] text-amber-900 dark:text-amber-100">
-          <p className="font-medium">Divergência detectada entre o snapshot congelado e os dados atuais.</p>
+          <p className="font-medium">
+            Divergência detectada entre o snapshot congelado e os dados atuais.
+          </p>
           <p className="mt-0.5 text-xs opacity-80">
-            Snapshot: Materiais {formatCurrency(Number(snapshot.data!.total_stock_cost ?? 0))} · Taxas cartão {formatCurrency(Number(snapshot.data!.total_card_fees ?? 0))} · Lucro {formatCurrency(Number(snapshot.data!.net_profit ?? 0))}.
-            Atual: Materiais {formatCurrency(calc.totals.totalStock)} · Taxas cartão {formatCurrency(calc.totals.totalCardFees)} · Lucro {formatCurrency(calc.totals.netProfit)}.
-            Use "Recalcular fechamento" para regravar o snapshot preservando o histórico.
+            Snapshot: Materiais {formatCurrency(Number(snapshot.data!.total_stock_cost ?? 0))} ·
+            Taxas cartão {formatCurrency(Number(snapshot.data!.total_card_fees ?? 0))} · Lucro{" "}
+            {formatCurrency(Number(snapshot.data!.net_profit ?? 0))}. Atual: Materiais{" "}
+            {formatCurrency(calc.totals.totalStock)} · Taxas cartão{" "}
+            {formatCurrency(calc.totals.totalCardFees)} · Lucro{" "}
+            {formatCurrency(calc.totals.netProfit)}. Use "Recalcular fechamento" para regravar o
+            snapshot preservando o histórico.
           </p>
         </div>
       )}
@@ -1157,14 +1534,23 @@ function FechamentoFinanceiroTab({
         <CalcKPI label="Receita bruta" value={calc.totals.grossRevenue} accent="positive" />
         <CalcKPI label="Materiais" value={-calc.totals.totalStock} accent="negative" />
         <CalcKPI label="Juros / taxa cartão" value={-calc.totals.totalCardFees} accent="negative" />
-        <CalcKPI label="Lucro líquido operacional" value={calc.totals.netProfit} accent={calc.totals.netProfit >= 0 ? "positive" : "negative"} />
+        <CalcKPI
+          label="Lucro líquido operacional"
+          value={calc.totals.netProfit}
+          accent={calc.totals.netProfit >= 0 ? "positive" : "negative"}
+        />
         <CalcKPI label="Palestrante (50%)" value={calc.totals.gustavoAmount} accent="muted" />
         <CalcKPI label="Agendista (50%)" value={calc.totals.agentAmount} accent="gold" />
-        <CalcKPI label="Dízimo sugerido (10%)" value={(calc.totals.gustavoTithe ?? 0) + (calc.totals.agentTithe ?? 0)} accent="muted" />
+        <CalcKPI
+          label="Dízimo sugerido (10%)"
+          value={(calc.totals.gustavoTithe ?? 0) + (calc.totals.agentTithe ?? 0)}
+          accent="muted"
+        />
       </div>
       <p className="text-[11px] text-muted-foreground">
-        Dízimo é apenas informativo — 10% sobre a parte individual de cada um, não deduzido do saldo.
-        Palestrante {formatCurrency(calc.totals.gustavoTithe ?? 0)} · Agendista {formatCurrency(calc.totals.agentTithe ?? 0)}.
+        Dízimo é apenas informativo — 10% sobre a parte individual de cada um, não deduzido do
+        saldo. Palestrante {formatCurrency(calc.totals.gustavoTithe ?? 0)} · Agendista{" "}
+        {formatCurrency(calc.totals.agentTithe ?? 0)}.
       </p>
 
       {/* Receitas */}
@@ -1182,12 +1568,18 @@ function FechamentoFinanceiroTab({
           origin: {
             actorName: actorName(r.createdBy),
             createdAt: r.createdAt,
-              reason: [
+            reason:
+              [
                 r.status ? `Status: ${r.status}` : null,
                 r.paymentMethod ? `Forma: ${paymentMethodLabel(r.paymentMethod)}` : null,
-                r.cardFeeAmount > 0 ? `Taxa cartão: ${formatCurrency(r.cardFeeAmount)} · líquido ${formatCurrency(r.netAmount)}` : null,
-              ].filter(Boolean).join(" · ") || null,
-            docRoute: r.docRoute, docLabel: r.docLabel,
+                r.cardFeeAmount > 0
+                  ? `Taxa cartão: ${formatCurrency(r.cardFeeAmount)} · líquido ${formatCurrency(r.netAmount)}`
+                  : null,
+              ]
+                .filter(Boolean)
+                .join(" · ") || null,
+            docRoute: r.docRoute,
+            docLabel: r.docLabel,
           },
         }))}
         totalLabel="Total de receitas"
@@ -1198,19 +1590,25 @@ function FechamentoFinanceiroTab({
       {(["tax", "cost", "stock", "expense"] as ExpenseBucket[]).map((bucket) => {
         const rows = expenses.filter((e) => (e.bucket ?? "expense") === bucket);
         const total =
-          bucket === "tax" ? calc.totals.totalTaxes :
-          bucket === "cost" ? calc.totals.totalCosts :
-          bucket === "stock" ? calc.totals.totalStock :
-          calc.totals.totalOtherExpenses;
+          bucket === "tax"
+            ? calc.totals.totalTaxes
+            : bucket === "cost"
+              ? calc.totals.totalCosts
+              : bucket === "stock"
+                ? calc.totals.totalStock
+                : calc.totals.totalOtherExpenses;
         return (
           <FechamentoSection
             key={bucket}
             title={BUCKET_LABEL[bucket]}
             subtitle={
-              bucket === "tax" ? "Impostos e taxas debitados da receita" :
-              bucket === "cost" ? "Custos operacionais, viagem, tecnologia" :
-              bucket === "stock" ? "Itens consumidos no estoque (custo médio)" :
-              "Demais despesas vinculadas"
+              bucket === "tax"
+                ? "Impostos e taxas debitados da receita"
+                : bucket === "cost"
+                  ? "Custos operacionais, viagem, tecnologia"
+                  : bucket === "stock"
+                    ? "Itens consumidos no estoque (custo médio)"
+                    : "Demais despesas vinculadas"
             }
             emptyText={`Nenhum lançamento em ${BUCKET_LABEL[bucket]}.`}
             rows={rows.map((e) => ({
@@ -1223,8 +1621,14 @@ function FechamentoFinanceiroTab({
               origin: {
                 actorName: actorName(e.createdBy),
                 createdAt: e.createdAt ?? null,
-                reason: e.source === "stock_movement" ? "Consumo registrado no estoque" : (e.category ? `Categoria: ${e.category}` : null),
-                docRoute: e.docRoute, docLabel: e.docLabel,
+                reason:
+                  e.source === "stock_movement"
+                    ? "Consumo registrado no estoque"
+                    : e.category
+                      ? `Categoria: ${e.category}`
+                      : null,
+                docRoute: e.docRoute,
+                docLabel: e.docLabel,
               },
             }))}
             totalLabel={`Subtotal ${BUCKET_LABEL[bucket]}`}
@@ -1236,7 +1640,11 @@ function FechamentoFinanceiroTab({
       {/* Adiantamentos */}
       <FechamentoSection
         title="Adiantamentos do agendista"
-        subtitle={agentId ? "Adiantamentos em aberto que serão amortizados neste fechamento" : "Vincule um agendista para listar adiantamentos."}
+        subtitle={
+          agentId
+            ? "Adiantamentos em aberto que serão amortizados neste fechamento"
+            : "Vincule um agendista para listar adiantamentos."
+        }
         emptyText="Nenhum adiantamento aplicável."
         rows={advancesForCalc.map((a) => ({
           id: a.id,
@@ -1270,12 +1678,18 @@ function FechamentoFinanceiroTab({
   );
 }
 
-function ReopenDialog({ pending, onConfirm }: { pending: boolean; onConfirm: (reason: string) => void }) {
+function ReopenDialog({
+  pending,
+  onConfirm,
+}: {
+  pending: boolean;
+  onConfirm: (reason: string) => void;
+}) {
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState("");
   return (
     <>
-      <Button variant="outline" size="sm" className="rounded-full" onClick={() => setOpen(true)} disabled={pending}>
+      <Button variant="outline" size="sm" onClick={() => setOpen(true)} disabled={pending}>
         <Unlock className="mr-1.5 h-4 w-4" /> Reabrir palestra
       </Button>
       <Dialog open={open} onOpenChange={setOpen}>
@@ -1286,19 +1700,33 @@ function ReopenDialog({ pending, onConfirm }: { pending: boolean; onConfirm: (re
           <div className="space-y-3">
             <p className="text-sm text-muted-foreground">
               O snapshot atual será arquivado (nada é apagado), os adiantamentos amortizados neste
-              fechamento voltam para o saldo em aberto e a palestra retorna para <strong>Em conferência</strong>.
-              A Conta Corrente deixa de considerar este resultado até o novo fechamento.
+              fechamento voltam para o saldo em aberto e a palestra retorna para{" "}
+              <strong>Em conferência</strong>. A Conta Corrente deixa de considerar este resultado
+              até o novo fechamento.
             </p>
             <div className="space-y-1.5">
               <Label>Motivo da reabertura</Label>
-              <Textarea rows={3} value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Ex.: correção do custo dos materiais." />
+              <Textarea
+                rows={3}
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+                placeholder="Ex.: correção do custo dos materiais."
+              />
             </div>
           </div>
           <DialogFooter>
-            <Button type="button" variant="ghost" onClick={() => setOpen(false)}>Cancelar</Button>
+            <Button type="button" variant="ghost" onClick={() => setOpen(false)}>
+              Cancelar
+            </Button>
             <Button
-              type="button" variant="navy" disabled={pending}
-              onClick={() => { onConfirm(reason); setOpen(false); setReason(""); }}
+              type="button"
+              variant="brand"
+              disabled={pending}
+              onClick={() => {
+                onConfirm(reason);
+                setOpen(false);
+                setReason("");
+              }}
             >
               Reabrir palestra
             </Button>
@@ -1310,7 +1738,6 @@ function ReopenDialog({ pending, onConfirm }: { pending: boolean; onConfirm: (re
 }
 
 /* ----- helpers do fechamento ----- */
-
 
 function pctStr(v: number) {
   return `${Math.round((v || 0) * 1000) / 10}%`;
@@ -1333,28 +1760,35 @@ type FechRow = {
 };
 
 function FechamentoSection({
-  title, subtitle, rows, emptyText, totalLabel, total,
+  title,
+  subtitle,
+  rows,
+  emptyText,
+  totalLabel,
+  total,
 }: {
-  title: string; subtitle?: string; rows: FechRow[]; emptyText: string;
-  totalLabel: string; total: number;
+  title: string;
+  subtitle?: string;
+  rows: FechRow[];
+  emptyText: string;
+  totalLabel: string;
+  total: number;
 }) {
   const navigate = useNavigate();
   return (
     <div className="overflow-hidden rounded-2xl border border-border bg-card/40">
       <div className="flex flex-wrap items-end justify-between gap-2 border-b border-border/70 px-5 py-4">
         <div>
-          <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">{title}</p>
+          <p className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">{title}</p>
           {subtitle && <p className="mt-1 text-xs text-muted-foreground">{subtitle}</p>}
         </div>
-        <p className="font-serif text-lg text-foreground tabular-nums">
-          {formatCurrency(total)}
-        </p>
+        <p className="font-serif text-lg text-foreground tabular-nums">{formatCurrency(total)}</p>
       </div>
       {rows.length === 0 ? (
         <p className="px-5 py-6 text-sm text-muted-foreground">{emptyText}</p>
       ) : (
         <table className="w-full text-sm">
-          <thead className="bg-muted/30 text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
+          <thead className="bg-muted/30 text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
             <tr>
               <th className="px-4 py-2.5 text-left font-medium">Data</th>
               <th className="px-4 py-2.5 text-left font-medium">Descrição</th>
@@ -1366,36 +1800,58 @@ function FechamentoSection({
           <tbody>
             {rows.map((r) => (
               <tr key={r.id} className="border-t border-border/70 hover:bg-muted/20">
-                <td className="px-4 py-2.5 text-muted-foreground whitespace-nowrap">{formatDate(r.date)}</td>
+                <td className="px-4 py-2.5 text-muted-foreground whitespace-nowrap">
+                  {formatDate(r.date)}
+                </td>
                 <td className="px-4 py-2.5 text-foreground">{r.description}</td>
                 <td className="px-4 py-2.5">
-                  <Badge variant="outline" className="font-normal">{r.tag}</Badge>
+                  <Badge variant="outline" className="font-normal">
+                    {r.tag}
+                  </Badge>
                 </td>
-                <td className={cn("px-4 py-2.5 text-right tabular-nums", r.positive ? "text-emerald-600" : "text-rose-600")}>
+                <td
+                  className={cn(
+                    "px-4 py-2.5 text-right tabular-nums",
+                    r.positive ? "text-emerald-600" : "text-rose-600",
+                  )}
+                >
                   {r.positive ? "+" : "−"} {formatCurrency(Math.abs(r.amount))}
                 </td>
                 <td className="px-4 py-2.5 text-right">
                   <Popover>
                     <PopoverTrigger asChild>
-                      <Button variant="ghost" size="sm" className="h-7 rounded-full text-xs">
+                      <Button variant="ghost" size="sm" className="h-7 text-xs">
                         <Info className="mr-1 h-3.5 w-3.5" /> Ver origem
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent align="end" className="w-80 text-xs">
-                      <p className="mb-2 text-[10px] uppercase tracking-[0.22em] text-muted-foreground">Origem do valor</p>
+                      <p className="mb-2 text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
+                        Origem do valor
+                      </p>
                       <dl className="space-y-1.5">
                         <OriginRow label="Usuário responsável" value={r.origin.actorName} />
-                        <OriginRow label="Lançado em" value={r.origin.createdAt ? `${formatDate(r.origin.createdAt)} · ${new Date(r.origin.createdAt).toTimeString().slice(0, 5)}` : "—"} />
-                        <OriginRow label="Data do movimento" value={r.date ? formatDate(r.date) : "—"} />
+                        <OriginRow
+                          label="Lançado em"
+                          value={
+                            r.origin.createdAt
+                              ? `${formatDate(r.origin.createdAt)} · ${new Date(r.origin.createdAt).toTimeString().slice(0, 5)}`
+                              : "—"
+                          }
+                        />
+                        <OriginRow
+                          label="Data do movimento"
+                          value={r.date ? formatDate(r.date) : "—"}
+                        />
                         {r.origin.reason && <OriginRow label="Motivo" value={r.origin.reason} />}
                       </dl>
                       {r.origin.docRoute && (
                         <button
                           type="button"
                           onClick={() => openDoc(navigate, r.origin.docRoute)}
-                          className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-[var(--gold)] hover:underline"
+                          className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-gold-ink hover:underline"
                         >
-                          <ExternalLink className="h-3.5 w-3.5" /> {r.origin.docLabel ?? "Documento"}
+                          <ExternalLink className="h-3.5 w-3.5" />{" "}
+                          {r.origin.docLabel ?? "Documento"}
                         </button>
                       )}
                     </PopoverContent>
@@ -1404,8 +1860,12 @@ function FechamentoSection({
               </tr>
             ))}
             <tr className="border-t border-border/80 bg-muted/30 font-medium">
-              <td className="px-4 py-2.5 text-muted-foreground" colSpan={3}>{totalLabel}</td>
-              <td className="px-4 py-2.5 text-right tabular-nums text-foreground" colSpan={2}>{formatCurrency(total)}</td>
+              <td className="px-4 py-2.5 text-muted-foreground" colSpan={3}>
+                {totalLabel}
+              </td>
+              <td className="px-4 py-2.5 text-right tabular-nums text-foreground" colSpan={2}>
+                {formatCurrency(total)}
+              </td>
             </tr>
           </tbody>
         </table>
@@ -1423,17 +1883,27 @@ function OriginRow({ label, value }: { label: string; value: string }) {
   );
 }
 
-function CalcKPI({ label, value, accent }: { label: string; value: number; accent: "positive" | "negative" | "muted" | "gold" }) {
+function CalcKPI({
+  label,
+  value,
+  accent,
+}: {
+  label: string;
+  value: number;
+  accent: "positive" | "negative" | "muted" | "gold";
+}) {
   return (
     <div className="rounded-2xl border border-border bg-card/40 p-5">
-      <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">{label}</p>
-      <p className={cn(
-        "mt-3 font-serif text-xl tabular-nums",
-        accent === "positive" && "text-emerald-600",
-        accent === "negative" && "text-rose-600",
-        accent === "muted" && "text-foreground",
-        accent === "gold" && "text-[var(--gold)]",
-      )}>
+      <p className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">{label}</p>
+      <p
+        className={cn(
+          "mt-3 font-serif text-xl tabular-nums",
+          accent === "positive" && "text-emerald-600",
+          accent === "negative" && "text-rose-600",
+          accent === "muted" && "text-foreground",
+          accent === "gold" && "text-gold-ink",
+        )}
+      >
         {formatCurrency(value)}
       </p>
     </div>

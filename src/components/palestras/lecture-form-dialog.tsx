@@ -2,14 +2,23 @@ import { useEffect, useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
-  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useAutomation } from "@/hooks/use-automation";
@@ -40,7 +49,11 @@ export type LectureRow = {
 const NONE = "__none__";
 
 export function LectureFormDialog({
-  open, onOpenChange, organizationId, userId, initial,
+  open,
+  onOpenChange,
+  organizationId,
+  userId,
+  initial,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
@@ -68,39 +81,85 @@ export function LectureFormDialog({
 
   const companies = useQuery({
     queryKey: ["lectures-companies-select", organizationId],
-    queryFn: async () => (await supabase.from("companies").select("id, legal_name").eq("organization_id", organizationId).is("archived_at", null).order("legal_name")).data ?? [],
+    queryFn: async () =>
+      (
+        await supabase
+          .from("companies")
+          .select("id, legal_name")
+          .eq("organization_id", organizationId)
+          .is("archived_at", null)
+          .order("legal_name")
+      ).data ?? [],
   });
   const contacts = useQuery({
     queryKey: ["lectures-contacts-select", organizationId, f.company_id],
     queryFn: async () => {
-      let q = supabase.from("contacts").select("id, full_name, company_id")
-        .eq("organization_id", organizationId).is("archived_at", null).order("full_name");
+      let q = supabase
+        .from("contacts")
+        .select("id, full_name, company_id")
+        .eq("organization_id", organizationId)
+        .is("archived_at", null)
+        .order("full_name");
       if (f.company_id) q = q.eq("company_id", f.company_id);
       return (await q).data ?? [];
     },
   });
   const agents = useQuery({
     queryKey: ["lectures-agents-select", organizationId],
-    queryFn: async () => (await supabase.from("agents").select("id, full_name").eq("organization_id", organizationId).is("archived_at", null).order("full_name")).data ?? [],
+    queryFn: async () =>
+      (
+        await supabase
+          .from("agents")
+          .select("id, full_name")
+          .eq("organization_id", organizationId)
+          .is("archived_at", null)
+          .order("full_name")
+      ).data ?? [],
   });
   const seasons = useQuery({
     queryKey: ["lectures-seasons-select", organizationId],
-    queryFn: async () => (await supabase.from("seasons").select("id, name").eq("organization_id", organizationId).is("archived_at", null).order("starts_on", { ascending: false })).data ?? [],
+    queryFn: async () =>
+      (
+        await supabase
+          .from("seasons")
+          .select("id, name")
+          .eq("organization_id", organizationId)
+          .is("archived_at", null)
+          .order("starts_on", { ascending: false })
+      ).data ?? [],
   });
   const campaigns = useQuery({
     queryKey: ["lectures-campaigns-select", organizationId],
-    queryFn: async () => (await supabase.from("campaigns").select("id, name").eq("organization_id", organizationId).is("archived_at", null).order("name")).data ?? [],
+    queryFn: async () =>
+      (
+        await supabase
+          .from("campaigns")
+          .select("id, name")
+          .eq("organization_id", organizationId)
+          .is("archived_at", null)
+          .order("name")
+      ).data ?? [],
   });
   const projects = useQuery({
     queryKey: ["lectures-projects-select", organizationId],
-    queryFn: async () => (await supabase.from("projects").select("id, name").eq("organization_id", organizationId).is("archived_at", null).order("name")).data ?? [],
+    queryFn: async () =>
+      (
+        await supabase
+          .from("projects")
+          .select("id, name")
+          .eq("organization_id", organizationId)
+          .is("archived_at", null)
+          .order("name")
+      ).data ?? [],
   });
 
   const save = useMutation({
     mutationFn: async () => {
       if (!f.title?.trim()) throw new Error("Informe o nome da palestra.");
       const scheduledAt = f.scheduled_at
-        ? new Date(`${f.scheduled_at}T${(f.scheduled_time || "00:00").slice(0, 5)}:00`).toISOString()
+        ? new Date(
+            `${f.scheduled_at}T${(f.scheduled_time || "00:00").slice(0, 5)}:00`,
+          ).toISOString()
         : null;
       const payload = {
         organization_id: organizationId,
@@ -128,7 +187,9 @@ export function LectureFormDialog({
         const { error } = await supabase.from("lectures").update(payload).eq("id", initial!.id!);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("lectures").insert({ ...payload, created_by: userId });
+        const { error } = await supabase
+          .from("lectures")
+          .insert({ ...payload, created_by: userId });
         if (error) throw error;
       }
     },
@@ -150,8 +211,13 @@ export function LectureFormDialog({
     onError: (e) => toast.error(e instanceof Error ? e.message : "Erro"),
   });
 
-  function submit(e: FormEvent) { e.preventDefault(); save.mutate(); }
-  function set<K extends keyof LectureRow>(k: K, v: LectureRow[K]) { setF((p) => ({ ...p, [k]: v })); }
+  function submit(e: FormEvent) {
+    e.preventDefault();
+    save.mutate();
+  }
+  function set<K extends keyof LectureRow>(k: K, v: LectureRow[K]) {
+    setF((p) => ({ ...p, [k]: v }));
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -161,7 +227,8 @@ export function LectureFormDialog({
             {isEdit ? "Editar palestra" : "Nova palestra"}
           </DialogTitle>
           <DialogDescription>
-            A palestra conecta empresa, contato, agendista, temporada, projeto, financeiro e estoque.
+            A palestra conecta empresa, contato, agendista, temporada, projeto, financeiro e
+            estoque.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={submit} className="grid grid-cols-1 gap-3 md:grid-cols-3">
@@ -172,9 +239,15 @@ export function LectureFormDialog({
           <div className="space-y-1.5">
             <Label>Status</Label>
             <Select value={f.status ?? "lead"} onValueChange={(v) => set("status", v)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
-                {LECTURE_STATUS.map((s) => <SelectItem key={s.key} value={s.key}>{s.label}</SelectItem>)}
+                {LECTURE_STATUS.map((s) => (
+                  <SelectItem key={s.key} value={s.key}>
+                    {s.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -184,31 +257,68 @@ export function LectureFormDialog({
             <Input value={f.theme ?? ""} onChange={(e) => set("theme", e.target.value)} />
           </div>
 
-          <SelectField label="Empresa" value={f.company_id} onChange={(v) => set("company_id", v)}
-            options={(companies.data ?? []).map((c) => ({ value: c.id, label: c.legal_name }))} />
-          <SelectField label="Contato" value={f.contact_id} onChange={(v) => set("contact_id", v)}
-            options={(contacts.data ?? []).map((c) => ({ value: c.id, label: c.full_name }))} />
-          <SelectField label="Agendista" value={f.agent_id} onChange={(v) => set("agent_id", v)}
-            options={(agents.data ?? []).map((a) => ({ value: a.id, label: a.full_name }))} />
+          <SelectField
+            label="Empresa"
+            value={f.company_id}
+            onChange={(v) => set("company_id", v)}
+            options={(companies.data ?? []).map((c) => ({ value: c.id, label: c.legal_name }))}
+          />
+          <SelectField
+            label="Contato"
+            value={f.contact_id}
+            onChange={(v) => set("contact_id", v)}
+            options={(contacts.data ?? []).map((c) => ({ value: c.id, label: c.full_name }))}
+          />
+          <SelectField
+            label="Agendista"
+            value={f.agent_id}
+            onChange={(v) => set("agent_id", v)}
+            options={(agents.data ?? []).map((a) => ({ value: a.id, label: a.full_name }))}
+          />
 
-          <SelectField label="Temporada" value={f.season_id} onChange={(v) => set("season_id", v)}
-            options={(seasons.data ?? []).map((s) => ({ value: s.id, label: s.name }))} />
-          <SelectField label="Campanha" value={f.campaign_id} onChange={(v) => set("campaign_id", v)}
-            options={(campaigns.data ?? []).map((c) => ({ value: c.id, label: c.name }))} />
-          <SelectField label="Projeto" value={f.project_id} onChange={(v) => set("project_id", v)}
-            options={(projects.data ?? []).map((p) => ({ value: p.id, label: p.name }))} />
+          <SelectField
+            label="Temporada"
+            value={f.season_id}
+            onChange={(v) => set("season_id", v)}
+            options={(seasons.data ?? []).map((s) => ({ value: s.id, label: s.name }))}
+          />
+          <SelectField
+            label="Campanha"
+            value={f.campaign_id}
+            onChange={(v) => set("campaign_id", v)}
+            options={(campaigns.data ?? []).map((c) => ({ value: c.id, label: c.name }))}
+          />
+          <SelectField
+            label="Projeto"
+            value={f.project_id}
+            onChange={(v) => set("project_id", v)}
+            options={(projects.data ?? []).map((p) => ({ value: p.id, label: p.name }))}
+          />
 
           <div className="space-y-1.5">
             <Label>Data</Label>
-            <Input type="date" value={f.scheduled_at ?? ""} onChange={(e) => set("scheduled_at", e.target.value)} />
+            <Input
+              type="date"
+              value={f.scheduled_at ?? ""}
+              onChange={(e) => set("scheduled_at", e.target.value)}
+            />
           </div>
           <div className="space-y-1.5">
             <Label>Hora</Label>
-            <Input type="time" value={f.scheduled_time ?? ""} onChange={(e) => set("scheduled_time", e.target.value)} />
+            <Input
+              type="time"
+              value={f.scheduled_time ?? ""}
+              onChange={(e) => set("scheduled_time", e.target.value)}
+            />
           </div>
           <div className="space-y-1.5">
             <Label>Receita bruta (R$)</Label>
-            <Input type="number" step="0.01" value={f.gross_revenue ?? ""} onChange={(e) => set("gross_revenue", e.target.value)} />
+            <Input
+              type="number"
+              step="0.01"
+              value={f.gross_revenue ?? ""}
+              onChange={(e) => set("gross_revenue", e.target.value)}
+            />
           </div>
 
           <div className="space-y-1.5">
@@ -226,22 +336,36 @@ export function LectureFormDialog({
 
           <div className="space-y-1.5">
             <Label>Público previsto</Label>
-            <Input type="number" value={f.expected_audience ?? ""} onChange={(e) => set("expected_audience", e.target.value)} />
+            <Input
+              type="number"
+              value={f.expected_audience ?? ""}
+              onChange={(e) => set("expected_audience", e.target.value)}
+            />
           </div>
           <div className="space-y-1.5">
             <Label>Público real</Label>
-            <Input type="number" value={f.actual_audience ?? ""} onChange={(e) => set("actual_audience", e.target.value)} />
+            <Input
+              type="number"
+              value={f.actual_audience ?? ""}
+              onChange={(e) => set("actual_audience", e.target.value)}
+            />
           </div>
           <div className="space-y-1.5"></div>
 
           <div className="space-y-1.5 md:col-span-3">
             <Label>Observações</Label>
-            <Textarea rows={3} value={f.notes ?? ""} onChange={(e) => set("notes", e.target.value)} />
+            <Textarea
+              rows={3}
+              value={f.notes ?? ""}
+              onChange={(e) => set("notes", e.target.value)}
+            />
           </div>
 
           <DialogFooter className="md:col-span-3">
-            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Cancelar</Button>
-            <Button type="submit" variant="navy" disabled={save.isPending}>
+            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
+              Cancelar
+            </Button>
+            <Button type="submit" variant="brand" disabled={save.isPending}>
               {save.isPending ? "Salvando…" : isEdit ? "Salvar" : "Criar palestra"}
             </Button>
           </DialogFooter>
@@ -251,8 +375,14 @@ export function LectureFormDialog({
   );
 }
 
-function SelectField({ label, value, onChange, options }: {
-  label: string; value: string | null | undefined;
+function SelectField({
+  label,
+  value,
+  onChange,
+  options,
+}: {
+  label: string;
+  value: string | null | undefined;
   onChange: (v: string | null) => void;
   options: { value: string; label: string }[];
 }) {
@@ -260,10 +390,16 @@ function SelectField({ label, value, onChange, options }: {
     <div className="space-y-1.5">
       <Label>{label}</Label>
       <Select value={value ?? NONE} onValueChange={(v) => onChange(v === NONE ? null : v)}>
-        <SelectTrigger><SelectValue placeholder="Selecionar" /></SelectTrigger>
+        <SelectTrigger>
+          <SelectValue placeholder="Selecionar" />
+        </SelectTrigger>
         <SelectContent>
           <SelectItem value={NONE}>Nenhum(a)</SelectItem>
-          {options.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+          {options.map((o) => (
+            <SelectItem key={o.value} value={o.value}>
+              {o.label}
+            </SelectItem>
+          ))}
         </SelectContent>
       </Select>
     </div>

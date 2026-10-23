@@ -53,7 +53,9 @@ function CrmPage() {
     queryFn: async (): Promise<Company[]> => {
       const { data, error } = await supabase
         .from("companies")
-        .select("id, legal_name, trade_name, document, segment, city, state, status, lifecycle_stage, is_favorite, created_at")
+        .select(
+          "id, legal_name, trade_name, document, segment, city, state, status, lifecycle_stage, is_favorite, created_at",
+        )
         .eq("organization_id", organizationId!)
         .is("archived_at", null)
         .order("created_at", { ascending: false });
@@ -95,7 +97,7 @@ function CrmPage() {
         title="Empresas"
         description="Cadastro central de empresas, contatos, leads e oportunidades."
         actions={
-          <Button variant="navy" className="rounded-full" onClick={() => setOpen(true)} disabled={!organizationId}>
+          <Button variant="brand" onClick={() => setOpen(true)} disabled={!organizationId}>
             <Plus className="mr-1.5 h-4 w-4" /> Nova empresa
           </Button>
         }
@@ -116,7 +118,9 @@ function CrmPage() {
             onClick={() => setFilter("all")}
             className={cn(
               "rounded-full px-3 py-1.5 text-xs transition-colors",
-              filter === "all" ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground",
+              filter === "all"
+                ? "bg-foreground text-background"
+                : "text-muted-foreground hover:text-foreground",
             )}
           >
             Todas
@@ -125,7 +129,9 @@ function CrmPage() {
             onClick={() => setFilter("favorites")}
             className={cn(
               "rounded-full px-3 py-1.5 text-xs transition-colors",
-              filter === "favorites" ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground",
+              filter === "favorites"
+                ? "bg-foreground text-background"
+                : "text-muted-foreground hover:text-foreground",
             )}
           >
             Favoritas
@@ -142,16 +148,23 @@ function CrmPage() {
             {search ? "Nada encontrado" : "Você ainda não cadastrou empresas"}
           </h3>
           <p className="mt-2 text-sm text-muted-foreground">
-            {search ? "Ajuste sua busca ou cadastre uma nova empresa." : "Comece criando a primeira empresa do seu CRM."}
+            {search
+              ? "Ajuste sua busca ou cadastre uma nova empresa."
+              : "Comece criando a primeira empresa do seu CRM."}
           </p>
-          <Button variant="navy" className="mt-6 rounded-full" onClick={() => setOpen(true)} disabled={!organizationId}>
+          <Button
+            variant="brand"
+            className="mt-6"
+            onClick={() => setOpen(true)}
+            disabled={!organizationId}
+          >
             <Plus className="mr-1.5 h-4 w-4" /> Nova empresa
           </Button>
         </div>
       ) : (
         <div className="overflow-hidden rounded-2xl border border-border bg-card/40">
           <table className="w-full text-sm">
-            <thead className="bg-muted/40 text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
+            <thead className="bg-muted/40 text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
               <tr>
                 <th className="px-5 py-3 text-left font-medium"></th>
                 <th className="px-5 py-3 text-left font-medium">Empresa</th>
@@ -165,20 +178,30 @@ function CrmPage() {
               {filtered.map((c) => {
                 const stage = LIFECYCLE_STAGES.find((s) => s.key === c.lifecycle_stage);
                 return (
-                  <tr key={c.id} className="group border-t border-border/70 transition-colors hover:bg-muted/30">
+                  <tr
+                    key={c.id}
+                    className="group border-t border-border/70 transition-colors hover:bg-muted/30"
+                  >
                     <td className="px-5 py-4">
                       <button
                         onClick={() => toggleFavorite.mutate(c)}
                         aria-label={c.is_favorite ? "Remover favorito" : "Favoritar"}
                         className="text-muted-foreground hover:text-foreground"
                       >
-                        <Star className={cn("h-4 w-4", c.is_favorite && "fill-[var(--gold)] text-[var(--gold)]")} />
+                        <Star
+                          className={cn(
+                            "h-4 w-4",
+                            c.is_favorite && "fill-[var(--gold)] text-gold-ink",
+                          )}
+                        />
                       </button>
                     </td>
                     <td className="px-5 py-4">
                       <Link to="/app/crm/$id" params={{ id: c.id }} className="block">
                         <div className="font-medium text-foreground">{c.legal_name}</div>
-                        {c.trade_name && <div className="text-xs text-muted-foreground">{c.trade_name}</div>}
+                        {c.trade_name && (
+                          <div className="text-xs text-muted-foreground">{c.trade_name}</div>
+                        )}
                       </Link>
                     </td>
                     <td className="px-5 py-4 text-muted-foreground">{c.segment ?? "—"}</td>
@@ -188,7 +211,9 @@ function CrmPage() {
                           <MapPin className="h-3 w-3" />
                           {[c.city, c.state].filter(Boolean).join(" / ")}
                         </span>
-                      ) : "—"}
+                      ) : (
+                        "—"
+                      )}
                     </td>
                     <td className="px-5 py-4">
                       <Badge variant="outline" className="font-normal">

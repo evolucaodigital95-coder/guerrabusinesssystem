@@ -80,7 +80,7 @@ function AdminPlanos() {
         title="Planos"
         description="Estrutura de planos, recursos e limites. Novos planos são criados aqui — sem alterar código."
         actions={
-          <Button variant="navy" onClick={() => setDraft(emptyDraft())}>
+          <Button variant="brand" onClick={() => setDraft(emptyDraft())}>
             + Novo plano
           </Button>
         }
@@ -200,7 +200,7 @@ function AdminPlanos() {
               </div>
 
               <div className="sm:col-span-2">
-                <div className="mb-2 text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+                <div className="mb-2 text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
                   Recursos
                 </div>
                 <div className="grid gap-2 sm:grid-cols-2">
@@ -219,7 +219,7 @@ function AdminPlanos() {
               </div>
 
               <div className="sm:col-span-2">
-                <div className="mb-2 text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+                <div className="mb-2 text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
                   Limites (vazio = ilimitado)
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2">
@@ -249,7 +249,7 @@ function AdminPlanos() {
             <Button variant="ghost" onClick={() => setDraft(null)}>
               Cancelar
             </Button>
-            <Button variant="navy" onClick={handleSave} disabled={savePlan.isPending}>
+            <Button variant="brand" onClick={handleSave} disabled={savePlan.isPending}>
               {savePlan.isPending ? "Salvando…" : "Salvar plano"}
             </Button>
           </DialogFooter>

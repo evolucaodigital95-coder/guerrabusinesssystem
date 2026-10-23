@@ -17,7 +17,10 @@ export const Route = createFileRoute("/admin/clientes/")({
   head: () => ({
     meta: [
       { title: "Clientes — GBS Admin" },
-      { name: "description", content: "Organizações clientes do GBS, planos e status de assinatura." },
+      {
+        name: "description",
+        content: "Organizações clientes do GBS, planos e status de assinatura.",
+      },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -92,7 +95,7 @@ function AdminClientes() {
       ) : (
         <div className="overflow-x-auto rounded-2xl border border-border bg-card">
           <table className="w-full min-w-[1000px] text-sm">
-            <thead className="border-b border-border text-left text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+            <thead className="border-b border-border text-left text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
               <tr>
                 <th className="px-4 py-3">Organização</th>
                 <th className="px-4 py-3">Responsável</th>
@@ -108,9 +111,16 @@ function AdminClientes() {
             </thead>
             <tbody>
               {rows.map((o) => (
-                <tr key={o.id} className="border-b border-border/60 last:border-0 hover:bg-muted/40">
+                <tr
+                  key={o.id}
+                  className="border-b border-border/60 last:border-0 hover:bg-muted/40"
+                >
                   <td className="px-4 py-3">
-                    <Link to="/admin/clientes/$id" params={{ id: o.id }} className="font-medium hover:underline">
+                    <Link
+                      to="/admin/clientes/$id"
+                      params={{ id: o.id }}
+                      className="font-medium hover:underline"
+                    >
                       {o.name}
                     </Link>
                   </td>

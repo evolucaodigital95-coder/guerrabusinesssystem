@@ -1,5 +1,6 @@
 import { type ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 interface PageHeaderProps {
   title: string;
@@ -10,22 +11,24 @@ interface PageHeaderProps {
 
 export function PageHeader({ title, description, actions, eyebrow }: PageHeaderProps) {
   return (
-    <header className="mb-14 grid grid-cols-[minmax(0,1fr)_auto] items-start gap-6">
+    <header className="mb-10 flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
       <div className="min-w-0">
-        {eyebrow && (
-          <div className="flex items-center gap-3 text-[10px] uppercase tracking-[0.28em] text-muted-foreground">
-            <span aria-hidden className="h-px w-6" style={{ background: "var(--gold)" }} />
-            {eyebrow}
-          </div>
-        )}
-        <h1 className="mt-5 font-display text-4xl leading-tight md:text-5xl">{title}</h1>
+        {eyebrow && <div className="text-[12px] font-medium capitalize text-clay">{eyebrow}</div>}
+        <h1
+          className={cn(
+            "font-display text-[2rem] leading-[1.1] md:text-[2.5rem]",
+            eyebrow && "mt-2",
+          )}
+        >
+          {title}
+        </h1>
         {description && (
-          <p className="mt-4 max-w-2xl text-sm leading-relaxed text-muted-foreground">
+          <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-muted-foreground">
             {description}
           </p>
         )}
       </div>
-      {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
+      {actions && <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div>}
     </header>
   );
 }
@@ -48,24 +51,19 @@ export function EmptyState({
   return (
     <div
       className={cn(
-        "flex flex-col items-center justify-center rounded-2xl border border-border bg-card px-8 py-24 text-center",
+        "flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-card/60 px-8 py-20 text-center",
         className,
       )}
     >
-      <span
-        aria-hidden
-        className="mb-8 block h-px w-10"
-        style={{ background: "var(--gold)" }}
-      />
+      <span aria-hidden className="mb-6 grid h-10 w-10 place-items-center rounded-full bg-clay/10">
+        <span className="h-2 w-2 rounded-full bg-clay" />
+      </span>
       <h3 className="font-display text-2xl">{title}</h3>
-      <p className="mt-4 max-w-md text-sm leading-relaxed text-muted-foreground">{message}</p>
+      <p className="mt-3 max-w-md text-sm leading-relaxed text-muted-foreground">{message}</p>
       {actionLabel && onAction && (
-        <button
-          onClick={onAction}
-          className="mt-10 inline-flex h-10 items-center justify-center rounded-full bg-[var(--navy)] px-6 text-sm font-medium text-[var(--navy-foreground)] transition-all duration-300 hover:opacity-95"
-        >
+        <Button variant="brand" className="mt-8" onClick={onAction}>
           {actionLabel}
-        </button>
+        </Button>
       )}
     </div>
   );

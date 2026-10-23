@@ -75,12 +75,7 @@ export function TimelineTab({
   return (
     <div className="space-y-5">
       <div className="flex justify-end">
-        <Button
-          variant="navy"
-          size="sm"
-          className="rounded-full"
-          onClick={() => setOpen(true)}
-        >
+        <Button variant="brand" size="sm" onClick={() => setOpen(true)}>
           <Plus className="mr-1.5 h-4 w-4" /> Registrar evento
         </Button>
       </div>
@@ -98,12 +93,10 @@ export function TimelineTab({
             const author = e.profiles?.full_name ?? e.profiles?.email ?? null;
             return (
               <li key={e.id} className="relative">
-                <span className="absolute -left-[27px] top-1.5 h-2 w-2 rounded-full bg-[var(--navy)]" />
-                <p className="text-sm text-foreground">
-                  {e.title ?? timelineKindLabel(e.kind)}
-                </p>
+                <span className="absolute -left-[27px] top-1.5 h-2 w-2 rounded-full bg-[var(--ink)]" />
+                <p className="text-sm text-foreground">{e.title ?? timelineKindLabel(e.kind)}</p>
                 {e.body && <p className="text-xs text-muted-foreground">{e.body}</p>}
-                <p className="mt-1 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+                <p className="mt-1 text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
                   {formatDate(e.occurs_at)}
                   {author ? ` · ${author}` : ""}
                   {e.kind ? ` · ${timelineKindLabel(e.kind)}` : ""}
@@ -236,7 +229,7 @@ function TimelineEventDialog({
             <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
               Cancelar
             </Button>
-            <Button type="submit" variant="navy" disabled={save.isPending}>
+            <Button type="submit" variant="brand" disabled={save.isPending}>
               {save.isPending ? "Salvando…" : "Registrar"}
             </Button>
           </DialogFooter>

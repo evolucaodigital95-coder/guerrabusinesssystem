@@ -81,7 +81,7 @@ function Field({
       <Label className="flex items-center gap-2 text-[13px]">
         {label}
         {optional && (
-          <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
+          <span className="text-[11px] uppercase tracking-wider text-muted-foreground">
             opcional
           </span>
         )}
@@ -177,7 +177,7 @@ function OnboardingPage() {
   return (
     <div className="mx-auto max-w-3xl pb-16">
       <section className="mb-10">
-        <div className="flex items-center gap-3 text-[10px] uppercase tracking-[0.28em] text-muted-foreground">
+        <div className="flex items-center gap-3 text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
           <span aria-hidden className="h-px w-6" style={{ background: "var(--gold)" }} />
           Configuração inicial
         </div>
@@ -658,7 +658,7 @@ function StepEquipe() {
       )}
 
       <div>
-        <div className="mb-2 text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+        <div className="mb-2 text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
           Membros ativos
         </div>
         <div className="divide-y divide-border rounded-2xl border border-border">
@@ -675,7 +675,7 @@ function StepEquipe() {
       </div>
 
       <div>
-        <div className="mb-2 text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+        <div className="mb-2 text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
           Convites pendentes
         </div>
         <div className="divide-y divide-border rounded-2xl border border-border">
@@ -790,18 +790,18 @@ function FinishScreen({
     <div className="mx-auto max-w-3xl py-10">
       <div
         className="rounded-3xl p-10"
-        style={{ background: "var(--navy)", color: "var(--navy-foreground)" }}
+        style={{ background: "var(--ink)", color: "var(--ink-foreground)" }}
       >
         <PartyPopper className="h-8 w-8" style={{ color: "var(--gold)" }} />
         <h1 className="mt-6 font-display text-4xl">Seu GBS está pronto.</h1>
-        <p className="mt-3 text-[var(--navy-foreground)]/80">
+        <p className="mt-3 text-[var(--ink-foreground)]/80">
           Configuração concluída em {progress}%.
         </p>
       </div>
       <div className="mt-6 grid gap-4 sm:grid-cols-2">
         {resumo.map((r) => (
           <div key={r.label} className="rounded-2xl border border-border bg-card p-5">
-            <div className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+            <div className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
               {r.label}
             </div>
             <div className="mt-2 text-sm font-medium">{r.value}</div>

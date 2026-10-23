@@ -16,7 +16,11 @@ export const Route = createFileRoute("/app/agendistas/")({
   head: () => ({
     meta: [
       { title: "Agendistas — GBS" },
-      { name: "description", content: "Equipe de prospecção e agendamentos. Conta corrente, adiantamentos e fechamentos." },
+      {
+        name: "description",
+        content:
+          "Equipe de prospecção e agendamentos. Conta corrente, adiantamentos e fechamentos.",
+      },
     ],
   }),
   component: AgendistasPage,
@@ -60,7 +64,9 @@ function AgendistasPage() {
     const q = search.trim().toLowerCase();
     if (!q) return agents.data ?? [];
     return (agents.data ?? []).filter((a) =>
-      [a.full_name, a.email, a.phone, a.cpf, a.pix_key].filter(Boolean).some((v) => String(v).toLowerCase().includes(q)),
+      [a.full_name, a.email, a.phone, a.cpf, a.pix_key]
+        .filter(Boolean)
+        .some((v) => String(v).toLowerCase().includes(q)),
     );
   }, [agents.data, search]);
 
@@ -71,7 +77,14 @@ function AgendistasPage() {
         title="Equipe de prospecção"
         description="Cada agendista tem sua própria conta corrente, adiantamentos, palestras e histórico de fechamentos."
         actions={
-          <Button variant="navy" className="rounded-full" onClick={() => { setEditing(null); setOpen(true); }} disabled={!organizationId}>
+          <Button
+            variant="brand"
+            onClick={() => {
+              setEditing(null);
+              setOpen(true);
+            }}
+            disabled={!organizationId}
+          >
             <Plus className="mr-1.5 h-4 w-4" /> Novo agendista
           </Button>
         }
@@ -80,7 +93,12 @@ function AgendistasPage() {
       <div className="rounded-2xl border border-border bg-card/40 p-4">
         <div className="relative max-w-md">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-          <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar nome, e-mail, telefone, CPF ou PIX…" className="rounded-full pl-9" />
+          <Input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Buscar nome, e-mail, telefone, CPF ou PIX…"
+            className="rounded-full pl-9"
+          />
         </div>
       </div>
 
@@ -90,9 +108,19 @@ function AgendistasPage() {
         <div className="rounded-3xl border border-dashed border-border bg-card/30 px-8 py-16 text-center">
           <h3 className="font-serif text-2xl text-foreground">Nenhum agendista</h3>
           <p className="mt-2 text-sm text-muted-foreground">
-            {(agents.data?.length ?? 0) > 0 ? "Ajuste a busca." : "Cadastre o primeiro agendista para iniciar."}
+            {(agents.data?.length ?? 0) > 0
+              ? "Ajuste a busca."
+              : "Cadastre o primeiro agendista para iniciar."}
           </p>
-          <Button variant="navy" className="mt-6 rounded-full" onClick={() => { setEditing(null); setOpen(true); }} disabled={!organizationId}>
+          <Button
+            variant="brand"
+            className="mt-6"
+            onClick={() => {
+              setEditing(null);
+              setOpen(true);
+            }}
+            disabled={!organizationId}
+          >
             <Plus className="mr-1.5 h-4 w-4" /> Novo agendista
           </Button>
         </div>
@@ -108,9 +136,14 @@ function AgendistasPage() {
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <p className="truncate font-serif text-lg text-foreground">{a.full_name}</p>
-                  <p className="mt-0.5 truncate text-xs text-muted-foreground">{a.email ?? a.phone ?? "—"}</p>
+                  <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                    {a.email ?? a.phone ?? "—"}
+                  </p>
                 </div>
-                <Badge variant={a.status === "ativo" ? "secondary" : "outline"} className="font-normal capitalize">
+                <Badge
+                  variant={a.status === "ativo" ? "secondary" : "outline"}
+                  className="font-normal capitalize"
+                >
                   {a.status ?? "ativo"}
                 </Badge>
               </div>
@@ -126,7 +159,10 @@ function AgendistasPage() {
       {organizationId && user && (
         <AgentFormDialog
           open={open}
-          onOpenChange={(v) => { setOpen(v); if (!v) setEditing(null); }}
+          onOpenChange={(v) => {
+            setOpen(v);
+            if (!v) setEditing(null);
+          }}
           organizationId={organizationId}
           userId={user.id}
           initial={editing ?? undefined}
@@ -139,7 +175,7 @@ function AgendistasPage() {
 function Field({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">{label}</p>
+      <p className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">{label}</p>
       <p className="mt-1 truncate text-sm text-foreground">{value}</p>
     </div>
   );

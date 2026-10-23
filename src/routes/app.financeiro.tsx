@@ -1,17 +1,35 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Search, ArrowDownRight, ArrowUpRight, Pencil, Trash2, Paperclip, Download, X } from "lucide-react";
+import {
+  Plus,
+  Search,
+  ArrowDownRight,
+  ArrowUpRight,
+  Pencil,
+  Trash2,
+  Paperclip,
+  Download,
+  X,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import {
-  Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle,
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
 } from "@/components/ui/sheet";
 import { PageHeader } from "@/components/page-shell";
 import { ListSkeleton } from "@/components/shared/list-skeleton";
@@ -20,8 +38,13 @@ import { useSession } from "@/hooks/use-session";
 import { useCurrentOrg } from "@/hooks/use-current-org";
 import { formatCurrency, formatDate } from "@/lib/crm";
 import {
-  MOVEMENT_DIRECTIONS, MOVEMENT_CATEGORIES, statusLabel, isSettled,
-  FINANCE_TIMELINE_KINDS, ACCOUNT_KINDS, paymentMethodLabel,
+  MOVEMENT_DIRECTIONS,
+  MOVEMENT_CATEGORIES,
+  statusLabel,
+  isSettled,
+  FINANCE_TIMELINE_KINDS,
+  ACCOUNT_KINDS,
+  paymentMethodLabel,
 } from "@/lib/finance";
 import { MovementFormDialog, type MovementRow } from "@/components/finance/movement-form-dialog";
 import { AccountFormDialog, type AccountRow } from "@/components/finance/account-form-dialog";
@@ -140,7 +163,8 @@ function FinancePage() {
     queryFn: async (): Promise<Movement[]> => {
       const { data, error } = await supabase
         .from("financial_movements")
-        .select(`
+        .select(
+          `
           id, direction, status, category, description, amount, expected_amount,
           expected_date, settled_at, occurs_on, occurs_time,
           account_id, company_id, lecture_id, agent_id, season_id, project_id,
@@ -153,7 +177,8 @@ function FinancePage() {
           seasons:season_id ( id, name ),
           projects:project_id ( id, name ),
           card_brands:card_brand_id ( id, name, kind )
-        `)
+        `,
+        )
         .eq("organization_id", organizationId!)
         .is("archived_at", null)
         .order("occurs_on", { ascending: false, nullsFirst: false })
@@ -172,10 +197,22 @@ function FinancePage() {
       return [...map.values()].sort((a, b) => a.label.localeCompare(b.label));
     };
     return {
-      companies: dedup(list.filter((m) => m.companies).map((m) => ({ id: m.companies!.id, label: m.companies!.legal_name }))),
-      agents: dedup(list.filter((m) => m.agents).map((m) => ({ id: m.agents!.id, label: m.agents!.full_name }))),
-      seasons: dedup(list.filter((m) => m.seasons).map((m) => ({ id: m.seasons!.id, label: m.seasons!.name }))),
-      projects: dedup(list.filter((m) => m.projects).map((m) => ({ id: m.projects!.id, label: m.projects!.name }))),
+      companies: dedup(
+        list
+          .filter((m) => m.companies)
+          .map((m) => ({ id: m.companies!.id, label: m.companies!.legal_name })),
+      ),
+      agents: dedup(
+        list.filter((m) => m.agents).map((m) => ({ id: m.agents!.id, label: m.agents!.full_name })),
+      ),
+      seasons: dedup(
+        list.filter((m) => m.seasons).map((m) => ({ id: m.seasons!.id, label: m.seasons!.name })),
+      ),
+      projects: dedup(
+        list
+          .filter((m) => m.projects)
+          .map((m) => ({ id: m.projects!.id, label: m.projects!.name })),
+      ),
     };
   }, [movements.data]);
 
@@ -195,29 +232,68 @@ function FinancePage() {
     if (q) {
       list = list.filter((m) =>
         [
-          m.description, m.category, m.notes,
-          paymentMethodLabel(m.payment_method), m.card_brands?.name,
-          m.accounts?.name, m.companies?.legal_name, m.lectures?.title,
-          m.agents?.full_name, m.seasons?.name, m.projects?.name,
+          m.description,
+          m.category,
+          m.notes,
+          paymentMethodLabel(m.payment_method),
+          m.card_brands?.name,
+          m.accounts?.name,
+          m.companies?.legal_name,
+          m.lectures?.title,
+          m.agents?.full_name,
+          m.seasons?.name,
+          m.projects?.name,
           m.amount != null ? String(m.amount) : "",
           m.expected_amount != null ? String(m.expected_amount) : "",
-          m.occurs_on, m.settled_at, m.expected_date,
-        ].filter(Boolean).some((v) => String(v).toLowerCase().includes(q)),
+          m.occurs_on,
+          m.settled_at,
+          m.expected_date,
+        ]
+          .filter(Boolean)
+          .some((v) => String(v).toLowerCase().includes(q)),
       );
     }
     return list;
-  }, [movements.data, search, fDirection, fStatus, fAccount, fCategory, fCompany, fAgent, fSeason, fProject, dateFrom, dateTo]);
+  }, [
+    movements.data,
+    search,
+    fDirection,
+    fStatus,
+    fAccount,
+    fCategory,
+    fCompany,
+    fAgent,
+    fSeason,
+    fProject,
+    dateFrom,
+    dateTo,
+  ]);
 
   const activeFilterCount =
-    (fDirection !== ALL ? 1 : 0) + (fStatus !== ALL ? 1 : 0) + (fAccount !== ALL ? 1 : 0) +
-    (fCategory !== ALL ? 1 : 0) + (fCompany !== ALL ? 1 : 0) + (fAgent !== ALL ? 1 : 0) +
-    (fSeason !== ALL ? 1 : 0) + (fProject !== ALL ? 1 : 0) +
-    (dateFrom ? 1 : 0) + (dateTo ? 1 : 0) + (search.trim() ? 1 : 0);
+    (fDirection !== ALL ? 1 : 0) +
+    (fStatus !== ALL ? 1 : 0) +
+    (fAccount !== ALL ? 1 : 0) +
+    (fCategory !== ALL ? 1 : 0) +
+    (fCompany !== ALL ? 1 : 0) +
+    (fAgent !== ALL ? 1 : 0) +
+    (fSeason !== ALL ? 1 : 0) +
+    (fProject !== ALL ? 1 : 0) +
+    (dateFrom ? 1 : 0) +
+    (dateTo ? 1 : 0) +
+    (search.trim() ? 1 : 0);
 
   const clearFilters = () => {
-    setSearch(""); setFDirection(ALL); setFStatus(ALL); setFAccount(ALL); setFCategory(ALL);
-    setFCompany(ALL); setFAgent(ALL); setFSeason(ALL); setFProject(ALL);
-    setDateFrom(""); setDateTo("");
+    setSearch("");
+    setFDirection(ALL);
+    setFStatus(ALL);
+    setFAccount(ALL);
+    setFCategory(ALL);
+    setFCompany(ALL);
+    setFAgent(ALL);
+    setFSeason(ALL);
+    setFProject(ALL);
+    setDateFrom("");
+    setDateTo("");
   };
 
   // Breakdown by dimension for the analytical panel
@@ -229,7 +305,8 @@ function FinancePage() {
         if (!k) continue;
         const cur = map.get(k.id) ?? { label: k.label, inV: 0, outV: 0, count: 0 };
         const v = Number(m.amount ?? m.expected_amount ?? 0);
-        if (m.direction === "in") cur.inV += v; else if (m.direction === "out") cur.outV += v;
+        if (m.direction === "in") cur.inV += v;
+        else if (m.direction === "out") cur.outV += v;
         cur.count += 1;
         map.set(k.id, cur);
       }
@@ -238,28 +315,61 @@ function FinancePage() {
         .sort((a, b) => b.net - a.net);
     };
     return {
-      companies: acc((m) => m.companies ? { id: m.companies.id, label: m.companies.legal_name } : null),
-      agents: acc((m) => m.agents ? { id: m.agents.id, label: m.agents.full_name } : null),
-      seasons: acc((m) => m.seasons ? { id: m.seasons.id, label: m.seasons.name } : null),
-      categories: acc((m) => m.category ? { id: m.category, label: m.category } : null),
+      companies: acc((m) =>
+        m.companies ? { id: m.companies.id, label: m.companies.legal_name } : null,
+      ),
+      agents: acc((m) => (m.agents ? { id: m.agents.id, label: m.agents.full_name } : null)),
+      seasons: acc((m) => (m.seasons ? { id: m.seasons.id, label: m.seasons.name } : null)),
+      categories: acc((m) => (m.category ? { id: m.category, label: m.category } : null)),
     };
   }, [filtered]);
 
   const exportCsv = () => {
     const header = [
-      "data","hora","tipo","status","categoria","descricao","conta","empresa","palestra","agendista","temporada","projeto",
-      "forma","bandeira","parcelas","juros_%","taxa","valor","liquido","previsto","notas",
+      "data",
+      "hora",
+      "tipo",
+      "status",
+      "categoria",
+      "descricao",
+      "conta",
+      "empresa",
+      "palestra",
+      "agendista",
+      "temporada",
+      "projeto",
+      "forma",
+      "bandeira",
+      "parcelas",
+      "juros_%",
+      "taxa",
+      "valor",
+      "liquido",
+      "previsto",
+      "notas",
     ];
     const rows = filtered.map((m) => [
-      m.occurs_on ?? "", m.occurs_time?.slice(0, 5) ?? "",
+      m.occurs_on ?? "",
+      m.occurs_time?.slice(0, 5) ?? "",
       m.direction === "in" ? "Entrada" : "Saída",
       statusLabel(m.direction as "in" | "out", m.status),
-      m.category ?? "", m.description ?? "", m.accounts?.name ?? "",
-      m.companies?.legal_name ?? "", m.lectures?.title ?? "",
-      m.agents?.full_name ?? "", m.seasons?.name ?? "", m.projects?.name ?? "",
-      paymentMethodLabel(m.payment_method), m.card_brands?.name ?? "",
-      m.card_installments ?? "", m.card_fee_percent ?? "", m.card_fee_amount ?? "",
-      m.amount ?? "", m.net_amount ?? "", m.expected_amount ?? "", (m.notes ?? "").replace(/\n/g, " "),
+      m.category ?? "",
+      m.description ?? "",
+      m.accounts?.name ?? "",
+      m.companies?.legal_name ?? "",
+      m.lectures?.title ?? "",
+      m.agents?.full_name ?? "",
+      m.seasons?.name ?? "",
+      m.projects?.name ?? "",
+      paymentMethodLabel(m.payment_method),
+      m.card_brands?.name ?? "",
+      m.card_installments ?? "",
+      m.card_fee_percent ?? "",
+      m.card_fee_amount ?? "",
+      m.amount ?? "",
+      m.net_amount ?? "",
+      m.expected_amount ?? "",
+      (m.notes ?? "").replace(/\n/g, " "),
     ]);
     const esc = (v: unknown) => {
       const s = String(v ?? "");
@@ -303,7 +413,10 @@ function FinancePage() {
     navigate({ search: { lancamento: undefined } });
   };
 
-  const selected = selectedId ? filtered.find((m) => m.id === selectedId) ?? movements.data?.find((m) => m.id === selectedId) : null;
+  const selected = selectedId
+    ? (filtered.find((m) => m.id === selectedId) ??
+      movements.data?.find((m) => m.id === selectedId))
+    : null;
 
   return (
     <div className="space-y-8">
@@ -313,13 +426,27 @@ function FinancePage() {
         description="Toda informação financeira é derivada de movimentos. Nada é apagado — apenas arquivado."
         actions={
           <div className="flex flex-wrap gap-2">
-            <Button variant="outline" className="rounded-full" onClick={exportCsv} disabled={filtered.length === 0}>
+            <Button variant="outline" onClick={exportCsv} disabled={filtered.length === 0}>
               <Download className="mr-1.5 h-4 w-4" /> Exportar CSV
             </Button>
-            <Button variant="outline" className="rounded-full" onClick={() => { setEditingAccount(null); setOpenAcc(true); }} disabled={!organizationId}>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setEditingAccount(null);
+                setOpenAcc(true);
+              }}
+              disabled={!organizationId}
+            >
               <Plus className="mr-1.5 h-4 w-4" /> Nova conta
             </Button>
-            <Button variant="navy" className="rounded-full" onClick={() => { setEditing(null); setOpenMov(true); }} disabled={!organizationId}>
+            <Button
+              variant="brand"
+              onClick={() => {
+                setEditing(null);
+                setOpenMov(true);
+              }}
+              disabled={!organizationId}
+            >
               <Plus className="mr-1.5 h-4 w-4" /> Novo lançamento
             </Button>
           </div>
@@ -336,25 +463,42 @@ function FinancePage() {
         <TabsContent value="ledger" className="space-y-6">
           {/* Totals */}
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <SummaryCard label="Entradas realizadas" value={formatCurrency(totals.inSettled)} accent="positive" />
-            <SummaryCard label="Saídas realizadas" value={formatCurrency(totals.outSettled)} accent="negative" />
-            <SummaryCard label="Entradas previstas" value={formatCurrency(totals.inPlanned)} muted />
+            <SummaryCard
+              label="Entradas realizadas"
+              value={formatCurrency(totals.inSettled)}
+              accent="positive"
+            />
+            <SummaryCard
+              label="Saídas realizadas"
+              value={formatCurrency(totals.outSettled)}
+              accent="negative"
+            />
+            <SummaryCard
+              label="Entradas previstas"
+              value={formatCurrency(totals.inPlanned)}
+              muted
+            />
             <SummaryCard label="Saídas previstas" value={formatCurrency(totals.outPlanned)} muted />
           </div>
 
           {/* Saldo líquido do recorte */}
           <div className="flex flex-wrap items-baseline justify-between gap-4 rounded-2xl border border-border bg-gradient-to-br from-card/60 to-card/30 px-6 py-4">
             <div>
-              <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">Saldo líquido do recorte</p>
-              <p className={cn(
-                "mt-1 font-serif text-3xl tabular-nums",
-                totals.inSettled - totals.outSettled >= 0 ? "text-emerald-600" : "text-rose-600",
-              )}>
+              <p className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
+                Saldo líquido do recorte
+              </p>
+              <p
+                className={cn(
+                  "mt-1 font-serif text-3xl tabular-nums",
+                  totals.inSettled - totals.outSettled >= 0 ? "text-emerald-600" : "text-rose-600",
+                )}
+              >
                 {formatCurrency(totals.inSettled - totals.outSettled)}
               </p>
             </div>
             <p className="text-xs text-muted-foreground">
-              {filtered.length} lançamento{filtered.length === 1 ? "" : "s"} · aplique filtros para segmentar por empresa, agendista, temporada ou projeto.
+              {filtered.length} lançamento{filtered.length === 1 ? "" : "s"} · aplique filtros para
+              segmentar por empresa, agendista, temporada ou projeto.
             </p>
           </div>
 
@@ -363,85 +507,154 @@ function FinancePage() {
             <div className="grid gap-3 md:grid-cols-12">
               <div className="relative md:col-span-4">
                 <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-                <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar valor, empresa, palestra, categoria, conta…" className="rounded-full pl-9" />
+                <Input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Buscar valor, empresa, palestra, categoria, conta…"
+                  className="rounded-full pl-9"
+                />
               </div>
               <div className="md:col-span-2">
                 <Select value={fDirection} onValueChange={setFDirection}>
-                  <SelectTrigger className="rounded-full"><SelectValue placeholder="Tipo" /></SelectTrigger>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Tipo" />
+                  </SelectTrigger>
                   <SelectContent>
                     <SelectItem value={ALL}>Todos os tipos</SelectItem>
-                    {MOVEMENT_DIRECTIONS.map((d) => <SelectItem key={d.key} value={d.key}>{d.label}</SelectItem>)}
+                    {MOVEMENT_DIRECTIONS.map((d) => (
+                      <SelectItem key={d.key} value={d.key}>
+                        {d.label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
               <div className="md:col-span-2">
                 <Select value={fStatus} onValueChange={setFStatus}>
-                  <SelectTrigger className="rounded-full"><SelectValue placeholder="Status" /></SelectTrigger>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
                   <SelectContent>
                     <SelectItem value={ALL}>Todos os status</SelectItem>
-                    {["previsto", "parcial", "recebido", "cancelado", "prevista", "paga", "cancelada"].map((s) => (
-                      <SelectItem key={s} value={s}>{s}</SelectItem>
+                    {[
+                      "previsto",
+                      "parcial",
+                      "recebido",
+                      "cancelado",
+                      "prevista",
+                      "paga",
+                      "cancelada",
+                    ].map((s) => (
+                      <SelectItem key={s} value={s}>
+                        {s}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               <div className="md:col-span-2">
                 <Select value={fAccount} onValueChange={setFAccount}>
-                  <SelectTrigger className="rounded-full"><SelectValue placeholder="Conta" /></SelectTrigger>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Conta" />
+                  </SelectTrigger>
                   <SelectContent>
                     <SelectItem value={ALL}>Todas as contas</SelectItem>
-                    {(accounts.data ?? []).map((a) => <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}
+                    {(accounts.data ?? []).map((a) => (
+                      <SelectItem key={a.id} value={a.id}>
+                        {a.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
               <div className="md:col-span-2">
                 <Select value={fCategory} onValueChange={setFCategory}>
-                  <SelectTrigger className="rounded-full"><SelectValue placeholder="Categoria" /></SelectTrigger>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Categoria" />
+                  </SelectTrigger>
                   <SelectContent>
                     <SelectItem value={ALL}>Todas as categorias</SelectItem>
-                    {MOVEMENT_CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                    {MOVEMENT_CATEGORIES.map((c) => (
+                      <SelectItem key={c} value={c}>
+                        {c}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
               <div className="md:col-span-2">
-                <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="rounded-full" />
+                <Input
+                  type="date"
+                  value={dateFrom}
+                  onChange={(e) => setDateFrom(e.target.value)}
+                  className="rounded-full"
+                />
               </div>
               <div className="md:col-span-2">
-                <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="rounded-full" />
+                <Input
+                  type="date"
+                  value={dateTo}
+                  onChange={(e) => setDateTo(e.target.value)}
+                  className="rounded-full"
+                />
               </div>
               <div className="md:col-span-3">
                 <Select value={fCompany} onValueChange={setFCompany}>
-                  <SelectTrigger className="rounded-full"><SelectValue placeholder="Empresa" /></SelectTrigger>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Empresa" />
+                  </SelectTrigger>
                   <SelectContent>
                     <SelectItem value={ALL}>Todas as empresas</SelectItem>
-                    {refs.companies.map((c) => <SelectItem key={c.id} value={c.id}>{c.label}</SelectItem>)}
+                    {refs.companies.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
               <div className="md:col-span-3">
                 <Select value={fAgent} onValueChange={setFAgent}>
-                  <SelectTrigger className="rounded-full"><SelectValue placeholder="Agendista" /></SelectTrigger>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Agendista" />
+                  </SelectTrigger>
                   <SelectContent>
                     <SelectItem value={ALL}>Todos os agendistas</SelectItem>
-                    {refs.agents.map((a) => <SelectItem key={a.id} value={a.id}>{a.label}</SelectItem>)}
+                    {refs.agents.map((a) => (
+                      <SelectItem key={a.id} value={a.id}>
+                        {a.label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
               <div className="md:col-span-3">
                 <Select value={fSeason} onValueChange={setFSeason}>
-                  <SelectTrigger className="rounded-full"><SelectValue placeholder="Temporada" /></SelectTrigger>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Temporada" />
+                  </SelectTrigger>
                   <SelectContent>
                     <SelectItem value={ALL}>Todas as temporadas</SelectItem>
-                    {refs.seasons.map((s) => <SelectItem key={s.id} value={s.id}>{s.label}</SelectItem>)}
+                    {refs.seasons.map((s) => (
+                      <SelectItem key={s.id} value={s.id}>
+                        {s.label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
               <div className="md:col-span-3">
                 <Select value={fProject} onValueChange={setFProject}>
-                  <SelectTrigger className="rounded-full"><SelectValue placeholder="Projeto" /></SelectTrigger>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Projeto" />
+                  </SelectTrigger>
                   <SelectContent>
                     <SelectItem value={ALL}>Todos os projetos</SelectItem>
-                    {refs.projects.map((p) => <SelectItem key={p.id} value={p.id}>{p.label}</SelectItem>)}
+                    {refs.projects.map((p) => (
+                      <SelectItem key={p.id} value={p.id}>
+                        {p.label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -449,9 +662,11 @@ function FinancePage() {
             {activeFilterCount > 0 && (
               <div className="mt-3 flex items-center justify-between border-t border-border/60 pt-3">
                 <p className="text-xs text-muted-foreground">
-                  {activeFilterCount} filtro{activeFilterCount === 1 ? "" : "s"} aplicado{activeFilterCount === 1 ? "" : "s"} · {filtered.length} de {movements.data?.length ?? 0} lançamentos
+                  {activeFilterCount} filtro{activeFilterCount === 1 ? "" : "s"} aplicado
+                  {activeFilterCount === 1 ? "" : "s"} · {filtered.length} de{" "}
+                  {movements.data?.length ?? 0} lançamentos
                 </p>
-                <Button variant="ghost" size="sm" className="h-7 rounded-full text-xs" onClick={clearFilters}>
+                <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={clearFilters}>
                   <X className="mr-1 h-3 w-3" /> Limpar filtros
                 </Button>
               </div>
@@ -475,16 +690,26 @@ function FinancePage() {
             <div className="rounded-3xl border border-dashed border-border bg-card/30 px-8 py-16 text-center">
               <h3 className="font-serif text-2xl text-foreground">Nenhum lançamento</h3>
               <p className="mt-2 text-sm text-muted-foreground">
-                {(movements.data?.length ?? 0) > 0 ? "Ajuste os filtros." : "Crie o primeiro lançamento do Livro Razão."}
+                {(movements.data?.length ?? 0) > 0
+                  ? "Ajuste os filtros."
+                  : "Crie o primeiro lançamento do Livro Razão."}
               </p>
-              <Button variant="navy" className="mt-6 rounded-full" onClick={() => { setEditing(null); setOpenMov(true); }} disabled={!organizationId}>
+              <Button
+                variant="brand"
+                className="mt-6"
+                onClick={() => {
+                  setEditing(null);
+                  setOpenMov(true);
+                }}
+                disabled={!organizationId}
+              >
                 <Plus className="mr-1.5 h-4 w-4" /> Novo lançamento
               </Button>
             </div>
           ) : (
             <div className="overflow-hidden rounded-2xl border border-border bg-card/40">
               <table className="w-full text-sm">
-                <thead className="bg-muted/40 text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
+                <thead className="bg-muted/40 text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
                   <tr>
                     <th className="px-4 py-3 text-left font-medium">Data</th>
                     <th className="px-4 py-3 text-left font-medium">Descrição</th>
@@ -503,38 +728,66 @@ function FinancePage() {
                     return (
                       <tr
                         key={m.id}
-                         onClick={() => openMovement(m.id)}
+                        onClick={() => openMovement(m.id)}
                         className="cursor-pointer border-t border-border/70 transition-colors hover:bg-muted/30"
                       >
                         <td className="px-4 py-3 align-top text-muted-foreground">
                           <div>{formatDate(m.occurs_on)}</div>
-                          {m.occurs_time && <div className="text-[10px] uppercase tracking-[0.18em]">{m.occurs_time.slice(0, 5)}</div>}
+                          {m.occurs_time && (
+                            <div className="text-[11px] uppercase tracking-[0.12em]">
+                              {m.occurs_time.slice(0, 5)}
+                            </div>
+                          )}
                         </td>
                         <td className="px-4 py-3 align-top">
                           <div className="flex items-center gap-2">
-                            <span className={cn(
-                              "grid h-6 w-6 place-items-center rounded-full",
-                              isIn ? "bg-emerald-500/10 text-emerald-600" : "bg-rose-500/10 text-rose-600",
-                            )}>
-                              {isIn ? <ArrowDownRight className="h-3.5 w-3.5" /> : <ArrowUpRight className="h-3.5 w-3.5" />}
+                            <span
+                              className={cn(
+                                "grid h-6 w-6 place-items-center rounded-full",
+                                isIn
+                                  ? "bg-emerald-500/10 text-emerald-600"
+                                  : "bg-rose-500/10 text-rose-600",
+                              )}
+                            >
+                              {isIn ? (
+                                <ArrowDownRight className="h-3.5 w-3.5" />
+                              ) : (
+                                <ArrowUpRight className="h-3.5 w-3.5" />
+                              )}
                             </span>
-                            <span className="font-medium text-foreground">{m.description ?? "—"}</span>
+                            <span className="font-medium text-foreground">
+                              {m.description ?? "—"}
+                            </span>
                           </div>
-                          {m.lectures?.title && <p className="mt-1 pl-8 text-xs text-muted-foreground">{m.lectures.title}</p>}
+                          {m.lectures?.title && (
+                            <p className="mt-1 pl-8 text-xs text-muted-foreground">
+                              {m.lectures.title}
+                            </p>
+                          )}
                         </td>
-                        <td className="px-4 py-3 align-top text-muted-foreground">{m.category ?? "—"}</td>
-                        <td className="px-4 py-3 align-top text-muted-foreground">{m.accounts?.name ?? "—"}</td>
-                        <td className="px-4 py-3 align-top text-muted-foreground">{m.companies?.legal_name ?? "—"}</td>
-        <td className={cn(
-                          "px-4 py-3 align-top text-right font-medium tabular-nums",
-                          isIn ? "text-emerald-600" : "text-rose-600",
-                        )}>
-          <div>{isIn ? "+" : "−"} {formatCurrency(Number(value ?? 0))}</div>
-          {isIn && Number(m.card_fee_amount ?? 0) > 0 && (
-            <div className="text-[10px] font-normal text-muted-foreground">
-              líquido {formatCurrency(Number(m.net_amount ?? 0))}
-            </div>
-          )}
+                        <td className="px-4 py-3 align-top text-muted-foreground">
+                          {m.category ?? "—"}
+                        </td>
+                        <td className="px-4 py-3 align-top text-muted-foreground">
+                          {m.accounts?.name ?? "—"}
+                        </td>
+                        <td className="px-4 py-3 align-top text-muted-foreground">
+                          {m.companies?.legal_name ?? "—"}
+                        </td>
+                        <td
+                          className={cn(
+                            "px-4 py-3 align-top text-right font-medium tabular-nums",
+                            isIn ? "text-emerald-600" : "text-rose-600",
+                          )}
+                        >
+                          <div>
+                            {isIn ? "+" : "−"} {formatCurrency(Number(value ?? 0))}
+                          </div>
+                          {isIn && Number(m.card_fee_amount ?? 0) > 0 && (
+                            <div className="text-[10px] font-normal text-muted-foreground">
+                              líquido {formatCurrency(Number(m.net_amount ?? 0))}
+                            </div>
+                          )}
                         </td>
                         <td className="px-4 py-3 align-top">
                           <span
@@ -542,7 +795,10 @@ function FinancePage() {
                             className="inline-block cursor-default"
                             aria-label="Status (indicador visual)"
                           >
-                            <Badge variant="outline" className="font-normal pointer-events-none select-none">
+                            <Badge
+                              variant="outline"
+                              className="font-normal pointer-events-none select-none"
+                            >
                               {statusLabel(m.direction as "in" | "out", m.status)}
                             </Badge>
                           </span>
@@ -568,8 +824,14 @@ function FinancePage() {
           <AccountsTab
             accounts={accounts.data ?? []}
             loading={accounts.isLoading}
-            onEdit={(a) => { setEditingAccount(a); setOpenAcc(true); }}
-            onNew={() => { setEditingAccount(null); setOpenAcc(true); }}
+            onEdit={(a) => {
+              setEditingAccount(a);
+              setOpenAcc(true);
+            }}
+            onNew={() => {
+              setEditingAccount(null);
+              setOpenAcc(true);
+            }}
           />
         </TabsContent>
       </Tabs>
@@ -578,14 +840,20 @@ function FinancePage() {
         <>
           <MovementFormDialog
             open={openMov}
-            onOpenChange={(v) => { setOpenMov(v); if (!v) setEditing(null); }}
+            onOpenChange={(v) => {
+              setOpenMov(v);
+              if (!v) setEditing(null);
+            }}
             organizationId={organizationId}
             userId={user.id}
             initial={editing ?? undefined}
           />
           <AccountFormDialog
             open={openAcc}
-            onOpenChange={(v) => { setOpenAcc(v); if (!v) setEditingAccount(null); }}
+            onOpenChange={(v) => {
+              setOpenAcc(v);
+              if (!v) setEditingAccount(null);
+            }}
             organizationId={organizationId}
             userId={user.id}
             initial={editingAccount ?? undefined}
@@ -599,7 +867,11 @@ function FinancePage() {
           organizationId={organizationId}
           userId={user.id}
           onClose={closeMovement}
-          onEdit={(m) => { closeMovement(); setEditing(m); setOpenMov(true); }}
+          onEdit={(m) => {
+            closeMovement();
+            setEditing(m);
+            setOpenMov(true);
+          }}
         />
       )}
     </div>
@@ -608,16 +880,30 @@ function FinancePage() {
 
 /* ---------------- Summary card ---------------- */
 
-function SummaryCard({ label, value, accent, muted }: { label: string; value: string; accent?: "positive" | "negative"; muted?: boolean }) {
+function SummaryCard({
+  label,
+  value,
+  accent,
+  muted,
+}: {
+  label: string;
+  value: string;
+  accent?: "positive" | "negative";
+  muted?: boolean;
+}) {
   return (
     <div className="rounded-2xl border border-border bg-card/40 p-5">
-      <p className="text-[10px] font-medium uppercase tracking-[0.22em] text-muted-foreground">{label}</p>
-      <p className={cn(
-        "mt-3 font-serif text-2xl tabular-nums",
-        accent === "positive" && "text-emerald-600",
-        accent === "negative" && "text-rose-600",
-        muted && "text-muted-foreground",
-      )}>
+      <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
+        {label}
+      </p>
+      <p
+        className={cn(
+          "mt-3 font-serif text-2xl tabular-nums",
+          accent === "positive" && "text-emerald-600",
+          accent === "negative" && "text-rose-600",
+          muted && "text-muted-foreground",
+        )}
+      >
         {value}
       </p>
     </div>
@@ -636,23 +922,32 @@ function BreakdownCard({
   const top = rows.slice(0, 5);
   return (
     <div className="rounded-2xl border border-border bg-card/40 p-5">
-      <p className="text-[10px] font-medium uppercase tracking-[0.22em] text-muted-foreground">{title}</p>
+      <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
+        {title}
+      </p>
       {top.length === 0 ? (
         <p className="mt-4 text-xs text-muted-foreground">Sem dados no recorte atual.</p>
       ) : (
         <ol className="mt-3 space-y-2 text-sm">
           {top.map((r) => (
-            <li key={r.id} className="flex items-baseline justify-between gap-3 border-t border-border/50 pt-2 first:border-0 first:pt-0">
+            <li
+              key={r.id}
+              className="flex items-baseline justify-between gap-3 border-t border-border/50 pt-2 first:border-0 first:pt-0"
+            >
               <div className="min-w-0">
-                <p className="truncate text-foreground" title={r.label}>{r.label}</p>
-                <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+                <p className="truncate text-foreground" title={r.label}>
+                  {r.label}
+                </p>
+                <p className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
                   {r.count} lanç. · +{formatCurrency(r.inV)} · −{formatCurrency(r.outV)}
                 </p>
               </div>
-              <span className={cn(
-                "shrink-0 tabular-nums text-sm font-medium",
-                r.net >= 0 ? "text-emerald-600" : "text-rose-600",
-              )}>
+              <span
+                className={cn(
+                  "shrink-0 tabular-nums text-sm font-medium",
+                  r.net >= 0 ? "text-emerald-600" : "text-rose-600",
+                )}
+              >
                 {formatCurrency(r.net)}
               </span>
             </li>
@@ -660,7 +955,7 @@ function BreakdownCard({
         </ol>
       )}
       {rows.length > 5 && (
-        <p className="mt-3 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+        <p className="mt-3 text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
           +{rows.length - 5} outros
         </p>
       )}
@@ -671,15 +966,25 @@ function BreakdownCard({
 /* ---------------- Accounts tab ---------------- */
 
 function AccountsTab({
-  accounts, loading, onEdit, onNew,
-}: { accounts: Account[]; loading: boolean; onEdit: (a: Account) => void; onNew: () => void }) {
+  accounts,
+  loading,
+  onEdit,
+  onNew,
+}: {
+  accounts: Account[];
+  loading: boolean;
+  onEdit: (a: Account) => void;
+  onNew: () => void;
+}) {
   if (loading) return <ListSkeleton />;
   if (accounts.length === 0) {
     return (
       <div className="rounded-3xl border border-dashed border-border bg-card/30 px-8 py-16 text-center">
         <h3 className="font-serif text-2xl text-foreground">Nenhuma conta cadastrada</h3>
-        <p className="mt-2 text-sm text-muted-foreground">Crie contas como Caixa, Banco, PIX, InfinitePay, Cartão, Sócios.</p>
-        <Button variant="navy" className="mt-6 rounded-full" onClick={onNew}>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Crie contas como Caixa, Banco, PIX, InfinitePay, Cartão, Sócios.
+        </p>
+        <Button variant="brand" className="mt-6" onClick={onNew}>
           <Plus className="mr-1.5 h-4 w-4" /> Nova conta
         </Button>
       </div>
@@ -703,7 +1008,10 @@ function AccountsTab({
             </Badge>
           </div>
           {a.notes && <p className="mt-3 line-clamp-2 text-xs text-muted-foreground">{a.notes}</p>}
-          <p className="mt-4 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">{ACCOUNT_KINDS.includes(a.kind as (typeof ACCOUNT_KINDS)[number]) ? a.kind : "Conta"} · {a.currency ?? "BRL"}</p>
+          <p className="mt-4 text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
+            {ACCOUNT_KINDS.includes(a.kind as (typeof ACCOUNT_KINDS)[number]) ? a.kind : "Conta"} ·{" "}
+            {a.currency ?? "BRL"}
+          </p>
         </button>
       ))}
     </div>
@@ -713,7 +1021,11 @@ function AccountsTab({
 /* ---------------- Movement detail sheet ---------------- */
 
 function MovementSheet({
-  movement, organizationId, userId, onClose, onEdit,
+  movement,
+  organizationId,
+  userId,
+  onClose,
+  onEdit,
 }: {
   movement: Movement | null;
   organizationId: string;
@@ -726,8 +1038,10 @@ function MovementSheet({
   const archive = useMutation({
     mutationFn: async () => {
       if (!movement) return;
-      const { error } = await supabase.from("financial_movements")
-        .update({ archived_at: new Date().toISOString(), updated_by: userId }).eq("id", movement.id);
+      const { error } = await supabase
+        .from("financial_movements")
+        .update({ archived_at: new Date().toISOString(), updated_by: userId })
+        .eq("id", movement.id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -758,12 +1072,15 @@ function MovementSheet({
       const newStatus = movement.direction === "in" ? "recebido" : "paga";
       const newAmount = movement.amount ?? movement.expected_amount;
       const today = new Date().toISOString().slice(0, 10);
-      const { error } = await supabase.from("financial_movements").update({
-        status: newStatus,
-        amount: newAmount,
-        settled_at: movement.settled_at ?? today,
-        updated_by: userId,
-      }).eq("id", movement.id);
+      const { error } = await supabase
+        .from("financial_movements")
+        .update({
+          status: newStatus,
+          amount: newAmount,
+          settled_at: movement.settled_at ?? today,
+          updated_by: userId,
+        })
+        .eq("id", movement.id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -829,7 +1146,7 @@ function MovementSheet({
     <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
       <SheetContent className="w-full overflow-y-auto sm:max-w-xl">
         <SheetHeader>
-          <SheetDescription className="text-[10px] uppercase tracking-[0.22em]">
+          <SheetDescription className="text-[11px] uppercase tracking-[0.12em]">
             {isIn ? "Receita" : "Despesa"} · {movement.category ?? "—"}
           </SheetDescription>
           <SheetTitle className="font-serif text-2xl">{movement.description ?? "—"}</SheetTitle>
@@ -838,61 +1155,115 @@ function MovementSheet({
         <div className="mt-6 space-y-6">
           <div className="rounded-2xl border border-border bg-card/40 p-5">
             <div className="grid grid-cols-2 gap-4 text-sm">
-              <Field label="Valor previsto" value={formatCurrency(Number(movement.expected_amount ?? 0))} />
+              <Field
+                label="Valor previsto"
+                value={formatCurrency(Number(movement.expected_amount ?? 0))}
+              />
               <Field
                 label={isIn ? "Valor recebido" : "Valor pago"}
                 value={formatCurrency(Number(movement.amount ?? 0))}
                 accent={isIn ? "positive" : "negative"}
               />
               <Field label="Data prevista" value={formatDate(movement.expected_date)} />
-              <Field label={isIn ? "Recebido em" : "Pago em"} value={formatDate(movement.settled_at)} />
-              <Field label="Data efetiva" value={`${formatDate(movement.occurs_on)}${movement.occurs_time ? ` ${movement.occurs_time.slice(0, 5)}` : ""}`} />
-              <Field label="Status" value={statusLabel(movement.direction as "in" | "out", movement.status)} />
+              <Field
+                label={isIn ? "Recebido em" : "Pago em"}
+                value={formatDate(movement.settled_at)}
+              />
+              <Field
+                label="Data efetiva"
+                value={`${formatDate(movement.occurs_on)}${movement.occurs_time ? ` ${movement.occurs_time.slice(0, 5)}` : ""}`}
+              />
+              <Field
+                label="Status"
+                value={statusLabel(movement.direction as "in" | "out", movement.status)}
+              />
               <Field label="Conta" value={movement.accounts?.name ?? "—"} />
               <Field label="Forma" value={paymentMethodLabel(movement.payment_method)} />
               {isIn && Number(movement.card_fee_amount ?? 0) > 0 && (
                 <>
                   <Field label="Bandeira" value={movement.card_brands?.name ?? "—"} />
                   <Field label="Parcelas" value={`${movement.card_installments ?? 1}x`} />
-                  <Field label="Juros cartão" value={`${Number(movement.card_fee_percent ?? 0).toLocaleString("pt-BR")}%`} accent="negative" />
-                  <Field label="Taxa descontada" value={formatCurrency(Number(movement.card_fee_amount ?? 0))} accent="negative" />
-                  <Field label="Valor líquido" value={formatCurrency(Number(movement.net_amount ?? 0))} accent="positive" />
+                  <Field
+                    label="Juros cartão"
+                    value={`${Number(movement.card_fee_percent ?? 0).toLocaleString("pt-BR")}%`}
+                    accent="negative"
+                  />
+                  <Field
+                    label="Taxa descontada"
+                    value={formatCurrency(Number(movement.card_fee_amount ?? 0))}
+                    accent="negative"
+                  />
+                  <Field
+                    label="Valor líquido"
+                    value={formatCurrency(Number(movement.net_amount ?? 0))}
+                    accent="positive"
+                  />
                 </>
               )}
               <FieldLink
                 label="Empresa"
-                value={movement.companies?.legal_name ?? (movement.company_id ? "Registro arquivado" : "—")}
-                to={movement.companies?.id ? { route: "/app/crm/$id", id: movement.companies.id } : undefined}
+                value={
+                  movement.companies?.legal_name ??
+                  (movement.company_id ? "Registro arquivado" : "—")
+                }
+                to={
+                  movement.companies?.id
+                    ? { route: "/app/crm/$id", id: movement.companies.id }
+                    : undefined
+                }
                 onNavigate={onClose}
               />
               <FieldLink
                 label="Palestra"
-                value={movement.lectures?.title ?? (movement.lecture_id ? "Registro arquivado" : "—")}
-                to={movement.lectures?.id ? { route: "/app/palestras/$id", id: movement.lectures.id } : undefined}
+                value={
+                  movement.lectures?.title ?? (movement.lecture_id ? "Registro arquivado" : "—")
+                }
+                to={
+                  movement.lectures?.id
+                    ? { route: "/app/palestras/$id", id: movement.lectures.id }
+                    : undefined
+                }
                 onNavigate={onClose}
               />
               <FieldLink
                 label="Agendista"
-                value={movement.agents?.full_name ?? (movement.agent_id ? "Registro arquivado" : "—")}
-                to={movement.agents?.id ? { route: "/app/agendistas/$id", id: movement.agents.id } : undefined}
+                value={
+                  movement.agents?.full_name ?? (movement.agent_id ? "Registro arquivado" : "—")
+                }
+                to={
+                  movement.agents?.id
+                    ? { route: "/app/agendistas/$id", id: movement.agents.id }
+                    : undefined
+                }
                 onNavigate={onClose}
               />
               <FieldLink
                 label="Temporada"
                 value={movement.seasons?.name ?? (movement.season_id ? "Registro arquivado" : "—")}
-                to={movement.seasons?.id ? { route: "/app/temporadas/$id", id: movement.seasons.id } : undefined}
+                to={
+                  movement.seasons?.id
+                    ? { route: "/app/temporadas/$id", id: movement.seasons.id }
+                    : undefined
+                }
                 onNavigate={onClose}
               />
               <FieldLink
                 label="Projeto"
-                value={movement.projects?.name ?? (movement.project_id ? "Registro arquivado" : "—")}
-                to={movement.projects?.id ? { route: "/app/projetos/$id", id: movement.projects.id } : undefined}
+                value={
+                  movement.projects?.name ?? (movement.project_id ? "Registro arquivado" : "—")
+                }
+                to={
+                  movement.projects?.id
+                    ? { route: "/app/projetos/$id", id: movement.projects.id }
+                    : undefined
+                }
                 onNavigate={onClose}
               />
-
             </div>
             {movement.notes && (
-              <p className="mt-4 whitespace-pre-wrap border-t border-border pt-4 text-sm text-muted-foreground">{movement.notes}</p>
+              <p className="mt-4 whitespace-pre-wrap border-t border-border pt-4 text-sm text-muted-foreground">
+                {movement.notes}
+              </p>
             )}
           </div>
 
@@ -901,7 +1272,12 @@ function MovementSheet({
               <Pencil className="mr-1.5 h-4 w-4" /> Editar
             </Button>
             {!settled && (
-              <Button variant="navy" size="sm" onClick={() => settle.mutate()} disabled={settle.isPending}>
+              <Button
+                variant="brand"
+                size="sm"
+                onClick={() => settle.mutate()}
+                disabled={settle.isPending}
+              >
                 {isIn ? "Marcar como recebido" : "Marcar como pago"}
               </Button>
             )}
@@ -953,17 +1329,17 @@ function MovementSheet({
                 <ol className="relative space-y-4 border-l border-border pl-6">
                   {timeline.map((e, i) => (
                     <li key={i} className="relative">
-                      <span className="absolute -left-[27px] top-1.5 h-2 w-2 rounded-full bg-[var(--navy)]" />
+                      <span className="absolute -left-[27px] top-1.5 h-2 w-2 rounded-full bg-[var(--ink)]" />
                       <p className="text-sm text-foreground">{e.title}</p>
                       {e.subtitle && <p className="text-xs text-muted-foreground">{e.subtitle}</p>}
-                      <p className="mt-1 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+                      <p className="mt-1 text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
                         {formatDate(e.at)}
                       </p>
                     </li>
                   ))}
                 </ol>
               )}
-              <p className="mt-4 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+              <p className="mt-4 text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
                 Eventos previstos: {FINANCE_TIMELINE_KINDS.map((k) => k.label).join(" · ")}
               </p>
             </TabsContent>
@@ -974,15 +1350,25 @@ function MovementSheet({
   );
 }
 
-function Field({ label, value, accent }: { label: string; value: string; accent?: "positive" | "negative" }) {
+function Field({
+  label,
+  value,
+  accent,
+}: {
+  label: string;
+  value: string;
+  accent?: "positive" | "negative";
+}) {
   return (
     <div>
-      <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">{label}</p>
-      <p className={cn(
-        "mt-1 text-sm text-foreground tabular-nums",
-        accent === "positive" && "text-emerald-600",
-        accent === "negative" && "text-rose-600",
-      )}>
+      <p className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">{label}</p>
+      <p
+        className={cn(
+          "mt-1 text-sm text-foreground tabular-nums",
+          accent === "positive" && "text-emerald-600",
+          accent === "negative" && "text-rose-600",
+        )}
+      >
         {value}
       </p>
     </div>
@@ -996,12 +1382,27 @@ type LinkTarget =
   | { route: "/app/temporadas/$id"; id: string }
   | { route: "/app/projetos/$id"; id: string };
 
-function FieldLink({ label, value, to, onNavigate }: { label: string; value: string; to?: LinkTarget; onNavigate?: () => void }) {
+function FieldLink({
+  label,
+  value,
+  to,
+  onNavigate,
+}: {
+  label: string;
+  value: string;
+  to?: LinkTarget;
+  onNavigate?: () => void;
+}) {
   return (
     <div>
-      <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">{label}</p>
+      <p className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">{label}</p>
       {to ? (
-        <Link to={to.route} params={{ id: to.id }} onClick={() => onNavigate?.()} className="mt-1 block text-sm text-foreground underline-offset-2 hover:underline">
+        <Link
+          to={to.route}
+          params={{ id: to.id }}
+          onClick={() => onNavigate?.()}
+          className="mt-1 block text-sm text-foreground underline-offset-2 hover:underline"
+        >
           {value}
         </Link>
       ) : (
@@ -1010,4 +1411,3 @@ function FieldLink({ label, value, to, onNavigate }: { label: string; value: str
     </div>
   );
 }
-

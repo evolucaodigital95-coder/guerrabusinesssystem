@@ -14,18 +14,10 @@ export const Route = createFileRoute("/admin/")({
   component: AdminDashboard,
 });
 
-function Metric({
-  label,
-  value,
-  hint,
-}: {
-  label: string;
-  value: string | number;
-  hint?: string;
-}) {
+function Metric({ label, value, hint }: { label: string; value: string | number; hint?: string }) {
   return (
     <div className="rounded-2xl border border-border bg-card p-5">
-      <div className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">{label}</div>
+      <div className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">{label}</div>
       <div className="mt-3 font-display text-2xl">{value}</div>
       {hint && <div className="mt-1 text-[11px] text-muted-foreground">{hint}</div>}
     </div>
@@ -66,9 +58,17 @@ function AdminDashboard() {
         <Metric label="MRR" value={money(o.mrr)} hint="Preço contratado (sem gateway)" />
         <Metric label="ARR" value={money(o.arr)} hint="MRR × 12" />
         <Metric label="Churn" value={pct(o.churn)} hint="Canceladas / total" />
-        <Metric label="Taxa de conversão" value={pct(o.conversion)} hint="Trial → assinatura ativa" />
+        <Metric
+          label="Taxa de conversão"
+          value={pct(o.conversion)}
+          hint="Trial → assinatura ativa"
+        />
         <Metric label="Receita recebida" value={NOT_AVAILABLE} hint="Requer gateway conectado" />
-        <Metric label="Usuários ativos (sessão)" value={NOT_AVAILABLE} hint="Telemetria não coletada" />
+        <Metric
+          label="Usuários ativos (sessão)"
+          value={NOT_AVAILABLE}
+          hint="Telemetria não coletada"
+        />
       </section>
 
       <p className="mt-10 text-xs text-muted-foreground">

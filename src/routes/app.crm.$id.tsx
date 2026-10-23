@@ -1,25 +1,56 @@
 import { createFileRoute, Link, useParams, useNavigate } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Building2, Globe, Instagram, MapPin, Pencil, Plus, Star, Trash2, Calendar, Wallet, Users, Target, MessageSquare, Paperclip, ExternalLink } from "lucide-react";
+import {
+  ArrowLeft,
+  Building2,
+  Globe,
+  Instagram,
+  MapPin,
+  Pencil,
+  Plus,
+  Star,
+  Trash2,
+  Calendar,
+  Wallet,
+  Users,
+  Target,
+  MessageSquare,
+  Paperclip,
+  ExternalLink,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/hooks/use-session";
 import { useCurrentOrg } from "@/hooks/use-current-org";
 import {
-  formatCurrency, formatDate, LEAD_STATUS, OPPORTUNITY_STATUS, TIMELINE_KINDS, timelineKindLabel,
+  formatCurrency,
+  formatDate,
+  LEAD_STATUS,
+  OPPORTUNITY_STATUS,
+  TIMELINE_KINDS,
+  timelineKindLabel,
 } from "@/lib/crm";
 import { StagePipeline } from "@/components/crm/stage-pipeline";
 import { CompanyFormDialog } from "@/components/crm/company-form-dialog";
@@ -49,7 +80,10 @@ function CompanyDetailPage() {
     enabled: !!id,
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("companies").select("*").eq("id", id).maybeSingle();
+        .from("companies")
+        .select("*")
+        .eq("id", id)
+        .maybeSingle();
       if (error) throw error;
       return data;
     },
@@ -58,8 +92,10 @@ function CompanyDetailPage() {
   const toggleFavorite = useMutation({
     mutationFn: async () => {
       if (!company.data) return;
-      const { error } = await supabase.from("companies")
-        .update({ is_favorite: !company.data.is_favorite }).eq("id", id);
+      const { error } = await supabase
+        .from("companies")
+        .update({ is_favorite: !company.data.is_favorite })
+        .eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["company", id] }),
@@ -67,8 +103,10 @@ function CompanyDetailPage() {
 
   const remove = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from("companies")
-        .update({ archived_at: new Date().toISOString() }).eq("id", id);
+      const { error } = await supabase
+        .from("companies")
+        .update({ archived_at: new Date().toISOString() })
+        .eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -85,7 +123,10 @@ function CompanyDetailPage() {
   if (!company.data) {
     return (
       <div className="space-y-4">
-        <Link to="/app/crm" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground">
+        <Link
+          to="/app/crm"
+          className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground"
+        >
           <ArrowLeft className="mr-1.5 h-4 w-4" /> Voltar para CRM
         </Link>
         <p className="text-foreground">Empresa não encontrada.</p>
@@ -98,25 +139,45 @@ function CompanyDetailPage() {
   return (
     <div className="space-y-10">
       <div>
-        <Link to="/app/crm" className="inline-flex items-center text-xs text-muted-foreground hover:text-foreground">
+        <Link
+          to="/app/crm"
+          className="inline-flex items-center text-xs text-muted-foreground hover:text-foreground"
+        >
           <ArrowLeft className="mr-1.5 h-3 w-3" /> CRM
         </Link>
         <div className="mt-3 flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0">
-            <p className="text-[10px] font-medium uppercase tracking-[0.22em] text-muted-foreground">Empresa</p>
-            <h1 className="mt-2 font-serif text-4xl leading-tight text-foreground">{c.legal_name}</h1>
+            <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
+              Empresa
+            </p>
+            <h1 className="mt-2 font-serif text-4xl leading-tight text-foreground">
+              {c.legal_name}
+            </h1>
             {c.trade_name && <p className="mt-1 text-sm text-muted-foreground">{c.trade_name}</p>}
             <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
               {c.document && <span>CNPJ {c.document}</span>}
-              {c.segment && <Badge variant="outline" className="font-normal">{c.segment}</Badge>}
-              {c.status && <Badge variant="secondary" className="font-normal">{c.status}</Badge>}
+              {c.segment && (
+                <Badge variant="outline" className="font-normal">
+                  {c.segment}
+                </Badge>
+              )}
+              {c.status && (
+                <Badge variant="secondary" className="font-normal">
+                  {c.status}
+                </Badge>
+              )}
               {(c.city || c.state) && (
                 <span className="inline-flex items-center gap-1.5">
                   <MapPin className="h-3 w-3" /> {[c.city, c.state].filter(Boolean).join(" / ")}
                 </span>
               )}
               {c.website && (
-                <a href={c.website} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 hover:text-foreground">
+                <a
+                  href={c.website}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1.5 hover:text-foreground"
+                >
                   <Globe className="h-3 w-3" /> {c.website.replace(/^https?:\/\//, "")}
                 </a>
               )}
@@ -131,13 +192,23 @@ function CompanyDetailPage() {
             </div>
             {organizationId && user && (
               <div className="mt-4">
-                <TagsBar entityType="company" entityId={id} organizationId={organizationId} userId={user.id} />
+                <TagsBar
+                  entityType="company"
+                  entityId={id}
+                  organizationId={organizationId}
+                  userId={user.id}
+                />
               </div>
             )}
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <Button variant="ghost" size="sm" onClick={() => toggleFavorite.mutate()}>
-              <Star className={cn("mr-1.5 h-4 w-4", c.is_favorite && "fill-[var(--gold)] text-[var(--gold)]")} />
+              <Star
+                className={cn(
+                  "mr-1.5 h-4 w-4",
+                  c.is_favorite && "fill-[var(--gold)] text-gold-ink",
+                )}
+              />
               {c.is_favorite ? "Favorita" : "Favoritar"}
             </Button>
             <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
@@ -178,13 +249,19 @@ function CompanyDetailPage() {
           <Overview company={c} />
         </TabsContent>
         <TabsContent value="contacts">
-          {organizationId && user && <ContactsTab companyId={id} organizationId={organizationId} userId={user.id} />}
+          {organizationId && user && (
+            <ContactsTab companyId={id} organizationId={organizationId} userId={user.id} />
+          )}
         </TabsContent>
         <TabsContent value="leads">
-          {organizationId && user && <LeadsTab companyId={id} organizationId={organizationId} userId={user.id} />}
+          {organizationId && user && (
+            <LeadsTab companyId={id} organizationId={organizationId} userId={user.id} />
+          )}
         </TabsContent>
         <TabsContent value="opportunities">
-          {organizationId && user && <OpportunitiesTab companyId={id} organizationId={organizationId} userId={user.id} />}
+          {organizationId && user && (
+            <OpportunitiesTab companyId={id} organizationId={organizationId} userId={user.id} />
+          )}
         </TabsContent>
         <TabsContent value="lectures">
           <CompanyLecturesTab companyId={id} />
@@ -193,15 +270,29 @@ function CompanyDetailPage() {
           <CompanyFinanceTab companyId={id} />
         </TabsContent>
         <TabsContent value="notes">
-          {organizationId && user && <NotesTab companyId={id} organizationId={organizationId} userId={user.id} />}
+          {organizationId && user && (
+            <NotesTab companyId={id} organizationId={organizationId} userId={user.id} />
+          )}
         </TabsContent>
         <TabsContent value="attachments">
           {organizationId && user && (
-            <AttachmentsTab entityType="company" entityId={id} organizationId={organizationId} userId={user.id} />
+            <AttachmentsTab
+              entityType="company"
+              entityId={id}
+              organizationId={organizationId}
+              userId={user.id}
+            />
           )}
         </TabsContent>
         <TabsContent value="timeline">
-          {organizationId && user && <TimelineTab companyId={id} organizationId={organizationId} userId={user.id} company={c} />}
+          {organizationId && user && (
+            <TimelineTab
+              companyId={id}
+              organizationId={organizationId}
+              userId={user.id}
+              company={c}
+            />
+          )}
         </TabsContent>
       </Tabs>
 
@@ -242,7 +333,7 @@ function Overview({ company }: { company: Record<string, unknown> }) {
         <dl className="mt-5 grid grid-cols-1 gap-x-8 gap-y-3 sm:grid-cols-2">
           {rows.map(([k, v]) => (
             <div key={k}>
-              <dt className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">{k}</dt>
+              <dt className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">{k}</dt>
               <dd className="mt-1 text-sm text-foreground">{v || "—"}</dd>
             </div>
           ))}
@@ -258,7 +349,17 @@ function Overview({ company }: { company: Record<string, unknown> }) {
   );
 }
 
-function EmptyTab({ icon, title, description, action }: { icon: React.ReactNode; title: string; description: string; action?: React.ReactNode }) {
+function EmptyTab({
+  icon,
+  title,
+  description,
+  action,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+  action?: React.ReactNode;
+}) {
   return (
     <div className="rounded-2xl border border-dashed border-border bg-card/20 px-8 py-14 text-center">
       <div className="mx-auto inline-flex">{icon}</div>
@@ -271,15 +372,25 @@ function EmptyTab({ icon, title, description, action }: { icon: React.ReactNode;
 
 /* ---------------- Contacts Tab ---------------- */
 
-function ContactsTab({ companyId, organizationId, userId }: { companyId: string; organizationId: string; userId: string }) {
+function ContactsTab({
+  companyId,
+  organizationId,
+  userId,
+}: {
+  companyId: string;
+  organizationId: string;
+  userId: string;
+}) {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const list = useQuery({
     queryKey: ["company-contacts", companyId],
     queryFn: async () => {
-      const { data, error } = await supabase.from("contacts")
+      const { data, error } = await supabase
+        .from("contacts")
         .select("id, full_name, role, email, phone, whatsapp, birthday, notes, created_at")
-        .eq("company_id", companyId).is("archived_at", null)
+        .eq("company_id", companyId)
+        .is("archived_at", null)
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data ?? [];
@@ -289,7 +400,7 @@ function ContactsTab({ companyId, organizationId, userId }: { companyId: string;
   return (
     <div className="space-y-4">
       <div className="flex justify-end">
-        <Button variant="navy" size="sm" className="rounded-full" onClick={() => setOpen(true)}>
+        <Button variant="brand" size="sm" onClick={() => setOpen(true)}>
           <Plus className="mr-1.5 h-4 w-4" /> Novo contato
         </Button>
       </div>
@@ -302,14 +413,20 @@ function ContactsTab({ companyId, organizationId, userId }: { companyId: string;
                   <p className="font-medium text-foreground">{c.full_name}</p>
                   {c.role && <p className="text-xs text-muted-foreground">{c.role}</p>}
                 </div>
-                {c.birthday && <span className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">{formatDate(c.birthday)}</span>}
+                {c.birthday && (
+                  <span className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
+                    {formatDate(c.birthday)}
+                  </span>
+                )}
               </div>
               <div className="mt-3 space-y-1 text-sm text-muted-foreground">
                 {c.email && <p>{c.email}</p>}
                 {c.phone && <p>Tel: {c.phone}</p>}
                 {c.whatsapp && <p>WhatsApp: {c.whatsapp}</p>}
               </div>
-              {c.notes && <p className="mt-3 whitespace-pre-wrap text-xs text-muted-foreground">{c.notes}</p>}
+              {c.notes && (
+                <p className="mt-3 whitespace-pre-wrap text-xs text-muted-foreground">{c.notes}</p>
+              )}
             </div>
           ))}
         </div>
@@ -321,8 +438,11 @@ function ContactsTab({ companyId, organizationId, userId }: { companyId: string;
         />
       )}
       <ContactFormDialog
-        open={open} onOpenChange={setOpen}
-        companyId={companyId} organizationId={organizationId} userId={userId}
+        open={open}
+        onOpenChange={setOpen}
+        companyId={companyId}
+        organizationId={organizationId}
+        userId={userId}
         onSaved={() => queryClient.invalidateQueries({ queryKey: ["company-contacts", companyId] })}
       />
     </div>
@@ -330,12 +450,29 @@ function ContactsTab({ companyId, organizationId, userId }: { companyId: string;
 }
 
 function ContactFormDialog({
-  open, onOpenChange, companyId, organizationId, userId, onSaved,
+  open,
+  onOpenChange,
+  companyId,
+  organizationId,
+  userId,
+  onSaved,
 }: {
-  open: boolean; onOpenChange: (v: boolean) => void;
-  companyId: string; organizationId: string; userId: string; onSaved: () => void;
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  companyId: string;
+  organizationId: string;
+  userId: string;
+  onSaved: () => void;
 }) {
-  const [f, setF] = useState({ full_name: "", role: "", email: "", phone: "", whatsapp: "", birthday: "", notes: "" });
+  const [f, setF] = useState({
+    full_name: "",
+    role: "",
+    email: "",
+    phone: "",
+    whatsapp: "",
+    birthday: "",
+    notes: "",
+  });
   const save = useMutation({
     mutationFn: async () => {
       if (!f.full_name.trim()) throw new Error("Informe o nome.");
@@ -356,12 +493,24 @@ function ContactFormDialog({
     },
     onSuccess: () => {
       toast.success("Contato adicionado");
-      setF({ full_name: "", role: "", email: "", phone: "", whatsapp: "", birthday: "", notes: "" });
-      onSaved(); onOpenChange(false);
+      setF({
+        full_name: "",
+        role: "",
+        email: "",
+        phone: "",
+        whatsapp: "",
+        birthday: "",
+        notes: "",
+      });
+      onSaved();
+      onOpenChange(false);
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Erro"),
   });
-  function submit(e: FormEvent) { e.preventDefault(); save.mutate(); }
+  function submit(e: FormEvent) {
+    e.preventDefault();
+    save.mutate();
+  }
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
@@ -370,16 +519,57 @@ function ContactFormDialog({
           <DialogDescription>Vinculado a esta empresa.</DialogDescription>
         </DialogHeader>
         <form onSubmit={submit} className="grid grid-cols-1 gap-3 md:grid-cols-2">
-          <div className="space-y-1.5 md:col-span-2"><Label>Nome *</Label><Input value={f.full_name} onChange={(e) => setF({ ...f, full_name: e.target.value })} required /></div>
-          <div className="space-y-1.5"><Label>Cargo</Label><Input value={f.role} onChange={(e) => setF({ ...f, role: e.target.value })} /></div>
-          <div className="space-y-1.5"><Label>Aniversário</Label><Input type="date" value={f.birthday} onChange={(e) => setF({ ...f, birthday: e.target.value })} /></div>
-          <div className="space-y-1.5"><Label>Email</Label><Input type="email" value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} /></div>
-          <div className="space-y-1.5"><Label>Telefone</Label><Input value={f.phone} onChange={(e) => setF({ ...f, phone: e.target.value })} /></div>
-          <div className="space-y-1.5 md:col-span-2"><Label>WhatsApp</Label><Input value={f.whatsapp} onChange={(e) => setF({ ...f, whatsapp: e.target.value })} /></div>
-          <div className="space-y-1.5 md:col-span-2"><Label>Observações</Label><Textarea rows={3} value={f.notes} onChange={(e) => setF({ ...f, notes: e.target.value })} /></div>
+          <div className="space-y-1.5 md:col-span-2">
+            <Label>Nome *</Label>
+            <Input
+              value={f.full_name}
+              onChange={(e) => setF({ ...f, full_name: e.target.value })}
+              required
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Cargo</Label>
+            <Input value={f.role} onChange={(e) => setF({ ...f, role: e.target.value })} />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Aniversário</Label>
+            <Input
+              type="date"
+              value={f.birthday}
+              onChange={(e) => setF({ ...f, birthday: e.target.value })}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Email</Label>
+            <Input
+              type="email"
+              value={f.email}
+              onChange={(e) => setF({ ...f, email: e.target.value })}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Telefone</Label>
+            <Input value={f.phone} onChange={(e) => setF({ ...f, phone: e.target.value })} />
+          </div>
+          <div className="space-y-1.5 md:col-span-2">
+            <Label>WhatsApp</Label>
+            <Input value={f.whatsapp} onChange={(e) => setF({ ...f, whatsapp: e.target.value })} />
+          </div>
+          <div className="space-y-1.5 md:col-span-2">
+            <Label>Observações</Label>
+            <Textarea
+              rows={3}
+              value={f.notes}
+              onChange={(e) => setF({ ...f, notes: e.target.value })}
+            />
+          </div>
           <DialogFooter className="md:col-span-2">
-            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Cancelar</Button>
-            <Button type="submit" variant="navy" disabled={save.isPending}>{save.isPending ? "Salvando…" : "Adicionar"}</Button>
+            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
+              Cancelar
+            </Button>
+            <Button type="submit" variant="brand" disabled={save.isPending}>
+              {save.isPending ? "Salvando…" : "Adicionar"}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>
@@ -389,15 +579,25 @@ function ContactFormDialog({
 
 /* ---------------- Leads Tab ---------------- */
 
-function LeadsTab({ companyId, organizationId, userId }: { companyId: string; organizationId: string; userId: string }) {
+function LeadsTab({
+  companyId,
+  organizationId,
+  userId,
+}: {
+  companyId: string;
+  organizationId: string;
+  userId: string;
+}) {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const list = useQuery({
     queryKey: ["company-leads", companyId],
     queryFn: async () => {
-      const { data, error } = await supabase.from("leads")
+      const { data, error } = await supabase
+        .from("leads")
         .select("id, source, status, interest, notes, created_at")
-        .eq("company_id", companyId).is("archived_at", null)
+        .eq("company_id", companyId)
+        .is("archived_at", null)
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data ?? [];
@@ -406,7 +606,7 @@ function LeadsTab({ companyId, organizationId, userId }: { companyId: string; or
   return (
     <div className="space-y-4">
       <div className="flex justify-end">
-        <Button variant="navy" size="sm" className="rounded-full" onClick={() => setOpen(true)}>
+        <Button variant="brand" size="sm" onClick={() => setOpen(true)}>
           <Plus className="mr-1.5 h-4 w-4" /> Novo lead
         </Button>
       </div>
@@ -419,52 +619,133 @@ function LeadsTab({ companyId, organizationId, userId }: { companyId: string; or
                 <p className="text-xs text-muted-foreground">{formatDate(l.created_at)}</p>
               </div>
               <div className="flex flex-wrap items-center gap-2">
-                {l.interest && <Badge variant="outline" className="font-normal">{l.interest}</Badge>}
-                {l.status && <Badge variant="secondary" className="font-normal">{l.status}</Badge>}
+                {l.interest && (
+                  <Badge variant="outline" className="font-normal">
+                    {l.interest}
+                  </Badge>
+                )}
+                {l.status && (
+                  <Badge variant="secondary" className="font-normal">
+                    {l.status}
+                  </Badge>
+                )}
               </div>
             </div>
           ))}
         </div>
       ) : (
-        <EmptyTab icon={<Building2 className="h-6 w-6 text-muted-foreground" />} title="Sem leads" description="Registre o primeiro lead desta empresa." />
+        <EmptyTab
+          icon={<Building2 className="h-6 w-6 text-muted-foreground" />}
+          title="Sem leads"
+          description="Registre o primeiro lead desta empresa."
+        />
       )}
-      <LeadFormDialog open={open} onOpenChange={setOpen} companyId={companyId} organizationId={organizationId} userId={userId}
-        onSaved={() => queryClient.invalidateQueries({ queryKey: ["company-leads", companyId] })} />
+      <LeadFormDialog
+        open={open}
+        onOpenChange={setOpen}
+        companyId={companyId}
+        organizationId={organizationId}
+        userId={userId}
+        onSaved={() => queryClient.invalidateQueries({ queryKey: ["company-leads", companyId] })}
+      />
     </div>
   );
 }
 
-function LeadFormDialog({ open, onOpenChange, companyId, organizationId, userId, onSaved }: { open: boolean; onOpenChange: (v: boolean) => void; companyId: string; organizationId: string; userId: string; onSaved: () => void }) {
+function LeadFormDialog({
+  open,
+  onOpenChange,
+  companyId,
+  organizationId,
+  userId,
+  onSaved,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  companyId: string;
+  organizationId: string;
+  userId: string;
+  onSaved: () => void;
+}) {
   const [f, setF] = useState({ source: "", status: "novo", interest: "", notes: "" });
   const save = useMutation({
     mutationFn: async () => {
       const { error } = await supabase.from("leads").insert({
-        organization_id: organizationId, company_id: companyId,
-        source: f.source || null, status: f.status, interest: f.interest || null, notes: f.notes || null,
-        owner_id: userId, created_by: userId, updated_by: userId,
+        organization_id: organizationId,
+        company_id: companyId,
+        source: f.source || null,
+        status: f.status,
+        interest: f.interest || null,
+        notes: f.notes || null,
+        owner_id: userId,
+        created_by: userId,
+        updated_by: userId,
       });
       if (error) throw error;
     },
-    onSuccess: () => { toast.success("Lead criado"); setF({ source: "", status: "novo", interest: "", notes: "" }); onSaved(); onOpenChange(false); },
+    onSuccess: () => {
+      toast.success("Lead criado");
+      setF({ source: "", status: "novo", interest: "", notes: "" });
+      onSaved();
+      onOpenChange(false);
+    },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Erro"),
   });
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
-        <DialogHeader><DialogTitle className="font-serif text-2xl">Novo lead</DialogTitle></DialogHeader>
-        <form onSubmit={(e) => { e.preventDefault(); save.mutate(); }} className="grid gap-3">
-          <div className="space-y-1.5"><Label>Origem</Label><Input value={f.source} onChange={(e) => setF({ ...f, source: e.target.value })} placeholder="Indicação, evento, inbound…" /></div>
-          <div className="space-y-1.5"><Label>Status</Label>
+        <DialogHeader>
+          <DialogTitle className="font-serif text-2xl">Novo lead</DialogTitle>
+        </DialogHeader>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            save.mutate();
+          }}
+          className="grid gap-3"
+        >
+          <div className="space-y-1.5">
+            <Label>Origem</Label>
+            <Input
+              value={f.source}
+              onChange={(e) => setF({ ...f, source: e.target.value })}
+              placeholder="Indicação, evento, inbound…"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Status</Label>
             <Select value={f.status} onValueChange={(v) => setF({ ...f, status: v })}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>{LEAD_STATUS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {LEAD_STATUS.map((s) => (
+                  <SelectItem key={s} value={s}>
+                    {s}
+                  </SelectItem>
+                ))}
+              </SelectContent>
             </Select>
           </div>
-          <div className="space-y-1.5"><Label>Interesse</Label><Input value={f.interest} onChange={(e) => setF({ ...f, interest: e.target.value })} /></div>
-          <div className="space-y-1.5"><Label>Observações</Label><Textarea rows={3} value={f.notes} onChange={(e) => setF({ ...f, notes: e.target.value })} /></div>
+          <div className="space-y-1.5">
+            <Label>Interesse</Label>
+            <Input value={f.interest} onChange={(e) => setF({ ...f, interest: e.target.value })} />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Observações</Label>
+            <Textarea
+              rows={3}
+              value={f.notes}
+              onChange={(e) => setF({ ...f, notes: e.target.value })}
+            />
+          </div>
           <DialogFooter>
-            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Cancelar</Button>
-            <Button type="submit" variant="navy" disabled={save.isPending}>{save.isPending ? "Salvando…" : "Criar"}</Button>
+            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
+              Cancelar
+            </Button>
+            <Button type="submit" variant="brand" disabled={save.isPending}>
+              {save.isPending ? "Salvando…" : "Criar"}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>
@@ -474,15 +755,27 @@ function LeadFormDialog({ open, onOpenChange, companyId, organizationId, userId,
 
 /* ---------------- Opportunities Tab ---------------- */
 
-function OpportunitiesTab({ companyId, organizationId, userId }: { companyId: string; organizationId: string; userId: string }) {
+function OpportunitiesTab({
+  companyId,
+  organizationId,
+  userId,
+}: {
+  companyId: string;
+  organizationId: string;
+  userId: string;
+}) {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const list = useQuery({
     queryKey: ["company-opps", companyId],
     queryFn: async () => {
-      const { data, error } = await supabase.from("opportunities")
-        .select("id, title, status, amount, currency, probability, expected_close, next_step, notes, created_at")
-        .eq("company_id", companyId).is("archived_at", null)
+      const { data, error } = await supabase
+        .from("opportunities")
+        .select(
+          "id, title, status, amount, currency, probability, expected_close, next_step, notes, created_at",
+        )
+        .eq("company_id", companyId)
+        .is("archived_at", null)
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data ?? [];
@@ -491,7 +784,7 @@ function OpportunitiesTab({ companyId, organizationId, userId }: { companyId: st
   return (
     <div className="space-y-4">
       <div className="flex justify-end">
-        <Button variant="navy" size="sm" className="rounded-full" onClick={() => setOpen(true)}>
+        <Button variant="brand" size="sm" onClick={() => setOpen(true)}>
           <Plus className="mr-1.5 h-4 w-4" /> Nova oportunidade
         </Button>
       </div>
@@ -501,66 +794,210 @@ function OpportunitiesTab({ companyId, organizationId, userId }: { companyId: st
             <div key={o.id} className="rounded-2xl border border-border bg-card/40 p-5">
               <div className="flex items-baseline justify-between gap-3">
                 <p className="font-medium text-foreground">{o.title}</p>
-                {o.status && <Badge variant="secondary" className="font-normal">{o.status}</Badge>}
+                {o.status && (
+                  <Badge variant="secondary" className="font-normal">
+                    {o.status}
+                  </Badge>
+                )}
               </div>
               <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
-                <div><p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Valor</p><p className="mt-0.5 text-foreground">{formatCurrency(o.amount, o.currency ?? "BRL")}</p></div>
-                <div><p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Probabilidade</p><p className="mt-0.5 text-foreground">{o.probability != null ? `${o.probability}%` : "—"}</p></div>
-                <div><p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Previsão</p><p className="mt-0.5 text-foreground">{formatDate(o.expected_close)}</p></div>
-                <div><p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Próximo passo</p><p className="mt-0.5 text-foreground">{o.next_step || "—"}</p></div>
+                <div>
+                  <p className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
+                    Valor
+                  </p>
+                  <p className="mt-0.5 text-foreground">
+                    {formatCurrency(o.amount, o.currency ?? "BRL")}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
+                    Probabilidade
+                  </p>
+                  <p className="mt-0.5 text-foreground">
+                    {o.probability != null ? `${o.probability}%` : "—"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
+                    Previsão
+                  </p>
+                  <p className="mt-0.5 text-foreground">{formatDate(o.expected_close)}</p>
+                </div>
+                <div>
+                  <p className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
+                    Próximo passo
+                  </p>
+                  <p className="mt-0.5 text-foreground">{o.next_step || "—"}</p>
+                </div>
               </div>
-              {o.notes && <p className="mt-3 whitespace-pre-wrap text-xs text-muted-foreground">{o.notes}</p>}
+              {o.notes && (
+                <p className="mt-3 whitespace-pre-wrap text-xs text-muted-foreground">{o.notes}</p>
+              )}
             </div>
           ))}
         </div>
       ) : (
-        <EmptyTab icon={<Building2 className="h-6 w-6 text-muted-foreground" />} title="Sem oportunidades" description="Crie a primeira oportunidade desta empresa." />
+        <EmptyTab
+          icon={<Building2 className="h-6 w-6 text-muted-foreground" />}
+          title="Sem oportunidades"
+          description="Crie a primeira oportunidade desta empresa."
+        />
       )}
-      <OpportunityFormDialog open={open} onOpenChange={setOpen} companyId={companyId} organizationId={organizationId} userId={userId}
-        onSaved={() => queryClient.invalidateQueries({ queryKey: ["company-opps", companyId] })} />
+      <OpportunityFormDialog
+        open={open}
+        onOpenChange={setOpen}
+        companyId={companyId}
+        organizationId={organizationId}
+        userId={userId}
+        onSaved={() => queryClient.invalidateQueries({ queryKey: ["company-opps", companyId] })}
+      />
     </div>
   );
 }
 
-function OpportunityFormDialog({ open, onOpenChange, companyId, organizationId, userId, onSaved }: { open: boolean; onOpenChange: (v: boolean) => void; companyId: string; organizationId: string; userId: string; onSaved: () => void }) {
-  const [f, setF] = useState({ title: "", status: "aberta", amount: "", probability: "", expected_close: "", next_step: "", notes: "" });
+function OpportunityFormDialog({
+  open,
+  onOpenChange,
+  companyId,
+  organizationId,
+  userId,
+  onSaved,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  companyId: string;
+  organizationId: string;
+  userId: string;
+  onSaved: () => void;
+}) {
+  const [f, setF] = useState({
+    title: "",
+    status: "aberta",
+    amount: "",
+    probability: "",
+    expected_close: "",
+    next_step: "",
+    notes: "",
+  });
   const save = useMutation({
     mutationFn: async () => {
       if (!f.title.trim()) throw new Error("Informe o título.");
       const { error } = await supabase.from("opportunities").insert({
-        organization_id: organizationId, company_id: companyId,
-        title: f.title.trim(), status: f.status,
+        organization_id: organizationId,
+        company_id: companyId,
+        title: f.title.trim(),
+        status: f.status,
         amount: f.amount ? Number(f.amount) : null,
         probability: f.probability ? Number(f.probability) : null,
         expected_close: f.expected_close || null,
-        next_step: f.next_step || null, notes: f.notes || null,
-        created_by: userId, updated_by: userId,
+        next_step: f.next_step || null,
+        notes: f.notes || null,
+        created_by: userId,
+        updated_by: userId,
       });
       if (error) throw error;
     },
-    onSuccess: () => { toast.success("Oportunidade criada"); setF({ title: "", status: "aberta", amount: "", probability: "", expected_close: "", next_step: "", notes: "" }); onSaved(); onOpenChange(false); },
+    onSuccess: () => {
+      toast.success("Oportunidade criada");
+      setF({
+        title: "",
+        status: "aberta",
+        amount: "",
+        probability: "",
+        expected_close: "",
+        next_step: "",
+        notes: "",
+      });
+      onSaved();
+      onOpenChange(false);
+    },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Erro"),
   });
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
-        <DialogHeader><DialogTitle className="font-serif text-2xl">Nova oportunidade</DialogTitle></DialogHeader>
-        <form onSubmit={(e) => { e.preventDefault(); save.mutate(); }} className="grid grid-cols-1 gap-3 md:grid-cols-2">
-          <div className="space-y-1.5 md:col-span-2"><Label>Título *</Label><Input value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })} required /></div>
-          <div className="space-y-1.5"><Label>Status</Label>
+        <DialogHeader>
+          <DialogTitle className="font-serif text-2xl">Nova oportunidade</DialogTitle>
+        </DialogHeader>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            save.mutate();
+          }}
+          className="grid grid-cols-1 gap-3 md:grid-cols-2"
+        >
+          <div className="space-y-1.5 md:col-span-2">
+            <Label>Título *</Label>
+            <Input
+              value={f.title}
+              onChange={(e) => setF({ ...f, title: e.target.value })}
+              required
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Status</Label>
             <Select value={f.status} onValueChange={(v) => setF({ ...f, status: v })}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>{OPPORTUNITY_STATUS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {OPPORTUNITY_STATUS.map((s) => (
+                  <SelectItem key={s} value={s}>
+                    {s}
+                  </SelectItem>
+                ))}
+              </SelectContent>
             </Select>
           </div>
-          <div className="space-y-1.5"><Label>Valor previsto</Label><Input type="number" step="0.01" value={f.amount} onChange={(e) => setF({ ...f, amount: e.target.value })} /></div>
-          <div className="space-y-1.5"><Label>Probabilidade (%)</Label><Input type="number" min={0} max={100} value={f.probability} onChange={(e) => setF({ ...f, probability: e.target.value })} /></div>
-          <div className="space-y-1.5"><Label>Data prevista</Label><Input type="date" value={f.expected_close} onChange={(e) => setF({ ...f, expected_close: e.target.value })} /></div>
-          <div className="space-y-1.5 md:col-span-2"><Label>Próximo passo</Label><Input value={f.next_step} onChange={(e) => setF({ ...f, next_step: e.target.value })} /></div>
-          <div className="space-y-1.5 md:col-span-2"><Label>Observações</Label><Textarea rows={3} value={f.notes} onChange={(e) => setF({ ...f, notes: e.target.value })} /></div>
+          <div className="space-y-1.5">
+            <Label>Valor previsto</Label>
+            <Input
+              type="number"
+              step="0.01"
+              value={f.amount}
+              onChange={(e) => setF({ ...f, amount: e.target.value })}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Probabilidade (%)</Label>
+            <Input
+              type="number"
+              min={0}
+              max={100}
+              value={f.probability}
+              onChange={(e) => setF({ ...f, probability: e.target.value })}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Data prevista</Label>
+            <Input
+              type="date"
+              value={f.expected_close}
+              onChange={(e) => setF({ ...f, expected_close: e.target.value })}
+            />
+          </div>
+          <div className="space-y-1.5 md:col-span-2">
+            <Label>Próximo passo</Label>
+            <Input
+              value={f.next_step}
+              onChange={(e) => setF({ ...f, next_step: e.target.value })}
+            />
+          </div>
+          <div className="space-y-1.5 md:col-span-2">
+            <Label>Observações</Label>
+            <Textarea
+              rows={3}
+              value={f.notes}
+              onChange={(e) => setF({ ...f, notes: e.target.value })}
+            />
+          </div>
           <DialogFooter className="md:col-span-2">
-            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Cancelar</Button>
-            <Button type="submit" variant="navy" disabled={save.isPending}>{save.isPending ? "Salvando…" : "Criar"}</Button>
+            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
+              Cancelar
+            </Button>
+            <Button type="submit" variant="brand" disabled={save.isPending}>
+              {save.isPending ? "Salvando…" : "Criar"}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>
@@ -570,15 +1007,26 @@ function OpportunityFormDialog({ open, onOpenChange, companyId, organizationId, 
 
 /* ---------------- Notes Tab ---------------- */
 
-function NotesTab({ companyId, organizationId, userId }: { companyId: string; organizationId: string; userId: string }) {
+function NotesTab({
+  companyId,
+  organizationId,
+  userId,
+}: {
+  companyId: string;
+  organizationId: string;
+  userId: string;
+}) {
   const queryClient = useQueryClient();
   const [body, setBody] = useState("");
   const list = useQuery({
     queryKey: ["company-notes", companyId],
     queryFn: async () => {
-      const { data, error } = await supabase.from("notes")
+      const { data, error } = await supabase
+        .from("notes")
         .select("id, body, created_at, created_by")
-        .eq("entity_type", "company").eq("entity_id", companyId).is("archived_at", null)
+        .eq("entity_type", "company")
+        .eq("entity_id", companyId)
+        .is("archived_at", null)
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data ?? [];
@@ -588,20 +1036,37 @@ function NotesTab({ companyId, organizationId, userId }: { companyId: string; or
     mutationFn: async () => {
       if (!body.trim()) throw new Error("Escreva uma nota.");
       const { error } = await supabase.from("notes").insert({
-        organization_id: organizationId, entity_type: "company", entity_id: companyId,
-        body: body.trim(), created_by: userId, updated_by: userId,
+        organization_id: organizationId,
+        entity_type: "company",
+        entity_id: companyId,
+        body: body.trim(),
+        created_by: userId,
+        updated_by: userId,
       });
       if (error) throw error;
     },
-    onSuccess: () => { setBody(""); queryClient.invalidateQueries({ queryKey: ["company-notes", companyId] }); },
+    onSuccess: () => {
+      setBody("");
+      queryClient.invalidateQueries({ queryKey: ["company-notes", companyId] });
+    },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Erro"),
   });
   return (
     <div className="space-y-5">
       <div className="rounded-2xl border border-border bg-card/40 p-4">
-        <Textarea rows={3} placeholder="Adicionar uma nota privada…" value={body} onChange={(e) => setBody(e.target.value)} />
+        <Textarea
+          rows={3}
+          placeholder="Adicionar uma nota privada…"
+          value={body}
+          onChange={(e) => setBody(e.target.value)}
+        />
         <div className="mt-3 flex justify-end">
-          <Button variant="navy" size="sm" onClick={() => add.mutate()} disabled={add.isPending || !body.trim()}>
+          <Button
+            variant="brand"
+            size="sm"
+            onClick={() => add.mutate()}
+            disabled={add.isPending || !body.trim()}
+          >
             {add.isPending ? "Salvando…" : "Adicionar nota"}
           </Button>
         </div>
@@ -611,7 +1076,9 @@ function NotesTab({ companyId, organizationId, userId }: { companyId: string; or
           {list.data.map((n) => (
             <li key={n.id} className="rounded-2xl border border-border bg-card/30 p-4">
               <p className="whitespace-pre-wrap text-sm text-foreground">{n.body}</p>
-              <p className="mt-2 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">{formatDate(n.created_at)}</p>
+              <p className="mt-2 text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
+                {formatDate(n.created_at)}
+              </p>
             </li>
           ))}
         </ul>
@@ -633,7 +1100,17 @@ function OwnerLabel({ ownerId, organizationId }: { ownerId: string; organization
 
 /* ---------------- Timeline Tab ---------------- */
 
-type FeedKind = "company" | "contact" | "lead" | "opportunity" | "lecture" | "finance-in" | "finance-out" | "note" | "attachment" | "event";
+type FeedKind =
+  | "company"
+  | "contact"
+  | "lead"
+  | "opportunity"
+  | "lecture"
+  | "finance-in"
+  | "finance-out"
+  | "note"
+  | "attachment"
+  | "event";
 type FeedItem = {
   id: string;
   at: string;
@@ -645,17 +1122,70 @@ type FeedItem = {
   linkParams?: Record<string, string>;
 };
 
-const FEED_META: Record<FeedKind, { label: string; icon: React.ComponentType<{ className?: string }>; dot: string; badge: string }> = {
-  company:      { label: "Empresa",      icon: Building2,     dot: "bg-slate-500",   badge: "border-slate-500/40 text-slate-600" },
-  contact:      { label: "Contato",      icon: Users,         dot: "bg-sky-500",     badge: "border-sky-500/40 text-sky-600" },
-  lead:         { label: "Lead",         icon: Target,        dot: "bg-indigo-500",  badge: "border-indigo-500/40 text-indigo-600" },
-  opportunity:  { label: "Oportunidade", icon: Target,        dot: "bg-violet-500",  badge: "border-violet-500/40 text-violet-600" },
-  lecture:      { label: "Palestra",     icon: Calendar,      dot: "bg-amber-500",   badge: "border-amber-500/40 text-amber-600" },
-  "finance-in": { label: "Entrada",      icon: Wallet,        dot: "bg-emerald-500", badge: "border-emerald-500/40 text-emerald-600" },
-  "finance-out":{ label: "Saída",        icon: Wallet,        dot: "bg-rose-500",    badge: "border-rose-500/40 text-rose-600" },
-  note:         { label: "Nota",         icon: MessageSquare, dot: "bg-teal-500",    badge: "border-teal-500/40 text-teal-600" },
-  attachment:   { label: "Anexo",        icon: Paperclip,     dot: "bg-zinc-500",    badge: "border-zinc-500/40 text-zinc-600" },
-  event:        { label: "Evento",       icon: Star,          dot: "bg-[var(--gold)]", badge: "border-[var(--gold)]/40 text-[var(--gold)]" },
+const FEED_META: Record<
+  FeedKind,
+  { label: string; icon: React.ComponentType<{ className?: string }>; dot: string; badge: string }
+> = {
+  company: {
+    label: "Empresa",
+    icon: Building2,
+    dot: "bg-slate-500",
+    badge: "border-slate-500/40 text-slate-600",
+  },
+  contact: {
+    label: "Contato",
+    icon: Users,
+    dot: "bg-sky-500",
+    badge: "border-sky-500/40 text-sky-600",
+  },
+  lead: {
+    label: "Lead",
+    icon: Target,
+    dot: "bg-indigo-500",
+    badge: "border-indigo-500/40 text-indigo-600",
+  },
+  opportunity: {
+    label: "Oportunidade",
+    icon: Target,
+    dot: "bg-violet-500",
+    badge: "border-violet-500/40 text-violet-600",
+  },
+  lecture: {
+    label: "Palestra",
+    icon: Calendar,
+    dot: "bg-amber-500",
+    badge: "border-amber-500/40 text-amber-600",
+  },
+  "finance-in": {
+    label: "Entrada",
+    icon: Wallet,
+    dot: "bg-emerald-500",
+    badge: "border-emerald-500/40 text-emerald-600",
+  },
+  "finance-out": {
+    label: "Saída",
+    icon: Wallet,
+    dot: "bg-rose-500",
+    badge: "border-rose-500/40 text-rose-600",
+  },
+  note: {
+    label: "Nota",
+    icon: MessageSquare,
+    dot: "bg-teal-500",
+    badge: "border-teal-500/40 text-teal-600",
+  },
+  attachment: {
+    label: "Anexo",
+    icon: Paperclip,
+    dot: "bg-zinc-500",
+    badge: "border-zinc-500/40 text-zinc-600",
+  },
+  event: {
+    label: "Evento",
+    icon: Star,
+    dot: "bg-[var(--gold)]",
+    badge: "border-[var(--gold)]/40 text-gold-ink",
+  },
 };
 
 const FEED_FILTERS: { key: "all" | FeedKind; label: string }[] = [
@@ -670,8 +1200,16 @@ const FEED_FILTERS: { key: "all" | FeedKind; label: string }[] = [
 ];
 
 function TimelineTab({
-  companyId, organizationId, userId, company,
-}: { companyId: string; organizationId: string; userId: string; company: Record<string, unknown> }) {
+  companyId,
+  organizationId,
+  userId,
+  company,
+}: {
+  companyId: string;
+  organizationId: string;
+  userId: string;
+  company: Record<string, unknown>;
+}) {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState<"all" | FeedKind>("all");
@@ -680,63 +1218,140 @@ function TimelineTab({
     queryKey: ["company-timeline", companyId],
     queryFn: async () => {
       const [te, leads, opps, contacts, lectures, movs, notes, atts] = await Promise.all([
-        supabase.from("timeline_events").select("id, kind, title, body, occurs_at")
-          .eq("organization_id", organizationId).eq("entity_type", "company").eq("entity_id", companyId)
+        supabase
+          .from("timeline_events")
+          .select("id, kind, title, body, occurs_at")
+          .eq("organization_id", organizationId)
+          .eq("entity_type", "company")
+          .eq("entity_id", companyId)
           .is("archived_at", null),
-        supabase.from("leads").select("id, source, status, created_at").eq("company_id", companyId).is("archived_at", null),
-        supabase.from("opportunities").select("id, title, status, amount, created_at").eq("company_id", companyId).is("archived_at", null),
-        supabase.from("contacts").select("id, full_name, role, created_at").eq("company_id", companyId).is("archived_at", null),
-        supabase.from("lectures").select("id, title, status, scheduled_at, gross_revenue, city, state").eq("company_id", companyId).is("archived_at", null),
-        supabase.from("financial_movements").select("id, direction, description, amount, expected_amount, occurs_on, status, category").eq("company_id", companyId).is("archived_at", null),
-        supabase.from("notes").select("id, body, created_at").eq("entity_type", "company").eq("entity_id", companyId).is("archived_at", null),
-        supabase.from("attachments").select("id, file_name, created_at").eq("entity_type", "company").eq("entity_id", companyId).is("archived_at", null),
+        supabase
+          .from("leads")
+          .select("id, source, status, created_at")
+          .eq("company_id", companyId)
+          .is("archived_at", null),
+        supabase
+          .from("opportunities")
+          .select("id, title, status, amount, created_at")
+          .eq("company_id", companyId)
+          .is("archived_at", null),
+        supabase
+          .from("contacts")
+          .select("id, full_name, role, created_at")
+          .eq("company_id", companyId)
+          .is("archived_at", null),
+        supabase
+          .from("lectures")
+          .select("id, title, status, scheduled_at, gross_revenue, city, state")
+          .eq("company_id", companyId)
+          .is("archived_at", null),
+        supabase
+          .from("financial_movements")
+          .select(
+            "id, direction, description, amount, expected_amount, occurs_on, status, category",
+          )
+          .eq("company_id", companyId)
+          .is("archived_at", null),
+        supabase
+          .from("notes")
+          .select("id, body, created_at")
+          .eq("entity_type", "company")
+          .eq("entity_id", companyId)
+          .is("archived_at", null),
+        supabase
+          .from("attachments")
+          .select("id, file_name, created_at")
+          .eq("entity_type", "company")
+          .eq("entity_id", companyId)
+          .is("archived_at", null),
       ]);
       const items: FeedItem[] = [];
       items.push({
-        id: `c-${company.id}`, at: company.created_at as string, kind: "company",
-        title: "Empresa cadastrada", subtitle: company.legal_name as string,
+        id: `c-${company.id}`,
+        at: company.created_at as string,
+        kind: "company",
+        title: "Empresa cadastrada",
+        subtitle: company.legal_name as string,
       });
-      contacts.data?.forEach((c) => items.push({
-        id: `ct-${c.id}`, at: c.created_at, kind: "contact",
-        title: c.full_name, subtitle: c.role ?? "Contato adicionado",
-      }));
-      leads.data?.forEach((l) => items.push({
-        id: `l-${l.id}`, at: l.created_at, kind: "lead",
-        title: "Lead registrado", subtitle: [l.source, l.status].filter(Boolean).join(" · ") || undefined,
-      }));
-      opps.data?.forEach((o) => items.push({
-        id: `o-${o.id}`, at: o.created_at, kind: "opportunity",
-        title: o.title, subtitle: o.status ?? undefined,
-        amount: o.amount ? Number(o.amount) : undefined,
-      }));
-      lectures.data?.forEach((l) => items.push({
-        id: `lec-${l.id}`, at: l.scheduled_at ?? l.id, kind: "lecture",
-        title: l.title, subtitle: [l.status, [l.city, l.state].filter(Boolean).join("/")].filter(Boolean).join(" · ") || undefined,
-        amount: l.gross_revenue ? Number(l.gross_revenue) : undefined,
-        linkTo: "/app/palestras/$id", linkParams: { id: l.id },
-      }));
+      contacts.data?.forEach((c) =>
+        items.push({
+          id: `ct-${c.id}`,
+          at: c.created_at,
+          kind: "contact",
+          title: c.full_name,
+          subtitle: c.role ?? "Contato adicionado",
+        }),
+      );
+      leads.data?.forEach((l) =>
+        items.push({
+          id: `l-${l.id}`,
+          at: l.created_at,
+          kind: "lead",
+          title: "Lead registrado",
+          subtitle: [l.source, l.status].filter(Boolean).join(" · ") || undefined,
+        }),
+      );
+      opps.data?.forEach((o) =>
+        items.push({
+          id: `o-${o.id}`,
+          at: o.created_at,
+          kind: "opportunity",
+          title: o.title,
+          subtitle: o.status ?? undefined,
+          amount: o.amount ? Number(o.amount) : undefined,
+        }),
+      );
+      lectures.data?.forEach((l) =>
+        items.push({
+          id: `lec-${l.id}`,
+          at: l.scheduled_at ?? l.id,
+          kind: "lecture",
+          title: l.title,
+          subtitle:
+            [l.status, [l.city, l.state].filter(Boolean).join("/")].filter(Boolean).join(" · ") ||
+            undefined,
+          amount: l.gross_revenue ? Number(l.gross_revenue) : undefined,
+          linkTo: "/app/palestras/$id",
+          linkParams: { id: l.id },
+        }),
+      );
       movs.data?.forEach((m) => {
         const v = Number(m.amount ?? m.expected_amount ?? 0);
         items.push({
-          id: `m-${m.id}`, at: m.occurs_on ?? new Date().toISOString(),
+          id: `m-${m.id}`,
+          at: m.occurs_on ?? new Date().toISOString(),
           kind: m.direction === "in" ? "finance-in" : "finance-out",
           title: m.description ?? (m.direction === "in" ? "Recebimento" : "Pagamento"),
           subtitle: [m.category, m.status].filter(Boolean).join(" · ") || undefined,
           amount: v,
         });
       });
-      notes.data?.forEach((n) => items.push({
-        id: `n-${n.id}`, at: n.created_at, kind: "note",
-        title: "Nota", subtitle: n.body?.slice(0, 140) ?? undefined,
-      }));
-      atts.data?.forEach((a) => items.push({
-        id: `a-${a.id}`, at: a.created_at, kind: "attachment",
-        title: a.file_name ?? "Anexo",
-      }));
-      te.data?.forEach((e) => items.push({
-        id: `t-${e.id}`, at: e.occurs_at, kind: "event",
-        title: e.title ?? timelineKindLabel(e.kind), subtitle: e.body ?? undefined,
-      }));
+      notes.data?.forEach((n) =>
+        items.push({
+          id: `n-${n.id}`,
+          at: n.created_at,
+          kind: "note",
+          title: "Nota",
+          subtitle: n.body?.slice(0, 140) ?? undefined,
+        }),
+      );
+      atts.data?.forEach((a) =>
+        items.push({
+          id: `a-${a.id}`,
+          at: a.created_at,
+          kind: "attachment",
+          title: a.file_name ?? "Anexo",
+        }),
+      );
+      te.data?.forEach((e) =>
+        items.push({
+          id: `t-${e.id}`,
+          at: e.occurs_at,
+          kind: "event",
+          title: e.title ?? timelineKindLabel(e.kind),
+          subtitle: e.body ?? undefined,
+        }),
+      );
       return items
         .filter((i) => i.at)
         .sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime());
@@ -779,7 +1394,7 @@ function TimelineTab({
                 className={cn(
                   "rounded-full border px-3 py-1 text-xs transition",
                   filter === f.key
-                    ? "border-[var(--navy)] bg-[var(--navy)] text-white"
+                    ? "border-[var(--ink)] bg-[var(--ink)] text-white"
                     : "border-border bg-card/40 text-muted-foreground hover:text-foreground",
                 )}
               >
@@ -788,7 +1403,7 @@ function TimelineTab({
             );
           })}
         </div>
-        <Button variant="navy" size="sm" className="rounded-full" onClick={() => setOpen(true)}>
+        <Button variant="brand" size="sm" onClick={() => setOpen(true)}>
           <Plus className="mr-1.5 h-4 w-4" /> Registrar evento
         </Button>
       </div>
@@ -797,20 +1412,32 @@ function TimelineTab({
       {filtered.length > 0 && (
         <div className="grid gap-3 sm:grid-cols-4">
           <div className="rounded-2xl border border-border bg-card/40 px-4 py-3">
-            <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">Eventos</p>
-            <p className="mt-1 font-serif text-2xl tabular-nums text-foreground">{filtered.length}</p>
+            <p className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">Eventos</p>
+            <p className="mt-1 font-serif text-2xl tabular-nums text-foreground">
+              {filtered.length}
+            </p>
           </div>
           <div className="rounded-2xl border border-border bg-card/40 px-4 py-3">
-            <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">Receita bruta</p>
-            <p className="mt-1 font-serif text-2xl tabular-nums text-amber-600">{formatCurrency(totals.lectures)}</p>
+            <p className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
+              Receita bruta
+            </p>
+            <p className="mt-1 font-serif text-2xl tabular-nums text-amber-600">
+              {formatCurrency(totals.lectures)}
+            </p>
           </div>
           <div className="rounded-2xl border border-border bg-card/40 px-4 py-3">
-            <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">Entradas</p>
-            <p className="mt-1 font-serif text-2xl tabular-nums text-emerald-600">{formatCurrency(totals.in)}</p>
+            <p className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
+              Entradas
+            </p>
+            <p className="mt-1 font-serif text-2xl tabular-nums text-emerald-600">
+              {formatCurrency(totals.in)}
+            </p>
           </div>
           <div className="rounded-2xl border border-border bg-card/40 px-4 py-3">
-            <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">Saídas</p>
-            <p className="mt-1 font-serif text-2xl tabular-nums text-rose-600">{formatCurrency(totals.out)}</p>
+            <p className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">Saídas</p>
+            <p className="mt-1 font-serif text-2xl tabular-nums text-rose-600">
+              {formatCurrency(totals.out)}
+            </p>
           </div>
         </div>
       )}
@@ -818,12 +1445,18 @@ function TimelineTab({
       {events.isLoading ? (
         <div className="text-sm text-muted-foreground">Carregando linha do tempo…</div>
       ) : filtered.length === 0 ? (
-        <EmptyTab icon={<Building2 className="h-6 w-6 text-muted-foreground" />} title="Sem eventos" description="Nenhum evento neste recorte. Ajuste o filtro ou registre um evento." />
+        <EmptyTab
+          icon={<Building2 className="h-6 w-6 text-muted-foreground" />}
+          title="Sem eventos"
+          description="Nenhum evento neste recorte. Ajuste o filtro ou registre um evento."
+        />
       ) : (
         <div className="space-y-8">
           {Object.entries(grouped).map(([month, items]) => (
             <div key={month}>
-              <p className="mb-3 text-[10px] font-medium uppercase tracking-[0.28em] text-muted-foreground">{month}</p>
+              <p className="mb-3 text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
+                {month}
+              </p>
               <ol className="relative space-y-4 border-l border-border/70 pl-6">
                 {items.map((e) => {
                   const meta = FEED_META[e.kind];
@@ -832,22 +1465,38 @@ function TimelineTab({
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
-                          <Badge variant="outline" className={cn("h-5 rounded-full border px-2 text-[10px] font-normal", meta.badge)}>
+                          <Badge
+                            variant="outline"
+                            className={cn(
+                              "h-5 rounded-full border px-2 text-[10px] font-normal",
+                              meta.badge,
+                            )}
+                          >
                             {meta.label}
                           </Badge>
                           <p className="truncate text-sm font-medium text-foreground">{e.title}</p>
-                          {e.linkTo && <ExternalLink className="h-3 w-3 shrink-0 text-muted-foreground opacity-0 transition group-hover:opacity-100" />}
+                          {e.linkTo && (
+                            <ExternalLink className="h-3 w-3 shrink-0 text-muted-foreground opacity-0 transition group-hover:opacity-100" />
+                          )}
                         </div>
-                        {e.subtitle && <p className="mt-0.5 truncate text-xs text-muted-foreground">{e.subtitle}</p>}
-                        <p className="mt-1 text-[10px] uppercase tracking-[0.18em] text-muted-foreground/80">{formatDate(e.at)}</p>
+                        {e.subtitle && (
+                          <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                            {e.subtitle}
+                          </p>
+                        )}
+                        <p className="mt-1 text-[11px] uppercase tracking-[0.12em] text-muted-foreground/80">
+                          {formatDate(e.at)}
+                        </p>
                       </div>
                       {e.amount != null && (
-                        <span className={cn(
-                          "shrink-0 whitespace-nowrap font-serif text-base tabular-nums",
-                          e.kind === "finance-in" && "text-emerald-600",
-                          e.kind === "finance-out" && "text-rose-600",
-                          (e.kind === "lecture" || e.kind === "opportunity") && "text-amber-600",
-                        )}>
+                        <span
+                          className={cn(
+                            "shrink-0 whitespace-nowrap font-serif text-base tabular-nums",
+                            e.kind === "finance-in" && "text-emerald-600",
+                            e.kind === "finance-out" && "text-rose-600",
+                            (e.kind === "lecture" || e.kind === "opportunity") && "text-amber-600",
+                          )}
+                        >
                           {e.kind === "finance-out" ? "−" : e.kind === "finance-in" ? "+" : ""}
                           {formatCurrency(Math.abs(e.amount))}
                         </span>
@@ -856,7 +1505,12 @@ function TimelineTab({
                   );
                   return (
                     <li key={e.id} className="group relative">
-                      <span className={cn("absolute -left-[29px] top-1.5 flex h-4 w-4 items-center justify-center rounded-full ring-4 ring-background", meta.dot)}>
+                      <span
+                        className={cn(
+                          "absolute -left-[29px] top-1.5 flex h-4 w-4 items-center justify-center rounded-full ring-4 ring-background",
+                          meta.dot,
+                        )}
+                      >
                         <Icon className="h-2.5 w-2.5 text-white" />
                       </span>
                       {e.linkTo ? (
@@ -879,8 +1533,11 @@ function TimelineTab({
         </div>
       )}
       <TimelineEventDialog
-        open={open} onOpenChange={setOpen}
-        companyId={companyId} organizationId={organizationId} userId={userId}
+        open={open}
+        onOpenChange={setOpen}
+        companyId={companyId}
+        organizationId={organizationId}
+        userId={userId}
         onSaved={() => queryClient.invalidateQueries({ queryKey: ["company-timeline", companyId] })}
       />
     </div>
@@ -888,12 +1545,26 @@ function TimelineTab({
 }
 
 function TimelineEventDialog({
-  open, onOpenChange, companyId, organizationId, userId, onSaved,
+  open,
+  onOpenChange,
+  companyId,
+  organizationId,
+  userId,
+  onSaved,
 }: {
-  open: boolean; onOpenChange: (v: boolean) => void;
-  companyId: string; organizationId: string; userId: string; onSaved: () => void;
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  companyId: string;
+  organizationId: string;
+  userId: string;
+  onSaved: () => void;
 }) {
-  const [f, setF] = useState({ kind: "meeting", title: "", body: "", occurs_at: new Date().toISOString().slice(0, 16) });
+  const [f, setF] = useState({
+    kind: "meeting",
+    title: "",
+    body: "",
+    occurs_at: new Date().toISOString().slice(0, 16),
+  });
   const save = useMutation({
     mutationFn: async () => {
       const { error } = await supabase.from("timeline_events").insert({
@@ -911,7 +1582,12 @@ function TimelineEventDialog({
     },
     onSuccess: () => {
       toast.success("Evento registrado");
-      setF({ kind: "meeting", title: "", body: "", occurs_at: new Date().toISOString().slice(0, 16) });
+      setF({
+        kind: "meeting",
+        title: "",
+        body: "",
+        occurs_at: new Date().toISOString().slice(0, 16),
+      });
       onSaved();
       onOpenChange(false);
     },
@@ -924,31 +1600,59 @@ function TimelineEventDialog({
           <DialogTitle className="font-serif text-2xl">Registrar evento</DialogTitle>
           <DialogDescription>Adicione um evento à timeline desta empresa.</DialogDescription>
         </DialogHeader>
-        <form onSubmit={(e) => { e.preventDefault(); save.mutate(); }} className="grid gap-3">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            save.mutate();
+          }}
+          className="grid gap-3"
+        >
           <div className="space-y-1.5">
             <Label>Tipo</Label>
             <Select value={f.kind} onValueChange={(v) => setF({ ...f, kind: v })}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
-                {TIMELINE_KINDS.map((k) => <SelectItem key={k.key} value={k.key}>{k.label}</SelectItem>)}
+                {TIMELINE_KINDS.map((k) => (
+                  <SelectItem key={k.key} value={k.key}>
+                    {k.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-1.5">
             <Label>Quando</Label>
-            <Input type="datetime-local" value={f.occurs_at} onChange={(e) => setF({ ...f, occurs_at: e.target.value })} />
+            <Input
+              type="datetime-local"
+              value={f.occurs_at}
+              onChange={(e) => setF({ ...f, occurs_at: e.target.value })}
+            />
           </div>
           <div className="space-y-1.5">
             <Label>Título</Label>
-            <Input value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })} placeholder="Opcional — usa o tipo se vazio" />
+            <Input
+              value={f.title}
+              onChange={(e) => setF({ ...f, title: e.target.value })}
+              placeholder="Opcional — usa o tipo se vazio"
+            />
           </div>
           <div className="space-y-1.5">
             <Label>Detalhes</Label>
-            <Textarea rows={3} value={f.body} onChange={(e) => setF({ ...f, body: e.target.value })} />
+            <Textarea
+              rows={3}
+              value={f.body}
+              onChange={(e) => setF({ ...f, body: e.target.value })}
+            />
           </div>
           <DialogFooter>
-            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Cancelar</Button>
-            <Button type="submit" variant="navy" disabled={save.isPending}>{save.isPending ? "Salvando…" : "Registrar"}</Button>
+            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
+              Cancelar
+            </Button>
+            <Button type="submit" variant="brand" disabled={save.isPending}>
+              {save.isPending ? "Salvando…" : "Registrar"}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>
@@ -965,7 +1669,8 @@ function CompanyLecturesTab({ companyId }: { companyId: string }) {
       const { data, error } = await supabase
         .from("lectures")
         .select("id, title, status, scheduled_at, city, state, gross_revenue, actual_audience")
-        .eq("company_id", companyId).is("archived_at", null)
+        .eq("company_id", companyId)
+        .is("archived_at", null)
         .order("scheduled_at", { ascending: false, nullsFirst: false });
       if (error) throw error;
       return data ?? [];
@@ -985,7 +1690,7 @@ function CompanyLecturesTab({ companyId }: { companyId: string }) {
   return (
     <div className="overflow-hidden rounded-2xl border border-border bg-card/40">
       <table className="w-full text-sm">
-        <thead className="bg-muted/40 text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
+        <thead className="bg-muted/40 text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
           <tr>
             <th className="px-4 py-3 text-left font-medium">Palestra</th>
             <th className="px-4 py-3 text-left font-medium">Data</th>
@@ -999,15 +1704,29 @@ function CompanyLecturesTab({ companyId }: { companyId: string }) {
           {(list.data ?? []).map((l) => (
             <tr key={l.id} className="border-t border-border/70 hover:bg-muted/30">
               <td className="px-4 py-3">
-                <Link to="/app/palestras/$id" params={{ id: l.id }} className="font-medium text-foreground hover:underline">
+                <Link
+                  to="/app/palestras/$id"
+                  params={{ id: l.id }}
+                  className="font-medium text-foreground hover:underline"
+                >
                   {l.title}
                 </Link>
               </td>
               <td className="px-4 py-3 text-muted-foreground">{formatDate(l.scheduled_at)}</td>
-              <td className="px-4 py-3 text-muted-foreground">{[l.city, l.state].filter(Boolean).join(" / ") || "—"}</td>
-              <td className="px-4 py-3"><Badge variant="outline" className="font-normal">{l.status ?? "—"}</Badge></td>
-              <td className="px-4 py-3 text-right tabular-nums text-muted-foreground">{l.actual_audience ?? "—"}</td>
-              <td className="px-4 py-3 text-right tabular-nums text-foreground">{formatCurrency(Number(l.gross_revenue ?? 0))}</td>
+              <td className="px-4 py-3 text-muted-foreground">
+                {[l.city, l.state].filter(Boolean).join(" / ") || "—"}
+              </td>
+              <td className="px-4 py-3">
+                <Badge variant="outline" className="font-normal">
+                  {l.status ?? "—"}
+                </Badge>
+              </td>
+              <td className="px-4 py-3 text-right tabular-nums text-muted-foreground">
+                {l.actual_audience ?? "—"}
+              </td>
+              <td className="px-4 py-3 text-right tabular-nums text-foreground">
+                {formatCurrency(Number(l.gross_revenue ?? 0))}
+              </td>
             </tr>
           ))}
         </tbody>
@@ -1024,8 +1743,11 @@ function CompanyFinanceTab({ companyId }: { companyId: string }) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("financial_movements")
-        .select("id, direction, status, category, description, amount, expected_amount, occurs_on, settled_at")
-        .eq("company_id", companyId).is("archived_at", null)
+        .select(
+          "id, direction, status, category, description, amount, expected_amount, occurs_on, settled_at",
+        )
+        .eq("company_id", companyId)
+        .is("archived_at", null)
         .order("occurs_on", { ascending: false, nullsFirst: false });
       if (error) throw error;
       return data ?? [];
@@ -1056,21 +1778,27 @@ function CompanyFinanceTab({ companyId }: { companyId: string }) {
     <div className="space-y-4">
       <div className="grid gap-3 sm:grid-cols-3">
         <div className="rounded-2xl border border-border bg-card/40 p-4">
-          <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">Entradas</p>
-          <p className="mt-2 font-serif text-xl tabular-nums text-emerald-600">{formatCurrency(totals.in)}</p>
+          <p className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">Entradas</p>
+          <p className="mt-2 font-serif text-xl tabular-nums text-emerald-600">
+            {formatCurrency(totals.in)}
+          </p>
         </div>
         <div className="rounded-2xl border border-border bg-card/40 p-4">
-          <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">Saídas</p>
-          <p className="mt-2 font-serif text-xl tabular-nums text-rose-600">{formatCurrency(totals.out)}</p>
+          <p className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">Saídas</p>
+          <p className="mt-2 font-serif text-xl tabular-nums text-rose-600">
+            {formatCurrency(totals.out)}
+          </p>
         </div>
         <div className="rounded-2xl border border-border bg-card/40 p-4">
-          <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">Resultado</p>
-          <p className="mt-2 font-serif text-xl tabular-nums text-foreground">{formatCurrency(totals.in - totals.out)}</p>
+          <p className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">Resultado</p>
+          <p className="mt-2 font-serif text-xl tabular-nums text-foreground">
+            {formatCurrency(totals.in - totals.out)}
+          </p>
         </div>
       </div>
       <div className="overflow-hidden rounded-2xl border border-border bg-card/40">
         <table className="w-full text-sm">
-          <thead className="bg-muted/40 text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
+          <thead className="bg-muted/40 text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
             <tr>
               <th className="px-4 py-3 text-left font-medium">Data</th>
               <th className="px-4 py-3 text-left font-medium">Descrição</th>
@@ -1088,11 +1816,17 @@ function CompanyFinanceTab({ companyId }: { companyId: string }) {
                   <td className="px-4 py-3 text-muted-foreground">{formatDate(m.occurs_on)}</td>
                   <td className="px-4 py-3 text-foreground">{m.description ?? "—"}</td>
                   <td className="px-4 py-3 text-muted-foreground">{m.category ?? "—"}</td>
-                  <td className="px-4 py-3"><Badge variant="outline" className="font-normal">{m.status ?? "—"}</Badge></td>
-                  <td className={cn(
-                    "px-4 py-3 text-right font-medium tabular-nums",
-                    isIn ? "text-emerald-600" : "text-rose-600",
-                  )}>
+                  <td className="px-4 py-3">
+                    <Badge variant="outline" className="font-normal">
+                      {m.status ?? "—"}
+                    </Badge>
+                  </td>
+                  <td
+                    className={cn(
+                      "px-4 py-3 text-right font-medium tabular-nums",
+                      isIn ? "text-emerald-600" : "text-rose-600",
+                    )}
+                  >
                     {isIn ? "+" : "−"} {formatCurrency(Number(v))}
                   </td>
                 </tr>

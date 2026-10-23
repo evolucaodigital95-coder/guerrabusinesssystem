@@ -2,14 +2,23 @@ import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
-  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useAutomation } from "@/hooks/use-automation";
@@ -18,7 +27,12 @@ import { PAYMENT_METHODS } from "@/lib/supplier-accounts";
 type Season = { id: string; name: string };
 
 export function SettlementFormDialog({
-  open, onOpenChange, organizationId, userId, defaults, initial,
+  open,
+  onOpenChange,
+  organizationId,
+  userId,
+  defaults,
+  initial,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
@@ -90,7 +104,8 @@ export function SettlementFormDialog({
       const trimmedSupplier = supplier.trim();
       const value = Number(amount);
       if (!trimmedSupplier) throw new Error("Informe o fornecedor.");
-      if (!Number.isFinite(value) || value <= 0) throw new Error("Valor pago deve ser maior que zero.");
+      if (!Number.isFinite(value) || value <= 0)
+        throw new Error("Valor pago deve ser maior que zero.");
       const payload = {
         organization_id: organizationId,
         supplier: trimmedSupplier,
@@ -103,7 +118,10 @@ export function SettlementFormDialog({
         updated_by: userId,
       };
       if (initial?.id) {
-        const { error } = await supabase.from("supplier_settlements").update(payload).eq("id", initial.id);
+        const { error } = await supabase
+          .from("supplier_settlements")
+          .update(payload)
+          .eq("id", initial.id);
         if (error) throw error;
       } else {
         const { error } = await supabase
@@ -134,49 +152,80 @@ export function SettlementFormDialog({
             {initial?.id ? "Editar acerto" : "Registrar acerto com fornecedor"}
           </DialogTitle>
           <DialogDescription>
-            Somente movimenta a prestação de contas. Não altera estoque, palestras nem o livro razão.
+            Somente movimenta a prestação de contas. Não altera estoque, palestras nem o livro
+            razão.
           </DialogDescription>
         </DialogHeader>
 
         <form
           className="grid gap-3"
-          onSubmit={(e) => { e.preventDefault(); save.mutate(); }}
+          onSubmit={(e) => {
+            e.preventDefault();
+            save.mutate();
+          }}
         >
           <div className="space-y-1.5">
             <Label>Fornecedor</Label>
-            <Input required value={supplier} onChange={(e) => setSupplier(e.target.value)} placeholder="Ex.: Editora Guerra" />
+            <Input
+              required
+              value={supplier}
+              onChange={(e) => setSupplier(e.target.value)}
+              placeholder="Ex.: Editora Guerra"
+            />
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label>Temporada</Label>
               <Select value={seasonId} onValueChange={setSeasonId}>
-                <SelectTrigger><SelectValue placeholder="Selecionar" /></SelectTrigger>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecionar" />
+                </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="__none__">Sem temporada</SelectItem>
                   {(seasons.data ?? []).map((s) => (
-                    <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                    <SelectItem key={s.id} value={s.id}>
+                      {s.name}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1.5">
               <Label>Data do pagamento</Label>
-              <Input type="date" value={paidOn} onChange={(e) => setPaidOn(e.target.value)} required />
+              <Input
+                type="date"
+                value={paidOn}
+                onChange={(e) => setPaidOn(e.target.value)}
+                required
+              />
             </div>
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label>Valor pago (R$)</Label>
-              <Input required type="number" step="0.01" min="0" value={amount} onChange={(e) => setAmount(e.target.value)} />
+              <Input
+                required
+                type="number"
+                step="0.01"
+                min="0"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+              />
             </div>
             <div className="space-y-1.5">
               <Label>Forma de pagamento</Label>
               <Select value={method} onValueChange={setMethod}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
                 <SelectContent>
-                  {PAYMENT_METHODS.map((m) => <SelectItem key={m} value={m}>{m}</SelectItem>)}
+                  {PAYMENT_METHODS.map((m) => (
+                    <SelectItem key={m} value={m}>
+                      {m}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -184,7 +233,11 @@ export function SettlementFormDialog({
 
           <div className="space-y-1.5">
             <Label>Número do comprovante (opcional)</Label>
-            <Input value={receipt} onChange={(e) => setReceipt(e.target.value)} placeholder="Ex.: NF 12345 / TED 998877" />
+            <Input
+              value={receipt}
+              onChange={(e) => setReceipt(e.target.value)}
+              placeholder="Ex.: NF 12345 / TED 998877"
+            />
           </div>
 
           <div className="space-y-1.5">
@@ -193,9 +246,15 @@ export function SettlementFormDialog({
           </div>
 
           <DialogFooter>
-            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Cancelar</Button>
-            <Button type="submit" variant="navy" disabled={save.isPending}>
-              {save.isPending ? "Salvando…" : initial?.id ? "Salvar alterações" : "Registrar acerto"}
+            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
+              Cancelar
+            </Button>
+            <Button type="submit" variant="brand" disabled={save.isPending}>
+              {save.isPending
+                ? "Salvando…"
+                : initial?.id
+                  ? "Salvar alterações"
+                  : "Registrar acerto"}
             </Button>
           </DialogFooter>
         </form>

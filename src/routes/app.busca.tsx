@@ -94,7 +94,6 @@ function BuscaPage() {
           .is("archived_at", null)
           .or(`name.ilike.${like}`)
           .limit(10),
-
       ]);
 
       const out: Result[] = [];
@@ -237,31 +236,35 @@ function BuscaPage() {
         </div>
       ) : (
         <div className="space-y-8">
-          <Group label="Empresas" icon={<Building2 className="h-4 w-4" />} items={grouped.company} />
+          <Group
+            label="Empresas"
+            icon={<Building2 className="h-4 w-4" />}
+            items={grouped.company}
+          />
           <Group label="Contatos" icon={<User className="h-4 w-4" />} items={grouped.contact} />
           <Group label="Palestras" icon={<Mic className="h-4 w-4" />} items={grouped.lecture} />
           <Group label="Agendistas" icon={<Users className="h-4 w-4" />} items={grouped.agent} />
-          <Group label="Financeiro" icon={<Wallet className="h-4 w-4" />} items={grouped.movement} />
-          <Group label="Temporadas" icon={<CalendarRange className="h-4 w-4" />} items={grouped.season} />
+          <Group
+            label="Financeiro"
+            icon={<Wallet className="h-4 w-4" />}
+            items={grouped.movement}
+          />
+          <Group
+            label="Temporadas"
+            icon={<CalendarRange className="h-4 w-4" />}
+            items={grouped.season}
+          />
         </div>
       )}
     </div>
   );
 }
 
-function Group({
-  label,
-  icon,
-  items,
-}: {
-  label: string;
-  icon: React.ReactNode;
-  items: Result[];
-}) {
+function Group({ label, icon, items }: { label: string; icon: React.ReactNode; items: Result[] }) {
   if (items.length === 0) return null;
   return (
     <section className="space-y-3">
-      <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+      <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
         <span className="text-foreground/60">{icon}</span>
         <span>
           {label} · {items.length}
@@ -278,7 +281,7 @@ function Group({
                 )}
               </div>
               {r.meta && (
-                <p className="shrink-0 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+                <p className="shrink-0 text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
                   {r.meta}
                 </p>
               )}
