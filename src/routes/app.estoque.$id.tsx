@@ -15,6 +15,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AuditHistory } from "@/components/shared/audit-history";
 import {
   Table,
   TableBody,
@@ -355,6 +356,7 @@ function ItemDetail() {
           <TabsTrigger value="palestras">Palestras</TabsTrigger>
           <TabsTrigger value="anexos">Anexos</TabsTrigger>
           <TabsTrigger value="notas">Notas</TabsTrigger>
+          <TabsTrigger value="historico">Histórico</TabsTrigger>
         </TabsList>
 
         <TabsContent value="movimentos">
@@ -543,6 +545,12 @@ function ItemDetail() {
               userId={user.id}
             />
           )}
+        </TabsContent>
+        <TabsContent value="historico">
+          <AuditHistory
+            organizationId={it.organization_id}
+            entityIds={[it.id, ...(movements.data ?? []).map((m) => m.id)]}
+          />
         </TabsContent>
       </Tabs>
 

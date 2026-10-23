@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AuditHistory } from "@/components/shared/audit-history";
 import {
   Select,
   SelectContent,
@@ -1313,7 +1314,11 @@ function MovementSheet({
                 <Paperclip className="mr-1.5 h-3.5 w-3.5" /> Comprovantes
               </TabsTrigger>
               <TabsTrigger value="timeline">Timeline</TabsTrigger>
+              <TabsTrigger value="history">Histórico</TabsTrigger>
             </TabsList>
+            <TabsContent value="history" className="mt-4">
+              <AuditHistory organizationId={organizationId} entityIds={[movement.id]} />
+            </TabsContent>
             <TabsContent value="attachments" className="mt-4">
               <AttachmentsTab
                 entityType="financial_movement"
