@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, type ReactNode } from "react";
+import { useMemo, type CSSProperties, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   UserPlus,
@@ -15,6 +15,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useCurrentOrg } from "@/hooks/use-current-org";
 import { useSession } from "@/hooks/use-session";
 import { BRL, NUM } from "@/lib/format";
+import { HERO_IMAGES, heroSrc, heroSrcSet } from "@/lib/hero-images";
+import { CountUp } from "@/components/count-up";
 
 export const Route = createFileRoute("/app/hoje")({
   head: () => ({
@@ -248,6 +250,36 @@ function Stat({ label, value, hint }: { label: string; value: ReactNode; hint?: 
   );
 }
 
+function HeroStat({
+  label,
+  value,
+  format,
+  accent,
+  i,
+}: {
+  label: string;
+  value: number | null;
+  format: (n: number) => string;
+  accent?: boolean;
+  i: number;
+}) {
+  return (
+    <div
+      className="reveal rounded-2xl border border-white/10 bg-white/[0.07] p-5 backdrop-blur-md transition-colors hover:bg-white/[0.11]"
+      style={{ "--i": i } as CSSProperties}
+    >
+      <div className="text-[11px] font-medium uppercase tracking-[0.12em] text-ink-foreground/60">
+        {label}
+      </div>
+      <div
+        className={`mt-3 font-display text-[2rem] leading-none ${accent ? "text-gold" : "text-ink-foreground"}`}
+      >
+        {value == null ? "—" : <CountUp value={value} format={format} />}
+      </div>
+    </div>
+  );
+}
+
 function TodayCard({
   label,
   value,
@@ -283,11 +315,12 @@ function HojePage() {
   const q = useToday(organizationId ?? null);
   const d = q.data;
 
-  const today = new Date().toLocaleDateString("pt-BR", {
+  const todayRaw = new Date().toLocaleDateString("pt-BR", {
     weekday: "long",
     day: "2-digit",
     month: "long",
   });
+  const today = todayRaw.charAt(0).toUpperCase() + todayRaw.slice(1);
   const loading = q.isLoading || !d;
 
   const fmtInt = (n: number | undefined) => (n == null ? "—" : NUM.format(n));
@@ -302,15 +335,68 @@ function HojePage() {
   return (
     <div className="mx-auto max-w-6xl">
       {/* Hero */}
-      <section className="mb-12">
-        <div className="text-[13px] font-medium capitalize text-clay">{today}</div>
-        <h1 className="mt-3 font-display text-[2.5rem] leading-[1.08] md:text-[3.25rem]">
-          {greeting()}
-          {firstName ? `, ${firstName}` : ""}.
-        </h1>
-        <p className="mt-4 max-w-xl text-[15px] leading-relaxed text-muted-foreground">
-          Resultados extraordinários começam com pessoas extraordinárias.
-        </p>
+      <section className="relative mb-12 overflow-hidden rounded-[28px] bg-ink text-ink-foreground shadow-[0_30px_80px_-40px_oklch(0.2_0.02_60/0.6)]">
+        <div aria-hidden className="absolute inset-0">
+          <img
+            src={heroSrc(HERO_IMAGES.today, 1920)}
+            srcSet={heroSrcSet(HERO_IMAGES.today)}
+            sizes="(min-width: 1280px) 1200px, 100vw"
+            alt=""
+            className="ken-burns h-full w-full object-cover opacity-70"
+          />
+          <div className="absolute inset-0 bg-[linear-gradient(105deg,oklch(0.17_0.01_60/0.95)_0%,oklch(0.17_0.01_60/0.75)_50%,oklch(0.17_0.01_60/0.25)_100%)]" />
+          <div
+            className="absolute -bottom-40 -right-24 h-96 w-96 rounded-full opacity-40 blur-3xl"
+            style={{ background: "radial-gradient(closest-side, var(--clay), transparent)" }}
+          />
+        </div>
+
+        <div className="relative flex min-h-[380px] flex-col justify-between gap-10 p-8 md:p-12">
+          <div>
+            <div
+              className="reveal inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[12px] font-medium text-ink-foreground/90 backdrop-blur"
+              style={{ "--i": 0 } as CSSProperties}
+            >
+              <span className="h-1.5 w-1.5 rounded-full bg-clay" />
+              {today}
+            </div>
+            <h1
+              className="reveal mt-5 max-w-2xl font-display text-[2.6rem] leading-[1.05] md:text-[3.6rem]"
+              style={{ "--i": 1 } as CSSProperties}
+            >
+              {greeting()}
+              {firstName ? `, ${firstName}` : ""}.
+            </h1>
+            <p
+              className="reveal mt-4 max-w-lg text-[15px] leading-relaxed text-ink-foreground/70"
+              style={{ "--i": 2 } as CSSProperties}
+            >
+              Resultados extraordinários começam com pessoas extraordinárias.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <HeroStat
+              i={3}
+              label="Vidas impactadas"
+              value={loading ? null : (d?.audienceTotal ?? 0)}
+              format={(n) => NUM.format(Math.round(n))}
+              accent
+            />
+            <HeroStat
+              i={4}
+              label="Receita realizada no mês"
+              value={loading ? null : (d?.receitaRealizada ?? 0)}
+              format={(n) => BRL.format(n)}
+            />
+            <HeroStat
+              i={5}
+              label="Palestras nos próximos 30 dias"
+              value={loading ? null : (d?.upcoming30Days ?? 0)}
+              format={(n) => NUM.format(Math.round(n))}
+            />
+          </div>
+        </div>
       </section>
 
       {/* Hoje — quick view */}
@@ -395,32 +481,6 @@ function HojePage() {
         </div>
       </section>
 
-      {/* Vidas Impactadas */}
-      <section className="mb-16">
-        <div
-          className="hover-lift relative overflow-hidden rounded-3xl p-10 md:p-14"
-          style={{ background: "var(--ink)", color: "var(--ink-foreground)" }}
-        >
-          <div
-            aria-hidden
-            className="pointer-events-none absolute -top-32 -right-24 h-80 w-80 rounded-full opacity-25 blur-3xl"
-            style={{ background: "radial-gradient(closest-side, var(--clay), transparent)" }}
-          />
-          <div className="relative">
-            <div className="flex items-center gap-3 text-[11px] uppercase tracking-[0.12em] text-[var(--ink-foreground)]/65">
-              <span aria-hidden className="h-px w-6" style={{ background: "var(--gold)" }} />
-              Vidas Impactadas
-            </div>
-            <div className="mt-8 font-display text-7xl leading-none tracking-tight md:text-[6.5rem]">
-              {loading ? "—" : NUM.format(d?.audienceTotal ?? 0)}
-            </div>
-            <p className="mt-6 max-w-md text-sm leading-relaxed text-[var(--ink-foreground)]/70">
-              Pessoas transformadas pelas palestras, mentorias e projetos do Grupo Guerra.
-            </p>
-          </div>
-        </div>
-      </section>
-
       {/* Visão do dia */}
       <section>
         <div className="mb-8 flex items-end justify-between">
@@ -432,21 +492,11 @@ function HojePage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-2 lg:grid-cols-4">
           <Stat
             label="Receita prevista"
             value={loading ? "—" : fmtBRL(d?.receitaPrevista)}
             hint="Este mês"
-          />
-          <Stat
-            label="Receita realizada"
-            value={loading ? "—" : fmtBRL(d?.receitaRealizada)}
-            hint="Liquidada no mês"
-          />
-          <Stat
-            label="Próximas palestras"
-            value={loading ? "—" : String(d?.upcoming30Days ?? 0).padStart(2, "0")}
-            hint="Próximos 30 dias"
           />
           <Stat
             label="Estoque baixo"

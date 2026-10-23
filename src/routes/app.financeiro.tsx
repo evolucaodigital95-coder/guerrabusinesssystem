@@ -54,6 +54,7 @@ import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { FinanceLecturesTab } from "@/components/finance/lectures-tab";
 import { cn } from "@/lib/utils";
 
+import { useQuickAction } from "@/lib/quick-actions";
 export const Route = createFileRoute("/app/financeiro")({
   validateSearch: (search) => ({
     lancamento: typeof search.lancamento === "string" ? search.lancamento : undefined,
@@ -124,6 +125,10 @@ function FinancePage() {
   const [openAcc, setOpenAcc] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [editing, setEditing] = useState<MovementRow | null>(null);
+  useQuickAction("lancamento", () => {
+    setEditing(null);
+    setOpenMov(true);
+  });
   const [editingAccount, setEditingAccount] = useState<AccountRow | null>(null);
 
   // filters

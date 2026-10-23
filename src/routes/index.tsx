@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate, Navigate } from "@tanstack/react-router";
-import { useState, type FormEvent } from "react";
+import { useState, type CSSProperties, type FormEvent } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { useSession } from "@/hooks/use-session";
 import { authErrorMessage } from "@/lib/auth-messages";
+import { HERO_IMAGES, heroSrc, heroSrcSet } from "@/lib/hero-images";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -125,31 +126,67 @@ function LoginPage() {
   }[mode];
 
   return (
-    <div className="grid min-h-screen bg-background lg:grid-cols-[1.05fr_1fr]">
-      <aside className="relative hidden overflow-hidden bg-ink p-14 text-ink-foreground lg:flex lg:flex-col lg:justify-between">
+    <div className="relative grid min-h-screen overflow-hidden bg-ink lg:grid-cols-[1.15fr_1fr]">
+      {/* Fundo: foto em tela cheia com zoom lento */}
+      <div aria-hidden className="absolute inset-0">
+        <img
+          src={heroSrc(HERO_IMAGES.login, 1920)}
+          srcSet={heroSrcSet(HERO_IMAGES.login)}
+          sizes="100vw"
+          alt=""
+          className="ken-burns h-full w-full object-cover"
+          fetchPriority="high"
+        />
+        <div className="absolute inset-0 bg-[linear-gradient(100deg,oklch(0.16_0.01_60/0.92)_0%,oklch(0.16_0.01_60/0.72)_45%,oklch(0.16_0.01_60/0.35)_100%)]" />
         <div
-          aria-hidden
-          className="pointer-events-none absolute -bottom-40 -left-24 h-[30rem] w-[30rem] rounded-full opacity-30 blur-3xl"
+          className="absolute -bottom-48 -left-32 h-[34rem] w-[34rem] rounded-full opacity-40 blur-3xl"
           style={{ background: "radial-gradient(closest-side, var(--clay), transparent)" }}
         />
-        <GbsMark variant="light" />
-        <div className="relative max-w-lg">
-          <h1 className="font-display text-[3.25rem] leading-[1.05]">
-            Gestão para palestrantes e grupos empresariais.
+      </div>
+
+      <aside className="relative hidden flex-col justify-between p-14 text-ink-foreground lg:flex">
+        <div className="reveal">
+          <GbsMark variant="light" />
+        </div>
+        <div className="max-w-xl">
+          <p
+            className="reveal text-[12px] font-medium uppercase tracking-[0.18em] text-clay"
+            style={{ "--i": 1 } as CSSProperties}
+          >
+            Guerra Business System
+          </p>
+          <h1
+            className="reveal mt-5 font-display text-[3.75rem] leading-[1.02]"
+            style={{ "--i": 2 } as CSSProperties}
+          >
+            Cada palestra,
+            <br />
+            cada número,
+            <br />
+            <span className="italic text-gold">no seu controle.</span>
           </h1>
-          <p className="mt-6 max-w-md text-[15px] leading-relaxed text-ink-foreground/70">
+          <p
+            className="reveal mt-7 max-w-md text-[15px] leading-relaxed text-ink-foreground/75"
+            style={{ "--i": 3 } as CSSProperties}
+          >
             Palestras, CRM, financeiro, estoque e inteligência operacional reunidos em um único
-            ambiente.
+            ambiente — com a segurança de que cada lançamento confere.
           </p>
         </div>
-        <p className="relative text-[11px] uppercase tracking-[0.12em] text-ink-foreground/50">
+        <p
+          className="reveal text-[11px] uppercase tracking-[0.12em] text-ink-foreground/50"
+          style={{ "--i": 4 } as CSSProperties}
+        >
           Powered by <span className="text-gold">Grupo Guerra</span>
         </p>
       </aside>
 
-      <main className="flex items-center justify-center px-6 py-12 md:px-12">
-        <div className="w-full max-w-[380px]">
-          <div className="mb-12 lg:hidden">
+      <main className="relative flex items-center justify-center px-4 py-12 md:px-12">
+        <div
+          className="reveal w-full max-w-[420px] rounded-3xl border border-white/10 bg-card/95 p-8 shadow-[0_40px_120px_-40px_oklch(0_0_0/0.7)] backdrop-blur-xl md:p-10"
+          style={{ "--i": 2 } as CSSProperties}
+        >
+          <div className="mb-10 lg:hidden">
             <GbsMark />
           </div>
           <h2 className="font-display text-[2rem] leading-tight text-foreground">{copy.title}</h2>

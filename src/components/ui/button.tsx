@@ -17,9 +17,10 @@ const buttonVariants = cva(
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
         /** Ação principal da marca (argila). */
-        brand: "bg-clay text-clay-foreground shadow-sm hover:bg-clay/90",
+        brand:
+          "shine bg-clay text-clay-foreground shadow-sm hover:-translate-y-px hover:bg-clay/95 hover:shadow-[0_8px_20px_-8px_var(--clay)]",
         /** Ação escura, para superfícies claras de destaque. */
-        ink: "bg-ink text-ink-foreground shadow-sm hover:bg-ink/90",
+        ink: "shine bg-ink text-ink-foreground shadow-sm hover:-translate-y-px hover:bg-ink/90",
       },
       size: {
         default: "h-9 px-4 py-2",
