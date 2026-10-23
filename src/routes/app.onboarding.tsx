@@ -148,7 +148,7 @@ function OnboardingPage() {
     try {
       if (patch && Object.keys(patch).length) await updateSettings.mutateAsync(patch);
       toast.success("Progresso salvo. Você pode continuar depois.");
-      navigate({ to: "/app/dashboard" });
+      navigate({ to: "/app/hoje" });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Não foi possível salvar.");
     }
@@ -164,11 +164,7 @@ function OnboardingPage() {
 
   if (finished) {
     return (
-      <FinishScreen
-        form={form}
-        progress={progress}
-        onEnter={() => navigate({ to: "/app/dashboard" })}
-      />
+      <FinishScreen form={form} progress={progress} onEnter={() => navigate({ to: "/app/hoje" })} />
     );
   }
 

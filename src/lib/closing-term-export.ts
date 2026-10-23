@@ -1,4 +1,5 @@
-import { formatCurrency, formatDate } from "@/lib/crm";
+import { formatCurrency } from "@/lib/crm";
+import { formatDateNumeric as formatDate } from "@/lib/format";
 import {
   type ExportMovement,
   type AdvanceExportRow,
@@ -82,7 +83,10 @@ export function defaultThanksMessage(orgName?: string | null) {
 export const DEFAULT_THANKS_MESSAGE = `Em nome do Grupo Guerra,${THANKS_BODY}`;
 
 export function closingFileName(d: ClosingTermData) {
-  const safe = d.agentName.replace(/[^a-zA-Z0-9-_]+/g, "_").replace(/^_+|_+$/g, "").slice(0, 40);
+  const safe = d.agentName
+    .replace(/[^a-zA-Z0-9-_]+/g, "_")
+    .replace(/^_+|_+$/g, "")
+    .slice(0, 40);
   return `${d.closingNumber}_${safe}_v${d.version}.pdf`;
 }
 
@@ -92,7 +96,7 @@ export async function buildClosingTermPDF(d: ClosingTermData): Promise<Blob> {
   const doc = new jsPDF({ unit: "pt", format: "a4", orientation: "portrait" });
   installTextSanitizer(doc as unknown as { text: (...a: unknown[]) => unknown });
 
-  const pageW = doc.internal.pageSize.getWidth();  // ~595
+  const pageW = doc.internal.pageSize.getWidth(); // ~595
   const pageH = doc.internal.pageSize.getHeight(); // ~842
   const M = 42;
   const W = pageW - M * 2;
@@ -104,7 +108,8 @@ export async function buildClosingTermPDF(d: ClosingTermData): Promise<Blob> {
   const monogram = brand.monogramDataUrl ?? logo;
   const monogramRatio = brand.monogramRatio;
 
-  const lastY = () => (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY;
+  const lastY = () =>
+    (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY;
 
   const space = (y: number, needed: number) => (y + needed > pageH - 70 ? (doc.addPage(), 64) : y);
 
@@ -126,7 +131,9 @@ export async function buildClosingTermPDF(d: ClosingTermData): Promise<Blob> {
   if (monogram) {
     try {
       doc.addImage(monogram, "PNG", (pageW - markW) / 2, y, markW, markH, undefined, "FAST");
-    } catch { /* segue sem marca */ }
+    } catch {
+      /* segue sem marca */
+    }
     y += markH + 16;
   }
 
@@ -250,18 +257,31 @@ export async function buildClosingTermPDF(d: ClosingTermData): Promise<Blob> {
       ["Débitos do período", "-" + money(d.totals.debits), "neg"],
       ["Saldo final da conta", money(d.totals.finalBalance), "final"],
     ].map(([label, value, kind]) => [
-      { content: label as string, styles: { fontStyle: kind === "plain" ? "normal" : kind === "strong" || kind === "final" ? "bold" : "normal", textColor: kind === "final" ? [255, 255, 255] : kind === "strong" ? NAVY : MUTED } },
+      {
+        content: label as string,
+        styles: {
+          fontStyle:
+            kind === "plain" ? "normal" : kind === "strong" || kind === "final" ? "bold" : "normal",
+          textColor: kind === "final" ? [255, 255, 255] : kind === "strong" ? NAVY : MUTED,
+        },
+      },
       {
         content: value as string,
         styles: {
           halign: "right",
           fontStyle: kind === "strong" || kind === "final" ? "bold" : "normal",
           textColor:
-            kind === "final" ? [255, 255, 255]
-              : kind === "neg" ? RED
-                : kind === "pos" ? GREEN
-                  : kind === "muted" ? MUTED
-                    : kind === "strong" ? NAVY : GRAPHITE,
+            kind === "final"
+              ? [255, 255, 255]
+              : kind === "neg"
+                ? RED
+                : kind === "pos"
+                  ? GREEN
+                  : kind === "muted"
+                    ? MUTED
+                    : kind === "strong"
+                      ? NAVY
+                      : GRAPHITE,
         },
       },
     ]),
@@ -289,11 +309,26 @@ export async function buildClosingTermPDF(d: ClosingTermData): Promise<Blob> {
         formatDate(m.date),
         m.description,
         [m.company, m.lecture].filter(Boolean).join(" · ") || m.type,
-        { content: m.credit ? formatCurrency(m.credit) : "", styles: { halign: "right", textColor: GREEN } },
-        { content: m.debit ? formatCurrency(m.debit) : "", styles: { halign: "right", textColor: RED } },
-        { content: formatCurrency(m.balance), styles: { halign: "right", fontStyle: "bold", textColor: NAVY } },
+        {
+          content: m.credit ? formatCurrency(m.credit) : "",
+          styles: { halign: "right", textColor: GREEN },
+        },
+        {
+          content: m.debit ? formatCurrency(m.debit) : "",
+          styles: { halign: "right", textColor: RED },
+        },
+        {
+          content: formatCurrency(m.balance),
+          styles: { halign: "right", fontStyle: "bold", textColor: NAVY },
+        },
       ]),
-      styles: { fontSize: 7.6, cellPadding: 4, lineColor: [232, 232, 238], lineWidth: 0.25, overflow: "linebreak" },
+      styles: {
+        fontSize: 7.6,
+        cellPadding: 4,
+        lineColor: [232, 232, 238],
+        lineWidth: 0.25,
+        overflow: "linebreak",
+      },
       headStyles: { fillColor: NAVY, textColor: 255, fontSize: 7, fontStyle: "bold" },
       alternateRowStyles: { fillColor: LIGHT },
       columnStyles: {
@@ -322,13 +357,34 @@ export async function buildClosingTermPDF(d: ClosingTermData): Promise<Blob> {
       body: d.lectures.map((l) => [
         formatDate(l.date),
         l.company,
-        { content: l.revenue == null ? "—" : formatCurrency(l.revenue), styles: { halign: "right" } },
-        { content: l.materials == null ? "—" : "-" + formatCurrency(l.materials), styles: { halign: "right", textColor: RED } },
-        { content: l.fees == null ? "—" : "-" + formatCurrency(l.fees), styles: { halign: "right", textColor: RED } },
-        { content: l.netProfit == null ? "—" : formatCurrency(l.netProfit), styles: { halign: "right" } },
-        { content: formatCurrency(l.agentShare), styles: { halign: "right", fontStyle: "bold", textColor: NAVY } },
+        {
+          content: l.revenue == null ? "—" : formatCurrency(l.revenue),
+          styles: { halign: "right" },
+        },
+        {
+          content: l.materials == null ? "—" : "-" + formatCurrency(l.materials),
+          styles: { halign: "right", textColor: RED },
+        },
+        {
+          content: l.fees == null ? "—" : "-" + formatCurrency(l.fees),
+          styles: { halign: "right", textColor: RED },
+        },
+        {
+          content: l.netProfit == null ? "—" : formatCurrency(l.netProfit),
+          styles: { halign: "right" },
+        },
+        {
+          content: formatCurrency(l.agentShare),
+          styles: { halign: "right", fontStyle: "bold", textColor: NAVY },
+        },
       ]),
-      styles: { fontSize: 7.6, cellPadding: 4, lineColor: [232, 232, 238], lineWidth: 0.25, overflow: "linebreak" },
+      styles: {
+        fontSize: 7.6,
+        cellPadding: 4,
+        lineColor: [232, 232, 238],
+        lineWidth: 0.25,
+        overflow: "linebreak",
+      },
       headStyles: { fillColor: NAVY, textColor: 255, fontSize: 7, fontStyle: "bold" },
       alternateRowStyles: { fillColor: LIGHT },
       columnStyles: {
@@ -357,11 +413,17 @@ export async function buildClosingTermPDF(d: ClosingTermData): Promise<Blob> {
       head: [["Data", "Descrição / Origem", "Palestra", "Valor"]],
       body: d.advances.map((a) => [
         formatDate(a.date),
-        a.notes?.trim() || a.source || "Adiantamento",
+        [a.source?.trim(), a.notes?.trim()].filter(Boolean).join(" · ") || "Adiantamento",
         a.lecture ?? "—",
         { content: formatCurrency(a.amount), styles: { halign: "right", textColor: RED } },
       ]),
-      styles: { fontSize: 8, cellPadding: 5, lineColor: [232, 232, 238], lineWidth: 0.25, overflow: "linebreak" },
+      styles: {
+        fontSize: 8,
+        cellPadding: 5,
+        lineColor: [232, 232, 238],
+        lineWidth: 0.25,
+        overflow: "linebreak",
+      },
       headStyles: { fillColor: NAVY, textColor: 255, fontSize: 7, fontStyle: "bold" },
       alternateRowStyles: { fillColor: LIGHT },
       columnStyles: { 0: { cellWidth: 62 }, 3: { cellWidth: 100, halign: "right" } },
@@ -388,24 +450,48 @@ export async function buildClosingTermPDF(d: ClosingTermData): Promise<Blob> {
         c.brand,
         c.installments ? `${c.installments}x` : "1x",
         { content: formatCurrency(c.amount), styles: { halign: "right" } },
-        { content: c.feeAmount != null ? "-" + formatCurrency(c.feeAmount) : "—", styles: { halign: "right", textColor: RED } },
-        { content: formatCurrency(c.netAmount ?? c.amount), styles: { halign: "right", fontStyle: "bold", textColor: NAVY } },
+        {
+          content: c.feeAmount != null ? "-" + formatCurrency(c.feeAmount) : "—",
+          styles: { halign: "right", textColor: RED },
+        },
+        {
+          content: formatCurrency(c.netAmount ?? c.amount),
+          styles: { halign: "right", fontStyle: "bold", textColor: NAVY },
+        },
       ]),
-      foot: [[
-        { content: "TOTAL", styles: { fontStyle: "bold", textColor: NAVY } },
-        "", "", "",
-        { content: formatCurrency(sumC((c) => c.amount)), styles: { halign: "right", fontStyle: "bold" } },
-        { content: "-" + formatCurrency(sumC((c) => c.feeAmount)), styles: { halign: "right", fontStyle: "bold", textColor: RED } },
-        { content: formatCurrency(sumC((c) => c.netAmount ?? c.amount)), styles: { halign: "right", fontStyle: "bold", textColor: NAVY } },
-      ]],
-      styles: { fontSize: 7.4, cellPadding: 4, lineColor: [232, 232, 238], lineWidth: 0.25, overflow: "linebreak" },
+      foot: [
+        [
+          { content: "TOTAL", styles: { fontStyle: "bold", textColor: NAVY } },
+          "",
+          "",
+          "",
+          {
+            content: formatCurrency(sumC((c) => c.amount)),
+            styles: { halign: "right", fontStyle: "bold" },
+          },
+          {
+            content: "-" + formatCurrency(sumC((c) => c.feeAmount)),
+            styles: { halign: "right", fontStyle: "bold", textColor: RED },
+          },
+          {
+            content: formatCurrency(sumC((c) => c.netAmount ?? c.amount)),
+            styles: { halign: "right", fontStyle: "bold", textColor: NAVY },
+          },
+        ],
+      ],
+      styles: {
+        fontSize: 7.4,
+        cellPadding: 4,
+        lineColor: [232, 232, 238],
+        lineWidth: 0.25,
+        overflow: "linebreak",
+      },
       headStyles: { fillColor: NAVY, textColor: 255, fontSize: 7, fontStyle: "bold" },
       footStyles: { fillColor: LIGHT },
       alternateRowStyles: { fillColor: LIGHT },
       columnStyles: {
-        0: { cellWidth: 52 },
-        1: { cellWidth: 145 },
-        2: { cellWidth: 62 },
+        0: { cellWidth: 56 },
+        2: { cellWidth: 58 },
         3: { cellWidth: 32, halign: "center" },
         4: { cellWidth: 68, halign: "right" },
         5: { cellWidth: 60, halign: "right" },
@@ -443,7 +529,9 @@ export async function buildClosingTermPDF(d: ClosingTermData): Promise<Blob> {
             try {
               const fmt = (p.mimeType ?? "").toLowerCase().includes("png") ? "PNG" : "JPEG";
               doc.addImage(p.dataUrl, fmt, x + 2, py + 2, tW - 4, tH - 4, undefined, "FAST");
-            } catch { /* ignora imagem inválida */ }
+            } catch {
+              /* ignora imagem inválida */
+            }
           } else {
             doc.setFont("helvetica", "italic");
             doc.setFontSize(8);
@@ -482,8 +570,12 @@ export async function buildClosingTermPDF(d: ClosingTermData): Promise<Blob> {
   doc.setFontSize(7.4);
   doc.setTextColor(...MUTED);
   doc.text(
-    doc.splitTextToSize("Valor informativo — não constitui despesa operacional e não é deduzido do saldo da conta corrente.", W - 190),
-    M + 170, y + 28,
+    doc.splitTextToSize(
+      "Valor informativo — não constitui despesa operacional e não é deduzido do saldo da conta corrente.",
+      W - 190,
+    ),
+    M + 170,
+    y + 28,
   );
   y += 66;
 
@@ -513,7 +605,11 @@ export async function buildClosingTermPDF(d: ClosingTermData): Promise<Blob> {
   doc.setTextColor(...GRAPHITE);
   const obs = d.notes?.trim() || "Sem observações registradas neste fechamento.";
   const obsLines = doc.splitTextToSize(obs, W);
-  obsLines.forEach((ln: string) => { y = space(y, 16); doc.text(ln, M, y); y += 13; });
+  obsLines.forEach((ln: string) => {
+    y = space(y, 16);
+    doc.text(ln, M, y);
+    y += 13;
+  });
   y += 14;
 
   /* ---------------- MENSAGEM DO GRUPO GUERRA ---------------- */
@@ -533,9 +629,21 @@ export async function buildClosingTermPDF(d: ClosingTermData): Promise<Blob> {
   y += boxH + 46;
 
   /* ---------------- ASSINATURAS ---------------- */
-  y = space(y, 70);
+  y = space(y, 120);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8.6);
+  doc.setTextColor(...GRAPHITE);
+  doc.text(
+    "Local e data: ________________________________, _____ de ____________________ de ________.",
+    M,
+    y,
+  );
+  y += 56;
   const sigW = (W - 40) / 2;
-  [[titleCaseName(brand.name), d.responsible], ["Agendista", d.agentName]].forEach(([role, name], i) => {
+  [
+    [titleCaseName(brand.name), d.responsible],
+    ["Agendista", d.agentName],
+  ].forEach(([role, name], i) => {
     const x = M + i * (sigW + 40);
     doc.setDrawColor(...GRAPHITE);
     doc.setLineWidth(0.5);
@@ -561,7 +669,9 @@ export async function buildClosingTermPDF(d: ClosingTermData): Promise<Blob> {
     doc.setFontSize(7);
     doc.setTextColor(...MUTED);
     doc.text(`${d.closingNumber} · v${d.version}`, M, pageH - 32);
-    doc.text("Documento oficial · Arquivo Oficial do GBS", pageW / 2, pageH - 32, { align: "center" });
+    doc.text("Documento oficial · Arquivo Oficial do GBS", pageW / 2, pageH - 32, {
+      align: "center",
+    });
     doc.text(`Página ${i} de ${total}`, pageW - M, pageH - 32, { align: "right" });
   }
 
@@ -569,7 +679,11 @@ export async function buildClosingTermPDF(d: ClosingTermData): Promise<Blob> {
 }
 
 function titleCaseName(v: string) {
-  return v.toLowerCase().split(/\s+/).map((w) => (w ? w[0].toUpperCase() + w.slice(1) : w)).join(" ");
+  return v
+    .toLowerCase()
+    .split(/\s+/)
+    .map((w) => (w ? w[0].toUpperCase() + w.slice(1) : w))
+    .join(" ");
 }
 
 function emptyNote(doc: import("jspdf").jsPDF, text: string, x: number, y: number) {
@@ -586,6 +700,8 @@ function installTextSanitizer(doc: { text: (...a: unknown[]) => unknown }) {
   const fix = (v: unknown): unknown =>
     typeof v === "string"
       ? v.replace(/[\u2192\u21D2\u27A1]/g, "-").replace(/[\u2190\u21D0]/g, "-")
-      : Array.isArray(v) ? v.map(fix) : v;
+      : Array.isArray(v)
+        ? v.map(fix)
+        : v;
   doc.text = ((t: unknown, ...rest: unknown[]) => raw(fix(t), ...rest)) as typeof doc.text;
 }

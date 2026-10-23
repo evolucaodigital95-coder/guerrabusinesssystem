@@ -17,7 +17,7 @@ import { Download, Printer, FileSpreadsheet, RefreshCw } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrentOrg } from "@/hooks/use-current-org";
-import { PageHeader, EmptyState } from "@/components/page-shell";
+import { PageHeader, EmptyState, NestedPageHeaders } from "@/components/page-shell";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -32,6 +32,7 @@ import { PainelDiretorPage } from "@/components/inteligencia/painel-diretor";
 import { IndicadoresPage } from "@/components/inteligencia/indicadores";
 import { PerformancePage } from "@/components/inteligencia/performance";
 import { RelatoriosPage } from "@/components/inteligencia/relatorios";
+import { OperationsDashboard } from "@/components/dashboard/operations-dashboard";
 import { NUM } from "@/lib/format";
 
 export const Route = createFileRoute("/app/inteligencia")({
@@ -58,32 +59,29 @@ function InteligenciaHub() {
       <PageHeader
         eyebrow="Inteligência"
         title="Central de Inteligência"
-        description="Visão do diretor, indicadores, análises, rankings e relatórios — tudo reunido em um só lugar."
+        description="Visão geral do negócio, análises com filtros, rankings e relatórios para exportar."
       />
-      <Tabs defaultValue="diretor" className="space-y-6">
-        <TabsList className="flex w-full flex-wrap justify-start bg-card/40">
-          <TabsTrigger value="diretor">Painel do Diretor</TabsTrigger>
-          <TabsTrigger value="indicadores">Indicadores</TabsTrigger>
-          <TabsTrigger value="analises">Análises</TabsTrigger>
-          <TabsTrigger value="performance">Performance</TabsTrigger>
-          <TabsTrigger value="relatorios">Relatórios</TabsTrigger>
-        </TabsList>
-        <TabsContent value="diretor">
-          <PainelDiretorPage />
-        </TabsContent>
-        <TabsContent value="indicadores">
-          <IndicadoresPage />
-        </TabsContent>
-        <TabsContent value="analises">
-          <IntelligencePage />
-        </TabsContent>
-        <TabsContent value="performance">
-          <PerformancePage />
-        </TabsContent>
-        <TabsContent value="relatorios">
-          <RelatoriosPage />
-        </TabsContent>
-      </Tabs>
+      <NestedPageHeaders value={true}>
+        <Tabs defaultValue="geral" className="space-y-6">
+          <TabsList className="flex w-full flex-wrap justify-start bg-card/40">
+            <TabsTrigger value="geral">Visão geral</TabsTrigger>
+            <TabsTrigger value="analises">Análises e rankings</TabsTrigger>
+            <TabsTrigger value="relatorios">Relatórios</TabsTrigger>
+          </TabsList>
+          <TabsContent value="geral" className="space-y-14">
+            <PainelDiretorPage />
+            <IndicadoresPage />
+          </TabsContent>
+          <TabsContent value="analises" className="space-y-14">
+            <IntelligencePage />
+            <OperationsDashboard view="rankings" />
+            <PerformancePage />
+          </TabsContent>
+          <TabsContent value="relatorios">
+            <RelatoriosPage />
+          </TabsContent>
+        </Tabs>
+      </NestedPageHeaders>
     </div>
   );
 }
@@ -301,7 +299,7 @@ function IntelligencePage() {
   if (orgLoading || isLoading || !data || !filtered) {
     return (
       <div className="mx-auto max-w-7xl">
-        <PageHeader eyebrow="BI" title="Centro de Inteligência" description="Carregando dados…" />
+        <PageHeader eyebrow="BI" title="Análises" description="Carregando dados…" />
         <div className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-4">
           {Array.from({ length: 8 }).map((_, i) => (
             <div key={i} className="h-28 animate-pulse bg-card" />
@@ -630,7 +628,7 @@ function IntelligencePage() {
     <div className="mx-auto max-w-7xl" id="intel-root">
       <PageHeader
         eyebrow="Business Intelligence"
-        title="Centro de Inteligência"
+        title="Análises"
         description="Indicadores estratégicos consolidados em tempo real, com base nos dados operacionais do Grupo Guerra."
         actions={
           <div className="flex flex-wrap items-center gap-2 print:hidden">

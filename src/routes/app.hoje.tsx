@@ -1,27 +1,18 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, type CSSProperties, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
-import {
-  UserPlus,
-  Building2,
-  Handshake,
-  FileText,
-  Mic,
-  Wallet,
-  Sparkles,
-  ChevronRight,
-} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrentOrg } from "@/hooks/use-current-org";
 import { useSession } from "@/hooks/use-session";
-import { BRL, NUM } from "@/lib/format";
+import { BRL, NUM, toLocalDate } from "@/lib/format";
 import { HERO_IMAGES, heroSrc, heroSrcSet } from "@/lib/hero-images";
 import { CountUp } from "@/components/count-up";
+import { OperationsDashboard } from "@/components/dashboard/operations-dashboard";
 
 export const Route = createFileRoute("/app/hoje")({
   head: () => ({
     meta: [
-      { title: "Hoje — GBS" },
+      { title: "Início — GBS" },
       { name: "description", content: "Sua visão executiva do dia no Guerra Business System." },
     ],
   }),
@@ -53,16 +44,6 @@ function endOfMonth(d = new Date()) {
   const x = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59, 999);
   return x;
 }
-
-const FLOW = [
-  { label: "Lead", to: "/app/crm", icon: UserPlus },
-  { label: "Empresa", to: "/app/crm", icon: Building2 },
-  { label: "Negociação", to: "/app/crm", icon: Handshake },
-  { label: "Proposta", to: "/app/crm", icon: FileText },
-  { label: "Palestra", to: "/app/palestras", icon: Mic },
-  { label: "Financeiro", to: "/app/financeiro", icon: Wallet },
-  { label: "Pós-venda", to: "/app/crm", icon: Sparkles },
-] as const;
 
 function useToday(orgId: string | null) {
   return useQuery({
@@ -210,7 +191,7 @@ function useToday(orgId: string | null) {
       const seasonLabel = season?.name ?? "—";
       const seasonRange =
         season && season.starts_on && season.ends_on
-          ? `${new Date(season.starts_on).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })} – ${new Date(season.ends_on).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })}`
+          ? `${toLocalDate(season.starts_on).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })} – ${toLocalDate(season.ends_on).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })}`
           : "";
 
       // Sem coluna de meta configurada — meta mensal indisponível
@@ -236,18 +217,6 @@ function useToday(orgId: string | null) {
       };
     },
   });
-}
-
-function Stat({ label, value, hint }: { label: string; value: ReactNode; hint?: string }) {
-  return (
-    <div className="bg-card p-6">
-      <div className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
-        {label}
-      </div>
-      <div className="mt-6 font-display text-[2rem] leading-none text-foreground">{value}</div>
-      {hint && <div className="mt-3 text-xs leading-relaxed text-muted-foreground">{hint}</div>}
-    </div>
-  );
 }
 
 function HeroStat({
@@ -439,82 +408,8 @@ function HojePage() {
         </div>
       </section>
 
-      {/* Fluxo Operacional */}
-      <section className="mb-16">
-        <div className="rounded-3xl border border-border bg-card p-8 md:p-10">
-          <div className="mb-8 flex items-center justify-between gap-6">
-            <div>
-              <div className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
-                Fluxo Operacional
-              </div>
-              <h2 className="mt-3 font-display text-2xl">A jornada de uma palestra no GBS</h2>
-            </div>
-          </div>
-          <ol className="flex flex-wrap items-stretch gap-3">
-            {FLOW.map((step, i) => {
-              const Icon = step.icon;
-              return (
-                <li key={step.label} className="flex items-stretch gap-3">
-                  <Link
-                    to={step.to}
-                    className="hover-lift group flex min-w-[140px] flex-col items-start justify-between rounded-2xl border border-border bg-background p-4 transition-colors hover:border-foreground/30"
-                  >
-                    <div className="grid h-9 w-9 place-items-center rounded-full border border-border text-foreground transition-colors group-hover:border-[var(--gold)]">
-                      <Icon className="h-4 w-4" />
-                    </div>
-                    <div className="mt-6">
-                      <div className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
-                        Etapa {String(i + 1).padStart(2, "0")}
-                      </div>
-                      <div className="mt-1 font-display text-base">{step.label}</div>
-                    </div>
-                  </Link>
-                  {i < FLOW.length - 1 && (
-                    <div className="flex items-center text-muted-foreground/60">
-                      <ChevronRight className="h-4 w-4" />
-                    </div>
-                  )}
-                </li>
-              );
-            })}
-          </ol>
-        </div>
-      </section>
-
-      {/* Visão do dia */}
-      <section>
-        <div className="mb-8 flex items-end justify-between">
-          <div>
-            <div className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
-              Visão do dia
-            </div>
-            <h2 className="mt-3 font-display text-2xl">Indicadores principais</h2>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-2 lg:grid-cols-4">
-          <Stat
-            label="Receita prevista"
-            value={loading ? "—" : fmtBRL(d?.receitaPrevista)}
-            hint="Este mês"
-          />
-          <Stat
-            label="Estoque baixo"
-            value={loading ? "—" : String(d?.lowStockCount ?? 0).padStart(2, "0")}
-            hint="Itens em reposição"
-          />
-          <Stat
-            label="A receber"
-            value={loading ? "—" : fmtBRL(d?.aReceber)}
-            hint="Pendências financeiras"
-          />
-          <Stat
-            label="Temporada atual"
-            value={loading ? "—" : (d?.seasonLabel ?? "—")}
-            hint={d?.seasonRange ?? ""}
-          />
-        </div>
-      </section>
+      {/* Operação: prioridades, temporada, agenda e o mês em números */}
+      <OperationsDashboard view="overview" />
     </div>
   );
 }

@@ -6,7 +6,6 @@ import {
   CalendarRange,
   CreditCard,
   Home,
-  LayoutDashboard,
   Library,
   Megaphone,
   Mic,
@@ -32,8 +31,7 @@ export interface ModuleDef {
 /** Itens do menu lateral, na ordem em que aparecem. */
 export const MODULES: ModuleDef[] = [
   // PRINCIPAL
-  { to: "/app/hoje", label: "Hoje", icon: Home, section: "principal" },
-  { to: "/app/dashboard", label: "Dashboard", icon: LayoutDashboard, section: "principal" },
+  { to: "/app/hoje", label: "Início", icon: Home, section: "principal" },
   { to: "/app/agenda", label: "Agenda", icon: CalendarClock, section: "principal" },
 
   // OPERAÇÃO

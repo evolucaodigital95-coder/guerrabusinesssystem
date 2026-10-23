@@ -1,6 +1,20 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { ArrowRight, CornerDownLeft, Search } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import {
+  ArrowRight,
+  Building2,
+  CalendarRange,
+  CornerDownLeft,
+  Mic,
+  Package,
+  Search,
+  User,
+  Users,
+  Wallet,
+} from "lucide-react";
+import { useCurrentOrg } from "@/hooks/use-current-org";
+import { searchEverything, type Result } from "@/lib/global-search";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { MODULES } from "@/lib/modules";
 import { requestQuickAction } from "@/lib/quick-actions";
@@ -9,11 +23,21 @@ import { cn } from "@/lib/utils";
 
 type Item = {
   id: string;
-  group: "Criar" | "Ir para" | "Pesquisar";
+  group: "Resultados" | "Criar" | "Ir para" | "Pesquisar";
   label: string;
   hint?: string;
   icon: typeof Search;
   run: () => void;
+};
+
+const RESULT_ICON: Record<Result["kind"], typeof Search> = {
+  company: Building2,
+  contact: User,
+  lecture: Mic,
+  agent: Users,
+  movement: Wallet,
+  season: CalendarRange,
+  stock: Package,
 };
 
 const normalize = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
@@ -32,6 +56,20 @@ export function CommandPalette({
   const [query, setQuery] = useState("");
   const [active, setActive] = useState(0);
   const listRef = useRef<HTMLDivElement>(null);
+  const { organizationId } = useCurrentOrg();
+
+  // Busca real no banco, com pequena espera para não consultar a cada tecla.
+  const [debounced, setDebounced] = useState("");
+  useEffect(() => {
+    const t = setTimeout(() => setDebounced(query.trim()), 220);
+    return () => clearTimeout(t);
+  }, [query]);
+  const live = useQuery({
+    queryKey: ["palette-search", organizationId, debounced],
+    enabled: open && !!organizationId && debounced.length >= 2,
+    queryFn: () => searchEverything(organizationId!, debounced),
+    staleTime: 30_000,
+  });
 
   useEffect(() => {
     if (open) {
@@ -65,9 +103,20 @@ export function CommandPalette({
         navigate({ to: m.to });
       },
     }));
+    const results: Item[] = (live.data ?? []).slice(0, 7).map((r) => ({
+      id: `r-${r.id}`,
+      group: "Resultados",
+      label: r.title,
+      hint: [r.subtitle, r.meta].filter(Boolean).join(" · ") || undefined,
+      icon: RESULT_ICON[r.kind],
+      run: () => {
+        close();
+        navigate({ to: r.to as never, params: r.params as never, search: r.search as never });
+      },
+    }));
     const q = normalize(query.trim());
-    const filtered = [...create, ...pages].filter(
-      (i) => !q || normalize(`${i.label} ${i.hint ?? ""}`).includes(q),
+    const filtered = [...results, ...create, ...pages].filter(
+      (i) => i.group === "Resultados" || !q || normalize(`${i.label} ${i.hint ?? ""}`).includes(q),
     );
     if (query.trim()) {
       filtered.push({
@@ -83,7 +132,7 @@ export function CommandPalette({
       });
     }
     return filtered;
-  }, [query, canCreate, navigate, onOpenChange]);
+  }, [query, canCreate, navigate, onOpenChange, live.data]);
 
   useEffect(() => setActive(0), [query]);
   useEffect(() => {

@@ -26,6 +26,8 @@ import { SupplierAccountsTab } from "@/components/estoque/supplier-accounts-tab"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { useQuickAction } from "@/lib/quick-actions";
+import { toLocalDate } from "@/lib/format";
+import { TopMovers } from "@/components/estoque/top-movers";
 export const Route = createFileRoute("/app/estoque/")({
   head: () => ({
     meta: [
@@ -123,6 +125,12 @@ function EstoquePage() {
     }
     return map;
   }, [items.data, movements.data]);
+
+  const availableById = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const [id, b] of balances) map.set(id, b.available);
+    return map;
+  }, [balances]);
 
   const filtered = useMemo(() => {
     let list = items.data ?? [];
@@ -238,11 +246,19 @@ function EstoquePage() {
               label="Última movimentação"
               value={
                 totals.lastMovement
-                  ? new Date(totals.lastMovement).toLocaleDateString("pt-BR")
+                  ? toLocalDate(totals.lastMovement).toLocaleDateString("pt-BR")
                   : "—"
               }
             />
           </div>
+
+          {organizationId && (
+            <TopMovers
+              organizationId={organizationId}
+              items={items.data ?? []}
+              availableById={availableById}
+            />
+          )}
 
           <div className="rounded-2xl border border-border bg-card/40 p-4">
             <div className="grid gap-3 md:grid-cols-12">
