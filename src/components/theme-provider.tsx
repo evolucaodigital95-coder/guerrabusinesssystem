@@ -11,20 +11,24 @@ const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState<Theme>("light");
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    const stored = typeof window !== "undefined" ? localStorage.getItem("gbs-theme") : null;
+    const stored = localStorage.getItem("gbs-theme");
     if (stored === "dark" || stored === "light") setTheme(stored);
+    setReady(true);
   }, []);
 
   useEffect(() => {
-    const root = document.documentElement;
-    root.classList.toggle("dark", theme === "dark");
+    if (!ready) return;
+    document.documentElement.classList.toggle("dark", theme === "dark");
     localStorage.setItem("gbs-theme", theme);
-  }, [theme]);
+  }, [theme, ready]);
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme: () => setTheme((t) => (t === "dark" ? "light" : "dark")) }}>
+    <ThemeContext.Provider
+      value={{ theme, toggleTheme: () => setTheme((t) => (t === "dark" ? "light" : "dark")) }}
+    >
       {children}
     </ThemeContext.Provider>
   );

@@ -37,8 +37,12 @@ type Row = {
 };
 
 export function FinanceLecturesTab({
-  organizationId, userId,
-}: { organizationId: string; userId: string }) {
+  organizationId,
+  userId,
+}: {
+  organizationId: string;
+  userId: string;
+}) {
   const qc = useQueryClient();
   const [search, setSearch] = useState("");
   const [onlyDup, setOnlyDup] = useState(false);
@@ -51,12 +55,14 @@ export function FinanceLecturesTab({
     queryFn: async (): Promise<Row[]> => {
       const { data, error } = await supabase
         .from("lectures")
-        .select(`
+        .select(
+          `
           id, title, theme, status, scheduled_at, scheduled_time, city, state,
           company_id, agent_id, season_id, campaign_id, project_id, contact_id,
           expected_audience, actual_audience, gross_revenue, notes,
           companies:company_id ( id, legal_name )
-        `)
+        `,
+        )
         .eq("organization_id", organizationId)
         .is("archived_at", null)
         .order("scheduled_at", { ascending: false, nullsFirst: false });
@@ -71,10 +77,15 @@ export function FinanceLecturesTab({
       const k = `${(l.title ?? "").trim().toLowerCase()}|${l.scheduled_at ?? ""}|${l.company_id ?? ""}`;
       count.set(k, (count.get(k) ?? 0) + 1);
     }
-    return new Set(Array.from(count.entries()).filter(([, n]) => n > 1).map(([k]) => k));
+    return new Set(
+      Array.from(count.entries())
+        .filter(([, n]) => n > 1)
+        .map(([k]) => k),
+    );
   }, [lectures.data]);
 
-  const keyOf = (l: Row) => `${(l.title ?? "").trim().toLowerCase()}|${l.scheduled_at ?? ""}|${l.company_id ?? ""}`;
+  const keyOf = (l: Row) =>
+    `${(l.title ?? "").trim().toLowerCase()}|${l.scheduled_at ?? ""}|${l.company_id ?? ""}`;
 
   const filtered = useMemo(() => {
     let list = lectures.data ?? [];
@@ -82,8 +93,10 @@ export function FinanceLecturesTab({
     const q = search.trim().toLowerCase();
     if (q) {
       list = list.filter((l) =>
-        [l.title, l.theme, l.city, l.companies?.legal_name].filter(Boolean)
-          .some((v) => String(v).toLowerCase().includes(q)));
+        [l.title, l.theme, l.city, l.companies?.legal_name]
+          .filter(Boolean)
+          .some((v) => String(v).toLowerCase().includes(q)),
+      );
     }
     return list;
   }, [lectures.data, search, onlyDup, dupKeys]);
@@ -96,12 +109,16 @@ export function FinanceLecturesTab({
 
   const archive = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("lectures")
+      const { error } = await supabase
+        .from("lectures")
         .update({ archived_at: new Date().toISOString(), updated_by: userId })
         .eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => { toast.success("Palestra arquivada"); invalidate(); },
+    onSuccess: () => {
+      toast.success("Palestra arquivada");
+      invalidate();
+    },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Erro ao arquivar"),
   });
 
@@ -121,7 +138,10 @@ export function FinanceLecturesTab({
       const { error } = await supabase.from("lectures").delete().eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => { toast.success("Palestra excluída definitivamente"); invalidate(); },
+    onSuccess: () => {
+      toast.success("Palestra excluída definitivamente");
+      invalidate();
+    },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Não foi possível excluir"),
   });
 
@@ -133,13 +153,14 @@ export function FinanceLecturesTab({
         <div className="flex flex-col gap-3 md:flex-row md:items-center">
           <div className="relative flex-1">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-            <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar palestra, empresa, cidade…" className="rounded-full pl-9" />
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Buscar palestra, empresa, cidade…"
+              className="rounded-full pl-9"
+            />
           </div>
-          <Button
-            variant={onlyDup ? "navy" : "outline"}
-            className="rounded-full"
-            onClick={() => setOnlyDup((v) => !v)}
-          >
+          <Button variant={onlyDup ? "brand" : "outline"} onClick={() => setOnlyDup((v) => !v)}>
             <AlertTriangle className="mr-1.5 h-4 w-4" />
             Duplicadas {dupCount > 0 ? `(${dupCount})` : ""}
           </Button>
@@ -151,12 +172,14 @@ export function FinanceLecturesTab({
       ) : filtered.length === 0 ? (
         <div className="rounded-3xl border border-dashed border-border bg-card/30 px-8 py-16 text-center">
           <h3 className="font-serif text-2xl text-foreground">Nenhuma palestra</h3>
-          <p className="mt-2 text-sm text-muted-foreground">Ajuste a busca ou cadastre palestras no módulo Palestras.</p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Ajuste a busca ou cadastre palestras no módulo Palestras.
+          </p>
         </div>
       ) : (
         <div className="overflow-hidden rounded-2xl border border-border bg-card/40">
           <table className="w-full text-sm">
-            <thead className="bg-muted/40 text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
+            <thead className="bg-muted/40 text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
               <tr>
                 <th className="px-4 py-3 text-left font-medium">Data</th>
                 <th className="px-4 py-3 text-left font-medium">Palestra</th>
@@ -170,35 +193,70 @@ export function FinanceLecturesTab({
               {filtered.map((l) => {
                 const dup = dupKeys.has(keyOf(l));
                 return (
-                  <tr key={l.id} className={cn("border-t border-border/70", dup && "bg-amber-500/5")}>
-                    <td className="px-4 py-3 align-top text-muted-foreground">{formatDate(l.scheduled_at)}</td>
+                  <tr
+                    key={l.id}
+                    className={cn("border-t border-border/70", dup && "bg-amber-500/5")}
+                  >
+                    <td className="px-4 py-3 align-top text-muted-foreground">
+                      {formatDate(l.scheduled_at)}
+                    </td>
                     <td className="px-4 py-3 align-top">
                       <div className="flex items-center gap-2">
                         <span className="font-medium text-foreground">{l.title}</span>
-                        {dup && <Badge variant="outline" className="border-amber-500/40 text-[10px] font-normal text-amber-600">duplicada</Badge>}
-                        <Link to="/app/palestras/$id" params={{ id: l.id }} className="text-muted-foreground hover:text-foreground">
+                        {dup && (
+                          <Badge
+                            variant="outline"
+                            className="border-amber-500/40 text-[10px] font-normal text-amber-600"
+                          >
+                            duplicada
+                          </Badge>
+                        )}
+                        <Link
+                          to="/app/palestras/$id"
+                          params={{ id: l.id }}
+                          className="text-muted-foreground hover:text-foreground"
+                        >
                           <ExternalLink className="h-3.5 w-3.5" />
                         </Link>
                       </div>
                       {l.theme && <p className="mt-0.5 text-xs text-muted-foreground">{l.theme}</p>}
                     </td>
-                    <td className="px-4 py-3 align-top text-muted-foreground">{l.companies?.legal_name ?? "—"}</td>
-                    <td className="px-4 py-3 align-top text-right tabular-nums">{formatCurrency(Number(l.gross_revenue ?? 0))}</td>
+                    <td className="px-4 py-3 align-top text-muted-foreground">
+                      {l.companies?.legal_name ?? "—"}
+                    </td>
+                    <td className="px-4 py-3 align-top text-right tabular-nums">
+                      {formatCurrency(Number(l.gross_revenue ?? 0))}
+                    </td>
                     <td className="px-4 py-3 align-top">
-                      <Badge variant="outline" className="font-normal">{lectureStatusLabel(l.status)}</Badge>
+                      <Badge variant="outline" className="font-normal">
+                        {lectureStatusLabel(l.status)}
+                      </Badge>
                     </td>
                     <td className="px-4 py-3 align-top">
                       <div className="flex items-center justify-end gap-1">
                         <Button
-                          variant="ghost" size="sm"
+                          variant="ghost"
+                          size="sm"
                           onClick={() => {
                             setEditing({
-                              id: l.id, title: l.title, theme: l.theme, company_id: l.company_id,
-                              contact_id: l.contact_id, agent_id: l.agent_id, season_id: l.season_id,
-                              campaign_id: l.campaign_id, project_id: l.project_id, city: l.city, state: l.state,
-                              scheduled_at: l.scheduled_at, scheduled_time: l.scheduled_time,
-                              expected_audience: l.expected_audience, actual_audience: l.actual_audience,
-                              status: l.status, gross_revenue: l.gross_revenue, notes: l.notes,
+                              id: l.id,
+                              title: l.title,
+                              theme: l.theme,
+                              company_id: l.company_id,
+                              contact_id: l.contact_id,
+                              agent_id: l.agent_id,
+                              season_id: l.season_id,
+                              campaign_id: l.campaign_id,
+                              project_id: l.project_id,
+                              city: l.city,
+                              state: l.state,
+                              scheduled_at: l.scheduled_at,
+                              scheduled_time: l.scheduled_time,
+                              expected_audience: l.expected_audience,
+                              actual_audience: l.actual_audience,
+                              status: l.status,
+                              gross_revenue: l.gross_revenue,
+                              notes: l.notes,
                             });
                             setOpen(true);
                           }}
@@ -242,7 +300,10 @@ export function FinanceLecturesTab({
 
       <LectureFormDialog
         open={open}
-        onOpenChange={(v) => { setOpen(v); if (!v) setEditing(null); }}
+        onOpenChange={(v) => {
+          setOpen(v);
+          if (!v) setEditing(null);
+        }}
         organizationId={organizationId}
         userId={userId}
         initial={editing ?? undefined}

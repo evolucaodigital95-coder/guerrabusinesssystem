@@ -44,7 +44,7 @@ export const Route = createFileRoute("/admin/clientes/$id")({
 function Field({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="rounded-xl border border-border bg-card p-4">
-      <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">{label}</div>
+      <div className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">{label}</div>
       <div className="mt-2 text-sm">{value}</div>
     </div>
   );
@@ -96,18 +96,27 @@ function AdminClienteDetail() {
           <Field label="Responsável" value={org.ownerName ?? "—"} />
           <Field label="E-mail" value={org.ownerEmail ?? "—"} />
           <Field label="Criada em" value={shortDate(org.created_at)} />
-          <Field label="Último acesso" value={<span className="text-muted-foreground">{NOT_AVAILABLE}</span>} />
+          <Field
+            label="Último acesso"
+            value={<span className="text-muted-foreground">{NOT_AVAILABLE}</span>}
+          />
           <Field label="Plano" value={org.plan?.name ?? "—"} />
           <Field
             label="Onboarding"
             value={onboarding ? `${onboarding.status} — ${onboarding.progress_percent ?? 0}%` : "—"}
           />
-          <Field label="Nome fantasia" value={settings?.trade_name ?? settings?.display_name ?? "—"} />
-          <Field label="Cidade / UF" value={[settings?.city, settings?.state].filter(Boolean).join(" / ") || "—"} />
+          <Field
+            label="Nome fantasia"
+            value={settings?.trade_name ?? settings?.display_name ?? "—"}
+          />
+          <Field
+            label="Cidade / UF"
+            value={[settings?.city, settings?.state].filter(Boolean).join(" / ") || "—"}
+          />
           <Field label="Telefone" value={settings?.phone ?? "—"} />
 
           <div className="rounded-xl border border-border bg-card p-5 sm:col-span-2 lg:col-span-3">
-            <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+            <div className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
               Status da organização
             </div>
             <p className="mt-2 text-sm text-muted-foreground">
@@ -163,7 +172,7 @@ function AdminClienteDetail() {
         <TabsContent value="usuarios" className="mt-6">
           <div className="overflow-hidden rounded-2xl border border-border bg-card">
             <table className="w-full text-sm">
-              <thead className="border-b border-border text-left text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+              <thead className="border-b border-border text-left text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
                 <tr>
                   <th className="px-4 py-3">Nome</th>
                   <th className="px-4 py-3">E-mail</th>
@@ -172,21 +181,32 @@ function AdminClienteDetail() {
                 </tr>
               </thead>
               <tbody>
-                {members.map((m: { user_id: string; role: string; created_at: string; profiles?: { full_name?: string; email?: string } | null }) => (
-                  <tr key={m.user_id} className="border-b border-border/60 last:border-0">
-                    <td className="px-4 py-3">{m.profiles?.full_name ?? "—"}</td>
-                    <td className="px-4 py-3 text-muted-foreground">{m.profiles?.email ?? "—"}</td>
-                    <td className="px-4 py-3">{ROLE_LABEL[m.role as OrgRole] ?? m.role}</td>
-                    <td className="px-4 py-3 text-muted-foreground">{shortDate(m.created_at)}</td>
-                  </tr>
-                ))}
+                {members.map(
+                  (m: {
+                    user_id: string;
+                    role: string;
+                    created_at: string;
+                    profiles?: { full_name?: string; email?: string } | null;
+                  }) => (
+                    <tr key={m.user_id} className="border-b border-border/60 last:border-0">
+                      <td className="px-4 py-3">{m.profiles?.full_name ?? "—"}</td>
+                      <td className="px-4 py-3 text-muted-foreground">
+                        {m.profiles?.email ?? "—"}
+                      </td>
+                      <td className="px-4 py-3">{ROLE_LABEL[m.role as OrgRole] ?? m.role}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{shortDate(m.created_at)}</td>
+                    </tr>
+                  ),
+                )}
               </tbody>
             </table>
           </div>
         </TabsContent>
 
         <TabsContent value="uso" className="mt-6">
-          <p className="text-sm text-muted-foreground">O consumo detalhado está na aba Assinatura.</p>
+          <p className="text-sm text-muted-foreground">
+            O consumo detalhado está na aba Assinatura.
+          </p>
         </TabsContent>
 
         <TabsContent value="historico" className="mt-6">
@@ -196,22 +216,33 @@ function AdminClienteDetail() {
             </div>
           ) : (
             <ul className="space-y-2">
-              {events.map((e: { id: string; event: string; from_status: string | null; to_status: string | null; source: string; created_at: string }) => (
-                <li
-                  key={e.id}
-                  className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 text-sm"
-                >
-                  <span className="font-medium">{SUBSCRIPTION_EVENT_LABEL[e.event] ?? e.event}</span>
-                  {e.from_status && e.to_status && (
-                    <span className="text-xs text-muted-foreground">
-                      {e.from_status} → {e.to_status}
+              {events.map(
+                (e: {
+                  id: string;
+                  event: string;
+                  from_status: string | null;
+                  to_status: string | null;
+                  source: string;
+                  created_at: string;
+                }) => (
+                  <li
+                    key={e.id}
+                    className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 text-sm"
+                  >
+                    <span className="font-medium">
+                      {SUBSCRIPTION_EVENT_LABEL[e.event] ?? e.event}
                     </span>
-                  )}
-                  <span className="ml-auto text-xs text-muted-foreground">
-                    {e.source} · {dateTime(e.created_at)}
-                  </span>
-                </li>
-              ))}
+                    {e.from_status && e.to_status && (
+                      <span className="text-xs text-muted-foreground">
+                        {e.from_status} → {e.to_status}
+                      </span>
+                    )}
+                    <span className="ml-auto text-xs text-muted-foreground">
+                      {e.source} · {dateTime(e.created_at)}
+                    </span>
+                  </li>
+                ),
+              )}
             </ul>
           )}
         </TabsContent>

@@ -35,9 +35,7 @@ export function TagsBar({
         .eq("entity_id", entityId)
         .is("archived_at", null);
       if (error) throw error;
-      return (data ?? [])
-        .map((r) => r.tags as unknown as Tag)
-        .filter(Boolean);
+      return (data ?? []).map((r) => r.tags as unknown as Tag).filter(Boolean);
     },
   });
 
@@ -144,7 +142,7 @@ export function TagsBar({
       ))}
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-          <Button variant="ghost" size="sm" className="h-7 rounded-full px-2 text-xs">
+          <Button variant="ghost" size="sm" className="h-7 px-2 text-xs">
             <Plus className="mr-1 h-3 w-3" /> Tag
           </Button>
         </PopoverTrigger>
@@ -157,13 +155,13 @@ export function TagsBar({
               placeholder="Nova ou existente…"
               className="h-9"
             />
-            <Button type="submit" size="sm" variant="navy" disabled={add.isPending}>
+            <Button type="submit" size="sm" variant="brand" disabled={add.isPending}>
               Adicionar
             </Button>
           </form>
           {suggestions.length > 0 && (
             <div className="mt-3">
-              <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+              <p className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
                 Existentes
               </p>
               <div className="mt-2 flex flex-wrap gap-1.5">

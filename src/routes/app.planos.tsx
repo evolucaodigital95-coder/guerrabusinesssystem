@@ -95,7 +95,7 @@ function PlanosPage() {
         <>
           <section className="grid gap-6 rounded-2xl border border-border bg-card p-6 lg:grid-cols-[1.2fr_2fr]">
             <div>
-              <div className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+              <div className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
                 Plano atual
               </div>
               <div className="mt-2 font-display text-4xl">{plan?.name ?? "—"}</div>
@@ -125,8 +125,8 @@ function PlanosPage() {
             {s.pending_plan && (
               <p className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs lg:col-span-2">
                 Troca para o plano <b>{s.pending_plan.name}</b> agendada para{" "}
-                {shortDate(sub?.pending_change_at)}. Nenhum dado será apagado; acima dos novos limites
-                apenas novos cadastros ficarão bloqueados.
+                {shortDate(sub?.pending_change_at)}. Nenhum dado será apagado; acima dos novos
+                limites apenas novos cadastros ficarão bloqueados.
               </p>
             )}
             {sub?.cancel_effective_at && (
@@ -180,7 +180,7 @@ function PlanosPage() {
           <table className="w-full min-w-[720px] text-sm">
             <thead>
               <tr className="border-b border-border">
-                <th className="p-4 text-left text-[10px] font-normal uppercase tracking-[0.2em] text-muted-foreground">
+                <th className="p-4 text-left text-[11px] font-normal uppercase tracking-[0.12em] text-muted-foreground">
                   &nbsp;
                 </th>
                 {visiblePlans.map((p) => {
@@ -189,7 +189,10 @@ function PlanosPage() {
                   return (
                     <th
                       key={p.id}
-                      className={cn("p-4 text-left align-top font-normal", current && "bg-muted/50")}
+                      className={cn(
+                        "p-4 text-left align-top font-normal",
+                        current && "bg-muted/50",
+                      )}
                     >
                       <div className="font-display text-lg">{p.name}</div>
                       <div className="mt-1 font-display text-2xl">
@@ -217,8 +220,15 @@ function PlanosPage() {
                   {visiblePlans.map((p) => {
                     const v = p.limits?.[k];
                     return (
-                      <td key={p.id} className={cn("p-3 tabular-nums", p.id === plan?.id && "bg-muted/50")}>
-                        {v == null ? "Ilimitado" : v === 0 ? "—" : Number(v).toLocaleString("pt-BR")}
+                      <td
+                        key={p.id}
+                        className={cn("p-3 tabular-nums", p.id === plan?.id && "bg-muted/50")}
+                      >
+                        {v == null
+                          ? "Ilimitado"
+                          : v === 0
+                            ? "—"
+                            : Number(v).toLocaleString("pt-BR")}
                       </td>
                     );
                   })}
@@ -249,7 +259,7 @@ function PlanosPage() {
 function Item({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div>
-      <dt className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">{label}</dt>
+      <dt className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">{label}</dt>
       <dd className="mt-1">{value}</dd>
     </div>
   );

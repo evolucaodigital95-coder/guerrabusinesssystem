@@ -7,6 +7,8 @@
  * resumo do dia, alertas, prioridades e insights.
  */
 
+import { BRL, NUM } from "@/lib/format";
+
 export type Priority = "critico" | "alto" | "medio" | "baixo";
 
 export const PRIORITY_LABEL: Record<Priority, string> = {
@@ -74,8 +76,6 @@ export type AssistantData = {
 /* ------------------------------------------------------------- helpers */
 
 const N = (v: unknown) => Number(v ?? 0) || 0;
-const BRL = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
-const NUM = new Intl.NumberFormat("pt-BR");
 
 const dayOf = (s: string | null | undefined) => (s ? String(s).slice(0, 10) : null);
 
@@ -242,7 +242,12 @@ export function buildAssistant(
   }, 0);
 
   const usedCost = stockMovs
-    .filter((m) => (m.kind === "saida" || m.kind === "baixa") && m.status !== "cancelado" && m.status !== "estornado")
+    .filter(
+      (m) =>
+        (m.kind === "saida" || m.kind === "baixa") &&
+        m.status !== "cancelado" &&
+        m.status !== "estornado",
+    )
     .reduce((a, m) => a + (N(m.total_cost) || N(m.unit_cost) * N(m.quantity)), 0);
 
   /* ---------------- fornecedores */

@@ -27,6 +27,7 @@ import { PageHeader } from "@/components/page-shell";
 import { lectureStatusLabel } from "@/lib/lectures";
 import { AssistantGuerra } from "@/components/dashboard/assistant-guerra";
 import { SetupBanner } from "@/components/onboarding/setup-banner";
+import { BRL, NUM } from "@/lib/format";
 
 export const Route = createFileRoute("/app/dashboard")({
   head: () => ({
@@ -49,8 +50,6 @@ export const Route = createFileRoute("/app/dashboard")({
   component: DashboardPage,
 });
 
-const BRL = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
-const NUM = new Intl.NumberFormat("pt-BR");
 const GOLD = "#C9A961";
 
 const N = (v: unknown) => Number(v ?? 0) || 0;
@@ -222,7 +221,7 @@ function SectionTitle({
   return (
     <div className="mb-6 flex items-end justify-between gap-4">
       <div>
-        <div className="flex items-center gap-3 text-[10px] uppercase tracking-[0.28em] text-muted-foreground">
+        <div className="flex items-center gap-3 text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
           <span aria-hidden className="h-px w-6" style={{ background: "var(--gold)" }} />
           {eyebrow}
         </div>
@@ -246,7 +245,7 @@ function Kpi({
 }) {
   const inner = (
     <div className="hover-lift h-full rounded-2xl border border-border bg-card p-5">
-      <div className="text-[10px] font-medium uppercase tracking-[0.22em] text-muted-foreground">
+      <div className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
         {label}
       </div>
       <div className="mt-4 font-display text-[1.5rem] leading-none tabular-nums">{value}</div>
@@ -302,7 +301,7 @@ function RankList({
           <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-muted">
             <div
               className="h-full rounded-full"
-              style={{ width: `${(r.value / max) * 100}%`, background: "var(--navy)" }}
+              style={{ width: `${(r.value / max) * 100}%`, background: "var(--ink)" }}
             />
           </div>
         </li>
@@ -398,7 +397,13 @@ function DashboardPage() {
     // ---- estoque
     const balance = new Map<string, number>();
     for (const m of stockMovs) {
-      if (m.status === "cancelado" || m.status === "estornado" || m.kind === "cancelamento" || !m.stock_item_id) continue;
+      if (
+        m.status === "cancelado" ||
+        m.status === "estornado" ||
+        m.kind === "cancelamento" ||
+        !m.stock_item_id
+      )
+        continue;
       const q = N(m.quantity);
       const sign = m.kind === "saida" || m.kind === "baixa" || m.kind === "reserva" ? -1 : 1;
       balance.set(m.stock_item_id, (balance.get(m.stock_item_id) ?? 0) + sign * q);
@@ -413,10 +418,20 @@ function DashboardPage() {
       }));
 
     const usedQty = stockMovs
-      .filter((m) => (m.kind === "saida" || m.kind === "baixa") && m.status !== "cancelado" && m.status !== "estornado")
+      .filter(
+        (m) =>
+          (m.kind === "saida" || m.kind === "baixa") &&
+          m.status !== "cancelado" &&
+          m.status !== "estornado",
+      )
       .reduce((a, m) => a + N(m.quantity), 0);
     const usedCost = stockMovs
-      .filter((m) => (m.kind === "saida" || m.kind === "baixa") && m.status !== "cancelado" && m.status !== "estornado")
+      .filter(
+        (m) =>
+          (m.kind === "saida" || m.kind === "baixa") &&
+          m.status !== "cancelado" &&
+          m.status !== "estornado",
+      )
       .reduce((a, m) => a + (N(m.total_cost) || N(m.unit_cost) * N(m.quantity)), 0);
     const totalBalance = Array.from(balance.values()).reduce((a, b) => a + Math.max(0, b), 0);
     const avgPerLecture = doneLectures.length > 0 ? usedQty / doneLectures.length : 0;
@@ -425,7 +440,13 @@ function DashboardPage() {
     // custo por item (materiais)
     const costByItem = new Map<string, number>();
     for (const m of stockMovs) {
-      if (m.status === "cancelado" || m.status === "estornado" || m.kind === "cancelamento" || !m.stock_item_id) continue;
+      if (
+        m.status === "cancelado" ||
+        m.status === "estornado" ||
+        m.kind === "cancelamento" ||
+        !m.stock_item_id
+      )
+        continue;
       if (m.kind !== "saida" && m.kind !== "baixa") continue;
       costByItem.set(
         m.stock_item_id,
@@ -862,20 +883,20 @@ function DashboardPage() {
       <section>
         <div
           className="relative overflow-hidden rounded-3xl p-8 md:p-12"
-          style={{ background: "var(--navy)", color: "var(--navy-foreground)" }}
+          style={{ background: "var(--ink)", color: "var(--ink-foreground)" }}
         >
           <div
             aria-hidden
             className="pointer-events-none absolute -top-32 -right-24 h-80 w-80 rounded-full opacity-25 blur-3xl"
-            style={{ background: "radial-gradient(closest-side, var(--gold), transparent)" }}
+            style={{ background: "radial-gradient(closest-side, var(--clay), transparent)" }}
           />
           <div className="relative">
-            <div className="text-[10px] uppercase tracking-[0.28em] opacity-70">
+            <div className="text-[11px] uppercase tracking-[0.12em] opacity-70">
               Situação da Temporada {activeSeason ? `· ${activeSeason.name}` : ""}
             </div>
             <div className="mt-6 grid gap-8 md:grid-cols-3">
               <div>
-                <div className="text-[10px] uppercase tracking-[0.22em] opacity-60">
+                <div className="text-[11px] uppercase tracking-[0.12em] opacity-60">
                   Receita bruta
                 </div>
                 <div className="mt-3 font-display text-4xl leading-none md:text-5xl">
@@ -883,7 +904,7 @@ function DashboardPage() {
                 </div>
               </div>
               <div>
-                <div className="text-[10px] uppercase tracking-[0.22em] opacity-60">
+                <div className="text-[11px] uppercase tracking-[0.12em] opacity-60">
                   Lucro líquido
                 </div>
                 <div
@@ -894,7 +915,7 @@ function DashboardPage() {
                 </div>
               </div>
               <div>
-                <div className="text-[10px] uppercase tracking-[0.22em] opacity-60">
+                <div className="text-[11px] uppercase tracking-[0.12em] opacity-60">
                   Meta anual atingida
                 </div>
                 <div className="mt-3 font-display text-4xl leading-none md:text-5xl">
@@ -924,8 +945,8 @@ function DashboardPage() {
                 { l: "Pago ao fornecedor", v: BRL.format(season.paidSupplier) },
                 { l: "A receber", v: BRL.format(season.expectedIn) },
               ].map((x) => (
-                <div key={x.l} className="p-4" style={{ background: "var(--navy)" }}>
-                  <div className="text-[9px] uppercase tracking-[0.2em] opacity-60">{x.l}</div>
+                <div key={x.l} className="p-4" style={{ background: "var(--ink)" }}>
+                  <div className="text-[11px] uppercase tracking-[0.12em] opacity-60">{x.l}</div>
                   <div className="mt-2 font-display text-lg tabular-nums">{x.v}</div>
                 </div>
               ))}
@@ -1021,7 +1042,7 @@ function DashboardPage() {
                       </div>
                       <div className="shrink-0 text-right">
                         <div className="font-display text-sm">{fmtDate(l.scheduled_at)}</div>
-                        <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                        <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
                           {lectureStatusLabel(l.status)}
                         </div>
                       </div>

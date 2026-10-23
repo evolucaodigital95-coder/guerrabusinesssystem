@@ -60,7 +60,7 @@ export function SubscriptionGate({ children }: { children: ReactNode }) {
         <h1 className="font-display text-3xl">Seu acesso precisa ser renovado.</h1>
         <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{message}</p>
       </div>
-      <Button asChild variant="navy">
+      <Button asChild variant="brand">
         <Link to="/app/planos">Ver planos</Link>
       </Button>
     </div>
@@ -71,18 +71,15 @@ export function SubscriptionGate({ children }: { children: ReactNode }) {
  * Bloqueio gradual por recurso do plano.
  * Nesta fase os planos liberam tudo por padrão — a estrutura fica pronta.
  */
-export function FeatureGate({
-  feature,
-  children,
-}: {
-  feature: FeatureKey;
-  children: ReactNode;
-}) {
+export function FeatureGate({ feature, children }: { feature: FeatureKey; children: ReactNode }) {
   const { plan, loading } = useSubscriptionAccess();
   const plans = usePlans();
   if (loading || planAllowsFeature(plan, feature)) return <>{children}</>;
   const target = (plans.data ?? []).find(
-    (p) => p.is_active !== false && p.display_order > (plan?.display_order ?? -1) && planAllowsFeature(p, feature),
+    (p) =>
+      p.is_active !== false &&
+      p.display_order > (plan?.display_order ?? -1) &&
+      planAllowsFeature(p, feature),
   );
 
   return (
@@ -93,7 +90,9 @@ export function FeatureGate({
           {FEATURE_LABEL[feature]} não está no seu plano
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          {target ? `Recurso disponível no plano ${target.name}.` : "Este recurso está disponível em outro plano do GBS."}
+          {target
+            ? `Recurso disponível no plano ${target.name}.`
+            : "Este recurso está disponível em outro plano do GBS."}
         </p>
       </div>
       <Button asChild variant="outline" size="sm">

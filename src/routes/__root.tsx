@@ -13,6 +13,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { ThemeProvider } from "@/components/theme-provider";
 import { installCommercialToast } from "@/lib/commercial-toast";
+import { Toaster } from "@/components/ui/sonner";
 
 installCommercialToast();
 
@@ -20,15 +21,15 @@ function NotFoundComponent() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
-        <h1 className="text-7xl font-bold text-foreground">404</h1>
-        <h2 className="mt-4 text-xl font-semibold text-foreground">Página não encontrada</h2>
+        <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-clay">Erro 404</p>
+        <h1 className="mt-4 font-display text-4xl text-foreground">Página não encontrada</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           A página que você está procurando não existe ou foi movida.
         </p>
         <div className="mt-6">
           <Link
             to="/"
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            className="inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
             Voltar ao início
           </Link>
@@ -48,9 +49,7 @@ function ErrorComponent({ error, reset }: import("@tanstack/react-router").Error
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
-        <h1 className="text-xl font-semibold tracking-tight text-foreground">
-          Esta página não carregou
-        </h1>
+        <h1 className="font-display text-3xl text-foreground">Esta página não carregou</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           Algo deu errado. Tente novamente ou volte ao início.
         </p>
@@ -60,13 +59,13 @@ function ErrorComponent({ error, reset }: import("@tanstack/react-router").Error
               router.invalidate();
               reset();
             }}
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            className="inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
             Tentar novamente
           </button>
           <a
             href="/"
-            className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
+            className="inline-flex items-center justify-center rounded-lg border border-input bg-card px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
           >
             Voltar ao início
           </a>
@@ -90,8 +89,16 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:card", content: "summary" },
       { name: "twitter:title", content: "GBS — Guerra Business System" },
       { name: "twitter:description", content: "Sistema empresarial premium do Grupo Guerra." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/316d23f7-21ef-4504-ab3e-d1e2cb79fd12/id-preview-44bf09f5--2d78be84-cb80-45ac-a0e0-aa46d7561260.lovable.app-1781830946508.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/316d23f7-21ef-4504-ab3e-d1e2cb79fd12/id-preview-44bf09f5--2d78be84-cb80-45ac-a0e0-aa46d7561260.lovable.app-1781830946508.png" },
+      {
+        property: "og:image",
+        content:
+          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/316d23f7-21ef-4504-ab3e-d1e2cb79fd12/id-preview-44bf09f5--2d78be84-cb80-45ac-a0e0-aa46d7561260.lovable.app-1781830946508.png",
+      },
+      {
+        name: "twitter:image",
+        content:
+          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/316d23f7-21ef-4504-ab3e-d1e2cb79fd12/id-preview-44bf09f5--2d78be84-cb80-45ac-a0e0-aa46d7561260.lovable.app-1781830946508.png",
+      },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
@@ -100,7 +107,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;1,8..60,400&display=swap",
       },
     ],
   }),
@@ -112,8 +119,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="pt-BR">
+    <html lang="pt-BR" suppressHydrationWarning>
       <head>
+        <script
+          // Aplica o tema salvo antes da hidratação para evitar o "flash" claro.
+          dangerouslySetInnerHTML={{
+            __html:
+              "try{if(localStorage.getItem('gbs-theme')==='dark')document.documentElement.classList.add('dark')}catch(e){}",
+          }}
+        />
         <HeadContent />
       </head>
       <body>
@@ -131,6 +145,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <Outlet />
+        <Toaster position="bottom-right" />
       </ThemeProvider>
     </QueryClientProvider>
   );

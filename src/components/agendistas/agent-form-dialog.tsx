@@ -2,14 +2,23 @@ import { useState, type FormEvent } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
-  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -30,7 +39,11 @@ const PIX_KINDS = ["CPF", "CNPJ", "Telefone", "E-mail", "Aleatória"] as const;
 const STATUS = ["ativo", "inativo"] as const;
 
 export function AgentFormDialog({
-  open, onOpenChange, organizationId, userId, initial,
+  open,
+  onOpenChange,
+  organizationId,
+  userId,
+  initial,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
@@ -75,8 +88,13 @@ export function AgentFormDialog({
     onError: (e) => toast.error(e instanceof Error ? e.message : "Erro"),
   });
 
-  function submit(e: FormEvent) { e.preventDefault(); save.mutate(); }
-  function set<K extends keyof AgentRow>(k: K, v: AgentRow[K]) { setF((p) => ({ ...p, [k]: v })); }
+  function submit(e: FormEvent) {
+    e.preventDefault();
+    save.mutate();
+  }
+  function set<K extends keyof AgentRow>(k: K, v: AgentRow[K]) {
+    setF((p) => ({ ...p, [k]: v }));
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -92,7 +110,11 @@ export function AgentFormDialog({
         <form onSubmit={submit} className="grid grid-cols-1 gap-3 md:grid-cols-2">
           <div className="space-y-1.5 md:col-span-2">
             <Label>Nome *</Label>
-            <Input value={f.full_name ?? ""} onChange={(e) => set("full_name", e.target.value)} required />
+            <Input
+              value={f.full_name ?? ""}
+              onChange={(e) => set("full_name", e.target.value)}
+              required
+            />
           </div>
           <div className="space-y-1.5">
             <Label>Telefone</Label>
@@ -100,27 +122,47 @@ export function AgentFormDialog({
           </div>
           <div className="space-y-1.5">
             <Label>E-mail</Label>
-            <Input type="email" value={f.email ?? ""} onChange={(e) => set("email", e.target.value)} />
+            <Input
+              type="email"
+              value={f.email ?? ""}
+              onChange={(e) => set("email", e.target.value)}
+            />
           </div>
           <div className="space-y-1.5">
             <Label>CPF</Label>
-            <Input value={f.cpf ?? ""} onChange={(e) => set("cpf", e.target.value)} placeholder="opcional" />
+            <Input
+              value={f.cpf ?? ""}
+              onChange={(e) => set("cpf", e.target.value)}
+              placeholder="opcional"
+            />
           </div>
           <div className="space-y-1.5">
             <Label>Status</Label>
             <Select value={f.status ?? "ativo"} onValueChange={(v) => set("status", v)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
-                {STATUS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                {STATUS.map((s) => (
+                  <SelectItem key={s} value={s}>
+                    {s}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-1.5">
             <Label>Tipo PIX</Label>
             <Select value={f.pix_kind ?? "CPF"} onValueChange={(v) => set("pix_kind", v)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
-                {PIX_KINDS.map((k) => <SelectItem key={k} value={k}>{k}</SelectItem>)}
+                {PIX_KINDS.map((k) => (
+                  <SelectItem key={k} value={k}>
+                    {k}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -134,11 +176,17 @@ export function AgentFormDialog({
           </div>
           <div className="space-y-1.5 md:col-span-2">
             <Label>Observações</Label>
-            <Textarea rows={3} value={f.notes ?? ""} onChange={(e) => set("notes", e.target.value)} />
+            <Textarea
+              rows={3}
+              value={f.notes ?? ""}
+              onChange={(e) => set("notes", e.target.value)}
+            />
           </div>
           <DialogFooter className="md:col-span-2">
-            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Cancelar</Button>
-            <Button type="submit" variant="navy" disabled={save.isPending}>
+            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
+              Cancelar
+            </Button>
+            <Button type="submit" variant="brand" disabled={save.isPending}>
               {save.isPending ? "Salvando…" : isEdit ? "Salvar" : "Cadastrar"}
             </Button>
           </DialogFooter>

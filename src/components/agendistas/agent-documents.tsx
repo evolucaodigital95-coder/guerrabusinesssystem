@@ -7,9 +7,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
-  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { useCurrentOrg } from "@/hooks/use-current-org";
@@ -92,12 +103,17 @@ export function AgentDocuments({ agentId, userId }: { agentId: string; userId: s
     },
   });
 
-  const uploaderIds = Array.from(new Set((list.data ?? []).map((d) => d.created_by).filter(Boolean))) as string[];
+  const uploaderIds = Array.from(
+    new Set((list.data ?? []).map((d) => d.created_by).filter(Boolean)),
+  ) as string[];
   const profiles = useQuery({
     queryKey: ["agent-documents-profiles", uploaderIds.join(",")],
     enabled: uploaderIds.length > 0,
     queryFn: async () => {
-      const { data, error } = await supabase.from("profiles").select("id, full_name, email").in("id", uploaderIds);
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id, full_name, email")
+        .in("id", uploaderIds);
       if (error) throw error;
       return data ?? [];
     },
@@ -125,7 +141,7 @@ export function AgentDocuments({ agentId, userId }: { agentId: string; userId: s
     if (!file) return toast.error("Selecione um arquivo.");
     setSaving(true);
     try {
-      const safe = file.name.replace(/[^\w.\-]+/g, "_");
+      const safe = file.name.replace(/[^\w.-]+/g, "_");
       const path = `${organizationId}/agent/${agentId}/documents/${Date.now()}-${safe}`;
       const up = await supabase.storage.from(BUCKET).upload(path, file, {
         contentType: file.type || "application/octet-stream",
@@ -179,7 +195,11 @@ export function AgentDocuments({ agentId, userId }: { agentId: string; userId: s
   async function openFile(row: DocRow, download = false) {
     const { data, error } = await supabase.storage
       .from(BUCKET)
-      .createSignedUrl(row.storage_path, 60, download ? { download: row.file_name ?? true } : undefined);
+      .createSignedUrl(
+        row.storage_path,
+        60,
+        download ? { download: row.file_name ?? true } : undefined,
+      );
     if (error) return toast.error(error.message);
     window.open(data.signedUrl, "_blank");
   }
@@ -191,14 +211,17 @@ export function AgentDocuments({ agentId, userId }: { agentId: string; userId: s
     <section className="space-y-3">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">Camada documental</p>
+          <p className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
+            Camada documental
+          </p>
           <h3 className="mt-1 font-serif text-lg text-foreground">Documentos externos</h3>
           <p className="text-xs text-muted-foreground">
-            Arquivos enviados manualmente para conferência. Não geram lançamentos nem alteram o saldo.
+            Arquivos enviados manualmente para conferência. Não geram lançamentos nem alteram o
+            saldo.
           </p>
         </div>
         {canWrite && (
-          <Button variant="navy" size="sm" className="rounded-full" onClick={() => setOpen(true)}>
+          <Button variant="brand" size="sm" onClick={() => setOpen(true)}>
             <Plus className="mr-1.5 h-4 w-4" /> Adicionar documento
           </Button>
         )}
@@ -208,7 +231,7 @@ export function AgentDocuments({ agentId, userId }: { agentId: string; userId: s
         <div className="overflow-x-auto rounded-2xl border border-border bg-card/40">
           <table className="w-full min-w-[820px] text-sm">
             <thead>
-              <tr className="border-b border-border text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+              <tr className="border-b border-border text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
                 <th className="px-4 py-3 text-left">Documento</th>
                 <th className="px-4 py-3 text-left">Tipo</th>
                 <th className="px-4 py-3 text-left">Período</th>
@@ -226,11 +249,13 @@ export function AgentDocuments({ agentId, userId }: { agentId: string; userId: s
                       <FileText className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
                       <div className="min-w-0">
                         <p className="truncate font-medium text-foreground">{row.title}</p>
-                        <p className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
+                        <p className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
                           {row.file_name ?? "arquivo"} · {humanSize(row.size_bytes)}
                         </p>
                         {row.description && (
-                          <p className="mt-1 max-w-md text-xs text-muted-foreground">{row.description}</p>
+                          <p className="mt-1 max-w-md text-xs text-muted-foreground">
+                            {row.description}
+                          </p>
                         )}
                       </div>
                     </div>
@@ -240,10 +265,14 @@ export function AgentDocuments({ agentId, userId }: { agentId: string; userId: s
                     {row.reference_period ?? (row.doc_date ? formatDate(row.doc_date) : "—")}
                   </td>
                   <td className="px-4 py-3 text-right tabular-nums text-muted-foreground">
-                    {row.reference_amount != null ? formatCurrency(Number(row.reference_amount)) : "—"}
+                    {row.reference_amount != null
+                      ? formatCurrency(Number(row.reference_amount))
+                      : "—"}
                   </td>
                   <td className="px-4 py-3 text-muted-foreground">{formatDate(row.created_at)}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{uploaderName(row.created_by)}</td>
+                  <td className="px-4 py-3 text-muted-foreground">
+                    {uploaderName(row.created_by)}
+                  </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-end gap-1">
                       <Button variant="ghost" size="sm" onClick={() => openFile(row)}>
@@ -295,40 +324,61 @@ export function AgentDocuments({ agentId, userId }: { agentId: string; userId: s
 
           <div className="grid gap-3">
             <div>
-              <Label className="text-[10px] uppercase">Nome do documento</Label>
-              <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Extrato Julho" />
+              <Label className="text-[11px] uppercase">Nome do documento</Label>
+              <Input
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Extrato Julho"
+              />
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
               <div>
-                <Label className="text-[10px] uppercase">Tipo</Label>
+                <Label className="text-[11px] uppercase">Tipo</Label>
                 <Select value={docType} onValueChange={setDocType}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
                   <SelectContent>
                     {AGENT_DOC_TYPES.map((t) => (
-                      <SelectItem key={t.key} value={t.key}>{t.label}</SelectItem>
+                      <SelectItem key={t.key} value={t.key}>
+                        {t.label}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label className="text-[10px] uppercase">Período de referência</Label>
-                <Input value={period} onChange={(e) => setPeriod(e.target.value)} placeholder="Jul/2026" />
+                <Label className="text-[11px] uppercase">Período de referência</Label>
+                <Input
+                  value={period}
+                  onChange={(e) => setPeriod(e.target.value)}
+                  placeholder="Jul/2026"
+                />
               </div>
               <div>
-                <Label className="text-[10px] uppercase">Data</Label>
+                <Label className="text-[11px] uppercase">Data</Label>
                 <Input type="date" value={docDate} onChange={(e) => setDocDate(e.target.value)} />
               </div>
               <div>
-                <Label className="text-[10px] uppercase">Valor de referência (opcional)</Label>
-                <Input inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0,00" />
+                <Label className="text-[11px] uppercase">Valor de referência (opcional)</Label>
+                <Input
+                  inputMode="decimal"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  placeholder="0,00"
+                />
               </div>
             </div>
             <div>
-              <Label className="text-[10px] uppercase">Descrição / observação</Label>
-              <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} />
+              <Label className="text-[11px] uppercase">Descrição / observação</Label>
+              <Textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                rows={3}
+              />
             </div>
             <div>
-              <Label className="text-[10px] uppercase">Arquivo</Label>
+              <Label className="text-[11px] uppercase">Arquivo</Label>
               <Input
                 ref={fileRef}
                 type="file"
@@ -344,10 +394,17 @@ export function AgentDocuments({ agentId, userId }: { agentId: string; userId: s
           </div>
 
           <DialogFooter>
-            <Button variant="outline" disabled={saving} onClick={() => { setOpen(false); reset(); }}>
+            <Button
+              variant="outline"
+              disabled={saving}
+              onClick={() => {
+                setOpen(false);
+                reset();
+              }}
+            >
               Cancelar
             </Button>
-            <Button variant="navy" disabled={saving} onClick={submit}>
+            <Button variant="brand" disabled={saving} onClick={submit}>
               {saving ? "Enviando…" : "Salvar documento"}
             </Button>
           </DialogFooter>

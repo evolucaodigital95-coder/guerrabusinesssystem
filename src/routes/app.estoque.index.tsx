@@ -1,15 +1,17 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import {
-  Plus, Minus, Search, Package, AlertTriangle, Boxes, MapPin, Undo2,
-} from "lucide-react";
+import { Plus, Minus, Search, Package, AlertTriangle, Boxes, MapPin, Undo2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import { PageHeader } from "@/components/page-shell";
 import { ListSkeleton } from "@/components/shared/list-skeleton";
@@ -17,9 +19,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/hooks/use-session";
 import { useCurrentOrg } from "@/hooks/use-current-org";
 import { formatCurrency } from "@/lib/crm";
-import {
-  STOCK_CATEGORIES, STOCK_ITEM_STATUS, calcOnHand,
-} from "@/lib/stock";
+import { STOCK_CATEGORIES, STOCK_ITEM_STATUS, calcOnHand } from "@/lib/stock";
 import { ItemFormDialog } from "@/components/estoque/item-form-dialog";
 import { MovementFormDialog } from "@/components/estoque/movement-form-dialog";
 import { SupplierAccountsTab } from "@/components/estoque/supplier-accounts-tab";
@@ -29,7 +29,11 @@ export const Route = createFileRoute("/app/estoque/")({
   head: () => ({
     meta: [
       { title: "Estoque — GBS" },
-      { name: "description", content: "Materiais, livros, folders, brindes, camisetas, certificados e equipamentos — rastreáveis por lote e movimentação." },
+      {
+        name: "description",
+        content:
+          "Materiais, livros, folders, brindes, camisetas, certificados e equipamentos — rastreáveis por lote e movimentação.",
+      },
     ],
   }),
   component: EstoquePage,
@@ -77,15 +81,17 @@ function EstoquePage() {
     setMvtOpen(true);
   }
 
-
   const items = useQuery({
     queryKey: ["stock-items", organizationId],
     enabled: !!organizationId,
     queryFn: async (): Promise<Item[]> => {
       const { data, error } = await supabase
         .from("stock_items")
-        .select("id, name, sku, category, unit, status, min_quantity, average_cost, purchase_price, supplier, location, photo_url")
-        .eq("organization_id", organizationId!).is("archived_at", null)
+        .select(
+          "id, name, sku, category, unit, status, min_quantity, average_cost, purchase_price, supplier, location, photo_url",
+        )
+        .eq("organization_id", organizationId!)
+        .is("archived_at", null)
         .order("name");
       if (error) throw error;
       return (data ?? []) as Item[];
@@ -99,7 +105,8 @@ function EstoquePage() {
       const { data, error } = await supabase
         .from("stock_movements")
         .select("stock_item_id, kind, direction, status, quantity")
-        .eq("organization_id", organizationId!).is("archived_at", null);
+        .eq("organization_id", organizationId!)
+        .is("archived_at", null);
       if (error) throw error;
       return (data ?? []) as Mvt[];
     },
@@ -122,7 +129,8 @@ function EstoquePage() {
     if (q) {
       list = list.filter((i) =>
         [i.name, i.sku, i.category, i.supplier, i.location]
-          .filter(Boolean).some((v) => String(v).toLowerCase().includes(q)),
+          .filter(Boolean)
+          .some((v) => String(v).toLowerCase().includes(q)),
       );
     }
     return list;
@@ -176,16 +184,28 @@ function EstoquePage() {
         description="Entradas, saídas e uso em palestras — com correção e estorno rastreáveis, sem perder histórico."
         actions={
           <div className="flex flex-wrap gap-2">
-            <Button variant="ghost" className="rounded-full" onClick={() => openMovement("entrada")} disabled={!organizationId}>
+            <Button
+              variant="ghost"
+              onClick={() => openMovement("entrada")}
+              disabled={!organizationId}
+            >
               <Plus className="mr-1.5 h-4 w-4" /> Entrada
             </Button>
-            <Button variant="ghost" className="rounded-full" onClick={() => openMovement("saida_palestra")} disabled={!organizationId}>
+            <Button
+              variant="ghost"
+              onClick={() => openMovement("saida_palestra")}
+              disabled={!organizationId}
+            >
               <Minus className="mr-1.5 h-4 w-4" /> Saída
             </Button>
-            <Button variant="ghost" className="rounded-full" onClick={() => openMovement("devolucao_fornecedor")} disabled={!organizationId}>
+            <Button
+              variant="ghost"
+              onClick={() => openMovement("devolucao_fornecedor")}
+              disabled={!organizationId}
+            >
               <Undo2 className="mr-1.5 h-4 w-4" /> Devolução
             </Button>
-            <Button variant="navy" className="rounded-full" onClick={() => setItemOpen(true)} disabled={!organizationId}>
+            <Button variant="brand" onClick={() => setItemOpen(true)} disabled={!organizationId}>
               <Plus className="mr-1.5 h-4 w-4" /> Novo material
             </Button>
           </div>
@@ -201,37 +221,64 @@ function EstoquePage() {
         <TabsContent value="items" className="space-y-6">
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
             <Summary label="Valor total em estoque" value={formatCurrency(totals.totalValue)} />
-            <Summary label="Materiais disponíveis" value={`${totals.withStock}/${totals.totalItems}`} />
+            <Summary
+              label="Materiais disponíveis"
+              value={`${totals.withStock}/${totals.totalItems}`}
+            />
             <Summary label="Total utilizado (custo)" value={formatCurrency(totals.usedCost)} />
-            <Summary label="Abaixo do mínimo" value={String(totals.lowStock)} highlight={totals.lowStock > 0} />
+            <Summary
+              label="Abaixo do mínimo"
+              value={String(totals.lowStock)}
+              highlight={totals.lowStock > 0}
+            />
             <Summary
               label="Última movimentação"
-              value={totals.lastMovement ? new Date(totals.lastMovement).toLocaleDateString("pt-BR") : "—"}
+              value={
+                totals.lastMovement
+                  ? new Date(totals.lastMovement).toLocaleDateString("pt-BR")
+                  : "—"
+              }
             />
           </div>
-
 
           <div className="rounded-2xl border border-border bg-card/40 p-4">
             <div className="grid gap-3 md:grid-cols-12">
               <div className="relative md:col-span-6">
                 <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-                <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar nome, SKU, fornecedor, localização…" className="rounded-full pl-9" />
+                <Input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Buscar nome, SKU, fornecedor, localização…"
+                  className="rounded-full pl-9"
+                />
               </div>
               <div className="md:col-span-3">
                 <Select value={fCat} onValueChange={setFCat}>
-                  <SelectTrigger className="rounded-full"><SelectValue placeholder="Categoria" /></SelectTrigger>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Categoria" />
+                  </SelectTrigger>
                   <SelectContent>
                     <SelectItem value={ALL}>Todas as categorias</SelectItem>
-                    {STOCK_CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                    {STOCK_CATEGORIES.map((c) => (
+                      <SelectItem key={c} value={c}>
+                        {c}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
               <div className="md:col-span-3">
                 <Select value={fStatus} onValueChange={setFStatus}>
-                  <SelectTrigger className="rounded-full"><SelectValue placeholder="Status" /></SelectTrigger>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
                   <SelectContent>
                     <SelectItem value={ALL}>Todos os status</SelectItem>
-                    {STOCK_ITEM_STATUS.map((s) => <SelectItem key={s.key} value={s.key}>{s.label}</SelectItem>)}
+                    {STOCK_ITEM_STATUS.map((s) => (
+                      <SelectItem key={s.key} value={s.key}>
+                        {s.label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -245,9 +292,16 @@ function EstoquePage() {
               <Boxes className="mx-auto h-7 w-7 text-muted-foreground" />
               <h3 className="mt-3 font-serif text-2xl text-foreground">Nenhum item</h3>
               <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
-                {(items.data?.length ?? 0) > 0 ? "Ajuste os filtros." : "Cadastre o primeiro item do estoque."}
+                {(items.data?.length ?? 0) > 0
+                  ? "Ajuste os filtros."
+                  : "Cadastre o primeiro item do estoque."}
               </p>
-              <Button variant="navy" className="mt-6 rounded-full" onClick={() => setItemOpen(true)} disabled={!organizationId}>
+              <Button
+                variant="brand"
+                className="mt-6"
+                onClick={() => setItemOpen(true)}
+                disabled={!organizationId}
+              >
                 <Plus className="mr-1.5 h-4 w-4" /> Novo item
               </Button>
             </div>
@@ -260,28 +314,38 @@ function EstoquePage() {
                 const noSupplier = !it.supplier;
                 return (
                   <Link
-                    key={it.id} to="/app/estoque/$id" params={{ id: it.id }}
+                    key={it.id}
+                    to="/app/estoque/$id"
+                    params={{ id: it.id }}
                     className="group rounded-2xl border border-border bg-card/40 p-5 transition-all duration-300 hover:-translate-y-0.5 hover:border-foreground/20 hover:bg-card/70 hover:shadow-lg"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
-                        <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
-                          {it.category ?? "Sem categoria"}{it.sku ? ` · ${it.sku}` : ""}
+                        <p className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
+                          {it.category ?? "Sem categoria"}
+                          {it.sku ? ` · ${it.sku}` : ""}
                         </p>
-                        <p className="mt-1 truncate font-serif text-lg text-foreground">{it.name}</p>
+                        <p className="mt-1 truncate font-serif text-lg text-foreground">
+                          {it.name}
+                        </p>
                       </div>
                       <Package className="h-4 w-4 shrink-0 text-muted-foreground" />
                     </div>
 
                     <div className="mt-5 grid grid-cols-3 gap-2">
-                      <Stat label="Em estoque" value={`${b.onHand}${it.unit ? ` ${it.unit}` : ""}`} />
+                      <Stat
+                        label="Em estoque"
+                        value={`${b.onHand}${it.unit ? ` ${it.unit}` : ""}`}
+                      />
                       <Stat label="Reservado" value={`${b.reserved}`} muted />
                       <Stat label="Disponível" value={`${b.available}`} />
                     </div>
 
                     <div className="mt-4 flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground">
                       {it.location && (
-                        <span className="flex items-center gap-1"><MapPin className="h-3 w-3" /> {it.location}</span>
+                        <span className="flex items-center gap-1">
+                          <MapPin className="h-3 w-3" /> {it.location}
+                        </span>
                       )}
                       {it.supplier && <span>· {it.supplier}</span>}
                     </div>
@@ -294,7 +358,9 @@ function EstoquePage() {
                           </Badge>
                         )}
                         {noSupplier && (
-                          <Badge variant="outline" className="text-muted-foreground">Sem fornecedor</Badge>
+                          <Badge variant="outline" className="text-muted-foreground">
+                            Sem fornecedor
+                          </Badge>
                         )}
                       </div>
                     )}
@@ -314,21 +380,44 @@ function EstoquePage() {
         </TabsContent>
       </Tabs>
 
-
       {organizationId && user && (
         <>
-          <ItemFormDialog open={itemOpen} onOpenChange={setItemOpen} organizationId={organizationId} userId={user.id} />
-          <MovementFormDialog key={mvtType} open={mvtOpen} onOpenChange={setMvtOpen} organizationId={organizationId} userId={user.id} defaultType={mvtType} />
+          <ItemFormDialog
+            open={itemOpen}
+            onOpenChange={setItemOpen}
+            organizationId={organizationId}
+            userId={user.id}
+          />
+          <MovementFormDialog
+            key={mvtType}
+            open={mvtOpen}
+            onOpenChange={setMvtOpen}
+            organizationId={organizationId}
+            userId={user.id}
+            defaultType={mvtType}
+          />
         </>
       )}
     </div>
   );
 }
 
-function Summary({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
+function Summary({
+  label,
+  value,
+  highlight,
+}: {
+  label: string;
+  value: string;
+  highlight?: boolean;
+}) {
   return (
-    <div className={`rounded-2xl border ${highlight ? "border-amber-500/40 bg-amber-500/5" : "border-border bg-card/40"} p-5`}>
-      <p className="text-[10px] font-medium uppercase tracking-[0.22em] text-muted-foreground">{label}</p>
+    <div
+      className={`rounded-2xl border ${highlight ? "border-amber-500/40 bg-amber-500/5" : "border-border bg-card/40"} p-5`}
+    >
+      <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
+        {label}
+      </p>
       <p className="mt-3 font-serif text-2xl tabular-nums text-foreground">{value}</p>
     </div>
   );
@@ -337,8 +426,12 @@ function Summary({ label, value, highlight }: { label: string; value: string; hi
 function Stat({ label, value, muted }: { label: string; value: string; muted?: boolean }) {
   return (
     <div className="rounded-xl border border-border/60 bg-background/40 px-3 py-2">
-      <p className="text-[9px] uppercase tracking-[0.2em] text-muted-foreground">{label}</p>
-      <p className={`mt-0.5 font-serif text-base tabular-nums ${muted ? "text-muted-foreground" : "text-foreground"}`}>{value}</p>
+      <p className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">{label}</p>
+      <p
+        className={`mt-0.5 font-serif text-base tabular-nums ${muted ? "text-muted-foreground" : "text-foreground"}`}
+      >
+        {value}
+      </p>
     </div>
   );
 }

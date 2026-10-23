@@ -2,36 +2,52 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
-  ArrowLeft, Pencil, Plus, Minus, Layers, Package, AlertTriangle, MapPin, Truck,
+  ArrowLeft,
+  Pencil,
+  Plus,
+  Minus,
+  Layers,
+  Package,
+  AlertTriangle,
+  MapPin,
+  Truck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui/table";
 import { PageHeader } from "@/components/page-shell";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/hooks/use-session";
 import { useCurrentOrg } from "@/hooks/use-current-org";
 import { formatCurrency, formatDate } from "@/lib/crm";
-import {
-  calcOnHand, isVoidMovement, movementKindLabel, reservationStatusLabel,
-} from "@/lib/stock";
+import { calcOnHand, isVoidMovement, movementKindLabel, reservationStatusLabel } from "@/lib/stock";
 import { ItemFormDialog, type ItemRow } from "@/components/estoque/item-form-dialog";
 import { BatchFormDialog } from "@/components/estoque/batch-form-dialog";
 import { MovementFormDialog } from "@/components/estoque/movement-form-dialog";
-import { MovementEditDialog, type EditableMovement } from "@/components/estoque/movement-edit-dialog";
+import {
+  MovementEditDialog,
+  type EditableMovement,
+} from "@/components/estoque/movement-edit-dialog";
 import { AttachmentsTab } from "@/components/shared/attachments-tab";
 import { NotesTab } from "@/components/shared/notes-tab";
 import { ArchiveButton } from "@/components/shared/archive-button";
-
 
 export const Route = createFileRoute("/app/estoque/$id")({
   head: () => ({
     meta: [
       { title: "Item de estoque — GBS" },
-      { name: "description", content: "Detalhe do item: saldo, lotes, movimentações, anexos e notas." },
+      {
+        name: "description",
+        content: "Detalhe do item: saldo, lotes, movimentações, anexos e notas.",
+      },
     ],
   }),
   component: ItemDetail,
@@ -57,7 +73,6 @@ type Movement = {
   reversal_reason: string | null;
   lectures: { id: string; title: string } | null;
 };
-
 
 type Batch = {
   id: string;
@@ -90,15 +105,17 @@ function ItemDetail() {
   const [mvtType, setMvtType] = useState<"entrada" | "saida_palestra">("entrada");
   const [editingMvt, setEditingMvt] = useState<EditableMovement | null>(null);
 
-
   const item = useQuery({
     queryKey: ["stock-item", id],
     enabled: !!id,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("stock_items")
-        .select("id, name, sku, category, unit, status, min_quantity, average_cost, purchase_price, supplier, location, description, notes, photo_url, organization_id, created_at, updated_at")
-        .eq("id", id).maybeSingle();
+        .select(
+          "id, name, sku, category, unit, status, min_quantity, average_cost, purchase_price, supplier, location, description, notes, photo_url, organization_id, created_at, updated_at",
+        )
+        .eq("id", id)
+        .maybeSingle();
       if (error) throw error;
       return data;
     },
@@ -110,15 +127,18 @@ function ItemDetail() {
     queryFn: async (): Promise<Movement[]> => {
       const { data, error } = await supabase
         .from("stock_movements")
-        .select(`
+        .select(
+          `
           id, kind, direction, status, quantity, unit_cost, total_cost,
           occurs_on, occurs_at, reason, notes,
           batch_id, lecture_id, season_id, project_id,
           reversed_at, reversal_reason,
           lectures:lecture_id ( id, title )
-        `)
+        `,
+        )
 
-        .eq("stock_item_id", id).is("archived_at", null)
+        .eq("stock_item_id", id)
+        .is("archived_at", null)
         .order("occurs_at", { ascending: false, nullsFirst: false })
         .order("created_at", { ascending: false });
       if (error) throw error;
@@ -132,8 +152,11 @@ function ItemDetail() {
     queryFn: async (): Promise<Batch[]> => {
       const { data, error } = await supabase
         .from("inventory_batches")
-        .select("id, code, initial_quantity, quantity, unit_cost, received_on, supplier, proof_url, notes, created_at")
-        .eq("stock_item_id", id).is("archived_at", null)
+        .select(
+          "id, code, initial_quantity, quantity, unit_cost, received_on, supplier, proof_url, notes, created_at",
+        )
+        .eq("stock_item_id", id)
+        .is("archived_at", null)
         .order("received_on", { ascending: false, nullsFirst: false });
       if (error) throw error;
       return (data ?? []) as Batch[];
@@ -156,6 +179,21 @@ function ItemDetail() {
 
   const balance = useMemo(() => calcOnHand(movements.data ?? []), [movements.data]);
 
+  // Palestras vinculadas (reservas + utilizações)
+  const lectureGroups = useMemo(() => {
+    const groups = new Map<string, { title: string; reserved: number; used: number }>();
+    for (const m of movements.data ?? []) {
+      if (!m.lectures) continue;
+      const g = groups.get(m.lectures.id) ?? { title: m.lectures.title, reserved: 0, used: 0 };
+      const q = Number(m.quantity ?? 0);
+      if (isVoidMovement(m.status, m.kind)) continue;
+      if (m.kind === "reserva" && m.status !== "utilizado") g.reserved += q;
+      else if (m.direction === "out") g.used += q;
+      groups.set(m.lectures.id, g);
+    }
+    return Array.from(groups.entries()).map(([id, v]) => ({ id, ...v }));
+  }, [movements.data]);
+
   if (item.isLoading) {
     return <div className="text-sm text-muted-foreground">Carregando…</div>;
   }
@@ -176,40 +214,53 @@ function ItemDetail() {
   const cost = Number(it.average_cost ?? it.purchase_price ?? 0);
   const stockValue = balance.onHand * cost;
 
-  // Palestras vinculadas (reservas + utilizações)
-  const lectureGroups = useMemo(() => {
-    const groups = new Map<string, { title: string; reserved: number; used: number }>();
-    for (const m of movements.data ?? []) {
-      if (!m.lectures) continue;
-      const g = groups.get(m.lectures.id) ?? { title: m.lectures.title, reserved: 0, used: 0 };
-      const q = Number(m.quantity ?? 0);
-      if (isVoidMovement(m.status, m.kind)) continue;
-      if (m.kind === "reserva" && m.status !== "utilizado") g.reserved += q;
-      else if (m.direction === "out") g.used += q;
-      groups.set(m.lectures.id, g);
-    }
-    return Array.from(groups.entries()).map(([id, v]) => ({ id, ...v }));
-  }, [movements.data]);
-
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-3">
-        <Link to="/app/estoque" className="inline-flex items-center text-xs uppercase tracking-[0.2em] text-muted-foreground hover:text-foreground">
+        <Link
+          to="/app/estoque"
+          className="inline-flex items-center text-xs uppercase tracking-[0.12em] text-muted-foreground hover:text-foreground"
+        >
           <ArrowLeft className="mr-1.5 h-3.5 w-3.5" /> Estoque
         </Link>
         <div className="flex flex-wrap justify-end gap-2">
-          <Button variant="ghost" size="sm" className="rounded-full" onClick={() => { setMvtType("entrada"); setMvtOpen(true); }}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              setMvtType("entrada");
+              setMvtOpen(true);
+            }}
+          >
             <Plus className="mr-1.5 h-4 w-4" /> Entrada
           </Button>
-          <Button variant="ghost" size="sm" className="rounded-full" onClick={() => { setMvtType("saida_palestra"); setMvtOpen(true); }}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              setMvtType("saida_palestra");
+              setMvtOpen(true);
+            }}
+          >
             <Minus className="mr-1.5 h-4 w-4" /> Saída
           </Button>
-          <Button variant="ghost" size="sm" className="rounded-full text-muted-foreground" onClick={() => setBatchOpen(true)}>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-muted-foreground"
+            onClick={() => setBatchOpen(true)}
+          >
             <Layers className="mr-1.5 h-4 w-4" /> Lote
           </Button>
 
-          <ArchiveButton table="stock_items" id={id} label="este item" listQueryKey="stock-items" backTo="/app/estoque" />
-          <Button variant="navy" size="sm" className="rounded-full" onClick={() => setEditOpen(true)}>
+          <ArchiveButton
+            table="stock_items"
+            id={id}
+            label="este item"
+            listQueryKey="stock-items"
+            backTo="/app/estoque"
+          />
+          <Button variant="brand" size="sm" onClick={() => setEditOpen(true)}>
             <Pencil className="mr-1.5 h-4 w-4" /> Editar
           </Button>
         </div>
@@ -237,18 +288,40 @@ function ItemDetail() {
             <Field label="Mínimo" value={min ? String(min) : "—"} />
             <Field label="Valor compra" value={formatCurrency(it.purchase_price)} />
             <Field label="Valor médio" value={formatCurrency(it.average_cost)} />
-            <Field label="Fornecedor" value={it.supplier ?? "—"} icon={<Truck className="h-3 w-3" />} />
-            <Field label="Localização" value={it.location ?? "—"} icon={<MapPin className="h-3 w-3" />} />
+            <Field
+              label="Fornecedor"
+              value={it.supplier ?? "—"}
+              icon={<Truck className="h-3 w-3" />}
+            />
+            <Field
+              label="Localização"
+              value={it.location ?? "—"}
+              icon={<MapPin className="h-3 w-3" />}
+            />
           </dl>
         </div>
 
         <div className="lg:col-span-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 self-start">
-          <BigStat label="Em estoque" value={`${balance.onHand}${it.unit ? ` ${it.unit}` : ""}`} highlight={low} />
+          <BigStat
+            label="Em estoque"
+            value={`${balance.onHand}${it.unit ? ` ${it.unit}` : ""}`}
+            highlight={low}
+          />
           <BigStat label="Reservado" value={String(balance.reserved)} muted />
           <BigStat label="Disponível" value={String(balance.available)} />
-          <BigStat label="Total comprado" value={`${Number(metrics.data?.total_purchased ?? 0)}${it.unit ? ` ${it.unit}` : ""}`} />
-          <BigStat label="Total utilizado" value={`${Number(metrics.data?.total_used ?? 0)}${it.unit ? ` ${it.unit}` : ""}`} />
-          <BigStat label="Última movimentação" value={metrics.data?.last_movement_at ? formatDate(metrics.data.last_movement_at) : "—"} muted />
+          <BigStat
+            label="Total comprado"
+            value={`${Number(metrics.data?.total_purchased ?? 0)}${it.unit ? ` ${it.unit}` : ""}`}
+          />
+          <BigStat
+            label="Total utilizado"
+            value={`${Number(metrics.data?.total_used ?? 0)}${it.unit ? ` ${it.unit}` : ""}`}
+          />
+          <BigStat
+            label="Última movimentação"
+            value={metrics.data?.last_movement_at ? formatDate(metrics.data.last_movement_at) : "—"}
+            muted
+          />
           <BigStat label="Lotes ativos" value={String((batches.data ?? []).length)} muted />
           <BigStat label="Movimentações" value={String((movements.data ?? []).length)} muted />
           <BigStat label="Valor em estoque" value={formatCurrency(stockValue)} />
@@ -261,10 +334,14 @@ function ItemDetail() {
                 </Badge>
               )}
               {!it.supplier && (
-                <Badge variant="outline" className="text-muted-foreground">Sem fornecedor padrão</Badge>
+                <Badge variant="outline" className="text-muted-foreground">
+                  Sem fornecedor padrão
+                </Badge>
               )}
               {(movements.data ?? []).length === 0 && (
-                <Badge variant="outline" className="text-muted-foreground">Sem movimentação</Badge>
+                <Badge variant="outline" className="text-muted-foreground">
+                  Sem movimentação
+                </Badge>
               )}
             </div>
           )}
@@ -282,7 +359,10 @@ function ItemDetail() {
 
         <TabsContent value="movimentos">
           {(movements.data ?? []).length === 0 ? (
-            <Empty title="Nenhuma movimentação" hint="Registre uma entrada, saída ou reserva para iniciar o histórico." />
+            <Empty
+              title="Nenhuma movimentação"
+              hint="Registre uma entrada, saída ou reserva para iniciar o histórico."
+            />
           ) : (
             <div className="overflow-hidden rounded-2xl border border-border bg-card/40">
               <Table>
@@ -305,21 +385,42 @@ function ItemDetail() {
                         <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
                           {m.occurs_at ? formatDate(m.occurs_at) : formatDate(m.occurs_on)}
                         </TableCell>
-                        <TableCell><Badge variant="outline" className="font-normal">{movementKindLabel(m.kind)}</Badge></TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className="font-normal">
+                            {movementKindLabel(m.kind)}
+                          </Badge>
+                        </TableCell>
                         <TableCell className="tabular-nums">
-                          <span className={voided ? "line-through text-muted-foreground" : m.direction === "in" ? "text-emerald-300" : "text-foreground"}>
-                            {m.direction === "in" ? "+" : "−"}{m.quantity}
+                          <span
+                            className={
+                              voided
+                                ? "line-through text-muted-foreground"
+                                : m.direction === "in"
+                                  ? "text-emerald-300"
+                                  : "text-foreground"
+                            }
+                          >
+                            {m.direction === "in" ? "+" : "−"}
+                            {m.quantity}
                           </span>
                         </TableCell>
-                        <TableCell className={`text-xs ${voided ? "line-through text-muted-foreground" : ""}`}>
+                        <TableCell
+                          className={`text-xs ${voided ? "line-through text-muted-foreground" : ""}`}
+                        >
                           {formatCurrency(m.total_cost)}
                         </TableCell>
                         <TableCell className="text-xs">
                           {m.lectures ? (
-                            <Link to="/app/palestras/$id" params={{ id: m.lectures.id }} className="hover:underline">
+                            <Link
+                              to="/app/palestras/$id"
+                              params={{ id: m.lectures.id }}
+                              className="hover:underline"
+                            >
                               {m.lectures.title}
                             </Link>
-                          ) : (m.reason ?? "—")}
+                          ) : (
+                            (m.reason ?? "—")
+                          )}
                         </TableCell>
                         <TableCell className="text-xs text-muted-foreground">
                           {reservationStatusLabel(m.status)}
@@ -331,8 +432,10 @@ function ItemDetail() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-7 rounded-full px-2 text-xs text-muted-foreground"
-                            onClick={() => setEditingMvt({ ...m, stock_item_id: id } as EditableMovement)}
+                            className="h-7 px-2 text-xs text-muted-foreground"
+                            onClick={() =>
+                              setEditingMvt({ ...m, stock_item_id: id } as EditableMovement)
+                            }
                           >
                             <Pencil className="mr-1 h-3 w-3" /> {voided ? "Ver" : "Corrigir"}
                           </Button>
@@ -342,7 +445,6 @@ function ItemDetail() {
                   })}
                 </TableBody>
               </Table>
-
             </div>
           )}
         </TabsContent>
@@ -366,9 +468,15 @@ function ItemDetail() {
                 <TableBody>
                   {(batches.data ?? []).map((b) => (
                     <TableRow key={b.id}>
-                      <TableCell className="whitespace-nowrap text-xs text-muted-foreground">{formatDate(b.received_on)}</TableCell>
-                      <TableCell className="font-mono text-xs">{b.code ?? b.id.slice(0, 8)}</TableCell>
-                      <TableCell className="tabular-nums">{b.initial_quantity ?? b.quantity ?? "—"}</TableCell>
+                      <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
+                        {formatDate(b.received_on)}
+                      </TableCell>
+                      <TableCell className="font-mono text-xs">
+                        {b.code ?? b.id.slice(0, 8)}
+                      </TableCell>
+                      <TableCell className="tabular-nums">
+                        {b.initial_quantity ?? b.quantity ?? "—"}
+                      </TableCell>
                       <TableCell className="tabular-nums">{b.quantity ?? "—"}</TableCell>
                       <TableCell className="text-xs">{formatCurrency(b.unit_cost)}</TableCell>
                       <TableCell className="text-xs">{b.supplier ?? "—"}</TableCell>
@@ -382,15 +490,32 @@ function ItemDetail() {
 
         <TabsContent value="palestras">
           {lectureGroups.length === 0 ? (
-            <Empty title="Nenhuma palestra vinculada" hint="Reserve ou utilize este item em uma palestra para vê-la aqui." />
+            <Empty
+              title="Nenhuma palestra vinculada"
+              hint="Reserve ou utilize este item em uma palestra para vê-la aqui."
+            />
           ) : (
             <ul className="space-y-2">
               {lectureGroups.map((g) => (
-                <li key={g.id} className="flex items-center justify-between rounded-2xl border border-border bg-card/40 px-5 py-4">
-                  <Link to="/app/palestras/$id" params={{ id: g.id }} className="font-medium hover:underline">{g.title}</Link>
+                <li
+                  key={g.id}
+                  className="flex items-center justify-between rounded-2xl border border-border bg-card/40 px-5 py-4"
+                >
+                  <Link
+                    to="/app/palestras/$id"
+                    params={{ id: g.id }}
+                    className="font-medium hover:underline"
+                  >
+                    {g.title}
+                  </Link>
                   <div className="flex gap-4 text-xs text-muted-foreground">
-                    <span>Reservado <strong className="text-foreground tabular-nums">{g.reserved}</strong></span>
-                    <span>Utilizado <strong className="text-foreground tabular-nums">{g.used}</strong></span>
+                    <span>
+                      Reservado{" "}
+                      <strong className="text-foreground tabular-nums">{g.reserved}</strong>
+                    </span>
+                    <span>
+                      Utilizado <strong className="text-foreground tabular-nums">{g.used}</strong>
+                    </span>
                   </div>
                 </li>
               ))}
@@ -424,28 +549,36 @@ function ItemDetail() {
       {organizationId && user && (
         <>
           <ItemFormDialog
-            open={editOpen} onOpenChange={setEditOpen}
-            organizationId={organizationId} userId={user.id}
+            open={editOpen}
+            onOpenChange={setEditOpen}
+            organizationId={organizationId}
+            userId={user.id}
             initial={it as ItemRow}
           />
           <BatchFormDialog
-            open={batchOpen} onOpenChange={setBatchOpen}
-            organizationId={organizationId} userId={user.id}
+            open={batchOpen}
+            onOpenChange={setBatchOpen}
+            organizationId={organizationId}
+            userId={user.id}
             stockItemId={id}
           />
           <MovementFormDialog
             key={mvtType}
-            open={mvtOpen} onOpenChange={setMvtOpen}
-            organizationId={organizationId} userId={user.id}
-            stockItemId={id} lockedItem defaultType={mvtType}
+            open={mvtOpen}
+            onOpenChange={setMvtOpen}
+            organizationId={organizationId}
+            userId={user.id}
+            stockItemId={id}
+            lockedItem
+            defaultType={mvtType}
           />
           <MovementEditDialog
             open={!!editingMvt}
             onOpenChange={(v) => !v && setEditingMvt(null)}
-            organizationId={organizationId} userId={user.id}
+            organizationId={organizationId}
+            userId={user.id}
             movement={editingMvt}
           />
-
         </>
       )}
     </div>
@@ -455,17 +588,38 @@ function ItemDetail() {
 function Field({ label, value, icon }: { label: string; value: string; icon?: React.ReactNode }) {
   return (
     <div>
-      <dt className="text-[9px] uppercase tracking-[0.2em] text-muted-foreground">{label}</dt>
-      <dd className="mt-0.5 flex items-center gap-1.5 text-foreground">{icon}{value}</dd>
+      <dt className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">{label}</dt>
+      <dd className="mt-0.5 flex items-center gap-1.5 text-foreground">
+        {icon}
+        {value}
+      </dd>
     </div>
   );
 }
 
-function BigStat({ label, value, muted, highlight }: { label: string; value: string; muted?: boolean; highlight?: boolean }) {
+function BigStat({
+  label,
+  value,
+  muted,
+  highlight,
+}: {
+  label: string;
+  value: string;
+  muted?: boolean;
+  highlight?: boolean;
+}) {
   return (
-    <div className={`rounded-2xl border ${highlight ? "border-amber-500/40 bg-amber-500/5" : "border-border bg-card/40"} p-5`}>
-      <p className="text-[10px] font-medium uppercase tracking-[0.22em] text-muted-foreground">{label}</p>
-      <p className={`mt-3 font-serif text-2xl tabular-nums ${muted ? "text-muted-foreground" : "text-foreground"}`}>{value}</p>
+    <div
+      className={`rounded-2xl border ${highlight ? "border-amber-500/40 bg-amber-500/5" : "border-border bg-card/40"} p-5`}
+    >
+      <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
+        {label}
+      </p>
+      <p
+        className={`mt-3 font-serif text-2xl tabular-nums ${muted ? "text-muted-foreground" : "text-foreground"}`}
+      >
+        {value}
+      </p>
     </div>
   );
 }

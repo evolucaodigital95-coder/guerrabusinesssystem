@@ -19,7 +19,6 @@ import { Route as AdminAuditoriaRouteImport } from './routes/admin.auditoria'
 import { Route as AdminPlanosRouteImport } from './routes/admin.planos'
 import { Route as AppIndexRouteImport } from './routes/app.index'
 import { Route as AppAgendaRouteImport } from './routes/app.agenda'
-import { Route as AppAuditoriaRouteImport } from './routes/app.auditoria'
 import { Route as AppAutomacoesRouteImport } from './routes/app.automacoes'
 import { Route as AppBibliotecaRouteImport } from './routes/app.biblioteca'
 import { Route as AppBuscaRouteImport } from './routes/app.busca'
@@ -28,7 +27,6 @@ import { Route as AppConfiguracoesRouteImport } from './routes/app.configuracoes
 import { Route as AppDashboardRouteImport } from './routes/app.dashboard'
 import { Route as AppFinanceiroRouteImport } from './routes/app.financeiro'
 import { Route as AppHojeRouteImport } from './routes/app.hoje'
-import { Route as AppIaGuerraRouteImport } from './routes/app.ia-guerra'
 import { Route as AppInteligenciaRouteImport } from './routes/app.inteligencia'
 import { Route as AppMetasRouteImport } from './routes/app.metas'
 import { Route as AppMinhaContaRouteImport } from './routes/app.minha-conta'
@@ -36,7 +34,6 @@ import { Route as AppOnboardingRouteImport } from './routes/app.onboarding'
 import { Route as AppOrganizacaoRouteImport } from './routes/app.organizacao'
 import { Route as AppPendenciasRouteImport } from './routes/app.pendencias'
 import { Route as AppPlanosRouteImport } from './routes/app.planos'
-import { Route as AppRoadmapRouteImport } from './routes/app.roadmap'
 import { Route as AdminClientesIndexRouteImport } from './routes/admin.clientes.index'
 import { Route as AdminClientesIdRouteImport } from './routes/admin.clientes.$id'
 import { Route as AppAgendistasIndexRouteImport } from './routes/app.agendistas.index'
@@ -104,11 +101,6 @@ const AppAgendaRoute = AppAgendaRouteImport.update({
   path: '/agenda',
   getParentRoute: () => AppRoute,
 } as any)
-const AppAuditoriaRoute = AppAuditoriaRouteImport.update({
-  id: '/auditoria',
-  path: '/auditoria',
-  getParentRoute: () => AppRoute,
-} as any)
 const AppAutomacoesRoute = AppAutomacoesRouteImport.update({
   id: '/automacoes',
   path: '/automacoes',
@@ -149,11 +141,6 @@ const AppHojeRoute = AppHojeRouteImport.update({
   path: '/hoje',
   getParentRoute: () => AppRoute,
 } as any)
-const AppIaGuerraRoute = AppIaGuerraRouteImport.update({
-  id: '/ia-guerra',
-  path: '/ia-guerra',
-  getParentRoute: () => AppRoute,
-} as any)
 const AppInteligenciaRoute = AppInteligenciaRouteImport.update({
   id: '/inteligencia',
   path: '/inteligencia',
@@ -187,11 +174,6 @@ const AppPendenciasRoute = AppPendenciasRouteImport.update({
 const AppPlanosRoute = AppPlanosRouteImport.update({
   id: '/planos',
   path: '/planos',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppRoadmapRoute = AppRoadmapRouteImport.update({
-  id: '/roadmap',
-  path: '/roadmap',
   getParentRoute: () => AppRoute,
 } as any)
 const AdminClientesIndexRoute = AdminClientesIndexRouteImport.update({
@@ -284,7 +266,6 @@ export interface FileRoutesByFullPath {
   '/admin/auditoria': typeof AdminAuditoriaRoute
   '/admin/planos': typeof AdminPlanosRoute
   '/app/agenda': typeof AppAgendaRoute
-  '/app/auditoria': typeof AppAuditoriaRoute
   '/app/automacoes': typeof AppAutomacoesRoute
   '/app/biblioteca': typeof AppBibliotecaRoute
   '/app/busca': typeof AppBuscaRoute
@@ -293,7 +274,6 @@ export interface FileRoutesByFullPath {
   '/app/dashboard': typeof AppDashboardRoute
   '/app/financeiro': typeof AppFinanceiroRoute
   '/app/hoje': typeof AppHojeRoute
-  '/app/ia-guerra': typeof AppIaGuerraRoute
   '/app/inteligencia': typeof AppInteligenciaRoute
   '/app/metas': typeof AppMetasRoute
   '/app/minha-conta': typeof AppMinhaContaRoute
@@ -301,7 +281,6 @@ export interface FileRoutesByFullPath {
   '/app/organizacao': typeof AppOrganizacaoRoute
   '/app/pendencias': typeof AppPendenciasRoute
   '/app/planos': typeof AppPlanosRoute
-  '/app/roadmap': typeof AppRoadmapRoute
   '/admin/': typeof AdminIndexRoute
   '/app/': typeof AppIndexRoute
   '/admin/clientes/$id': typeof AdminClientesIdRoute
@@ -328,7 +307,6 @@ export interface FileRoutesByTo {
   '/admin/auditoria': typeof AdminAuditoriaRoute
   '/admin/planos': typeof AdminPlanosRoute
   '/app/agenda': typeof AppAgendaRoute
-  '/app/auditoria': typeof AppAuditoriaRoute
   '/app/automacoes': typeof AppAutomacoesRoute
   '/app/biblioteca': typeof AppBibliotecaRoute
   '/app/busca': typeof AppBuscaRoute
@@ -337,7 +315,6 @@ export interface FileRoutesByTo {
   '/app/dashboard': typeof AppDashboardRoute
   '/app/financeiro': typeof AppFinanceiroRoute
   '/app/hoje': typeof AppHojeRoute
-  '/app/ia-guerra': typeof AppIaGuerraRoute
   '/app/inteligencia': typeof AppInteligenciaRoute
   '/app/metas': typeof AppMetasRoute
   '/app/minha-conta': typeof AppMinhaContaRoute
@@ -345,7 +322,6 @@ export interface FileRoutesByTo {
   '/app/organizacao': typeof AppOrganizacaoRoute
   '/app/pendencias': typeof AppPendenciasRoute
   '/app/planos': typeof AppPlanosRoute
-  '/app/roadmap': typeof AppRoadmapRoute
   '/admin': typeof AdminIndexRoute
   '/app': typeof AppIndexRoute
   '/admin/clientes/$id': typeof AdminClientesIdRoute
@@ -375,7 +351,6 @@ export interface FileRoutesById {
   '/admin/auditoria': typeof AdminAuditoriaRoute
   '/admin/planos': typeof AdminPlanosRoute
   '/app/agenda': typeof AppAgendaRoute
-  '/app/auditoria': typeof AppAuditoriaRoute
   '/app/automacoes': typeof AppAutomacoesRoute
   '/app/biblioteca': typeof AppBibliotecaRoute
   '/app/busca': typeof AppBuscaRoute
@@ -384,7 +359,6 @@ export interface FileRoutesById {
   '/app/dashboard': typeof AppDashboardRoute
   '/app/financeiro': typeof AppFinanceiroRoute
   '/app/hoje': typeof AppHojeRoute
-  '/app/ia-guerra': typeof AppIaGuerraRoute
   '/app/inteligencia': typeof AppInteligenciaRoute
   '/app/metas': typeof AppMetasRoute
   '/app/minha-conta': typeof AppMinhaContaRoute
@@ -392,7 +366,6 @@ export interface FileRoutesById {
   '/app/organizacao': typeof AppOrganizacaoRoute
   '/app/pendencias': typeof AppPendenciasRoute
   '/app/planos': typeof AppPlanosRoute
-  '/app/roadmap': typeof AppRoadmapRoute
   '/admin/': typeof AdminIndexRoute
   '/app/': typeof AppIndexRoute
   '/admin/clientes/$id': typeof AdminClientesIdRoute
@@ -423,7 +396,6 @@ export interface FileRouteTypes {
     | '/admin/auditoria'
     | '/admin/planos'
     | '/app/agenda'
-    | '/app/auditoria'
     | '/app/automacoes'
     | '/app/biblioteca'
     | '/app/busca'
@@ -432,7 +404,6 @@ export interface FileRouteTypes {
     | '/app/dashboard'
     | '/app/financeiro'
     | '/app/hoje'
-    | '/app/ia-guerra'
     | '/app/inteligencia'
     | '/app/metas'
     | '/app/minha-conta'
@@ -440,7 +411,6 @@ export interface FileRouteTypes {
     | '/app/organizacao'
     | '/app/pendencias'
     | '/app/planos'
-    | '/app/roadmap'
     | '/admin/'
     | '/app/'
     | '/admin/clientes/$id'
@@ -467,7 +437,6 @@ export interface FileRouteTypes {
     | '/admin/auditoria'
     | '/admin/planos'
     | '/app/agenda'
-    | '/app/auditoria'
     | '/app/automacoes'
     | '/app/biblioteca'
     | '/app/busca'
@@ -476,7 +445,6 @@ export interface FileRouteTypes {
     | '/app/dashboard'
     | '/app/financeiro'
     | '/app/hoje'
-    | '/app/ia-guerra'
     | '/app/inteligencia'
     | '/app/metas'
     | '/app/minha-conta'
@@ -484,7 +452,6 @@ export interface FileRouteTypes {
     | '/app/organizacao'
     | '/app/pendencias'
     | '/app/planos'
-    | '/app/roadmap'
     | '/admin'
     | '/app'
     | '/admin/clientes/$id'
@@ -513,7 +480,6 @@ export interface FileRouteTypes {
     | '/admin/auditoria'
     | '/admin/planos'
     | '/app/agenda'
-    | '/app/auditoria'
     | '/app/automacoes'
     | '/app/biblioteca'
     | '/app/busca'
@@ -522,7 +488,6 @@ export interface FileRouteTypes {
     | '/app/dashboard'
     | '/app/financeiro'
     | '/app/hoje'
-    | '/app/ia-guerra'
     | '/app/inteligencia'
     | '/app/metas'
     | '/app/minha-conta'
@@ -530,7 +495,6 @@ export interface FileRouteTypes {
     | '/app/organizacao'
     | '/app/pendencias'
     | '/app/planos'
-    | '/app/roadmap'
     | '/admin/'
     | '/app/'
     | '/admin/clientes/$id'
@@ -631,13 +595,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAgendaRouteImport
       parentRoute: typeof AppRoute
     }
-    '/app/auditoria': {
-      id: '/app/auditoria'
-      path: '/auditoria'
-      fullPath: '/app/auditoria'
-      preLoaderRoute: typeof AppAuditoriaRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/app/automacoes': {
       id: '/app/automacoes'
       path: '/automacoes'
@@ -694,13 +651,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppHojeRouteImport
       parentRoute: typeof AppRoute
     }
-    '/app/ia-guerra': {
-      id: '/app/ia-guerra'
-      path: '/ia-guerra'
-      fullPath: '/app/ia-guerra'
-      preLoaderRoute: typeof AppIaGuerraRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/app/inteligencia': {
       id: '/app/inteligencia'
       path: '/inteligencia'
@@ -748,13 +698,6 @@ declare module '@tanstack/react-router' {
       path: '/planos'
       fullPath: '/app/planos'
       preLoaderRoute: typeof AppPlanosRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/roadmap': {
-      id: '/app/roadmap'
-      path: '/roadmap'
-      fullPath: '/app/roadmap'
-      preLoaderRoute: typeof AppRoadmapRouteImport
       parentRoute: typeof AppRoute
     }
     '/admin/clientes/': {
@@ -892,7 +835,6 @@ const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
 interface AppRouteChildren {
   AppAgendaRoute: typeof AppAgendaRoute
-  AppAuditoriaRoute: typeof AppAuditoriaRoute
   AppAutomacoesRoute: typeof AppAutomacoesRoute
   AppBibliotecaRoute: typeof AppBibliotecaRoute
   AppBuscaRoute: typeof AppBuscaRoute
@@ -901,7 +843,6 @@ interface AppRouteChildren {
   AppDashboardRoute: typeof AppDashboardRoute
   AppFinanceiroRoute: typeof AppFinanceiroRoute
   AppHojeRoute: typeof AppHojeRoute
-  AppIaGuerraRoute: typeof AppIaGuerraRoute
   AppInteligenciaRoute: typeof AppInteligenciaRoute
   AppMetasRoute: typeof AppMetasRoute
   AppMinhaContaRoute: typeof AppMinhaContaRoute
@@ -909,7 +850,6 @@ interface AppRouteChildren {
   AppOrganizacaoRoute: typeof AppOrganizacaoRoute
   AppPendenciasRoute: typeof AppPendenciasRoute
   AppPlanosRoute: typeof AppPlanosRoute
-  AppRoadmapRoute: typeof AppRoadmapRoute
   AppIndexRoute: typeof AppIndexRoute
   AppAgendistasIdRoute: typeof AppAgendistasIdRoute
   AppCampanhasIdRoute: typeof AppCampanhasIdRoute
@@ -929,7 +869,6 @@ interface AppRouteChildren {
 
 const AppRouteChildren: AppRouteChildren = {
   AppAgendaRoute: AppAgendaRoute,
-  AppAuditoriaRoute: AppAuditoriaRoute,
   AppAutomacoesRoute: AppAutomacoesRoute,
   AppBibliotecaRoute: AppBibliotecaRoute,
   AppBuscaRoute: AppBuscaRoute,
@@ -938,7 +877,6 @@ const AppRouteChildren: AppRouteChildren = {
   AppDashboardRoute: AppDashboardRoute,
   AppFinanceiroRoute: AppFinanceiroRoute,
   AppHojeRoute: AppHojeRoute,
-  AppIaGuerraRoute: AppIaGuerraRoute,
   AppInteligenciaRoute: AppInteligenciaRoute,
   AppMetasRoute: AppMetasRoute,
   AppMinhaContaRoute: AppMinhaContaRoute,
@@ -946,7 +884,6 @@ const AppRouteChildren: AppRouteChildren = {
   AppOrganizacaoRoute: AppOrganizacaoRoute,
   AppPendenciasRoute: AppPendenciasRoute,
   AppPlanosRoute: AppPlanosRoute,
-  AppRoadmapRoute: AppRoadmapRoute,
   AppIndexRoute: AppIndexRoute,
   AppAgendistasIdRoute: AppAgendistasIdRoute,
   AppCampanhasIdRoute: AppCampanhasIdRoute,

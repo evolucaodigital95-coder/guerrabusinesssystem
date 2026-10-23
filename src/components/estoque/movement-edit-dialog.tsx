@@ -3,14 +3,23 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Undo2 } from "lucide-react";
 import {
-  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useAutomation } from "@/hooks/use-automation";
@@ -43,7 +52,11 @@ const NONE = "__none__";
  *   a quantidade ao estoque e removendo o custo dos cálculos da palestra.
  */
 export function MovementEditDialog({
-  open, onOpenChange, organizationId, userId, movement,
+  open,
+  onOpenChange,
+  organizationId,
+  userId,
+  movement,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
@@ -81,8 +94,10 @@ export function MovementEditDialog({
     enabled: open && !!organizationId,
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("lectures").select("id, title, scheduled_at")
-        .eq("organization_id", organizationId).is("archived_at", null)
+        .from("lectures")
+        .select("id, title, scheduled_at")
+        .eq("organization_id", organizationId)
+        .is("archived_at", null)
         .order("scheduled_at", { ascending: false, nullsFirst: false });
       if (error) throw error;
       return data ?? [];
@@ -197,25 +212,41 @@ export function MovementEditDialog({
             Corrigir movimentação · {movementKindLabel(movement?.kind)}
           </DialogTitle>
           <DialogDescription>
-            Nada é apagado. Toda correção guarda valor anterior, valor novo, usuário e data.
-            Se a movimentação foi lançada por engano, use <strong>Estornar</strong>.
+            Nada é apagado. Toda correção guarda valor anterior, valor novo, usuário e data. Se a
+            movimentação foi lançada por engano, use <strong>Estornar</strong>.
           </DialogDescription>
         </DialogHeader>
 
         {isReversed ? (
           <div className="rounded-xl border border-amber-500/40 bg-amber-500/5 p-4 text-sm text-amber-300">
-            Esta movimentação está <strong>estornada</strong> e não afeta mais estoque, custo ou palestra.
+            Esta movimentação está <strong>estornada</strong> e não afeta mais estoque, custo ou
+            palestra.
           </div>
         ) : (
           <form onSubmit={submit} className="grid grid-cols-1 gap-3 md:grid-cols-2">
             <div className="space-y-1.5">
               <Label>Quantidade *</Label>
-              <Input type="number" step="0.001" min="0" value={qty} onChange={(e) => setQty(e.target.value)} required />
+              <Input
+                type="number"
+                step="0.001"
+                min="0"
+                value={qty}
+                onChange={(e) => setQty(e.target.value)}
+                required
+              />
             </div>
             <div className="space-y-1.5">
               <Label>Custo unitário</Label>
-              <Input type="number" step="0.01" min="0" value={unitCost} onChange={(e) => setUnitCost(e.target.value)} />
-              <p className="text-[11px] text-muted-foreground">Novo total: {formatCurrency(newTotal)}</p>
+              <Input
+                type="number"
+                step="0.01"
+                min="0"
+                value={unitCost}
+                onChange={(e) => setUnitCost(e.target.value)}
+              />
+              <p className="text-[11px] text-muted-foreground">
+                Novo total: {formatCurrency(newTotal)}
+              </p>
             </div>
             <div className="space-y-1.5">
               <Label>Data</Label>
@@ -223,27 +254,40 @@ export function MovementEditDialog({
             </div>
             <div className="space-y-1.5">
               <Label>Palestra vinculada</Label>
-              <Select value={lectureId ?? NONE} onValueChange={(v) => setLectureId(v === NONE ? null : v)}>
-                <SelectTrigger><SelectValue placeholder="Nenhuma" /></SelectTrigger>
+              <Select
+                value={lectureId ?? NONE}
+                onValueChange={(v) => setLectureId(v === NONE ? null : v)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Nenhuma" />
+                </SelectTrigger>
                 <SelectContent>
                   <SelectItem value={NONE}>Nenhuma</SelectItem>
                   {(lectures.data ?? []).map((l) => (
-                    <SelectItem key={l.id} value={l.id}>{l.title}</SelectItem>
+                    <SelectItem key={l.id} value={l.id}>
+                      {l.title}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1.5 md:col-span-2">
               <Label>Motivo</Label>
-              <Input value={reason} onChange={(e) => setReason(e.target.value)} placeholder={dir === "in" ? "Fornecedor / origem" : "Motivo da saída"} />
+              <Input
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+                placeholder={dir === "in" ? "Fornecedor / origem" : "Motivo da saída"}
+              />
             </div>
             <div className="space-y-1.5 md:col-span-2">
               <Label>Observações</Label>
               <Textarea rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} />
             </div>
             <DialogFooter className="md:col-span-2">
-              <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Cancelar</Button>
-              <Button type="submit" variant="navy" disabled={save.isPending}>
+              <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
+                Cancelar
+              </Button>
+              <Button type="submit" variant="brand" disabled={save.isPending}>
                 {save.isPending ? "Salvando…" : "Salvar correção"}
               </Button>
             </DialogFooter>
@@ -253,19 +297,41 @@ export function MovementEditDialog({
         {!isReversed && (
           <div className="mt-2 rounded-xl border border-border bg-background/40 p-4">
             {!confirmReverse ? (
-              <Button type="button" variant="ghost" className="text-muted-foreground" onClick={() => setConfirmReverse(true)}>
+              <Button
+                type="button"
+                variant="ghost"
+                className="text-muted-foreground"
+                onClick={() => setConfirmReverse(true)}
+              >
                 <Undo2 className="mr-1.5 h-4 w-4" /> Estornar movimentação
               </Button>
             ) : (
               <div className="space-y-2">
                 <Label>Motivo do estorno *</Label>
-                <Input value={reversalReason} onChange={(e) => setReversalReason(e.target.value)} placeholder="Ex.: lançamento em duplicidade" />
+                <Input
+                  value={reversalReason}
+                  onChange={(e) => setReversalReason(e.target.value)}
+                  placeholder="Ex.: lançamento em duplicidade"
+                />
                 <p className="text-[11px] text-muted-foreground">
-                  A quantidade volta ao estoque e o custo deixa de impactar a palestra. O registro permanece marcado como ESTORNADA.
+                  A quantidade volta ao estoque e o custo deixa de impactar a palestra. O registro
+                  permanece marcado como ESTORNADA.
                 </p>
                 <div className="flex gap-2">
-                  <Button type="button" variant="ghost" size="sm" onClick={() => setConfirmReverse(false)}>Cancelar</Button>
-                  <Button type="button" size="sm" disabled={reverse.isPending} onClick={() => reverse.mutate()}>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setConfirmReverse(false)}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    disabled={reverse.isPending}
+                    onClick={() => reverse.mutate()}
+                  >
                     {reverse.isPending ? "Estornando…" : "Confirmar estorno"}
                   </Button>
                 </div>

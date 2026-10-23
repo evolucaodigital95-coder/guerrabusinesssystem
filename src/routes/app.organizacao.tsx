@@ -91,7 +91,7 @@ function OrganizacaoPage() {
   return (
     <div className="mx-auto max-w-5xl pb-16">
       <section className="mb-10">
-        <div className="flex items-center gap-3 text-[10px] uppercase tracking-[0.28em] text-muted-foreground">
+        <div className="flex items-center gap-3 text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
           <span aria-hidden className="h-px w-6" style={{ background: "var(--gold)" }} />
           Configuração da organização
         </div>
@@ -387,7 +387,7 @@ function OrganizacaoPage() {
           className="mt-6 space-y-6 rounded-3xl border border-border bg-card p-6"
         >
           <div>
-            <div className="mb-2 text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+            <div className="mb-2 text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
               Membros ativos
             </div>
             <div className="divide-y divide-border rounded-2xl border border-border">
@@ -403,7 +403,7 @@ function OrganizacaoPage() {
             </div>
           </div>
           <div>
-            <div className="mb-2 text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+            <div className="mb-2 text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
               Convites
             </div>
             <div className="divide-y divide-border rounded-2xl border border-border">

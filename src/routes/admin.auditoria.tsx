@@ -7,7 +7,10 @@ export const Route = createFileRoute("/admin/auditoria")({
   head: () => ({
     meta: [
       { title: "Auditoria — GBS Admin" },
-      { name: "description", content: "Registro de todas as ações administrativas da plataforma GBS." },
+      {
+        name: "description",
+        content: "Registro de todas as ações administrativas da plataforma GBS.",
+      },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -34,7 +37,7 @@ function AdminAuditoria() {
       ) : (
         <div className="overflow-x-auto rounded-2xl border border-border bg-card">
           <table className="w-full min-w-[820px] text-sm">
-            <thead className="border-b border-border text-left text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+            <thead className="border-b border-border text-left text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
               <tr>
                 <th className="px-4 py-3">Data</th>
                 <th className="px-4 py-3">Autor</th>

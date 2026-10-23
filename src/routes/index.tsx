@@ -19,7 +19,10 @@ export const Route = createFileRoute("/")({
         content:
           "GBS é o sistema do Grupo Guerra para gestão de palestras, CRM, financeiro, estoque e inteligência operacional. Acesse sua conta para continuar.",
       },
-      { property: "og:title", content: "GBS — Sistema de gestão para palestrantes e grupos empresariais" },
+      {
+        property: "og:title",
+        content: "GBS — Sistema de gestão para palestrantes e grupos empresariais",
+      },
       {
         property: "og:description",
         content:
@@ -27,7 +30,10 @@ export const Route = createFileRoute("/")({
       },
       { property: "og:type", content: "website" },
       { property: "og:url", content: "https://guerrabusinesssystem.lovable.app/" },
-      { name: "twitter:title", content: "GBS — Sistema de gestão para palestrantes e grupos empresariais" },
+      {
+        name: "twitter:title",
+        content: "GBS — Sistema de gestão para palestrantes e grupos empresariais",
+      },
       {
         name: "twitter:description",
         content:
@@ -100,68 +106,104 @@ function LoginPage() {
     navigate({ to: "/app/hoje" });
   }
 
+  const copy = {
+    sign_in: {
+      title: "Bem-vindo de volta",
+      subtitle: "Entre para continuar de onde parou.",
+      submit: "Entrar",
+    },
+    sign_up: {
+      title: "Crie sua conta",
+      subtitle: "Comece com seu workspace privado.",
+      submit: "Criar conta",
+    },
+    forgot: {
+      title: "Recuperar acesso",
+      subtitle: "Informe seu e-mail e enviaremos um link para criar uma nova senha.",
+      submit: "Enviar link de recuperação",
+    },
+  }[mode];
+
   return (
-    <div className="relative grid min-h-screen lg:grid-cols-[1.1fr_1fr]">
-      <div
-        className="relative hidden overflow-hidden lg:flex lg:flex-col lg:justify-between lg:p-16"
-        style={{ background: "var(--navy)", color: "var(--navy-foreground)" }}
-      >
+    <div className="grid min-h-screen bg-background lg:grid-cols-[1.05fr_1fr]">
+      <aside className="relative hidden overflow-hidden bg-ink p-14 text-ink-foreground lg:flex lg:flex-col lg:justify-between">
         <div
           aria-hidden
-          className="pointer-events-none absolute -top-48 -right-32 h-[28rem] w-[28rem] rounded-full opacity-20 blur-3xl"
-          style={{ background: "radial-gradient(closest-side, var(--gold), transparent)" }}
+          className="pointer-events-none absolute -bottom-40 -left-24 h-[30rem] w-[30rem] rounded-full opacity-30 blur-3xl"
+          style={{ background: "radial-gradient(closest-side, var(--clay), transparent)" }}
         />
         <GbsMark variant="light" />
-        <div className="relative max-w-md">
-          <p className="text-[10px] uppercase tracking-[0.32em] opacity-60">Guerra Business System</p>
-          <h1 className="mt-6 font-serif text-5xl leading-tight">
-            GBS — Sistema de gestão para palestrantes e grupos empresariais
+        <div className="relative max-w-lg">
+          <h1 className="font-display text-[3.25rem] leading-[1.05]">
+            Gestão para palestrantes e grupos empresariais.
           </h1>
-          <p className="mt-6 text-sm leading-relaxed opacity-80">
-            Operação, estratégia e inteligência reunidas num único ambiente premium para o Grupo Guerra.
+          <p className="mt-6 max-w-md text-[15px] leading-relaxed text-ink-foreground/70">
+            Palestras, CRM, financeiro, estoque e inteligência operacional reunidos em um único
+            ambiente.
           </p>
         </div>
-        <p className="relative text-[10px] uppercase tracking-[0.32em] opacity-60">
-          Powered by Grupo Guerra
+        <p className="relative text-[11px] uppercase tracking-[0.12em] text-ink-foreground/50">
+          Powered by <span className="text-gold">Grupo Guerra</span>
         </p>
-      </div>
+      </aside>
 
       <main className="flex items-center justify-center px-6 py-12 md:px-12">
-        <div className="w-full max-w-sm">
-          <div className="mb-10 lg:hidden">
+        <div className="w-full max-w-[380px]">
+          <div className="mb-12 lg:hidden">
             <GbsMark />
           </div>
-          <p className="text-[10px] uppercase tracking-[0.32em] text-muted-foreground">
-            {mode === "sign_in" ? "Acessar" : mode === "sign_up" ? "Criar conta" : "Recuperar acesso"}
-          </p>
-          <h2 className="mt-3 font-serif text-3xl text-foreground">
-            {mode === "sign_in"
-              ? "Bem-vindo de volta"
-              : mode === "sign_up"
-                ? "Crie sua conta"
-                : "Esqueci minha senha"}
-          </h2>
-          <p className="mt-2 text-sm text-muted-foreground">
-            {mode === "sign_in"
-              ? "Entre para continuar."
-              : mode === "sign_up"
-                ? "Comece com seu workspace privado."
-                : "Informe seu e-mail e enviaremos um link para criar uma nova senha."}
-          </p>
+          <h2 className="font-display text-[2rem] leading-tight text-foreground">{copy.title}</h2>
+          <p className="mt-2 text-[15px] text-muted-foreground">{copy.subtitle}</p>
 
-          <form onSubmit={handleSubmit} className="mt-8 space-y-4">
+          {mode !== "forgot" && (
+            <>
+              <Button
+                type="button"
+                variant="outline"
+                className="mt-8 h-10 w-full"
+                onClick={handleGoogle}
+                disabled={busy}
+              >
+                <GoogleIcon /> Continuar com Google
+              </Button>
+              <div className="my-6 flex items-center gap-3 text-xs text-muted-foreground">
+                <span className="h-px flex-1 bg-border" /> ou{" "}
+                <span className="h-px flex-1 bg-border" />
+              </div>
+            </>
+          )}
+
+          <form
+            onSubmit={handleSubmit}
+            className={mode === "forgot" ? "mt-8 space-y-4" : "space-y-4"}
+          >
             {mode === "sign_up" && (
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <Label htmlFor="name">Nome completo</Label>
-                <Input id="name" value={fullName} onChange={(e) => setFullName(e.target.value)} required />
+                <Input
+                  id="name"
+                  className="h-10"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  required
+                />
               </div>
             )}
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+            <div className="space-y-1.5">
+              <Label htmlFor="email">E-mail</Label>
+              <Input
+                id="email"
+                type="email"
+                className="h-10"
+                autoComplete="email"
+                placeholder="voce@empresa.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
             </div>
             {mode !== "forgot" && (
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="password">Senha</Label>
                   {mode === "sign_in" && (
@@ -174,45 +216,57 @@ function LoginPage() {
                     </button>
                   )}
                 </div>
-                <Input id="password" type="password" autoComplete={mode === "sign_in" ? "current-password" : "new-password"} value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
+                <Input
+                  id="password"
+                  type="password"
+                  className="h-10"
+                  autoComplete={mode === "sign_in" ? "current-password" : "new-password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  minLength={6}
+                />
               </div>
             )}
-            <Button type="submit" variant="navy" className="w-full rounded-full" disabled={busy}>
-              {busy
-                ? "Aguarde..."
-                : mode === "sign_in"
-                  ? "Entrar"
-                  : mode === "sign_up"
-                    ? "Criar conta"
-                    : "Enviar link de recuperação"}
+            <Button type="submit" variant="brand" className="h-10 w-full" disabled={busy}>
+              {busy ? "Aguarde…" : copy.submit}
             </Button>
           </form>
 
-          {mode !== "forgot" && (
-            <>
-              <div className="my-6 flex items-center gap-3 text-[10px] uppercase tracking-[0.28em] text-muted-foreground">
-                <span className="h-px flex-1 bg-border" /> ou <span className="h-px flex-1 bg-border" />
-              </div>
-
-              <Button type="button" variant="outline" className="w-full rounded-full" onClick={handleGoogle} disabled={busy}>
-                Continuar com Google
-              </Button>
-            </>
-          )}
-
           <p className="mt-8 text-center text-sm text-muted-foreground">
-            {mode === "sign_in" ? (
-              <>Ainda não tem conta?{" "}
-                <button onClick={() => setMode("sign_up")} className="text-foreground underline-offset-4 hover:underline">Criar conta</button>
-              </>
-            ) : (
-              <>Já tem conta?{" "}
-                <button onClick={() => setMode("sign_in")} className="text-foreground underline-offset-4 hover:underline">Entrar</button>
-              </>
-            )}
+            {mode === "sign_in" ? "Ainda não tem conta? " : "Já tem conta? "}
+            <button
+              onClick={() => setMode(mode === "sign_in" ? "sign_up" : "sign_in")}
+              className="font-medium text-foreground underline-offset-4 hover:underline"
+            >
+              {mode === "sign_in" ? "Criar conta" : "Entrar"}
+            </button>
           </p>
         </div>
       </main>
     </div>
+  );
+}
+
+function GoogleIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden className="h-4 w-4">
+      <path
+        fill="#4285F4"
+        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.27-4.74 3.27-8.1z"
+      />
+      <path
+        fill="#34A853"
+        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0 0 12 23z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M5.84 14.1A6.6 6.6 0 0 1 5.5 12c0-.73.13-1.44.34-2.1V7.06H2.18A11 11 0 0 0 1 12c0 1.78.43 3.45 1.18 4.94l3.66-2.84z"
+      />
+      <path
+        fill="#EA4335"
+        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84C6.71 7.31 9.14 5.38 12 5.38z"
+      />
+    </svg>
   );
 }

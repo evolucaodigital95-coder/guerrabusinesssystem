@@ -15,7 +15,13 @@ const BAR: Record<string, string> = {
 };
 
 /** Consumo real x limite do plano (contagens feitas no banco). */
-export function UsageMeters({ state, compact = false }: { state: CommercialState; compact?: boolean }) {
+export function UsageMeters({
+  state,
+  compact = false,
+}: {
+  state: CommercialState;
+  compact?: boolean;
+}) {
   return (
     <div className={cn("grid gap-3", compact ? "sm:grid-cols-2" : "sm:grid-cols-2 lg:grid-cols-3")}>
       {USAGE_KEYS.map((key) => {
@@ -28,13 +34,13 @@ export function UsageMeters({ state, compact = false }: { state: CommercialState
         return (
           <div key={key} className="rounded-xl border border-border bg-card p-4">
             <div className="flex items-baseline justify-between gap-2">
-              <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+              <span className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
                 {LIMIT_LABEL[key]}
               </span>
               {level !== "normal" && (
                 <span
                   className={cn(
-                    "text-[10px] font-medium uppercase tracking-wider",
+                    "text-[11px] font-medium uppercase tracking-wider",
                     level === "limite" ? "text-destructive" : "text-amber-600",
                   )}
                 >
@@ -51,7 +57,10 @@ export function UsageMeters({ state, compact = false }: { state: CommercialState
               </span>
             </div>
             <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-muted">
-              <div className={cn("h-full rounded-full", BAR[level])} style={{ width: `${limit === null ? 0 : pct}%` }} />
+              <div
+                className={cn("h-full rounded-full", BAR[level])}
+                style={{ width: `${limit === null ? 0 : pct}%` }}
+              />
             </div>
           </div>
         );

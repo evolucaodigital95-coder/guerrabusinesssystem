@@ -1,8 +1,22 @@
 import { createFileRoute, useRouterState } from "@tanstack/react-router";
 import { useState } from "react";
-import { ThumbsUp, ThumbsDown, Bug, Lightbulb, Sparkles, Settings as SettingsIcon } from "lucide-react";
+import {
+  ThumbsUp,
+  ThumbsDown,
+  Bug,
+  Lightbulb,
+  Sparkles,
+  Settings as SettingsIcon,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,7 +29,10 @@ export const Route = createFileRoute("/app/configuracoes")({
   head: () => ({
     meta: [
       { title: "Configurações — GBS" },
-      { name: "description", content: "Informações da versão, novidades e canal de feedback do GBS." },
+      {
+        name: "description",
+        content: "Informações da versão, novidades e canal de feedback do GBS.",
+      },
     ],
   }),
   component: () => (
@@ -27,7 +44,12 @@ export const Route = createFileRoute("/app/configuracoes")({
 
 type FeedbackKind = "gostei" | "nao_gostei" | "bug" | "ideia" | "melhoria";
 
-const FEEDBACK_OPTIONS: { kind: FeedbackKind; label: string; icon: typeof ThumbsUp; tone: string }[] = [
+const FEEDBACK_OPTIONS: {
+  kind: FeedbackKind;
+  label: string;
+  icon: typeof ThumbsUp;
+  tone: string;
+}[] = [
   { kind: "gostei", label: "Gostei", icon: ThumbsUp, tone: "text-emerald-600" },
   { kind: "nao_gostei", label: "Não gostei", icon: ThumbsDown, tone: "text-rose-600" },
   { kind: "bug", label: "Bug", icon: Bug, tone: "text-amber-600" },
@@ -48,7 +70,7 @@ const NOVIDADES = [
 function Info({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-2xl border border-border bg-card p-6">
-      <div className="text-[10px] font-medium uppercase tracking-[0.22em] text-muted-foreground">
+      <div className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
         {label}
       </div>
       <div className="mt-3 font-display text-xl leading-none">{value}</div>
@@ -86,13 +108,17 @@ function ConfigPage() {
     setMessage("");
   }
 
-  const lastUpdate = new Date().toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
+  const lastUpdate = new Date().toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  });
 
   return (
     <div className="mx-auto max-w-5xl">
       {/* Hero */}
       <section className="mb-12">
-        <div className="flex items-center gap-3 text-[10px] uppercase tracking-[0.28em] text-muted-foreground">
+        <div className="flex items-center gap-3 text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
           <span aria-hidden className="h-px w-6" style={{ background: "var(--gold)" }} />
           Configurações
         </div>
@@ -107,7 +133,9 @@ function ConfigPage() {
 
       {/* Versão */}
       <section className="mb-14">
-        <div className="mb-6 text-[10px] uppercase tracking-[0.28em] text-muted-foreground">Sobre esta versão</div>
+        <div className="mb-6 text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
+          Sobre esta versão
+        </div>
         <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
           <Info label="Versão" value="1.0.0" />
           <Info label="Build" value="2026.06" />
@@ -122,23 +150,29 @@ function ConfigPage() {
       <section className="mb-14">
         <div
           className="relative overflow-hidden rounded-3xl p-10"
-          style={{ background: "var(--navy)", color: "var(--navy-foreground)" }}
+          style={{ background: "var(--ink)", color: "var(--ink-foreground)" }}
         >
           <div
             aria-hidden
             className="pointer-events-none absolute -top-24 -right-24 h-72 w-72 rounded-full opacity-20 blur-3xl"
-            style={{ background: "radial-gradient(closest-side, var(--gold), transparent)" }}
+            style={{ background: "radial-gradient(closest-side, var(--clay), transparent)" }}
           />
           <div className="relative">
-            <div className="flex items-center gap-3 text-[10px] uppercase tracking-[0.28em] text-[var(--navy-foreground)]/65">
+            <div className="flex items-center gap-3 text-[11px] uppercase tracking-[0.12em] text-[var(--ink-foreground)]/65">
               <span aria-hidden className="h-px w-6" style={{ background: "var(--gold)" }} />
               Versão 1.0
             </div>
             <h2 className="mt-6 font-display text-3xl">O que há de novo</h2>
             <ul className="mt-8 grid gap-3 sm:grid-cols-2">
               {NOVIDADES.map((n) => (
-                <li key={n} className="flex items-center gap-3 text-sm text-[var(--navy-foreground)]/90">
-                  <span className="h-1.5 w-1.5 rounded-full" style={{ background: "var(--gold)" }} />
+                <li
+                  key={n}
+                  className="flex items-center gap-3 text-sm text-[var(--ink-foreground)]/90"
+                >
+                  <span
+                    className="h-1.5 w-1.5 rounded-full"
+                    style={{ background: "var(--gold)" }}
+                  />
                   {n}
                 </li>
               ))}
@@ -149,7 +183,9 @@ function ConfigPage() {
 
       {/* Feedback */}
       <section className="mb-10">
-        <div className="mb-6 text-[10px] uppercase tracking-[0.28em] text-muted-foreground">Sua opinião</div>
+        <div className="mb-6 text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
+          Sua opinião
+        </div>
         <div className="rounded-3xl border border-border bg-card p-8">
           <h2 className="font-display text-2xl">Como foi sua experiência?</h2>
           <p className="mt-2 text-sm text-muted-foreground">

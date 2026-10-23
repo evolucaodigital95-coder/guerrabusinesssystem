@@ -3,14 +3,23 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { AlertTriangle, Plus, Trash2 } from "lucide-react";
 import {
-  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useAutomation } from "@/hooks/use-automation";
@@ -21,7 +30,13 @@ import { calcOnHand, type MovementKind } from "@/lib/stock";
  * Suporta MÚLTIPLOS itens em uma única movimentação (ex.: uma saída com 5 livros e 10 folders).
  * O sistema calcula automaticamente o custo em saídas (custo médio / lote).
  */
-type SimpleType = "entrada" | "saida_palestra" | "ajuste" | "perda" | "devolucao" | "devolucao_fornecedor";
+type SimpleType =
+  | "entrada"
+  | "saida_palestra"
+  | "ajuste"
+  | "perda"
+  | "devolucao"
+  | "devolucao_fornecedor";
 
 type Line = {
   key: string;
@@ -30,13 +45,62 @@ type Line = {
   unitCost: string; // usado apenas para entrada
 };
 
-const TYPE_OPTIONS: { key: SimpleType; label: string; help: string; kind: MovementKind; direction: "in" | "out"; status: string }[] = [
-  { key: "entrada",         label: "Entrada",             help: "Compra ou reposição — registra custo e atualiza custo médio.",       kind: "entrada",   direction: "in",  status: "utilizado" },
-  { key: "saida_palestra",  label: "Saída para Palestra", help: "Consumo vinculado a uma palestra — custo automático pelo estoque.", kind: "saida",     direction: "out", status: "utilizado" },
-  { key: "ajuste",          label: "Ajuste",              help: "Correção de inventário (positiva ou negativa).",                     kind: "ajuste",    direction: "in",  status: "utilizado" },
-  { key: "perda",           label: "Perda / Avaria",      help: "Baixa por perda, dano ou vencimento.",                               kind: "baixa",     direction: "out", status: "utilizado" },
-  { key: "devolucao",       label: "Devolução ao estoque", help: "Material que voltou para o estoque (sobra de palestra).",           kind: "devolucao", direction: "in",  status: "utilizado" },
-  { key: "devolucao_fornecedor", label: "Devolução ao fornecedor", help: "Material devolvido ao fornecedor — sai do seu estoque.",     kind: "devolucao_fornecedor", direction: "out", status: "utilizado" },
+const TYPE_OPTIONS: {
+  key: SimpleType;
+  label: string;
+  help: string;
+  kind: MovementKind;
+  direction: "in" | "out";
+  status: string;
+}[] = [
+  {
+    key: "entrada",
+    label: "Entrada",
+    help: "Compra ou reposição — registra custo e atualiza custo médio.",
+    kind: "entrada",
+    direction: "in",
+    status: "utilizado",
+  },
+  {
+    key: "saida_palestra",
+    label: "Saída para Palestra",
+    help: "Consumo vinculado a uma palestra — custo automático pelo estoque.",
+    kind: "saida",
+    direction: "out",
+    status: "utilizado",
+  },
+  {
+    key: "ajuste",
+    label: "Ajuste",
+    help: "Correção de inventário (positiva ou negativa).",
+    kind: "ajuste",
+    direction: "in",
+    status: "utilizado",
+  },
+  {
+    key: "perda",
+    label: "Perda / Avaria",
+    help: "Baixa por perda, dano ou vencimento.",
+    kind: "baixa",
+    direction: "out",
+    status: "utilizado",
+  },
+  {
+    key: "devolucao",
+    label: "Devolução ao estoque",
+    help: "Material que voltou para o estoque (sobra de palestra).",
+    kind: "devolucao",
+    direction: "in",
+    status: "utilizado",
+  },
+  {
+    key: "devolucao_fornecedor",
+    label: "Devolução ao fornecedor",
+    help: "Material devolvido ao fornecedor — sai do seu estoque.",
+    kind: "devolucao_fornecedor",
+    direction: "out",
+    status: "utilizado",
+  },
 ];
 
 function emptyLine(itemId: string | null = null): Line {
@@ -44,7 +108,14 @@ function emptyLine(itemId: string | null = null): Line {
 }
 
 export function MovementFormDialog({
-  open, onOpenChange, organizationId, userId, stockItemId, lockedItem, defaultLectureId, defaultType,
+  open,
+  onOpenChange,
+  organizationId,
+  userId,
+  stockItemId,
+  lockedItem,
+  defaultLectureId,
+  defaultType,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
@@ -79,7 +150,6 @@ export function MovementFormDialog({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, initialType]);
 
-
   const qc = useQueryClient();
   const { emit } = useAutomation();
 
@@ -88,8 +158,10 @@ export function MovementFormDialog({
     enabled: !!organizationId,
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("stock_items").select("id, name, unit, average_cost, purchase_price")
-        .eq("organization_id", organizationId).is("archived_at", null)
+        .from("stock_items")
+        .select("id, name, unit, average_cost, purchase_price")
+        .eq("organization_id", organizationId)
+        .is("archived_at", null)
         .order("name");
       if (error) throw error;
       return data ?? [];
@@ -104,7 +176,8 @@ export function MovementFormDialog({
       const { data, error } = await supabase
         .from("stock_movements")
         .select("stock_item_id, kind, direction, quantity, status")
-        .eq("organization_id", organizationId).is("archived_at", null);
+        .eq("organization_id", organizationId)
+        .is("archived_at", null);
       if (error) throw error;
       return data ?? [];
     },
@@ -115,8 +188,10 @@ export function MovementFormDialog({
     enabled: !!organizationId,
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("lectures").select("id, title, scheduled_at")
-        .eq("organization_id", organizationId).is("archived_at", null)
+        .from("lectures")
+        .select("id, title, scheduled_at")
+        .eq("organization_id", organizationId)
+        .is("archived_at", null)
         .order("scheduled_at", { ascending: false, nullsFirst: false });
       if (error) throw error;
       return data ?? [];
@@ -124,7 +199,16 @@ export function MovementFormDialog({
   });
 
   const itemsById = useMemo(() => {
-    const m = new Map<string, { id: string; name: string; unit: string | null; average_cost: number | null; purchase_price: number | null }>();
+    const m = new Map<
+      string,
+      {
+        id: string;
+        name: string;
+        unit: string | null;
+        average_cost: number | null;
+        purchase_price: number | null;
+      }
+    >();
     for (const it of items.data ?? []) m.set(it.id, it);
     return m;
   }, [items.data]);
@@ -173,9 +257,10 @@ export function MovementFormDialog({
     mutationFn: async () => {
       if (validLines.length === 0) throw new Error("Adicione ao menos um item com quantidade.");
       if (isSaidaPalestra && !lectureId) throw new Error("Selecione a palestra vinculada à saída.");
-      if (isDevFornecedor && !supplier.trim()) throw new Error("Informe para qual fornecedor está devolvendo.");
-      if (!isEntrada && !isSaidaPalestra && !isDevFornecedor && !reason.trim()) throw new Error("Informe o motivo da movimentação.");
-
+      if (isDevFornecedor && !supplier.trim())
+        throw new Error("Informe para qual fornecedor está devolvendo.");
+      if (!isEntrada && !isSaidaPalestra && !isDevFornecedor && !reason.trim())
+        throw new Error("Informe o motivo da movimentação.");
 
       // Validações por linha
       for (const l of validLines) {
@@ -187,7 +272,9 @@ export function MovementFormDialog({
         if (isOut) {
           const avail = availableById.get(l.itemId!) ?? 0;
           if (q > avail) {
-            throw new Error(`"${it?.name ?? "Item"}": disponível ${avail} ${it?.unit ?? "un"}, tentou retirar ${q}.`);
+            throw new Error(
+              `"${it?.name ?? "Item"}": disponível ${avail} ${it?.unit ?? "un"}, tentou retirar ${q}.`,
+            );
           }
         }
       }
@@ -197,7 +284,9 @@ export function MovementFormDialog({
       for (const l of validLines) {
         if (seen.has(l.itemId!)) {
           const it = itemsById.get(l.itemId!);
-          throw new Error(`Item "${it?.name ?? ""}" aparece duas vezes. Some as quantidades em uma única linha.`);
+          throw new Error(
+            `Item "${it?.name ?? ""}" aparece duas vezes. Some as quantidades em uma única linha.`,
+          );
         }
         seen.add(l.itemId!);
       }
@@ -217,11 +306,12 @@ export function MovementFormDialog({
           occurs_on: occursOn,
           occurs_at: new Date().toISOString(),
           lecture_id: isSaidaPalestra ? lectureId : null,
-          reason: (isEntrada
-            ? supplier.trim()
-            : isDevFornecedor
-              ? `Devolução ao fornecedor: ${supplier.trim()}${reason.trim() ? ` — ${reason.trim()}` : ""}`
-              : reason.trim()) || null,
+          reason:
+            (isEntrada
+              ? supplier.trim()
+              : isDevFornecedor
+                ? `Devolução ao fornecedor: ${supplier.trim()}${reason.trim() ? ` — ${reason.trim()}` : ""}`
+                : reason.trim()) || null,
           notes: notes.trim() || null,
           created_by: userId,
           updated_by: userId,
@@ -246,7 +336,10 @@ export function MovementFormDialog({
         entityType: "stock_item",
         entityId: null,
         lectureId: lectureId ?? null,
-        summary: n === 1 ? "Movimentação de estoque registrada" : `${n} movimentações de estoque registradas`,
+        summary:
+          n === 1
+            ? "Movimentação de estoque registrada"
+            : `${n} movimentações de estoque registradas`,
       });
       onOpenChange(false);
     },
@@ -266,7 +359,10 @@ export function MovementFormDialog({
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-serif text-2xl">Nova movimentação</DialogTitle>
-          <DialogDescription>{opt.help}{multi ? " Você pode incluir vários itens de uma só vez." : ""}</DialogDescription>
+          <DialogDescription>
+            {opt.help}
+            {multi ? " Você pode incluir vários itens de uma só vez." : ""}
+          </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={submit} className="space-y-4">
@@ -274,15 +370,26 @@ export function MovementFormDialog({
             <div className="space-y-1.5">
               <Label>Tipo *</Label>
               <Select value={type} onValueChange={(v) => setType(v as SimpleType)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
                 <SelectContent>
-                  {TYPE_OPTIONS.map((t) => <SelectItem key={t.key} value={t.key}>{t.label}</SelectItem>)}
+                  {TYPE_OPTIONS.map((t) => (
+                    <SelectItem key={t.key} value={t.key}>
+                      {t.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1.5">
               <Label>Data *</Label>
-              <Input type="date" value={occursOn} onChange={(e) => setOccursOn(e.target.value)} required />
+              <Input
+                type="date"
+                value={occursOn}
+                onChange={(e) => setOccursOn(e.target.value)}
+                required
+              />
             </div>
           </div>
 
@@ -290,15 +397,21 @@ export function MovementFormDialog({
             <div className="space-y-1.5">
               <Label>Palestra *</Label>
               <Select value={lectureId ?? ""} onValueChange={(v) => setLectureId(v)}>
-                <SelectTrigger><SelectValue placeholder="Selecionar palestra" /></SelectTrigger>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecionar palestra" />
+                </SelectTrigger>
                 <SelectContent>
                   {(lectures.data ?? []).map((l) => (
-                    <SelectItem key={l.id} value={l.id}>{l.title}</SelectItem>
+                    <SelectItem key={l.id} value={l.id}>
+                      {l.title}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
               {selectedLecture && (
-                <p className="text-[11px] text-muted-foreground">Todos os itens abaixo serão vinculados a esta palestra.</p>
+                <p className="text-[11px] text-muted-foreground">
+                  Todos os itens abaixo serão vinculados a esta palestra.
+                </p>
               )}
             </div>
           )}
@@ -306,20 +419,33 @@ export function MovementFormDialog({
           {isEntrada ? (
             <div className="space-y-1.5">
               <Label>Fornecedor</Label>
-              <Input value={supplier} onChange={(e) => setSupplier(e.target.value)} placeholder="Opcional — aplicado a todos os itens" />
+              <Input
+                value={supplier}
+                onChange={(e) => setSupplier(e.target.value)}
+                placeholder="Opcional — aplicado a todos os itens"
+              />
             </div>
           ) : isDevFornecedor ? (
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
               <div className="space-y-1.5">
                 <Label>Fornecedor *</Label>
-                <Input value={supplier} onChange={(e) => setSupplier(e.target.value)} placeholder="Para quem você está devolvendo" />
+                <Input
+                  value={supplier}
+                  onChange={(e) => setSupplier(e.target.value)}
+                  placeholder="Para quem você está devolvendo"
+                />
               </div>
               <div className="space-y-1.5">
                 <Label>Motivo</Label>
-                <Input value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Opcional — ex.: item com defeito, sobra de compra" />
+                <Input
+                  value={reason}
+                  onChange={(e) => setReason(e.target.value)}
+                  placeholder="Opcional — ex.: item com defeito, sobra de compra"
+                />
               </div>
               <p className="md:col-span-2 text-[11px] text-muted-foreground">
-                Os itens abaixo serão retirados do seu estoque e registrados como devolvidos ao fornecedor.
+                Os itens abaixo serão retirados do seu estoque e registrados como devolvidos ao
+                fornecedor.
               </p>
             </div>
           ) : (
@@ -328,11 +454,14 @@ export function MovementFormDialog({
               <Input
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
-                placeholder={isSaidaPalestra ? "Opcional — ex.: kit de materiais do evento" : "Ex.: perda no transporte, correção de inventário"}
+                placeholder={
+                  isSaidaPalestra
+                    ? "Opcional — ex.: kit de materiais do evento"
+                    : "Ex.: perda no transporte, correção de inventário"
+                }
               />
             </div>
           )}
-
 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
@@ -352,7 +481,10 @@ export function MovementFormDialog({
                 const insufficient = isOut && q > 0 && q > avail;
                 const unit = it ? Number(it.average_cost ?? it.purchase_price ?? 0) : 0;
                 return (
-                  <div key={l.key} className="rounded-xl border border-border/70 bg-background/40 p-3">
+                  <div
+                    key={l.key}
+                    className="rounded-xl border border-border/70 bg-background/40 p-3"
+                  >
                     <div className="grid grid-cols-1 gap-2 md:grid-cols-12">
                       <div className="md:col-span-6">
                         {lockedItem ? (
@@ -371,18 +503,24 @@ export function MovementFormDialog({
                               });
                             }}
                           >
-
-                            <SelectTrigger><SelectValue placeholder="Selecionar item" /></SelectTrigger>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecionar item" />
+                            </SelectTrigger>
                             <SelectContent>
                               {(items.data ?? []).map((i) => (
-                                <SelectItem key={i.id} value={i.id}>{i.name}{i.unit ? ` · ${i.unit}` : ""}</SelectItem>
+                                <SelectItem key={i.id} value={i.id}>
+                                  {i.name}
+                                  {i.unit ? ` · ${i.unit}` : ""}
+                                </SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
                         )}
                         {it && (
-                          <p className="mt-1 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-                            Disponível: <span className="tabular-nums text-foreground">{avail}</span> {it.unit ?? "un"}
+                          <p className="mt-1 text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
+                            Disponível:{" "}
+                            <span className="tabular-nums text-foreground">{avail}</span>{" "}
+                            {it.unit ?? "un"}
                             {!isEntrada && unit > 0 && <> · Custo méd. {money(unit)}</>}
                           </p>
                         )}
@@ -390,7 +528,10 @@ export function MovementFormDialog({
 
                       <div className="md:col-span-3">
                         <Input
-                          type="number" step="0.001" min="0" placeholder="Qtd"
+                          type="number"
+                          step="0.001"
+                          min="0"
+                          placeholder="Qtd"
                           value={l.qty}
                           onChange={(e) => updateLine(l.key, { qty: e.target.value })}
                         />
@@ -399,7 +540,10 @@ export function MovementFormDialog({
                       {isEntrada ? (
                         <div className="md:col-span-3">
                           <Input
-                            type="number" step="0.01" min="0" placeholder="Custo unit."
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            placeholder="Custo unit."
                             value={l.unitCost}
                             onChange={(e) => updateLine(l.key, { unitCost: e.target.value })}
                           />
@@ -412,7 +556,13 @@ export function MovementFormDialog({
 
                       {multi && lines.length > 1 && (
                         <div className="md:col-span-12 flex justify-end">
-                          <Button type="button" variant="ghost" size="sm" className="text-muted-foreground" onClick={() => removeLine(l.key)}>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="text-muted-foreground"
+                            onClick={() => removeLine(l.key)}
+                          >
                             <Trash2 className="mr-1 h-3.5 w-3.5" /> Remover
                           </Button>
                         </div>
@@ -422,7 +572,9 @@ export function MovementFormDialog({
                     {insufficient && (
                       <div className="mt-2 flex items-start gap-1.5 text-[11px] text-amber-600 dark:text-amber-300">
                         <AlertTriangle className="mt-0.5 h-3 w-3 shrink-0" />
-                        <span>Estoque insuficiente. Disponível: {avail} {it?.unit ?? "un"}.</span>
+                        <span>
+                          Estoque insuficiente. Disponível: {avail} {it?.unit ?? "un"}.
+                        </span>
                       </div>
                     )}
                   </div>
@@ -440,17 +592,26 @@ export function MovementFormDialog({
 
           <div className="space-y-1.5">
             <Label>Observação</Label>
-            <Textarea rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Opcional — aplicada a todos os itens" />
+            <Textarea
+              rows={2}
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Opcional — aplicada a todos os itens"
+            />
           </div>
 
           <DialogFooter>
-            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Cancelar</Button>
-            <Button type="submit" variant="navy" disabled={save.isPending}>
+            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
+              Cancelar
+            </Button>
+            <Button type="submit" variant="brand" disabled={save.isPending}>
               {save.isPending
                 ? "Salvando…"
                 : validLines.length > 1
                   ? `Registrar ${validLines.length} itens`
-                  : isSaidaPalestra ? "Confirmar saída" : "Registrar"}
+                  : isSaidaPalestra
+                    ? "Confirmar saída"
+                    : "Registrar"}
             </Button>
           </DialogFooter>
         </form>

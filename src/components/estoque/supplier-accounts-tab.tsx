@@ -2,29 +2,59 @@ import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
-  Plus, FileDown, FileSpreadsheet, FileText, Pencil, Trash2, Wallet, AlertTriangle,
+  Plus,
+  FileDown,
+  FileSpreadsheet,
+  FileText,
+  Pencil,
+  Trash2,
+  Wallet,
+  AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
 import { formatCurrency } from "@/lib/crm";
 import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { SettlementFormDialog } from "@/components/estoque/settlement-form-dialog";
 import {
-  aggregateBySupplier, aggregateBooks, aggregateCompanies, totalsFromAggregates,
-  type Movement, type Batch, type Item, type Lecture, type Company, type Settlement,
+  aggregateBySupplier,
+  aggregateBooks,
+  aggregateCompanies,
+  totalsFromAggregates,
+  type Movement,
+  type Batch,
+  type Item,
+  type Lecture,
+  type Company,
+  type Settlement,
 } from "@/lib/supplier-accounts";
 import {
-  exportSupplierPDF, exportSupplierXLSX, exportSupplierCSV,
+  exportSupplierPDF,
+  exportSupplierXLSX,
+  exportSupplierCSV,
 } from "@/lib/supplier-report-export";
 import { useDocBrand } from "@/hooks/use-doc-brand";
 
@@ -33,7 +63,8 @@ type Season = { id: string; name: string };
 const ALL = "__all__";
 
 export function SupplierAccountsTab({
-  organizationId, userId,
+  organizationId,
+  userId,
 }: {
   organizationId: string;
   userId: string;
@@ -42,15 +73,19 @@ export function SupplierAccountsTab({
   const [seasonId, setSeasonId] = useState<string>(ALL);
   const [settleOpen, setSettleOpen] = useState(false);
   const [editing, setEditing] = useState<Settlement | null>(null);
-  const [defaults, setDefaults] = useState<{ supplier?: string; seasonId?: string | null } | undefined>();
+  const [defaults, setDefaults] = useState<
+    { supplier?: string; seasonId?: string | null } | undefined
+  >();
   const [confirmDel, setConfirmDel] = useState<Settlement | null>(null);
 
   const seasons = useQuery({
     queryKey: ["seasons-select", organizationId],
     queryFn: async (): Promise<Season[]> => {
       const { data, error } = await supabase
-        .from("seasons").select("id, name")
-        .eq("organization_id", organizationId).is("archived_at", null)
+        .from("seasons")
+        .select("id, name")
+        .eq("organization_id", organizationId)
+        .is("archived_at", null)
         .order("starts_on", { ascending: false, nullsFirst: false });
       if (error) throw error;
       return (data ?? []) as Season[];
@@ -62,8 +97,11 @@ export function SupplierAccountsTab({
     queryFn: async (): Promise<Movement[]> => {
       const { data, error } = await supabase
         .from("stock_movements")
-        .select("id, stock_item_id, batch_id, kind, direction, status, quantity, unit_cost, total_cost, season_id, lecture_id, occurs_on")
-        .eq("organization_id", organizationId).is("archived_at", null);
+        .select(
+          "id, stock_item_id, batch_id, kind, direction, status, quantity, unit_cost, total_cost, season_id, lecture_id, occurs_on",
+        )
+        .eq("organization_id", organizationId)
+        .is("archived_at", null);
       if (error) throw error;
       return (data ?? []) as Movement[];
     },
@@ -73,8 +111,10 @@ export function SupplierAccountsTab({
     queryKey: ["inventory-batches-supplier", organizationId],
     queryFn: async (): Promise<Batch[]> => {
       const { data, error } = await supabase
-        .from("inventory_batches").select("id, stock_item_id, supplier, unit_cost")
-        .eq("organization_id", organizationId).is("archived_at", null);
+        .from("inventory_batches")
+        .select("id, stock_item_id, supplier, unit_cost")
+        .eq("organization_id", organizationId)
+        .is("archived_at", null);
       if (error) throw error;
       return (data ?? []) as Batch[];
     },
@@ -84,8 +124,10 @@ export function SupplierAccountsTab({
     queryKey: ["stock-items-supplier", organizationId],
     queryFn: async (): Promise<Item[]> => {
       const { data, error } = await supabase
-        .from("stock_items").select("id, name, supplier, unit, category")
-        .eq("organization_id", organizationId).is("archived_at", null);
+        .from("stock_items")
+        .select("id, name, supplier, unit, category")
+        .eq("organization_id", organizationId)
+        .is("archived_at", null);
       if (error) throw error;
       return (data ?? []) as Item[];
     },
@@ -95,8 +137,10 @@ export function SupplierAccountsTab({
     queryKey: ["lectures-supplier", organizationId],
     queryFn: async (): Promise<Lecture[]> => {
       const { data, error } = await supabase
-        .from("lectures").select("id, title, company_id, season_id")
-        .eq("organization_id", organizationId).is("archived_at", null);
+        .from("lectures")
+        .select("id, title, company_id, season_id")
+        .eq("organization_id", organizationId)
+        .is("archived_at", null);
       if (error) throw error;
       return (data ?? []) as Lecture[];
     },
@@ -106,8 +150,10 @@ export function SupplierAccountsTab({
     queryKey: ["companies-supplier", organizationId],
     queryFn: async (): Promise<Company[]> => {
       const { data, error } = await supabase
-        .from("companies").select("id, legal_name")
-        .eq("organization_id", organizationId).is("archived_at", null);
+        .from("companies")
+        .select("id, legal_name")
+        .eq("organization_id", organizationId)
+        .is("archived_at", null);
       if (error) throw error;
       return (data ?? []) as Company[];
     },
@@ -118,8 +164,11 @@ export function SupplierAccountsTab({
     queryFn: async (): Promise<Settlement[]> => {
       const { data, error } = await supabase
         .from("supplier_settlements")
-        .select("id, supplier, season_id, amount_paid, paid_on, payment_method, receipt_number, notes, created_by, created_at")
-        .eq("organization_id", organizationId).is("archived_at", null)
+        .select(
+          "id, supplier, season_id, amount_paid, paid_on, payment_method, receipt_number, notes, created_by, created_at",
+        )
+        .eq("organization_id", organizationId)
+        .is("archived_at", null)
         .order("paid_on", { ascending: false });
       if (error) throw error;
       return (data ?? []) as Settlement[];
@@ -142,13 +191,17 @@ export function SupplierAccountsTab({
 
   const filteredSeasonId = seasonId === ALL ? null : seasonId;
 
-  const aggregates = useMemo(() => aggregateBySupplier({
-    movements: movements.data ?? [],
-    batches: batches.data ?? [],
-    items: items.data ?? [],
-    settlements: settlements.data ?? [],
-    seasonId: filteredSeasonId,
-  }), [movements.data, batches.data, items.data, settlements.data, filteredSeasonId]);
+  const aggregates = useMemo(
+    () =>
+      aggregateBySupplier({
+        movements: movements.data ?? [],
+        batches: batches.data ?? [],
+        items: items.data ?? [],
+        settlements: settlements.data ?? [],
+        seasonId: filteredSeasonId,
+      }),
+    [movements.data, batches.data, items.data, settlements.data, filteredSeasonId],
+  );
 
   const totals = useMemo(() => totalsFromAggregates(aggregates), [aggregates]);
 
@@ -157,22 +210,28 @@ export function SupplierAccountsTab({
     return filteredSeasonId ? rows.filter((s) => s.season_id === filteredSeasonId) : rows;
   }, [settlements.data, filteredSeasonId]);
 
-  const seasonName =
-    filteredSeasonId
-      ? seasons.data?.find((s) => s.id === filteredSeasonId)?.name ?? "Temporada"
-      : "Todas as temporadas";
+  const seasonName = filteredSeasonId
+    ? (seasons.data?.find((s) => s.id === filteredSeasonId)?.name ?? "Temporada")
+    : "Todas as temporadas";
 
   const buildReport = (supplier: string) => {
     const a = aggregates.find((x) => x.supplier === supplier);
     if (!a) return null;
     const books = aggregateBooks({
-      movements: movements.data ?? [], batches: batches.data ?? [], items: items.data ?? [],
-      seasonId: filteredSeasonId, supplier,
+      movements: movements.data ?? [],
+      batches: batches.data ?? [],
+      items: items.data ?? [],
+      seasonId: filteredSeasonId,
+      supplier,
     });
     const comp = aggregateCompanies({
-      movements: movements.data ?? [], batches: batches.data ?? [], items: items.data ?? [],
-      lectures: lectures.data ?? [], companies: companies.data ?? [],
-      seasonId: filteredSeasonId, supplier,
+      movements: movements.data ?? [],
+      batches: batches.data ?? [],
+      items: items.data ?? [],
+      lectures: lectures.data ?? [],
+      companies: companies.data ?? [],
+      seasonId: filteredSeasonId,
+      supplier,
     });
     const sett = (settlements.data ?? []).filter(
       (s) => s.supplier === supplier && (!filteredSeasonId || s.season_id === filteredSeasonId),
@@ -181,8 +240,12 @@ export function SupplierAccountsTab({
   };
 
   const loading =
-    movements.isLoading || batches.isLoading || items.isLoading ||
-    lectures.isLoading || companies.isLoading || settlements.isLoading;
+    movements.isLoading ||
+    batches.isLoading ||
+    items.isLoading ||
+    lectures.isLoading ||
+    companies.isLoading ||
+    settlements.isLoading;
 
   return (
     <div className="space-y-6">
@@ -191,21 +254,27 @@ export function SupplierAccountsTab({
         <div className="flex items-center gap-3">
           <div className="w-64">
             <Select value={seasonId} onValueChange={setSeasonId}>
-              <SelectTrigger className="rounded-full">
+              <SelectTrigger>
                 <SelectValue placeholder="Temporada" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value={ALL}>Todas as temporadas</SelectItem>
                 {(seasons.data ?? []).map((s) => (
-                  <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                  <SelectItem key={s.id} value={s.id}>
+                    {s.name}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
         </div>
         <Button
-          variant="navy" className="rounded-full"
-          onClick={() => { setEditing(null); setDefaults({ seasonId: filteredSeasonId }); setSettleOpen(true); }}
+          variant="brand"
+          onClick={() => {
+            setEditing(null);
+            setDefaults({ seasonId: filteredSeasonId });
+            setSettleOpen(true);
+          }}
         >
           <Plus className="mr-1.5 h-4 w-4" /> Registrar acerto
         </Button>
@@ -244,7 +313,7 @@ export function SupplierAccountsTab({
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-background/30 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+              <thead className="bg-background/30 text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
                 <tr>
                   <th className="px-4 py-3 text-left">Fornecedor</th>
                   <th className="px-4 py-3 text-right">Comprado</th>
@@ -259,14 +328,21 @@ export function SupplierAccountsTab({
                 {aggregates.map((r) => (
                   <tr key={r.supplier} className="border-t border-border/40">
                     <td className="px-4 py-3 font-medium">{r.supplier}</td>
-                    <td className="px-4 py-3 text-right tabular-nums">{formatCurrency(r.purchased)}</td>
+                    <td className="px-4 py-3 text-right tabular-nums">
+                      {formatCurrency(r.purchased)}
+                    </td>
                     <td className="px-4 py-3 text-right tabular-nums">{formatCurrency(r.used)}</td>
-                    <td className="px-4 py-3 text-right tabular-nums">{formatCurrency(r.inStock)}</td>
-                    <td className="px-4 py-3 text-right tabular-nums">{formatCurrency(r.settled)}</td>
+                    <td className="px-4 py-3 text-right tabular-nums">
+                      {formatCurrency(r.inStock)}
+                    </td>
+                    <td className="px-4 py-3 text-right tabular-nums">
+                      {formatCurrency(r.settled)}
+                    </td>
                     <td className="px-4 py-3 text-right tabular-nums">
                       {r.balance > 0.005 ? (
                         <Badge variant="outline" className="border-amber-500/40 text-amber-300">
-                          <AlertTriangle className="mr-1 h-3 w-3" />{formatCurrency(r.balance)}
+                          <AlertTriangle className="mr-1 h-3 w-3" />
+                          {formatCurrency(r.balance)}
                         </Badge>
                       ) : (
                         <span className="text-emerald-400">{formatCurrency(r.balance)}</span>
@@ -275,8 +351,14 @@ export function SupplierAccountsTab({
                     <td className="px-4 py-3 text-right">
                       <div className="flex items-center justify-end gap-1">
                         <Button
-                          size="sm" variant="ghost" className="h-8 px-2"
-                          onClick={() => { setEditing(null); setDefaults({ supplier: r.supplier, seasonId: filteredSeasonId }); setSettleOpen(true); }}
+                          size="sm"
+                          variant="ghost"
+                          className="h-8 px-2"
+                          onClick={() => {
+                            setEditing(null);
+                            setDefaults({ supplier: r.supplier, seasonId: filteredSeasonId });
+                            setSettleOpen(true);
+                          }}
                         >
                           <Plus className="h-3.5 w-3.5" />
                         </Button>
@@ -287,13 +369,28 @@ export function SupplierAccountsTab({
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={async () => { const rep = buildReport(r.supplier); if (rep) exportSupplierPDF({ ...rep, brand: await getDocBrand() }); }}>
+                            <DropdownMenuItem
+                              onClick={async () => {
+                                const rep = buildReport(r.supplier);
+                                if (rep) exportSupplierPDF({ ...rep, brand: await getDocBrand() });
+                              }}
+                            >
                               <FileText className="mr-2 h-3.5 w-3.5" /> PDF
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => { const rep = buildReport(r.supplier); if (rep) exportSupplierXLSX(rep); }}>
+                            <DropdownMenuItem
+                              onClick={() => {
+                                const rep = buildReport(r.supplier);
+                                if (rep) exportSupplierXLSX(rep);
+                              }}
+                            >
                               <FileSpreadsheet className="mr-2 h-3.5 w-3.5" /> Excel
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => { const rep = buildReport(r.supplier); if (rep) exportSupplierCSV(rep); }}>
+                            <DropdownMenuItem
+                              onClick={() => {
+                                const rep = buildReport(r.supplier);
+                                if (rep) exportSupplierCSV(rep);
+                              }}
+                            >
                               <FileDown className="mr-2 h-3.5 w-3.5" /> CSV
                             </DropdownMenuItem>
                           </DropdownMenuContent>
@@ -332,11 +429,13 @@ export function SupplierAccountsTab({
           <h3 className="font-serif text-lg">Histórico dos acertos</h3>
         </div>
         {filteredSettlements.length === 0 ? (
-          <div className="p-8 text-center text-sm text-muted-foreground">Nenhum acerto registrado.</div>
+          <div className="p-8 text-center text-sm text-muted-foreground">
+            Nenhum acerto registrado.
+          </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-background/30 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+              <thead className="bg-background/30 text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
                 <tr>
                   <th className="px-4 py-3 text-left">Data</th>
                   <th className="px-4 py-3 text-left">Fornecedor</th>
@@ -350,26 +449,40 @@ export function SupplierAccountsTab({
               <tbody>
                 {filteredSettlements.map((s) => {
                   const sName = s.season_id
-                    ? seasons.data?.find((x) => x.id === s.season_id)?.name ?? "—"
+                    ? (seasons.data?.find((x) => x.id === s.season_id)?.name ?? "—")
                     : "—";
                   return (
                     <tr key={s.id} className="border-t border-border/40">
-                      <td className="px-4 py-3">{new Date(s.paid_on + "T00:00:00").toLocaleDateString("pt-BR")}</td>
+                      <td className="px-4 py-3">
+                        {new Date(s.paid_on + "T00:00:00").toLocaleDateString("pt-BR")}
+                      </td>
                       <td className="px-4 py-3 font-medium">{s.supplier}</td>
                       <td className="px-4 py-3 text-muted-foreground">{sName}</td>
-                      <td className="px-4 py-3 text-right tabular-nums">{formatCurrency(Number(s.amount_paid))}</td>
+                      <td className="px-4 py-3 text-right tabular-nums">
+                        {formatCurrency(Number(s.amount_paid))}
+                      </td>
                       <td className="px-4 py-3">{s.payment_method ?? "—"}</td>
-                      <td className="px-4 py-3 text-muted-foreground">{s.notes ?? s.receipt_number ?? "—"}</td>
+                      <td className="px-4 py-3 text-muted-foreground">
+                        {s.notes ?? s.receipt_number ?? "—"}
+                      </td>
                       <td className="px-4 py-3 text-right">
                         <div className="flex items-center justify-end gap-1">
                           <Button
-                            size="sm" variant="ghost" className="h-8 px-2"
-                            onClick={() => { setEditing(s); setDefaults(undefined); setSettleOpen(true); }}
+                            size="sm"
+                            variant="ghost"
+                            className="h-8 px-2"
+                            onClick={() => {
+                              setEditing(s);
+                              setDefaults(undefined);
+                              setSettleOpen(true);
+                            }}
                           >
                             <Pencil className="h-3.5 w-3.5" />
                           </Button>
                           <Button
-                            size="sm" variant="ghost" className="h-8 px-2 text-destructive"
+                            size="sm"
+                            variant="ghost"
+                            className="h-8 px-2 text-destructive"
                             onClick={() => setConfirmDel(s)}
                           >
                             <Trash2 className="h-3.5 w-3.5" />
@@ -387,13 +500,24 @@ export function SupplierAccountsTab({
 
       <SettlementFormDialog
         open={settleOpen}
-        onOpenChange={(v) => { setSettleOpen(v); if (!v) { setEditing(null); setDefaults(undefined); } }}
+        onOpenChange={(v) => {
+          setSettleOpen(v);
+          if (!v) {
+            setEditing(null);
+            setDefaults(undefined);
+          }
+        }}
         organizationId={organizationId}
         userId={userId}
         defaults={defaults}
         initial={editing}
       />
-      <AlertDialog open={!!confirmDel} onOpenChange={(v: boolean) => { if (!v) setConfirmDel(null); }}>
+      <AlertDialog
+        open={!!confirmDel}
+        onOpenChange={(v: boolean) => {
+          if (!v) setConfirmDel(null);
+        }}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle className="font-serif text-2xl">Excluir acerto?</AlertDialogTitle>
@@ -406,7 +530,10 @@ export function SupplierAccountsTab({
             <AlertDialogAction
               disabled={del.isPending}
               className="bg-rose-600 hover:bg-rose-700"
-              onClick={(e) => { e.preventDefault(); if (confirmDel) del.mutate(confirmDel.id); }}
+              onClick={(e) => {
+                e.preventDefault();
+                if (confirmDel) del.mutate(confirmDel.id);
+              }}
             >
               {del.isPending ? "Excluindo…" : "Excluir"}
             </AlertDialogAction>
@@ -419,18 +546,27 @@ export function SupplierAccountsTab({
 
 function Kpi({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
   return (
-    <div className={`rounded-2xl border p-5 ${highlight ? "border-amber-500/40 bg-amber-500/5" : "border-border bg-card/40"}`}>
-      <p className="text-[10px] font-medium uppercase tracking-[0.22em] text-muted-foreground">{label}</p>
+    <div
+      className={`rounded-2xl border p-5 ${highlight ? "border-amber-500/40 bg-amber-500/5" : "border-border bg-card/40"}`}
+    >
+      <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
+        {label}
+      </p>
       <p className="mt-3 font-serif text-xl tabular-nums text-foreground">{value}</p>
     </div>
   );
 }
 
 function BookBreakdown({
-  seasonId, movements, batches, items,
+  seasonId,
+  movements,
+  batches,
+  items,
 }: {
   seasonId: string | null;
-  movements: Movement[]; batches: Batch[]; items: Item[];
+  movements: Movement[];
+  batches: Batch[];
+  items: Item[];
 }) {
   const rows = useMemo(
     () => aggregateBooks({ movements, batches, items, seasonId }).slice(0, 20),
@@ -442,11 +578,13 @@ function BookBreakdown({
         <h3 className="font-serif text-lg">Top livros / materiais utilizados</h3>
       </div>
       {rows.length === 0 ? (
-        <div className="p-8 text-center text-sm text-muted-foreground">Sem utilização registrada.</div>
+        <div className="p-8 text-center text-sm text-muted-foreground">
+          Sem utilização registrada.
+        </div>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-background/30 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+            <thead className="bg-background/30 text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
               <tr>
                 <th className="px-4 py-3 text-left">Livro</th>
                 <th className="px-4 py-3 text-right">Qtd</th>
@@ -461,9 +599,16 @@ function BookBreakdown({
                     <div className="font-medium">{r.name}</div>
                     <div className="text-[11px] text-muted-foreground">{r.supplier}</div>
                   </td>
-                  <td className="px-4 py-3 text-right tabular-nums">{r.quantity}{r.unit ? ` ${r.unit}` : ""}</td>
-                  <td className="px-4 py-3 text-right tabular-nums">{formatCurrency(r.avgUnitCost)}</td>
-                  <td className="px-4 py-3 text-right tabular-nums font-medium">{formatCurrency(r.totalValue)}</td>
+                  <td className="px-4 py-3 text-right tabular-nums">
+                    {r.quantity}
+                    {r.unit ? ` ${r.unit}` : ""}
+                  </td>
+                  <td className="px-4 py-3 text-right tabular-nums">
+                    {formatCurrency(r.avgUnitCost)}
+                  </td>
+                  <td className="px-4 py-3 text-right tabular-nums font-medium">
+                    {formatCurrency(r.totalValue)}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -475,14 +620,23 @@ function BookBreakdown({
 }
 
 function CompanyBreakdown({
-  seasonId, movements, batches, items, lectures, companies,
+  seasonId,
+  movements,
+  batches,
+  items,
+  lectures,
+  companies,
 }: {
   seasonId: string | null;
-  movements: Movement[]; batches: Batch[]; items: Item[];
-  lectures: Lecture[]; companies: Company[];
+  movements: Movement[];
+  batches: Batch[];
+  items: Item[];
+  lectures: Lecture[];
+  companies: Company[];
 }) {
   const rows = useMemo(
-    () => aggregateCompanies({ movements, batches, items, lectures, companies, seasonId }).slice(0, 20),
+    () =>
+      aggregateCompanies({ movements, batches, items, lectures, companies, seasonId }).slice(0, 20),
     [movements, batches, items, lectures, companies, seasonId],
   );
   return (
@@ -491,11 +645,13 @@ function CompanyBreakdown({
         <h3 className="font-serif text-lg">Empresas que mais consumiram materiais</h3>
       </div>
       {rows.length === 0 ? (
-        <div className="p-8 text-center text-sm text-muted-foreground">Sem consumo por empresa.</div>
+        <div className="p-8 text-center text-sm text-muted-foreground">
+          Sem consumo por empresa.
+        </div>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-background/30 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+            <thead className="bg-background/30 text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
               <tr>
                 <th className="px-4 py-3 text-left">Empresa</th>
                 <th className="px-4 py-3 text-left">Fornecedor</th>
@@ -504,10 +660,15 @@ function CompanyBreakdown({
             </thead>
             <tbody>
               {rows.map((r, i) => (
-                <tr key={`${r.supplier}-${r.companyId ?? "n"}-${i}`} className="border-t border-border/40">
+                <tr
+                  key={`${r.supplier}-${r.companyId ?? "n"}-${i}`}
+                  className="border-t border-border/40"
+                >
                   <td className="px-4 py-3 font-medium">{r.companyName}</td>
                   <td className="px-4 py-3 text-muted-foreground">{r.supplier}</td>
-                  <td className="px-4 py-3 text-right tabular-nums font-medium">{formatCurrency(r.totalValue)}</td>
+                  <td className="px-4 py-3 text-right tabular-nums font-medium">
+                    {formatCurrency(r.totalValue)}
+                  </td>
                 </tr>
               ))}
             </tbody>

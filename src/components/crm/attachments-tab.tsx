@@ -60,7 +60,7 @@ export function AttachmentsTab({
     setUploading(true);
     try {
       for (const file of Array.from(files)) {
-        const safe = file.name.replace(/[^\w.\-]+/g, "_");
+        const safe = file.name.replace(/[^\w.-]+/g, "_");
         const path = `${organizationId}/${entityType}/${entityId}/${Date.now()}-${safe}`;
         const up = await supabase.storage.from(BUCKET).upload(path, file, {
           contentType: file.type || "application/octet-stream",
@@ -122,9 +122,8 @@ export function AttachmentsTab({
           onChange={(e) => handleUpload(e.target.files)}
         />
         <Button
-          variant="navy"
+          variant="brand"
           size="sm"
-          className="rounded-full"
           onClick={() => fileRef.current?.click()}
           disabled={uploading}
         >
@@ -146,7 +145,7 @@ export function AttachmentsTab({
                   <p className="truncate text-sm text-foreground">
                     {row.file_name ?? row.storage_path?.split("/").pop() ?? "Arquivo anexado"}
                   </p>
-                  <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+                  <p className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
                     {humanSize(row.size_bytes)} · {formatDate(row.created_at)}
                   </p>
                 </div>

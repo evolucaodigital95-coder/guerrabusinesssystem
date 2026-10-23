@@ -58,7 +58,9 @@ export function CompanyFormDialog({
   initial?: CompanyRow & { id?: string };
 }) {
   const isEdit = !!initial?.id;
-  const [form, setForm] = useState<CompanyRow>(initial ?? { status: "ativo", lifecycle_stage: "lead" });
+  const [form, setForm] = useState<CompanyRow>(
+    initial ?? { status: "ativo", lifecycle_stage: "lead" },
+  );
   const queryClient = useQueryClient();
   const { emit } = useAutomation();
   const members = useOrgMembers(organizationId);
@@ -89,7 +91,9 @@ export function CompanyFormDialog({
         const { error } = await supabase.from("companies").update(payload).eq("id", initial!.id!);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("companies").insert({ ...payload, created_by: userId });
+        const { error } = await supabase
+          .from("companies")
+          .insert({ ...payload, created_by: userId });
         if (error) throw error;
       }
     },
@@ -132,35 +136,73 @@ export function CompanyFormDialog({
         <form onSubmit={submit} className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div className="space-y-1.5 md:col-span-2">
             <Label htmlFor="legal_name">Razão social *</Label>
-            <Input id="legal_name" value={form.legal_name ?? ""} onChange={(e) => set("legal_name", e.target.value)} required />
+            <Input
+              id="legal_name"
+              value={form.legal_name ?? ""}
+              onChange={(e) => set("legal_name", e.target.value)}
+              required
+            />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="trade_name">Nome fantasia</Label>
-            <Input id="trade_name" value={form.trade_name ?? ""} onChange={(e) => set("trade_name", e.target.value)} />
+            <Input
+              id="trade_name"
+              value={form.trade_name ?? ""}
+              onChange={(e) => set("trade_name", e.target.value)}
+            />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="document">CNPJ</Label>
-            <Input id="document" value={form.document ?? ""} onChange={(e) => set("document", e.target.value)} />
+            <Input
+              id="document"
+              value={form.document ?? ""}
+              onChange={(e) => set("document", e.target.value)}
+            />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="segment">Segmento</Label>
-            <Input id="segment" value={form.segment ?? ""} onChange={(e) => set("segment", e.target.value)} />
+            <Input
+              id="segment"
+              value={form.segment ?? ""}
+              onChange={(e) => set("segment", e.target.value)}
+            />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="employees">Nº de funcionários</Label>
-            <Input id="employees" type="number" min={0} value={form.employees_count ?? ""} onChange={(e) => set("employees_count", e.target.value ? Number(e.target.value) : null)} />
+            <Input
+              id="employees"
+              type="number"
+              min={0}
+              value={form.employees_count ?? ""}
+              onChange={(e) =>
+                set("employees_count", e.target.value ? Number(e.target.value) : null)
+              }
+            />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="city">Cidade</Label>
-            <Input id="city" value={form.city ?? ""} onChange={(e) => set("city", e.target.value)} />
+            <Input
+              id="city"
+              value={form.city ?? ""}
+              onChange={(e) => set("city", e.target.value)}
+            />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="state">Estado</Label>
-            <Input id="state" maxLength={2} value={form.state ?? ""} onChange={(e) => set("state", e.target.value.toUpperCase())} />
+            <Input
+              id="state"
+              maxLength={2}
+              value={form.state ?? ""}
+              onChange={(e) => set("state", e.target.value.toUpperCase())}
+            />
           </div>
           <div className="space-y-1.5 md:col-span-2">
             <Label htmlFor="address">Endereço</Label>
-            <Input id="address" value={form.address ?? ""} onChange={(e) => set("address", e.target.value)} />
+            <Input
+              id="address"
+              value={form.address ?? ""}
+              onChange={(e) => set("address", e.target.value)}
+            />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="zip">CEP</Label>
@@ -168,34 +210,64 @@ export function CompanyFormDialog({
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="website">Site</Label>
-            <Input id="website" placeholder="https://" value={form.website ?? ""} onChange={(e) => set("website", e.target.value)} />
+            <Input
+              id="website"
+              placeholder="https://"
+              value={form.website ?? ""}
+              onChange={(e) => set("website", e.target.value)}
+            />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="instagram">Instagram</Label>
-            <Input id="instagram" placeholder="@" value={form.instagram ?? ""} onChange={(e) => set("instagram", e.target.value)} />
+            <Input
+              id="instagram"
+              placeholder="@"
+              value={form.instagram ?? ""}
+              onChange={(e) => set("instagram", e.target.value)}
+            />
           </div>
           <div className="space-y-1.5">
             <Label>Status</Label>
             <Select value={form.status ?? "ativo"} onValueChange={(v) => set("status", v)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
-                {COMPANY_STATUS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                {COMPANY_STATUS.map((s) => (
+                  <SelectItem key={s} value={s}>
+                    {s}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-1.5 md:col-span-2">
             <Label>Etapa do relacionamento</Label>
-            <Select value={form.lifecycle_stage ?? "lead"} onValueChange={(v) => set("lifecycle_stage", v)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+            <Select
+              value={form.lifecycle_stage ?? "lead"}
+              onValueChange={(v) => set("lifecycle_stage", v)}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
-                {LIFECYCLE_STAGES.map((s) => <SelectItem key={s.key} value={s.key}>{s.label}</SelectItem>)}
+                {LIFECYCLE_STAGES.map((s) => (
+                  <SelectItem key={s.key} value={s.key}>
+                    {s.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-1.5 md:col-span-2">
             <Label>Responsável principal</Label>
-            <Select value={form.owner_id ?? "none"} onValueChange={(v) => set("owner_id", v === "none" ? null : v)}>
-              <SelectTrigger><SelectValue placeholder="Selecionar responsável" /></SelectTrigger>
+            <Select
+              value={form.owner_id ?? "none"}
+              onValueChange={(v) => set("owner_id", v === "none" ? null : v)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecionar responsável" />
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">Sem responsável</SelectItem>
                 {(members.data ?? []).map((m) => (
@@ -208,12 +280,19 @@ export function CompanyFormDialog({
           </div>
           <div className="space-y-1.5 md:col-span-2">
             <Label htmlFor="notes">Observações</Label>
-            <Textarea id="notes" rows={3} value={form.notes ?? ""} onChange={(e) => set("notes", e.target.value)} />
+            <Textarea
+              id="notes"
+              rows={3}
+              value={form.notes ?? ""}
+              onChange={(e) => set("notes", e.target.value)}
+            />
           </div>
 
           <DialogFooter className="md:col-span-2">
-            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Cancelar</Button>
-            <Button type="submit" variant="navy" disabled={save.isPending}>
+            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
+              Cancelar
+            </Button>
+            <Button type="submit" variant="brand" disabled={save.isPending}>
               {save.isPending ? "Salvando…" : isEdit ? "Salvar alterações" : "Criar empresa"}
             </Button>
           </DialogFooter>

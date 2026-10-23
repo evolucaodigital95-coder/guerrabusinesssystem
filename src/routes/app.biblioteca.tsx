@@ -10,9 +10,20 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
-  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { Search, FileText, Download, Trash2, Upload, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -22,9 +33,16 @@ export const Route = createFileRoute("/app/biblioteca")({
   head: () => ({
     meta: [
       { title: "Central de Conteúdo — GBS" },
-      { name: "description", content: "Repositório organizado: slides, livros, propostas, contratos, mídia e treinamentos." },
+      {
+        name: "description",
+        content:
+          "Repositório organizado: slides, livros, propostas, contratos, mídia e treinamentos.",
+      },
       { property: "og:title", content: "Central de Conteúdo — GBS" },
-      { property: "og:description", content: "Slides, livros, propostas, contratos, mídia e treinamentos do Grupo Guerra." },
+      {
+        property: "og:description",
+        content: "Slides, livros, propostas, contratos, mídia e treinamentos do Grupo Guerra.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -36,8 +54,18 @@ const BUCKET = "crm-attachments";
 const ENTITY = "content";
 
 const CATEGORIES = [
-  "Slides", "Livros", "Propostas Comerciais", "Contratos", "Autorizações",
-  "Modelos de PDF", "Identidade Visual", "Logos", "Fotos", "Vídeos", "Treinamentos", "Documentos internos",
+  "Slides",
+  "Livros",
+  "Propostas Comerciais",
+  "Contratos",
+  "Autorizações",
+  "Modelos de PDF",
+  "Identidade Visual",
+  "Logos",
+  "Fotos",
+  "Vídeos",
+  "Treinamentos",
+  "Documentos internos",
 ] as const;
 
 type Row = {
@@ -59,7 +87,9 @@ function humanSize(n: number | null) {
 function categoryOf(path: string) {
   // {org}/content/{categoria}/{arquivo}
   const parts = path.split("/");
-  return parts.length >= 4 ? decodeURIComponent(parts[2]).replace(/_/g, " ") : "Documentos internos";
+  return parts.length >= 4
+    ? decodeURIComponent(parts[2]).replace(/_/g, " ")
+    : "Documentos internos";
 }
 
 function CentralConteudoPage() {
@@ -96,7 +126,10 @@ function CentralConteudoPage() {
     return list.filter((a) => {
       if (cat !== "Todos" && categoryOf(a.storage_path) !== cat) return false;
       if (!term) return true;
-      return (a.file_name ?? "").toLowerCase().includes(term) || categoryOf(a.storage_path).toLowerCase().includes(term);
+      return (
+        (a.file_name ?? "").toLowerCase().includes(term) ||
+        categoryOf(a.storage_path).toLowerCase().includes(term)
+      );
     });
   }, [data, q, cat]);
 
@@ -105,7 +138,7 @@ function CentralConteudoPage() {
     setUploading(true);
     try {
       for (const file of Array.from(files)) {
-        const safe = file.name.replace(/[^\w.\-]+/g, "_");
+        const safe = file.name.replace(/[^\w.-]+/g, "_");
         const folder = uploadCat.replace(/[^\w]+/g, "_");
         const path = `${organizationId}/${ENTITY}/${folder}/${Date.now()}-${safe}`;
         const up = await supabase.storage.from(BUCKET).upload(path, file, {
@@ -151,9 +184,11 @@ function CentralConteudoPage() {
   });
 
   async function download(row: Row) {
-    const { data, error } = await supabase.storage.from(BUCKET).createSignedUrl(row.storage_path, 300, {
-      download: row.file_name ?? true,
-    });
+    const { data, error } = await supabase.storage
+      .from(BUCKET)
+      .createSignedUrl(row.storage_path, 300, {
+        download: row.file_name ?? true,
+      });
     if (error || !data) return toast.error(error?.message ?? "Não foi possível baixar");
     window.open(data.signedUrl, "_blank");
   }
@@ -165,7 +200,7 @@ function CentralConteudoPage() {
         title="Central de Conteúdo"
         description="Repositório único de slides, livros, propostas, contratos, mídia e treinamentos do Grupo Guerra."
         actions={
-          <Button variant="navy" className="rounded-full" onClick={() => setOpen(true)} disabled={!organizationId}>
+          <Button variant="brand" onClick={() => setOpen(true)} disabled={!organizationId}>
             <Plus className="mr-1.5 h-4 w-4" /> Adicionar conteúdo
           </Button>
         }
@@ -174,7 +209,12 @@ function CentralConteudoPage() {
       <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center">
         <div className="relative flex-1">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Pesquisar conteúdo" className="h-10 pl-9" />
+          <Input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Pesquisar conteúdo"
+            className="h-10 pl-9"
+          />
         </div>
       </div>
 
@@ -185,7 +225,9 @@ function CentralConteudoPage() {
             onClick={() => setCat(c)}
             className={cn(
               "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
-              cat === c ? "border-foreground bg-foreground text-background" : "border-border bg-card text-muted-foreground hover:text-foreground",
+              cat === c
+                ? "border-foreground bg-foreground text-background"
+                : "border-border bg-card text-muted-foreground hover:text-foreground",
             )}
           >
             {c}
@@ -210,10 +252,16 @@ function CentralConteudoPage() {
               <div className="min-w-0 flex-1">
                 <div className="truncate text-sm font-medium">{a.file_name ?? "Arquivo"}</div>
                 <div className="mt-1 text-[11px] text-muted-foreground">
-                  {categoryOf(a.storage_path)} · {humanSize(a.size_bytes)} · {new Date(a.created_at).toLocaleDateString("pt-BR")}
+                  {categoryOf(a.storage_path)} · {humanSize(a.size_bytes)} ·{" "}
+                  {new Date(a.created_at).toLocaleDateString("pt-BR")}
                 </div>
                 <div className="mt-2 flex items-center gap-1">
-                  <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => download(a)}>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 px-2 text-xs"
+                    onClick={() => download(a)}
+                  >
                     <Download className="mr-1 h-3.5 w-3.5" /> Baixar
                   </Button>
                   <ConfirmDialog
@@ -224,7 +272,11 @@ function CentralConteudoPage() {
                     pending={remove.isPending}
                     onConfirm={() => remove.mutate(a)}
                     trigger={
-                      <Button variant="ghost" size="sm" className="h-7 px-2 text-xs text-muted-foreground">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 px-2 text-xs text-muted-foreground"
+                      >
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>
                     }
@@ -246,17 +298,35 @@ function CentralConteudoPage() {
             <div className="space-y-1.5">
               <Label>Categoria</Label>
               <Select value={uploadCat} onValueChange={setUploadCat}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
                 <SelectContent>
-                  {CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                  {CATEGORIES.map((c) => (
+                    <SelectItem key={c} value={c}>
+                      {c}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
-            <input ref={fileRef} type="file" multiple className="hidden" onChange={(e) => handleUpload(e.target.files)} />
+            <input
+              ref={fileRef}
+              type="file"
+              multiple
+              className="hidden"
+              onChange={(e) => handleUpload(e.target.files)}
+            />
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setOpen(false)} disabled={uploading}>Cancelar</Button>
-            <Button variant="navy" onClick={() => fileRef.current?.click()} disabled={uploading || !organizationId}>
+            <Button variant="outline" onClick={() => setOpen(false)} disabled={uploading}>
+              Cancelar
+            </Button>
+            <Button
+              variant="brand"
+              onClick={() => fileRef.current?.click()}
+              disabled={uploading || !organizationId}
+            >
               <Upload className="mr-1.5 h-4 w-4" /> {uploading ? "Enviando…" : "Escolher arquivos"}
             </Button>
           </DialogFooter>

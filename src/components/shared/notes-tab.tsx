@@ -80,7 +80,7 @@ export function NotesTab({
         />
         <div className="mt-3 flex justify-end">
           <Button
-            variant="navy"
+            variant="brand"
             size="sm"
             onClick={() => add.mutate()}
             disabled={add.isPending || !body.trim()}
@@ -96,7 +96,7 @@ export function NotesTab({
             return (
               <li key={n.id} className="rounded-2xl border border-border bg-card/30 p-4">
                 <p className="whitespace-pre-wrap text-sm text-foreground">{n.body}</p>
-                <p className="mt-2 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+                <p className="mt-2 text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
                   {formatDate(n.created_at)}
                   {author ? ` · ${author}` : ""}
                 </p>
