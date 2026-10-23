@@ -1,3 +1,4 @@
+import { toLocalDate } from "@/lib/format";
 /**
  * GBS PLATFORM (Fase SaaS 3)
  *
@@ -353,7 +354,7 @@ export const money = (value: number | null | undefined, currency = "BRL") =>
     : new Intl.NumberFormat("pt-BR", { style: "currency", currency }).format(value);
 
 export const shortDate = (iso: string | null | undefined) =>
-  iso ? new Date(iso).toLocaleDateString("pt-BR") : "—";
+  iso ? toLocalDate(iso).toLocaleDateString("pt-BR") : "—";
 
 export const dateTime = (iso: string | null | undefined) =>
   iso ? new Date(iso).toLocaleString("pt-BR") : "—";

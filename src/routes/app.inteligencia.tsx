@@ -17,7 +17,7 @@ import { Download, Printer, FileSpreadsheet, RefreshCw } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrentOrg } from "@/hooks/use-current-org";
-import { PageHeader, EmptyState } from "@/components/page-shell";
+import { PageHeader, EmptyState, NestedPageHeaders } from "@/components/page-shell";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -60,30 +60,32 @@ function InteligenciaHub() {
         title="Central de Inteligência"
         description="Visão do diretor, indicadores, análises, rankings e relatórios — tudo reunido em um só lugar."
       />
-      <Tabs defaultValue="diretor" className="space-y-6">
-        <TabsList className="flex w-full flex-wrap justify-start bg-card/40">
-          <TabsTrigger value="diretor">Painel do Diretor</TabsTrigger>
-          <TabsTrigger value="indicadores">Indicadores</TabsTrigger>
-          <TabsTrigger value="analises">Análises</TabsTrigger>
-          <TabsTrigger value="performance">Performance</TabsTrigger>
-          <TabsTrigger value="relatorios">Relatórios</TabsTrigger>
-        </TabsList>
-        <TabsContent value="diretor">
-          <PainelDiretorPage />
-        </TabsContent>
-        <TabsContent value="indicadores">
-          <IndicadoresPage />
-        </TabsContent>
-        <TabsContent value="analises">
-          <IntelligencePage />
-        </TabsContent>
-        <TabsContent value="performance">
-          <PerformancePage />
-        </TabsContent>
-        <TabsContent value="relatorios">
-          <RelatoriosPage />
-        </TabsContent>
-      </Tabs>
+      <NestedPageHeaders value={true}>
+        <Tabs defaultValue="diretor" className="space-y-6">
+          <TabsList className="flex w-full flex-wrap justify-start bg-card/40">
+            <TabsTrigger value="diretor">Painel do Diretor</TabsTrigger>
+            <TabsTrigger value="indicadores">Indicadores</TabsTrigger>
+            <TabsTrigger value="analises">Análises</TabsTrigger>
+            <TabsTrigger value="performance">Performance</TabsTrigger>
+            <TabsTrigger value="relatorios">Relatórios</TabsTrigger>
+          </TabsList>
+          <TabsContent value="diretor">
+            <PainelDiretorPage />
+          </TabsContent>
+          <TabsContent value="indicadores">
+            <IndicadoresPage />
+          </TabsContent>
+          <TabsContent value="analises">
+            <IntelligencePage />
+          </TabsContent>
+          <TabsContent value="performance">
+            <PerformancePage />
+          </TabsContent>
+          <TabsContent value="relatorios">
+            <RelatoriosPage />
+          </TabsContent>
+        </Tabs>
+      </NestedPageHeaders>
     </div>
   );
 }
@@ -301,7 +303,7 @@ function IntelligencePage() {
   if (orgLoading || isLoading || !data || !filtered) {
     return (
       <div className="mx-auto max-w-7xl">
-        <PageHeader eyebrow="BI" title="Centro de Inteligência" description="Carregando dados…" />
+        <PageHeader eyebrow="BI" title="Análises" description="Carregando dados…" />
         <div className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-4">
           {Array.from({ length: 8 }).map((_, i) => (
             <div key={i} className="h-28 animate-pulse bg-card" />
@@ -630,7 +632,7 @@ function IntelligencePage() {
     <div className="mx-auto max-w-7xl" id="intel-root">
       <PageHeader
         eyebrow="Business Intelligence"
-        title="Centro de Inteligência"
+        title="Análises"
         description="Indicadores estratégicos consolidados em tempo real, com base nos dados operacionais do Grupo Guerra."
         actions={
           <div className="flex flex-wrap items-center gap-2 print:hidden">

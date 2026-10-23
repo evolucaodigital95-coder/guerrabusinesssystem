@@ -14,7 +14,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrentOrg } from "@/hooks/use-current-org";
 import { useSession } from "@/hooks/use-session";
-import { BRL, NUM } from "@/lib/format";
+import { BRL, NUM, toLocalDate } from "@/lib/format";
 import { HERO_IMAGES, heroSrc, heroSrcSet } from "@/lib/hero-images";
 import { CountUp } from "@/components/count-up";
 
@@ -210,7 +210,7 @@ function useToday(orgId: string | null) {
       const seasonLabel = season?.name ?? "—";
       const seasonRange =
         season && season.starts_on && season.ends_on
-          ? `${new Date(season.starts_on).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })} – ${new Date(season.ends_on).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })}`
+          ? `${toLocalDate(season.starts_on).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })} – ${toLocalDate(season.ends_on).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })}`
           : "";
 
       // Sem coluna de meta configurada — meta mensal indisponível

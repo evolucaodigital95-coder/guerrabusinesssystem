@@ -1,3 +1,4 @@
+import { toLocalDate } from "@/lib/format";
 export const LIFECYCLE_STAGES = [
   { key: "lead", label: "Lead criado" },
   { key: "first_contact", label: "Primeiro contato" },
@@ -19,7 +20,13 @@ export function stageIndex(stage: string | null | undefined): number {
 
 export const COMPANY_STATUS = ["ativo", "inativo", "prospect", "perdido"] as const;
 
-export const LEAD_STATUS = ["novo", "qualificando", "qualificado", "convertido", "descartado"] as const;
+export const LEAD_STATUS = [
+  "novo",
+  "qualificando",
+  "qualificado",
+  "convertido",
+  "descartado",
+] as const;
 
 export const OPPORTUNITY_STATUS = ["aberta", "ganha", "perdida", "pausada"] as const;
 
@@ -49,5 +56,5 @@ export function formatCurrency(value: number | null | undefined, currency = "BRL
 
 export function formatDate(value: string | null | undefined) {
   if (!value) return "—";
-  return new Intl.DateTimeFormat("pt-BR", { dateStyle: "medium" }).format(new Date(value));
+  return new Intl.DateTimeFormat("pt-BR", { dateStyle: "medium" }).format(toLocalDate(value));
 }

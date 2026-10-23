@@ -1,4 +1,4 @@
-import { type ReactNode } from "react";
+import { createContext, useContext, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -9,7 +9,28 @@ interface PageHeaderProps {
   eyebrow?: string;
 }
 
+/**
+ * Dentro de uma página com abas (ex.: Central de Inteligência), o cabeçalho
+ * de cada aba vira um subtítulo compacto em vez de repetir um título grande.
+ */
+const NestedHeaderContext = createContext(false);
+export const NestedPageHeaders = NestedHeaderContext.Provider;
+
 export function PageHeader({ title, description, actions, eyebrow }: PageHeaderProps) {
+  const nested = useContext(NestedHeaderContext);
+  if (nested) {
+    return (
+      <header className="mb-6 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+        <div className="min-w-0">
+          <h2 className="font-display text-2xl leading-tight">{title}</h2>
+          {description && (
+            <p className="mt-1 max-w-2xl text-sm text-muted-foreground">{description}</p>
+          )}
+        </div>
+        {actions && <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div>}
+      </header>
+    );
+  }
   return (
     <header className="mb-10 flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
       <div className="min-w-0">
