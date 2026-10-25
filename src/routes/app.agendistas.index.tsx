@@ -10,6 +10,7 @@ import { ListSkeleton } from "@/components/shared/list-skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/hooks/use-session";
 import { useCurrentOrg } from "@/hooks/use-current-org";
+import { pluralLabel, useOrgPreferences } from "@/lib/org-preferences";
 import { AgentFormDialog, type AgentRow } from "@/components/agendistas/agent-form-dialog";
 
 export const Route = createFileRoute("/app/agendistas/")({
@@ -41,6 +42,7 @@ type Agent = {
 function AgendistasPage() {
   const { user } = useSession();
   const { organizationId, loading: orgLoading } = useCurrentOrg();
+  const prefs = useOrgPreferences();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<AgentRow | null>(null);
   const [search, setSearch] = useState("");
@@ -73,9 +75,9 @@ function AgendistasPage() {
   return (
     <div className="space-y-8">
       <PageHeader
-        eyebrow="Agendistas"
+        eyebrow={pluralLabel(prefs.agentLabel)}
         title="Equipe de prospecção"
-        description="Cada agendista tem sua própria conta corrente, adiantamentos, palestras e histórico de fechamentos."
+        description={`Cada ${prefs.agentLabel.toLowerCase()} tem sua própria conta corrente, adiantamentos, palestras e histórico de fechamentos.`}
         actions={
           <Button
             variant="brand"

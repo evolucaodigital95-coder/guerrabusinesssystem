@@ -89,7 +89,8 @@ export function CommandPalette({
           icon: a.icon,
           run: () => {
             close();
-            navigate({ to: a.to }).then(() => requestQuickAction(a.action));
+            if (!a.to) requestQuickAction(a.action);
+            else navigate({ to: a.to }).then(() => requestQuickAction(a.action));
           },
         }))
       : [];

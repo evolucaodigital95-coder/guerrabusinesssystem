@@ -67,6 +67,7 @@ import {
 import { buildSpeakerStatement } from "@/lib/finance-engine";
 import { useDocBrand } from "@/hooks/use-doc-brand";
 import { SpeakerHero } from "@/components/palestrante/speaker-hero";
+import { useOrgPreferences } from "@/lib/org-preferences";
 
 export const Route = createFileRoute("/app/centro-palestrante")({
   head: () => ({
@@ -127,8 +128,6 @@ type PendingLecture = {
   companies: { legal_name?: string | null } | null;
 };
 
-const TITHE = 0.1;
-
 const iso = (d: Date) =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 const PERIOD_PRESETS = [
@@ -155,6 +154,8 @@ const PERIOD_PRESETS = [
 
 function CentroPalestrante() {
   const { organizationId, organizationName } = useCurrentOrg();
+  const prefs = useOrgPreferences();
+  const TITHE = prefs.titheRate;
   const { user } = useSession();
   const userId = user?.id ?? "";
   const [advanceOpen, setAdvanceOpen] = useState(false);
@@ -401,6 +402,7 @@ function CentroPalestrante() {
     pending.data,
     thisMonth,
     thisYear,
+    TITHE,
   ]);
 
   // Conta corrente do palestrante (créditos, adiantamentos e retiradas)
@@ -429,7 +431,7 @@ function CentroPalestrante() {
         })),
         titheRate: TITHE,
       }),
-    [filtered, advances.data, speakerPayouts.data],
+    [filtered, advances.data, speakerPayouts.data, TITHE],
   );
 
   const accountLines = useMemo(() => {
@@ -481,7 +483,7 @@ function CentroPalestrante() {
       running += r.speakerShare;
       return { ...r, balance: running };
     });
-  }, [filtered]);
+  }, [filtered, TITHE]);
 
   // Por empresa
   const byCompany = useMemo(() => {
@@ -866,7 +868,9 @@ function CentroPalestrante() {
               <TabsTrigger value="extrato">Extrato</TabsTrigger>
               <TabsTrigger value="conta">Conta corrente</TabsTrigger>
               <TabsTrigger value="desempenho">Desempenho</TabsTrigger>
-              <TabsTrigger value="metas">Metas e dízimo</TabsTrigger>
+              <TabsTrigger value="metas">
+                {prefs.showTithe ? "Metas e dízimo" : "Metas"}
+              </TabsTrigger>
             </TabsList>
 
             {/* Extrato */}
@@ -1377,63 +1381,65 @@ function CentroPalestrante() {
             </TabsContent>
 
             {/* Dízimo */}
-            <TabsContent value="metas" className="mt-4 space-y-4">
-              <div className="rounded-lg border border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-900/50 p-4 text-sm">
-                <div className="flex items-start gap-2">
-                  <Info className="h-4 w-4 mt-0.5 flex-shrink-0 text-amber-700" />
-                  <div>
-                    <strong className="text-amber-900 dark:text-amber-200">
-                      Informativo apenas.
-                    </strong>
-                    <span className="text-amber-900/80 dark:text-amber-200/80">
-                      {" "}
-                      O dízimo sugerido nunca é descontado automaticamente. Corresponde a 10% da
-                      participação individual do palestrante em cada fechamento.
-                    </span>
+            {prefs.showTithe && (
+              <TabsContent value="metas" className="mt-4 space-y-4">
+                <div className="rounded-lg border border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-900/50 p-4 text-sm">
+                  <div className="flex items-start gap-2">
+                    <Info className="h-4 w-4 mt-0.5 flex-shrink-0 text-amber-700" />
+                    <div>
+                      <strong className="text-amber-900 dark:text-amber-200">
+                        Informativo apenas.
+                      </strong>
+                      <span className="text-amber-900/80 dark:text-amber-200/80">
+                        {" "}
+                        O dízimo sugerido nunca é descontado automaticamente. Corresponde a 10% da
+                        participação individual do palestrante em cada fechamento.
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <Kpi label="Dízimo — Mês" value={formatCurrency(kpis.lucroMes * TITHE)} />
-                <Kpi label="Dízimo — Ano" value={formatCurrency(kpis.lucroAno * TITHE)} />
-                <Kpi
-                  label="Dízimo — Acumulado"
-                  value={formatCurrency(kpis.dizimoSugerido)}
-                  highlight
-                />
-              </div>
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">Origem — por palestra</CardTitle>
-                </CardHeader>
-                <CardContent className="overflow-x-auto">
-                  <table className="w-full text-xs sm:text-sm">
-                    <thead>
-                      <tr className="border-b text-muted-foreground uppercase text-[10px] tracking-wider">
-                        <Th>Data</Th>
-                        <Th>Empresa</Th>
-                        <Th>Palestra</Th>
-                        <Th right>Participação</Th>
-                        <Th right>Dízimo 10%</Th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {statement.map((r, i) => (
-                        <tr key={i} className="border-b last:border-0">
-                          <Td>{formatDate(r.date)}</Td>
-                          <Td className="font-medium">{r.company}</Td>
-                          <Td className="text-muted-foreground">{r.lecture}</Td>
-                          <Td right>{formatCurrency(r.speakerShare)}</Td>
-                          <Td right className="font-semibold text-amber-700">
-                            {formatCurrency(r.tithe)}
-                          </Td>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <Kpi label="Dízimo — Mês" value={formatCurrency(kpis.lucroMes * TITHE)} />
+                  <Kpi label="Dízimo — Ano" value={formatCurrency(kpis.lucroAno * TITHE)} />
+                  <Kpi
+                    label="Dízimo — Acumulado"
+                    value={formatCurrency(kpis.dizimoSugerido)}
+                    highlight
+                  />
+                </div>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base">Origem — por palestra</CardTitle>
+                  </CardHeader>
+                  <CardContent className="overflow-x-auto">
+                    <table className="w-full text-xs sm:text-sm">
+                      <thead>
+                        <tr className="border-b text-muted-foreground uppercase text-[10px] tracking-wider">
+                          <Th>Data</Th>
+                          <Th>Empresa</Th>
+                          <Th>Palestra</Th>
+                          <Th right>Participação</Th>
+                          <Th right>Dízimo 10%</Th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </CardContent>
-              </Card>
-            </TabsContent>
+                      </thead>
+                      <tbody>
+                        {statement.map((r, i) => (
+                          <tr key={i} className="border-b last:border-0">
+                            <Td>{formatDate(r.date)}</Td>
+                            <Td className="font-medium">{r.company}</Td>
+                            <Td className="text-muted-foreground">{r.lecture}</Td>
+                            <Td right>{formatCurrency(r.speakerShare)}</Td>
+                            <Td right className="font-semibold text-amber-700">
+                              {formatCurrency(r.tithe)}
+                            </Td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            )}
 
             {/* Metas & Previsão */}
             <TabsContent value="metas" className="mt-4 space-y-4">

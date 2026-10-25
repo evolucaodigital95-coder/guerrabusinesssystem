@@ -7,6 +7,7 @@ import {
   PackageMinus,
   PackagePlus,
   Plus,
+  ShoppingBag,
   Wallet,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -16,9 +17,17 @@ export const QUICK_ACTIONS: {
   action: QuickAction;
   label: string;
   hint: string;
-  to: string;
+  /** null = abre na própria tela, sem navegar. */
+  to: string | null;
   icon: typeof Plus;
 }[] = [
+  {
+    action: "venda-evento",
+    label: "Venda no evento",
+    hint: "Livros e kits: estoque e caixa juntos",
+    to: null,
+    icon: ShoppingBag,
+  },
   {
     action: "palestra",
     label: "Nova palestra",
@@ -77,7 +86,8 @@ export function QuickActionsFab() {
 
   function run(a: (typeof QUICK_ACTIONS)[number]) {
     setOpen(false);
-    navigate({ to: a.to }).then(() => requestQuickAction(a.action));
+    if (!a.to) requestQuickAction(a.action);
+    else navigate({ to: a.to }).then(() => requestQuickAction(a.action));
   }
 
   return (

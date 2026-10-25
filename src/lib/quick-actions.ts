@@ -10,7 +10,8 @@ export type QuickAction =
   | "entrada-estoque"
   | "saida-estoque"
   | "empresa"
-  | "inventario";
+  | "inventario"
+  | "venda-evento";
 
 let pending: QuickAction | null = null;
 const listeners = new Set<() => void>();

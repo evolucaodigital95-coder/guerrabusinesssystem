@@ -88,6 +88,7 @@ export type OrgSettings = {
   tithe_percent: number;
   finance_notes: string | null;
   enabled_modules: string[];
+  preferences: Record<string, unknown>;
 };
 
 export type OrgOnboarding = {

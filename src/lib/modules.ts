@@ -69,3 +69,44 @@ export const MODULES: ModuleDef[] = [
   { to: "/app/planos", label: "Plano e cobrança", icon: CreditCard, section: "sistema" },
   { to: "/app/configuracoes", label: "Configurações", icon: Settings, section: "sistema" },
 ];
+
+/** Rota → chave de módulo escolhida em Organização → Preferências. */
+export const MODULE_KEY_BY_ROUTE: Record<string, string> = {
+  "/app/crm": "crm",
+  "/app/palestras": "palestras",
+  "/app/estoque": "estoque",
+  "/app/financeiro": "financeiro",
+  "/app/agendistas": "agendistas",
+  "/app/centro-palestrante": "palestrantes",
+  "/app/temporadas": "temporadas",
+  "/app/campanhas": "campanhas",
+  "/app/projetos": "projetos",
+  "/app/inteligencia": "relatorios",
+  "/app/biblioteca": "biblioteca",
+  "/app/agenda": "agenda",
+};
+
+/** Escondidos no modo simplificado (palestrante solo). */
+export const ADVANCED_ROUTES = new Set([
+  "/app/temporadas",
+  "/app/campanhas",
+  "/app/projetos",
+  "/app/automacoes",
+  "/app/inteligencia",
+  "/app/biblioteca",
+]);
+
+/** Itens do menu visíveis para a organização, conforme módulos e modo escolhidos. */
+export function visibleModules(opts: {
+  enabledModules: string[];
+  navMode: "full" | "simple";
+  agentLabel: string;
+  agentPlural: string;
+}): ModuleDef[] {
+  return MODULES.filter((m) => {
+    if (opts.navMode === "simple" && ADVANCED_ROUTES.has(m.to)) return false;
+    const key = MODULE_KEY_BY_ROUTE[m.to];
+    if (key && opts.enabledModules.length > 0 && !opts.enabledModules.includes(key)) return false;
+    return true;
+  }).map((m) => (m.to === "/app/agendistas" ? { ...m, label: opts.agentPlural } : m));
+}

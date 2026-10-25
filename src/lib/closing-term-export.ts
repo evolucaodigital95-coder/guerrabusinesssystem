@@ -69,6 +69,8 @@ export type ClosingTermData = {
   thanksMessage: string;
   /** Identidade visual da organização ativa (apresentação apenas). */
   brand?: DocBrand;
+  /** Mostra o dízimo sugerido (preferência da organização). Padrão: sim. */
+  showTithe?: boolean;
 };
 
 const THANKS_BODY =
@@ -251,7 +253,9 @@ export async function buildClosingTermPDF(d: ClosingTermData): Promise<Blob> {
       ["(-) Outras despesas operacionais", "-" + money(d.totals.expenses), "neg"],
       ["(=) Resultado / Lucro líquido", money(d.totals.netProfit), "strong"],
       ["Participação do agendista", money(d.totals.agentShare), "strong"],
-      ["Dízimo sugerido (informativo)", money(d.totals.tithe), "muted"],
+      ...(d.showTithe === false
+        ? []
+        : [["Dízimo sugerido (informativo)", money(d.totals.tithe), "muted"] as const]),
       ["Adiantamentos recebidos", "-" + money(d.totals.advances), "neg"],
       ["Créditos do período", money(d.totals.credits), "pos"],
       ["Débitos do período", "-" + money(d.totals.debits), "neg"],
@@ -552,36 +556,40 @@ export async function buildClosingTermPDF(d: ClosingTermData): Promise<Blob> {
     }
   }
 
-  /* ---------------- SEÇÃO 8 — DÍZIMO ---------------- */
-  y = space(y, 80);
-  y = section("8 · DÍZIMO", y);
-  doc.setDrawColor(...GOLD);
-  doc.setLineWidth(0.5);
-  doc.roundedRect(M, y, W, 50, 4, 4, "S");
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(6.6);
-  doc.setTextColor(...GOLD);
-  doc.text("DÍZIMO SUGERIDO SOBRE A PARTICIPAÇÃO", M + 14, y + 18, { charSpace: 1.4 });
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(14);
-  doc.setTextColor(...NAVY);
-  doc.text(formatCurrency(d.totals.tithe), M + 14, y + 38);
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(7.4);
-  doc.setTextColor(...MUTED);
-  doc.text(
-    doc.splitTextToSize(
-      "Valor informativo — não constitui despesa operacional e não é deduzido do saldo da conta corrente.",
-      W - 190,
-    ),
-    M + 170,
-    y + 28,
-  );
-  y += 66;
+  /* ---------------- SEÇÃO 8 — DÍZIMO (opcional) ---------------- */
+  // Com o dízimo desligado, as seções seguintes sobem um número.
+  const n8 = d.showTithe === false ? 0 : 1;
+  if (d.showTithe !== false) {
+    y = space(y, 80);
+    y = section("8 · DÍZIMO", y);
+    doc.setDrawColor(...GOLD);
+    doc.setLineWidth(0.5);
+    doc.roundedRect(M, y, W, 50, 4, 4, "S");
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(6.6);
+    doc.setTextColor(...GOLD);
+    doc.text("DÍZIMO SUGERIDO SOBRE A PARTICIPAÇÃO", M + 14, y + 18, { charSpace: 1.4 });
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(14);
+    doc.setTextColor(...NAVY);
+    doc.text(formatCurrency(d.totals.tithe), M + 14, y + 38);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(7.4);
+    doc.setTextColor(...MUTED);
+    doc.text(
+      doc.splitTextToSize(
+        "Valor informativo — não constitui despesa operacional e não é deduzido do saldo da conta corrente.",
+        W - 190,
+      ),
+      M + 170,
+      y + 28,
+    );
+    y += 66;
+  }
 
   /* ---------------- SEÇÃO 9 — DOCUMENTOS EXTERNOS ---------------- */
   y = space(y, 80);
-  y = section("9 · DOCUMENTOS EXTERNOS VINCULADOS", y);
+  y = section(`${8 + n8} · DOCUMENTOS EXTERNOS VINCULADOS`, y);
   if (!d.externalDocs?.length) {
     y = emptyNote(doc, "Nenhum documento externo vinculado a esta conta.", M, y);
   } else {
@@ -599,7 +607,7 @@ export async function buildClosingTermPDF(d: ClosingTermData): Promise<Blob> {
 
   /* ---------------- SEÇÃO 10 — OBSERVAÇÕES ---------------- */
   y = space(y, 80);
-  y = section("10 · OBSERVAÇÕES", y);
+  y = section(`${9 + n8} · OBSERVAÇÕES`, y);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
   doc.setTextColor(...GRAPHITE);
