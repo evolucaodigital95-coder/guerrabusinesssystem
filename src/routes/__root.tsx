@@ -79,7 +79,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
+      { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
+      { name: "theme-color", content: "#FAF9F5", media: "(prefers-color-scheme: light)" },
+      { name: "theme-color", content: "#262624", media: "(prefers-color-scheme: dark)" },
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-title", content: "GBS" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "default" },
       { title: "GBS — Guerra Business System" },
       { name: "description", content: "Sistema empresarial premium do Grupo Guerra." },
       { name: "author", content: "Grupo Guerra" },
@@ -103,6 +109,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     links: [
       { rel: "stylesheet", href: appCss },
       { rel: "icon", type: "image/png", href: "/favicon.png" },
+      { rel: "manifest", href: "/manifest.webmanifest" },
+      { rel: "apple-touch-icon", href: "/icons/apple-touch-icon.png" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
@@ -140,6 +148,17 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+
+  // App instalável: registra o service worker só no site publicado de verdade
+  // (fora do editor do Lovable, que abre o app dentro de um iframe).
+  useEffect(() => {
+    if (!("serviceWorker" in navigator)) return;
+    if (window.self !== window.top) return;
+    if (/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) return;
+    navigator.serviceWorker.register("/sw.js").catch(() => {
+      /* sem app instalável — o site continua funcionando normalmente */
+    });
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>

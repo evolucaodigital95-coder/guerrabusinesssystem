@@ -13,9 +13,11 @@ export const Route = createFileRoute("/sitemap.xml")({
   server: {
     handlers: {
       GET: async () => {
-        // Apenas a página de login é pública. Todas as rotas /app/* exigem autenticação.
+        // Páginas públicas: login e documentos legais. Todas as rotas /app/* exigem autenticação.
         const entries: SitemapEntry[] = [
           { path: "/", changefreq: "monthly", priority: "1.0" },
+          { path: "/termos", changefreq: "yearly", priority: "0.3" },
+          { path: "/privacidade", changefreq: "yearly", priority: "0.3" },
         ];
 
         const urls = entries.map((e) =>

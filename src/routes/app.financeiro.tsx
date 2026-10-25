@@ -127,6 +127,10 @@ function FinancePage() {
   const [openAcc, setOpenAcc] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [editing, setEditing] = useState<MovementRow | null>(null);
+  useQuickAction("nova-conta", () => {
+    setEditingAccount(null);
+    setOpenAcc(true);
+  });
   useQuickAction("lancamento", () => {
     setEditing(null);
     setOpenMov(true);

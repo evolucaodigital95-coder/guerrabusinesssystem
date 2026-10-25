@@ -11,7 +11,9 @@ export type QuickAction =
   | "saida-estoque"
   | "empresa"
   | "inventario"
-  | "venda-evento";
+  | "venda-evento"
+  | "nova-conta"
+  | "novo-material";
 
 let pending: QuickAction | null = null;
 const listeners = new Set<() => void>();

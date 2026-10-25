@@ -20,6 +20,7 @@ import { BRL, NUM, toLocalDate } from "@/lib/format";
 import { HERO_IMAGES, heroSrc, heroSrcSet } from "@/lib/hero-images";
 import { CountUp } from "@/components/count-up";
 import { OperationsDashboard } from "@/components/dashboard/operations-dashboard";
+import { FirstSteps } from "@/components/onboarding/first-steps";
 
 export const Route = createFileRoute("/app/hoje")({
   head: () => ({
@@ -435,6 +436,8 @@ function HojePage() {
           </div>
         </div>
       </section>
+
+      <FirstSteps />
 
       {/* Seu dia */}
       <section className="mb-14">

@@ -42,6 +42,7 @@ import {
 } from "@/lib/onboarding";
 import { ROLE_LABEL, type OrgRole } from "@/lib/permissions";
 
+import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/app/onboarding")({
   head: () => ({
     meta: [
@@ -261,8 +262,13 @@ function OnboardingPage() {
 function pickPatch(step: number, f: Record<string, unknown>): Record<string, unknown> {
   const pick = (keys: string[]) =>
     Object.fromEntries(keys.filter((k) => f[k] !== undefined).map((k) => [k, f[k]]));
-  if (step === 1)
-    return pick([
+  // Palestrante individual começa no menu simplificado (pode mudar depois em Preferências).
+  const prefs = (f.preferences && typeof f.preferences === "object" ? f.preferences : {}) as Record<
+    string,
+    unknown
+  >;
+  if (step === 1) {
+    const base = pick([
       "legal_name",
       "trade_name",
       "owner_name",
@@ -274,6 +280,10 @@ function pickPatch(step: number, f: Record<string, unknown>): Record<string, unk
       "description",
       "operation_type",
     ]);
+    if (f.operation_type === "palestrante" && prefs.navMode === undefined)
+      base.preferences = { ...prefs, navMode: "simple" };
+    return base;
+  }
   if (step === 2)
     return pick([
       "logo_url",
@@ -292,7 +302,7 @@ function pickPatch(step: number, f: Record<string, unknown>): Record<string, unk
       "tithe_percent",
       "finance_notes",
     ]);
-  if (step === 6) return pick(["enabled_modules"]);
+  if (step === 6) return pick(["enabled_modules", "preferences"]);
   return {};
 }
 
@@ -711,11 +721,42 @@ function StepOperacional({ form, set }: StepProps) {
       "enabled_modules",
       selected.includes(v) ? selected.filter((m) => m !== v) : [...selected, v],
     );
+  const prefs = (
+    form.preferences && typeof form.preferences === "object" ? form.preferences : {}
+  ) as Record<string, unknown>;
+  const navMode =
+    prefs.navMode === "simple" ||
+    (prefs.navMode === undefined && form.operation_type === "palestrante")
+      ? "simple"
+      : "full";
   return (
     <div className="space-y-4">
+      <div className="grid grid-cols-2 gap-2">
+        {[
+          {
+            v: "simple",
+            t: "Palestrante solo",
+            d: "Menu enxuto: agenda, palestras, financeiro e estoque",
+          },
+          { v: "full", t: "Completo", d: "Inclui temporadas, campanhas, projetos e inteligência" },
+        ].map((o) => (
+          <button
+            key={o.v}
+            type="button"
+            onClick={() => set("preferences", { ...prefs, navMode: o.v })}
+            className={cn(
+              "rounded-xl border p-3 text-left transition-colors",
+              navMode === o.v ? "border-clay bg-clay/5" : "border-border hover:bg-accent/50",
+            )}
+          >
+            <div className="text-sm font-medium">{o.t}</div>
+            <div className="text-[11px] text-muted-foreground">{o.d}</div>
+          </button>
+        ))}
+      </div>
       <p className="text-sm text-muted-foreground">
-        Selecione os recursos que sua organização utiliza. Nada é removido do sistema — usamos isso
-        apenas para destacar o que importa para você.
+        Selecione os recursos que sua organização utiliza. Os que ficarem desmarcados saem do menu
+        (sem nenhum marcado, todos aparecem). Dá para mudar quando quiser em Organização.
       </p>
       <div className="grid gap-2 sm:grid-cols-3">
         {OPERATIONAL_MODULES.map((m) => (

@@ -90,6 +90,7 @@ function EstoquePage() {
   useQuickAction("entrada-estoque", () => openMovement("entrada"));
   useQuickAction("saida-estoque", () => openMovement("saida_palestra"));
   useQuickAction("inventario", () => setCountOpen(true));
+  useQuickAction("novo-material", () => setItemOpen(true));
 
   const items = useQuery({
     queryKey: ["stock-items", organizationId],

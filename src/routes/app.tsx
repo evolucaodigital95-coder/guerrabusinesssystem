@@ -44,7 +44,15 @@ import { SubscriptionBanner } from "@/components/subscription-guard";
 import { QuickActionsFab } from "@/components/quick-actions-fab";
 import { CommandPalette } from "@/components/command-palette";
 import { EventSaleDialog } from "@/components/estoque/event-sale-dialog";
-import { useQuickAction } from "@/lib/quick-actions";
+import { requestQuickAction, useQuickAction, type QuickAction } from "@/lib/quick-actions";
+import { InstallAppMenuItem } from "@/components/install-app";
+
+const SHORTCUT_ACTIONS = new Set<QuickAction>([
+  "venda-evento",
+  "palestra",
+  "lancamento",
+  "inventario",
+]);
 
 export const Route = createFileRoute("/app")({
   component: AppRoute,
@@ -114,6 +122,20 @@ function AppLayout() {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, []);
+
+  // Atalhos do app instalado (ex.: /app/hoje?acao=venda-evento): dispara a ação
+  // na tela de destino e limpa o parâmetro da barra de endereço.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const acao = params.get("acao");
+    if (!acao || !SHORTCUT_ACTIONS.has(acao as QuickAction)) return;
+    params.delete("acao");
+    const rest = params.toString();
+    window.history.replaceState(null, "", `${window.location.pathname}${rest ? `?${rest}` : ""}`);
+    // Espera a tela de destino montar e registrar a ação.
+    const t = setTimeout(() => requestQuickAction(acao as QuickAction), 400);
+    return () => clearTimeout(t);
+  }, [pathname]);
 
   // Fecha o menu móvel ao trocar de página.
   useEffect(() => setMobileOpen(false), [pathname]);
@@ -230,6 +252,7 @@ function AppLayout() {
                   <Settings /> Configurações
                 </Link>
               </DropdownMenuItem>
+              <InstallAppMenuItem />
               <DropdownMenuItem onSelect={toggleTheme}>
                 {theme === "dark" ? <Sun /> : <Moon />}
                 {theme === "dark" ? "Tema claro" : "Tema escuro"}
