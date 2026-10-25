@@ -98,7 +98,10 @@ export function QuickActionsFab() {
           onClick={() => setOpen(false)}
         />
       )}
-      <div className="fixed right-5 bottom-5 z-50 flex flex-col items-end gap-3 md:right-8 md:bottom-8">
+      <div
+        className="fixed right-5 z-50 flex flex-col items-end gap-3 md:right-8"
+        style={{ bottom: "max(1.25rem, calc(env(safe-area-inset-bottom) + 0.75rem))" }}
+      >
         {open && (
           <ul className="flex flex-col items-end gap-2" role="menu">
             {QUICK_ACTIONS.map((a, i) => {

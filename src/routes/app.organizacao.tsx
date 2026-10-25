@@ -50,6 +50,9 @@ export const Route = createFileRoute("/app/organizacao")({
       { name: "twitter:card", content: "summary" },
     ],
   }),
+  validateSearch: (search: Record<string, unknown>): { aba?: string } => ({
+    aba: typeof search.aba === "string" ? search.aba : undefined,
+  }),
   component: () => (
     <RequirePermission permission="settings">
       <OrganizacaoPage />
@@ -60,6 +63,7 @@ export const Route = createFileRoute("/app/organizacao")({
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 function OrganizacaoPage() {
+  const { aba } = Route.useSearch();
   const { organizationName, organizationId, can } = useCurrentOrg();
   const settingsQ = useOrgSettings();
   const update = useUpdateOrgSettings();
@@ -137,7 +141,7 @@ function OrganizacaoPage() {
         </ul>
       </section>
 
-      <Tabs defaultValue="perfil">
+      <Tabs defaultValue={aba ?? "perfil"}>
         <TabsList className="flex flex-wrap">
           <TabsTrigger value="perfil">Perfil da empresa</TabsTrigger>
           <TabsTrigger value="identidade">Identidade visual</TabsTrigger>

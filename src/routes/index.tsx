@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate, Navigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Navigate, Link } from "@tanstack/react-router";
 import { useState, type CSSProperties, type FormEvent } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { lovable } from "@/integrations/lovable/index";
 import { useSession } from "@/hooks/use-session";
 import { authErrorMessage } from "@/lib/auth-messages";
 import { HERO_IMAGES, heroSrc, heroSrcSet } from "@/lib/hero-images";
+import { LEGAL } from "@/lib/legal";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -56,6 +57,7 @@ function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
+  const [accepted, setAccepted] = useState(false);
 
   if (!loading && session) return <Navigate to="/app/hoje" />;
 
@@ -71,11 +73,20 @@ function LoginPage() {
         toast.success("Enviamos um link de recuperação para o seu e-mail.");
         setMode("sign_in");
       } else if (mode === "sign_up") {
+        if (!accepted)
+          throw new Error(
+            "Para criar a conta, aceite os Termos de Uso e a Política de Privacidade.",
+          );
         const { error } = await supabase.auth.signUp({
           email,
           password,
           options: {
-            data: { full_name: fullName || email.split("@")[0] },
+            data: {
+              full_name: fullName || email.split("@")[0],
+              // Registro do aceite (versão e momento) para fins de LGPD.
+              terms_version: LEGAL.version,
+              terms_accepted_at: new Date().toISOString(),
+            },
             emailRedirectTo: window.location.origin,
           },
         });
@@ -126,9 +137,9 @@ function LoginPage() {
   }[mode];
 
   return (
-    <div className="relative grid min-h-screen overflow-hidden bg-ink lg:grid-cols-[1.15fr_1fr]">
-      {/* Fundo: foto em tela cheia com zoom lento */}
-      <div aria-hidden className="absolute inset-0">
+    <div className="relative grid min-h-screen overflow-clip bg-ink lg:grid-cols-[1.15fr_1fr]">
+      {/* Fundo: foto em tela cheia com zoom lento (overflow-hidden: o brilho não pode vazar) */}
+      <div aria-hidden className="absolute inset-0 overflow-hidden">
         <img
           src={heroSrc(HERO_IMAGES.login, 1920)}
           srcSet={heroSrcSet(HERO_IMAGES.login)}
@@ -265,12 +276,59 @@ function LoginPage() {
                 />
               </div>
             )}
+            {mode === "sign_up" && (
+              <label className="flex items-start gap-2.5 text-xs leading-relaxed text-muted-foreground">
+                <input
+                  type="checkbox"
+                  checked={accepted}
+                  onChange={(e) => setAccepted(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 shrink-0 accent-[var(--clay)]"
+                  required
+                />
+                <span>
+                  Li e aceito os{" "}
+                  <Link
+                    to="/termos"
+                    target="_blank"
+                    className="text-foreground underline underline-offset-2"
+                  >
+                    Termos de Uso
+                  </Link>{" "}
+                  e a{" "}
+                  <Link
+                    to="/privacidade"
+                    target="_blank"
+                    className="text-foreground underline underline-offset-2"
+                  >
+                    Política de Privacidade
+                  </Link>
+                  .
+                </span>
+              </label>
+            )}
             <Button type="submit" variant="brand" className="h-10 w-full" disabled={busy}>
               {busy ? "Aguarde…" : copy.submit}
             </Button>
           </form>
 
-          <p className="mt-8 text-center text-sm text-muted-foreground">
+          {mode !== "forgot" && (
+            <p className="mt-4 text-center text-[11px] leading-relaxed text-muted-foreground">
+              Ao continuar com o Google, você concorda com os{" "}
+              <Link to="/termos" className="underline underline-offset-2 hover:text-foreground">
+                Termos
+              </Link>{" "}
+              e a{" "}
+              <Link
+                to="/privacidade"
+                className="underline underline-offset-2 hover:text-foreground"
+              >
+                Política de Privacidade
+              </Link>
+              .
+            </p>
+          )}
+
+          <p className="mt-6 text-center text-sm text-muted-foreground">
             {mode === "sign_in" ? "Ainda não tem conta? " : "Já tem conta? "}
             <button
               onClick={() => setMode(mode === "sign_in" ? "sign_up" : "sign_in")}
