@@ -21,6 +21,8 @@ import {
   Receipt,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchAll } from "@/lib/fetch-all";
+import { balancesByItem } from "@/lib/stock";
 import { useCurrentOrg } from "@/hooks/use-current-org";
 import { lectureStatusLabel } from "@/lib/lectures";
 import { AssistantGuerra } from "@/components/dashboard/assistant-guerra";
@@ -110,43 +112,53 @@ function useOperations(orgId: string | null) {
         advances,
       ] = await Promise.all([
         base(supabase.from("seasons").select("id, name, status, starts_on, ends_on")),
-        base(
-          supabase
-            .from("lectures")
-            .select(
-              "id, title, status, scheduled_at, scheduled_time, city, state, actual_audience, expected_audience, gross_revenue, financial_status, closed_at, season_id, campaign_id, project_id, company_id, agent_id, contact_id, companies:company_id(legal_name, trade_name), contacts:contact_id(full_name, phone, whatsapp), agents:agent_id(full_name)",
-            ),
+        fetchAll(() =>
+          base(
+            supabase
+              .from("lectures")
+              .select(
+                "id, title, status, scheduled_at, scheduled_time, city, state, actual_audience, expected_audience, gross_revenue, financial_status, closed_at, season_id, campaign_id, project_id, company_id, agent_id, contact_id, companies:company_id(legal_name, trade_name), contacts:contact_id(full_name, phone, whatsapp), agents:agent_id(full_name)",
+              ),
+          ),
         ),
-        base(
-          supabase
-            .from("financial_movements")
-            .select(
-              "id, direction, amount, expected_amount, net_amount, occurs_on, expected_date, status, category, description, company_id, season_id, project_id, agent_id, lecture_id",
-            ),
+        fetchAll(() =>
+          base(
+            supabase
+              .from("financial_movements")
+              .select(
+                "id, direction, amount, expected_amount, net_amount, occurs_on, expected_date, status, category, description, company_id, season_id, project_id, agent_id, lecture_id",
+              ),
+          ),
         ),
-        supabase
-          .from("lecture_financial_snapshots")
-          .select(
-            "lecture_id, agent_id, gross_revenue, net_profit, gustavo_amount, agent_amount, total_expenses, total_stock_cost, total_card_fees, closed_at",
-          )
-          .eq("organization_id", org)
-          .is("archived_at", null),
+        fetchAll(() =>
+          supabase
+            .from("lecture_financial_snapshots")
+            .select(
+              "lecture_id, agent_id, gross_revenue, net_profit, gustavo_amount, agent_amount, total_expenses, total_stock_cost, total_card_fees, closed_at",
+            )
+            .eq("organization_id", org)
+            .is("archived_at", null),
+        ),
         base(
           supabase
             .from("stock_items")
             .select("id, name, min_quantity, average_cost, purchase_price, supplier"),
         ),
-        base(
-          supabase
-            .from("inventory_batches")
-            .select("id, stock_item_id, supplier, unit_cost, initial_quantity, quantity"),
+        fetchAll(() =>
+          base(
+            supabase
+              .from("inventory_batches")
+              .select("id, stock_item_id, supplier, unit_cost, initial_quantity, quantity"),
+          ),
         ),
-        base(
-          supabase
-            .from("stock_movements")
-            .select(
-              "id, stock_item_id, kind, quantity, total_cost, unit_cost, status, occurs_on, lecture_id",
-            ),
+        fetchAll(() =>
+          base(
+            supabase
+              .from("stock_movements")
+              .select(
+                "id, stock_item_id, kind, direction, quantity, total_cost, unit_cost, status, occurs_on, lecture_id",
+              ),
+          ),
         ),
         base(
           supabase
@@ -161,10 +173,12 @@ function useOperations(orgId: string | null) {
         base(supabase.from("campaigns").select("id, name, season_id")),
         base(supabase.from("agents").select("id, full_name")),
         base(supabase.from("projects").select("id, name, season_id, campaign_id")),
-        base(
-          supabase
-            .from("advances")
-            .select("id, agent_id, lecture_id, amount, amount_amortized, status, granted_on"),
+        fetchAll(() =>
+          base(
+            supabase
+              .from("advances")
+              .select("id, agent_id, lecture_id, amount, amount_amortized, status, granted_on"),
+          ),
         ),
       ]);
 
@@ -375,19 +389,9 @@ export function OperationsDashboard({ view }: { view: "overview" | "rankings" })
       .sort((a, b) => b.due - a.due);
 
     // ---- estoque
+    // Mesma regra de saldo da tela de Estoque (inclui devolução ao fornecedor como saída).
     const balance = new Map<string, number>();
-    for (const m of stockMovs) {
-      if (
-        m.status === "cancelado" ||
-        m.status === "estornado" ||
-        m.kind === "cancelamento" ||
-        !m.stock_item_id
-      )
-        continue;
-      const q = N(m.quantity);
-      const sign = m.kind === "saida" || m.kind === "baixa" || m.kind === "reserva" ? -1 : 1;
-      balance.set(m.stock_item_id, (balance.get(m.stock_item_id) ?? 0) + sign * q);
-    }
+    for (const [id, b] of balancesByItem(stockMovs)) balance.set(id, b.onHand);
     const lowStock = items
       .filter((i) => N(i.min_quantity) > 0 && (balance.get(i.id) ?? 0) <= N(i.min_quantity))
       .map((i) => ({

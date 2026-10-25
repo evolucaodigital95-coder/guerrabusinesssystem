@@ -36,6 +36,7 @@ import {
 import { PageHeader } from "@/components/page-shell";
 import { ListSkeleton } from "@/components/shared/list-skeleton";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchAll } from "@/lib/fetch-all";
 import { useSession } from "@/hooks/use-session";
 import { useCurrentOrg } from "@/hooks/use-current-org";
 import { formatCurrency, formatDate } from "@/lib/crm";
@@ -168,10 +169,11 @@ function FinancePage() {
     queryKey: ["movements", organizationId],
     enabled: !!organizationId,
     queryFn: async (): Promise<Movement[]> => {
-      const { data, error } = await supabase
-        .from("financial_movements")
-        .select(
-          `
+      const { data, error } = await fetchAll(() =>
+        supabase
+          .from("financial_movements")
+          .select(
+            `
           id, direction, status, category, description, amount, expected_amount,
           expected_date, settled_at, occurs_on, occurs_time,
           account_id, company_id, lecture_id, agent_id, season_id, project_id,
@@ -185,11 +187,12 @@ function FinancePage() {
           projects:project_id ( id, name ),
           card_brands:card_brand_id ( id, name, kind )
         `,
-        )
-        .eq("organization_id", organizationId!)
-        .is("archived_at", null)
-        .order("occurs_on", { ascending: false, nullsFirst: false })
-        .order("created_at", { ascending: false });
+          )
+          .eq("organization_id", organizationId!)
+          .is("archived_at", null)
+          .order("occurs_on", { ascending: false, nullsFirst: false })
+          .order("created_at", { ascending: false }),
+      );
       if (error) throw error;
       return (data ?? []) as unknown as Movement[];
     },

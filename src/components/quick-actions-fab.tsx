@@ -1,6 +1,14 @@
 import { useEffect, useState, type CSSProperties } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { Building2, Mic, PackageMinus, PackagePlus, Plus, Wallet } from "lucide-react";
+import {
+  Building2,
+  ClipboardCheck,
+  Mic,
+  PackageMinus,
+  PackagePlus,
+  Plus,
+  Wallet,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { requestQuickAction, type QuickAction } from "@/lib/quick-actions";
 
@@ -38,6 +46,13 @@ export const QUICK_ACTIONS: {
     hint: "Material usado em uma palestra",
     to: "/app/estoque",
     icon: PackageMinus,
+  },
+  {
+    action: "inventario",
+    label: "Inventário",
+    hint: "Conferir o estoque físico",
+    to: "/app/estoque",
+    icon: ClipboardCheck,
   },
   {
     action: "empresa",

@@ -21,6 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchAll } from "@/lib/fetch-all";
 import { calcOnHand } from "@/lib/stock";
 import {
   calculateLecture,
@@ -226,11 +227,13 @@ export function LectureWizardDialog({
     enabled: open,
     queryFn: async () =>
       (
-        await supabase
-          .from("stock_movements")
-          .select("stock_item_id, kind, direction, quantity, status")
-          .eq("organization_id", organizationId)
-          .is("archived_at", null)
+        await fetchAll(() =>
+          supabase
+            .from("stock_movements")
+            .select("stock_item_id, kind, direction, quantity, status")
+            .eq("organization_id", organizationId)
+            .is("archived_at", null),
+        )
       ).data ?? [],
   });
   const rules = useQuery({
