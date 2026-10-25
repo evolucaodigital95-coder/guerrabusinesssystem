@@ -29,7 +29,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { GbsGlyph, GbsMark } from "@/components/gbs-mark";
-import { MODULES } from "@/lib/modules";
+import { visibleModules } from "@/lib/modules";
+import { useOrgSettings } from "@/hooks/use-onboarding";
+import { parsePreferences, pluralLabel } from "@/lib/org-preferences";
 import { useTheme } from "@/components/theme-provider";
 import { cn } from "@/lib/utils";
 import { useSession } from "@/hooks/use-session";
@@ -41,6 +43,8 @@ import { OnboardingGate } from "@/components/onboarding/onboarding-gate";
 import { SubscriptionBanner } from "@/components/subscription-guard";
 import { QuickActionsFab } from "@/components/quick-actions-fab";
 import { CommandPalette } from "@/components/command-palette";
+import { EventSaleDialog } from "@/components/estoque/event-sale-dialog";
+import { useQuickAction } from "@/lib/quick-actions";
 
 export const Route = createFileRoute("/app")({
   component: AppRoute,
@@ -78,12 +82,22 @@ const SECTION_LABEL: Record<(typeof SECTIONS)[number], string> = {
 function AppLayout() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
+  const [saleOpen, setSaleOpen] = useState(false);
+  useQuickAction("venda-evento", () => setSaleOpen(true));
   const { theme, toggleTheme } = useTheme();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
   const { user } = useSession();
   const queryClient = useQueryClient();
-  const { can, switching, organizationStatus, isOrgActive } = useCurrentOrg();
+  const { can, switching, organizationStatus, isOrgActive, organizationId } = useCurrentOrg();
+  const settings = useOrgSettings();
+  const prefs = parsePreferences(settings.data?.preferences, settings.data?.tithe_percent);
+  const menu = visibleModules({
+    enabledModules: settings.data?.enabled_modules ?? [],
+    navMode: prefs.navMode,
+    agentLabel: prefs.agentLabel,
+    agentPlural: pluralLabel(prefs.agentLabel),
+  });
 
   const fullName = (user?.user_metadata?.full_name as string | undefined) ?? "";
   const firstName = fullName.split(" ")[0] || user?.email?.split("@")[0] || "";
@@ -138,7 +152,8 @@ function AppLayout() {
 
         <nav className="flex-1 overflow-y-auto px-3 pb-6">
           {SECTIONS.map((section) => {
-            const items = MODULES.filter((m) => m.section === section);
+            const items = menu.filter((m) => m.section === section);
+            if (items.length === 0) return null;
             return (
               <div key={section} className="mt-4 first:mt-1">
                 <div className="mb-1 px-2.5 text-[11px] font-medium text-muted-foreground/80">
@@ -289,6 +304,14 @@ function AppLayout() {
       </div>
 
       {can("create") && <QuickActionsFab />}
+      {can("create") && organizationId && user && (
+        <EventSaleDialog
+          open={saleOpen}
+          onOpenChange={setSaleOpen}
+          organizationId={organizationId}
+          userId={user.id}
+        />
+      )}
       <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} canCreate={can("create")} />
 
       {mobileOpen && (

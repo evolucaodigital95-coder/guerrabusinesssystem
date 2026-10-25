@@ -20,6 +20,10 @@ function normalizeSettings(row: any): OrgSettings {
       ? row.payment_methods
       : DEFAULT_FINANCE.payment_methods,
     enabled_modules: Array.isArray(row.enabled_modules) ? row.enabled_modules : [],
+    preferences:
+      row.preferences && typeof row.preferences === "object" && !Array.isArray(row.preferences)
+        ? row.preferences
+        : {},
   } as OrgSettings;
 }
 

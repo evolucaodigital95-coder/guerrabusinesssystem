@@ -42,6 +42,7 @@ import { PageHeader } from "@/components/page-shell";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/hooks/use-session";
 import { useCurrentOrg } from "@/hooks/use-current-org";
+import { useOrgPreferences } from "@/lib/org-preferences";
 import { formatCurrency, formatDate } from "@/lib/crm";
 import { AgentFormDialog, type AgentRow } from "@/components/agendistas/agent-form-dialog";
 import { AdvanceFormDialog, type AdvanceRow } from "@/components/agendistas/advance-form-dialog";
@@ -93,6 +94,7 @@ function AgentDetail() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
   const { user } = useSession();
+  const prefs = useOrgPreferences();
   const { organizationId, organizationName } = useCurrentOrg();
   const [editOpen, setEditOpen] = useState(false);
   const [advOpen, setAdvOpen] = useState(false);
@@ -832,104 +834,6 @@ function AgentDetail() {
     onError: (e) => toast.error(e instanceof Error ? e.message : "Não foi possível excluir"),
   });
 
-  const closeLecture = useMutation({
-    mutationFn: async (lectureId: string) => {
-      if (!organizationId || !user) throw new Error("Sessão inválida");
-      const lec = lectures.data?.find((l) => l.id === lectureId);
-      if (!lec) throw new Error("Palestra não encontrada");
-      const gross = Number(lec.gross_revenue ?? 0);
-      if (!gross) throw new Error("Defina a receita bruta da palestra antes de fechar.");
-
-      // despesas da palestra
-      const { data: exps } = await supabase
-        .from("financial_movements")
-        .select("description, amount, occurs_on")
-        .eq("lecture_id", lectureId)
-        .eq("direction", "out")
-        .is("archived_at", null);
-
-      // adiantamentos abertos do agendista
-      const { data: advs } = await supabase
-        .from("advances")
-        .select("id, amount, granted_on, source, status, amount_amortized")
-        .eq("agent_id", id)
-        .is("archived_at", null)
-        .neq("status", "cancelado");
-
-      const openAdvances = (advs ?? [])
-        .map((a) => ({
-          id: a.id,
-          amount: Math.max(0, Number(a.amount ?? 0) - Number(a.amount_amortized ?? 0)),
-          granted_on: a.granted_on,
-          source: a.source ?? null,
-        }))
-        .filter((a) => a.amount > 0);
-
-      const calc = calculateLecture({
-        grossRevenue: gross,
-        expenses: (exps ?? []).map((e) => ({
-          description: e.description,
-          amount: Number(e.amount ?? 0),
-          date: e.occurs_on,
-        })),
-        advances: openAdvances,
-        rule: activeRule,
-      });
-
-      const { error: insErr } = await supabase.from("lecture_financial_snapshots").insert({
-        organization_id: organizationId,
-        lecture_id: lectureId,
-        agent_id: id,
-        rule_id: activeRule.id ?? null,
-        rule_snapshot: JSON.parse(JSON.stringify(activeRule)),
-        inputs: JSON.parse(
-          JSON.stringify({ grossRevenue: gross, expenses: exps ?? [], advances: openAdvances }),
-        ),
-        breakdown: JSON.parse(JSON.stringify(calc)),
-        gross_revenue: gross,
-        total_expenses: calc.totals.totalExpenses,
-        total_advances: calc.totals.totalAdvances,
-        net_profit: calc.totals.netProfit,
-        gustavo_amount: calc.totals.gustavoAmount,
-        agent_amount: calc.totals.agentAmount,
-        closed_by: user.id,
-      });
-      if (insErr) throw insErr;
-
-      // Amortiza adiantamentos
-      for (const a of openAdvances) {
-        const original = (advs ?? []).find((x) => x.id === a.id);
-        if (!original) continue;
-        const newAmortized = Number(original.amount_amortized ?? 0) + a.amount;
-        const fullyAmortized = newAmortized >= Number(original.amount ?? 0);
-        await supabase
-          .from("advances")
-          .update({
-            amount_amortized: newAmortized,
-            status: fullyAmortized ? "abatido_total" : "abatido_parcial",
-            updated_by: user.id,
-          })
-          .eq("id", a.id);
-      }
-
-      await supabase
-        .from("lectures")
-        .update({
-          financial_status: "closed",
-          closed_at: new Date().toISOString(),
-          closed_by: user.id,
-        })
-        .eq("id", lectureId);
-    },
-    onSuccess: () => {
-      toast.success("Palestra fechada financeiramente");
-      qc.invalidateQueries({ queryKey: ["agent-snapshots", id] });
-      qc.invalidateQueries({ queryKey: ["advances", id] });
-      qc.invalidateQueries({ queryKey: ["agent-lectures", id, organizationId] });
-    },
-    onError: (e) => toast.error(e instanceof Error ? e.message : "Erro"),
-  });
-
   /** Exclui definitivamente um movimento do extrato (adiantamento ou pagamento). */
   const deleteMovement = useMutation({
     mutationFn: async (movementId: string) => {
@@ -1524,7 +1428,7 @@ function AgentDetail() {
       </Link>
 
       <PageHeader
-        eyebrow="Agendista"
+        eyebrow={prefs.agentLabel}
         title={a.full_name}
         description={[a.email, a.phone].filter(Boolean).join(" · ")}
         actions={
@@ -2132,13 +2036,16 @@ function AgentDetail() {
                         >
                           <Pencil className="mr-1.5 h-3.5 w-3.5" /> Editar
                         </Button>
-                        <Button
-                          variant="brand"
-                          size="sm"
-                          onClick={() => closeLecture.mutate(l.id)}
-                          disabled={closeLecture.isPending || !l.gross_revenue}
-                        >
-                          <Calculator className="mr-1.5 h-4 w-4" /> Fechar e calcular
+                        <Button variant="brand" size="sm" asChild>
+                          {/* Um único lugar de fechamento: o motor completo da palestra
+                              (receitas recebidas, taxas de cartão, materiais e regra). */}
+                          <Link
+                            to="/app/palestras/$id"
+                            params={{ id: l.id }}
+                            search={{ aba: "fechamento" }}
+                          >
+                            <Calculator className="mr-1.5 h-4 w-4" /> Fechar e calcular
+                          </Link>
                         </Button>
                         <ConfirmDialog
                           title="Arquivar esta palestra?"

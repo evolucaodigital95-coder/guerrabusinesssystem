@@ -29,6 +29,8 @@ import {
 import { OPERATION_TYPES, OPERATIONAL_MODULES, PAYMENT_METHODS } from "@/lib/onboarding";
 import { ROLE_LABEL, type OrgRole } from "@/lib/permissions";
 
+import { cn } from "@/lib/utils";
+import { parsePreferences } from "@/lib/org-preferences";
 export const Route = createFileRoute("/app/organizacao")({
   head: () => ({
     meta: [
@@ -87,6 +89,12 @@ function OrganizacaoPage() {
 
   const methods: string[] = Array.isArray(f.payment_methods) ? f.payment_methods : [];
   const modules: string[] = Array.isArray(f.enabled_modules) ? f.enabled_modules : [];
+  const rawPrefs: Record<string, unknown> =
+    f.preferences && typeof f.preferences === "object" ? f.preferences : {};
+  const prefs = parsePreferences(rawPrefs, f.tithe_percent);
+  function setPref(key: string, value: unknown) {
+    set("preferences", { ...rawPrefs, [key]: value });
+  }
 
   return (
     <div className="mx-auto max-w-5xl pb-16">
@@ -453,13 +461,82 @@ function OrganizacaoPage() {
             </div>
           </div>
           <p className="text-xs text-muted-foreground">
-            Notificações, integrações e importação de dados (CSV/XLSX) serão acopladas a esta área
-            nas próximas fases.
+            Módulos desmarcados somem do menu. Sem nenhum marcado, todos aparecem.
           </p>
+
+          <div className="grid gap-4 border-t border-border pt-5 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label className="text-[13px]">Modo do menu</Label>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { v: "full", t: "Completo", d: "Todos os módulos de gestão" },
+                  { v: "simple", t: "Palestrante solo", d: "Só o essencial do dia a dia" },
+                ].map((o) => (
+                  <button
+                    key={o.v}
+                    type="button"
+                    disabled={!canEdit}
+                    onClick={() => setPref("navMode", o.v)}
+                    className={cn(
+                      "rounded-xl border p-3 text-left transition-colors",
+                      prefs.navMode === o.v
+                        ? "border-clay bg-clay/5"
+                        : "border-border hover:bg-accent/50",
+                    )}
+                  >
+                    <div className="text-sm font-medium">{o.t}</div>
+                    <div className="text-[11px] text-muted-foreground">{o.d}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-[13px]">Como você chama quem agenda/vende as palestras?</Label>
+              <Input
+                value={prefs.agentLabel}
+                disabled={!canEdit}
+                maxLength={24}
+                onChange={(e) => setPref("agentLabel", e.target.value)}
+                placeholder="Agendista, Produtor, Vendedor…"
+              />
+              <p className="text-[11px] text-muted-foreground">
+                Aparece no menu e nas telas principais.
+              </p>
+            </div>
+            <label className="flex items-start gap-3 rounded-xl border border-border p-3 text-sm">
+              <Checkbox
+                checked={prefs.showTithe}
+                disabled={!canEdit}
+                onCheckedChange={(v) => setPref("showTithe", v === true)}
+              />
+              <span>
+                <span className="block font-medium">Mostrar dízimo sugerido</span>
+                <span className="text-[11px] text-muted-foreground">
+                  Na Área do Palestrante e nos documentos de fechamento. Percentual na aba
+                  Financeiro.
+                </span>
+              </span>
+            </label>
+            <label className="flex items-start gap-3 rounded-xl border border-border p-3 text-sm">
+              <Checkbox
+                checked={prefs.bookSalesInSplit}
+                disabled={!canEdit}
+                onCheckedChange={(v) => setPref("bookSalesInSplit", v === true)}
+              />
+              <span>
+                <span className="block font-medium">Venda de livros entra na divisão</span>
+                <span className="text-[11px] text-muted-foreground">
+                  Se marcado, o que for vendido no evento soma na receita da palestra e gera
+                  comissão para o {prefs.agentLabel.toLowerCase()}.
+                </span>
+              </span>
+            </label>
+          </div>
+
           <Button
             size="sm"
             disabled={!canEdit || update.isPending}
-            onClick={() => save(["enabled_modules"])}
+            onClick={() => save(["enabled_modules", "preferences"])}
           >
             Salvar preferências
           </Button>

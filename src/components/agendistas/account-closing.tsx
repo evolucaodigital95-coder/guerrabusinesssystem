@@ -29,6 +29,7 @@ import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { useCurrentOrg } from "@/hooks/use-current-org";
 import { formatCurrency, formatDate } from "@/lib/crm";
 import { useDocBrand } from "@/hooks/use-doc-brand";
+import { useOrgPreferences } from "@/lib/org-preferences";
 import {
   buildClosingTermPDF,
   closingFileName,
@@ -100,6 +101,7 @@ export function AccountClosing({
   userId: string;
   source: () => ClosingSource;
 }) {
+  const prefs = useOrgPreferences();
   const qc = useQueryClient();
   const { organizationId, can } = useCurrentOrg();
   const [open, setOpen] = useState(false);
@@ -187,6 +189,7 @@ export function AccountClosing({
         externalDocs: snap.externalDocs,
         notes: notes.trim() || null,
         thanksMessage: thanks.trim() || DEFAULT_THANKS_MESSAGE,
+        showTithe: prefs.showTithe,
         brand: await getDocBrand(),
       };
 

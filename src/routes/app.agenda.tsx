@@ -8,6 +8,7 @@ import { PageHeader, EmptyState } from "@/components/page-shell";
 import { ListSkeleton } from "@/components/shared/list-skeleton";
 import { lectureStatusLabel } from "@/lib/lectures";
 import { cn } from "@/lib/utils";
+import { CalendarActions } from "@/components/palestras/calendar-actions";
 
 export const Route = createFileRoute("/app/agenda")({
   head: () => ({
@@ -86,6 +87,38 @@ function AgendaPage() {
         eyebrow="Operação"
         title="Agenda"
         description="Compromissos com filtro por período. Clique para abrir a palestra."
+        actions={
+          organizationId ? (
+            <CalendarActions
+              label="Levar para o calendário"
+              loadMany={async () => {
+                const { data, error } = await supabase
+                  .from("lectures")
+                  .select(
+                    "id, title, theme, scheduled_at, scheduled_time, city, state, location, notes, companies:company_id ( legal_name )",
+                  )
+                  .eq("organization_id", organizationId)
+                  .is("archived_at", null)
+                  .neq("status", "cancelada")
+                  .gte("scheduled_at", new Date().toISOString())
+                  .order("scheduled_at");
+                if (error) throw error;
+                return (data ?? []).map((l) => ({
+                  id: l.id,
+                  title: l.title,
+                  theme: l.theme,
+                  scheduled_at: l.scheduled_at,
+                  scheduled_time: l.scheduled_time,
+                  city: l.city,
+                  state: l.state,
+                  address: l.location,
+                  notes: l.notes,
+                  company: (l.companies as { legal_name?: string } | null)?.legal_name ?? null,
+                }));
+              }}
+            />
+          ) : undefined
+        }
       />
 
       <div className="mb-8 inline-flex rounded-full border border-border bg-card p-1">

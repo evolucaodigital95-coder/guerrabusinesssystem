@@ -76,6 +76,15 @@ import { paymentMethodLabel } from "@/lib/finance";
 import { cn } from "@/lib/utils";
 import { openDoc } from "@/lib/doc-links";
 
+import {
+  EVENT_SALE_CATEGORY,
+  EVENT_SALE_REASON_PREFIX,
+  useOrgPreferences,
+} from "@/lib/org-preferences";
+import { EventSaleDialog } from "@/components/estoque/event-sale-dialog";
+import { FileText, ShoppingBag } from "lucide-react";
+import { CalendarActions } from "@/components/palestras/calendar-actions";
+import { ProposalDialog } from "@/components/palestras/proposal-dialog";
 export const Route = createFileRoute("/app/palestras/$id")({
   head: () => ({
     meta: [
@@ -86,14 +95,20 @@ export const Route = createFileRoute("/app/palestras/$id")({
       },
     ],
   }),
+  validateSearch: (search: Record<string, unknown>): { aba?: string } => ({
+    aba: typeof search.aba === "string" ? search.aba : undefined,
+  }),
   component: PalestraDetail,
 });
 
 function PalestraDetail() {
   const { id } = Route.useParams();
+  const { aba } = Route.useSearch();
+  const [saleOpen, setSaleOpen] = useState(false);
+  const [proposalOpen, setProposalOpen] = useState(false);
   const navigate = useNavigate();
   const { user } = useSession();
-  const { organizationId } = useCurrentOrg();
+  const { organizationId, organizationName } = useCurrentOrg();
   const [edit, setEdit] = useState(false);
   const [eventOpen, setEventOpen] = useState(false);
   const [audienceDraft, setAudienceDraft] = useState<string>("");
@@ -294,7 +309,7 @@ function PalestraDetail() {
         title={l.title}
         description={l.theme ?? undefined}
         actions={
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center justify-end gap-2">
             <Select value={l.status ?? "lead"} onValueChange={(v) => setStatus.mutate(v)}>
               <SelectTrigger className="w-[220px]">
                 <SelectValue />
@@ -307,6 +322,25 @@ function PalestraDetail() {
                 ))}
               </SelectContent>
             </Select>
+            <Button variant="brand" onClick={() => setSaleOpen(true)}>
+              <ShoppingBag /> Venda no evento
+            </Button>
+            <Button variant="outline" onClick={() => setProposalOpen(true)}>
+              <FileText /> Proposta
+            </Button>
+            <CalendarActions
+              lecture={{
+                id,
+                title: l.title,
+                theme: l.theme,
+                scheduled_at: l.scheduled_at,
+                scheduled_time: l.scheduled_time,
+                city: l.city,
+                state: l.state,
+                address: l.location ?? null,
+                company: company?.legal_name ?? null,
+              }}
+            />
             <Button variant="outline" onClick={() => setEdit(true)}>
               <Pencil className="mr-1.5 h-4 w-4" /> Editar
             </Button>
@@ -320,6 +354,37 @@ function PalestraDetail() {
           </div>
         }
       />
+
+      {organizationId && (
+        <ProposalDialog
+          open={proposalOpen}
+          onOpenChange={setProposalOpen}
+          organizationId={organizationId}
+          speakerName={organizationName ?? "Palestrante"}
+          lecture={{
+            id,
+            title: l.title,
+            theme: l.theme,
+            scheduled_at: l.scheduled_at,
+            city: l.city,
+            state: l.state,
+            location: l.location ?? null,
+            expected_audience: l.expected_audience ?? null,
+            gross_revenue: l.gross_revenue ?? null,
+            company: company?.legal_name ?? null,
+            contact: contact?.full_name ?? null,
+          }}
+        />
+      )}
+      {organizationId && user && (
+        <EventSaleDialog
+          open={saleOpen}
+          onOpenChange={setSaleOpen}
+          organizationId={organizationId}
+          userId={user.id}
+          defaultLectureId={id}
+        />
+      )}
 
       {/* Cabeçalho com vínculos */}
       <div className="grid gap-3 md:grid-cols-3 xl:grid-cols-6">
@@ -386,7 +451,7 @@ function PalestraDetail() {
         <KPI label="Receita bruta" value={formatCurrency(Number(l.gross_revenue ?? 0))} />
       </div>
 
-      <Tabs defaultValue="overview" className="space-y-6">
+      <Tabs key={aba ?? "overview"} defaultValue={aba ?? "overview"} className="space-y-6">
         <TabsList className="bg-card/40">
           <TabsTrigger value="overview">Visão geral</TabsTrigger>
           <TabsTrigger value="timeline">Timeline</TabsTrigger>
@@ -569,6 +634,8 @@ function PalestraDetail() {
               organizationId={organizationId}
               userId={user.id}
               grossRevenueDefault={Number(l.gross_revenue ?? 0)}
+              audience={Number(l.actual_audience ?? 0)}
+              lectureStatus={l.status ?? null}
               agentId={agent?.id ?? null}
               seasonId={season?.id ?? null}
             />
@@ -933,6 +1000,8 @@ type EnrichedExpense = LectureExpenseInput & {
 };
 
 function FechamentoFinanceiroTab({
+  audience = 0,
+  lectureStatus = null,
   lectureId,
   organizationId,
   userId,
@@ -944,9 +1013,12 @@ function FechamentoFinanceiroTab({
   organizationId: string;
   userId: string;
   grossRevenueDefault: number;
+  audience?: number;
+  lectureStatus?: string | null;
   agentId: string | null;
   seasonId: string | null;
 }) {
+  const prefs = useOrgPreferences();
   const qc = useQueryClient();
   const { emit } = useAutomation();
 
@@ -1064,7 +1136,13 @@ function FechamentoFinanceiroTab({
   // Receitas (in)
   const receitas = useMemo(() => {
     return (movements.data ?? [])
-      .filter((m) => m.direction === "in" && !CANCEL_STATUS.includes(m.status ?? ""))
+      .filter(
+        (m) =>
+          m.direction === "in" &&
+          !CANCEL_STATUS.includes(m.status ?? "") &&
+          // Venda de livros no evento só entra na divisão se a organização quiser.
+          (prefs.bookSalesInSplit || m.category !== EVENT_SALE_CATEGORY),
+      )
       .map((m) => ({
         id: m.id,
         description: m.description ?? "Receita",
@@ -1083,7 +1161,7 @@ function FechamentoFinanceiroTab({
         docRoute: m.id ? `/app/financeiro/${m.id}` : "/app/financeiro",
         docLabel: "Abrir lançamento",
       }));
-  }, [movements.data]);
+  }, [movements.data, prefs.bookSalesInSplit]);
 
   const cardFees = useMemo(() => {
     return receitas
@@ -1131,7 +1209,11 @@ function FechamentoFinanceiroTab({
   // Stock consumed (out)
   const expensesFromStock: EnrichedExpense[] = useMemo(() => {
     return (stockMoves.data ?? [])
-      .filter((m) => m.direction === "out")
+      .filter(
+        (m) =>
+          m.direction === "out" &&
+          (prefs.bookSalesInSplit || !(m.reason ?? "").startsWith(EVENT_SALE_REASON_PREFIX)),
+      )
       .map((m) => {
         const item = m.stock_items as {
           id?: string;
@@ -1158,7 +1240,7 @@ function FechamentoFinanceiroTab({
         };
       })
       .filter((e) => e.amount > 0);
-  }, [stockMoves.data]);
+  }, [stockMoves.data, prefs.bookSalesInSplit]);
 
   const expenses: EnrichedExpense[] = useMemo(
     () => [...expensesFromMovs, ...expensesFromStock],
@@ -1430,6 +1512,49 @@ function FechamentoFinanceiroTab({
 
   return (
     <div className="space-y-5">
+      {!isClosed && (
+        <CloseReadiness
+          checks={[
+            {
+              ok: !!agentId,
+              label: "Agendista vinculado",
+              hint: "Necessário para calcular a comissão.",
+            },
+            {
+              ok: receitas.length > 0,
+              label: "Receita registrada",
+              hint:
+                receitas.length > 0
+                  ? `${receitas.length} recebimento(s) lançados.`
+                  : "Sem recebimento lançado — será usado o valor previsto da palestra.",
+              soft: true,
+            },
+            {
+              ok: (stockMoves.data ?? []).length > 0,
+              label: "Material baixado",
+              hint:
+                (stockMoves.data ?? []).length > 0
+                  ? "Saídas de estoque vinculadas."
+                  : "Nenhuma saída de material — confirme se não usou livros ou kits.",
+              soft: true,
+            },
+            {
+              ok: audience > 0,
+              label: "Público informado",
+              hint: audience > 0 ? `${audience} pessoas.` : "Informe na aba Pessoas impactadas.",
+              soft: true,
+            },
+            {
+              ok: lectureStatus === "realizada" || lectureStatus === "encerrada",
+              label: "Palestra marcada como realizada",
+              hint: "Mude o status no topo da página.",
+              soft: true,
+            },
+          ]}
+          totals={calc.totals}
+        />
+      )}
+
       {/* Cabeçalho do motor */}
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-card/40 p-5">
         <div>
@@ -1906,6 +2031,83 @@ function CalcKPI({
       >
         {formatCurrency(value)}
       </p>
+    </div>
+  );
+}
+
+function CloseReadiness({
+  checks,
+  totals,
+}: {
+  checks: { ok: boolean; label: string; hint: string; soft?: boolean }[];
+  totals: {
+    grossRevenue: number;
+    totalExpenses: number;
+    totalCardFees: number;
+    fee: number;
+    gustavoAmount: number;
+    agentAmount: number;
+  };
+}) {
+  const gross = totals.grossRevenue || 0;
+  const costs = totals.totalExpenses + totals.totalCardFees + totals.fee;
+  const parts = [
+    { label: "Custos e taxas", value: costs, className: "bg-foreground/25" },
+    { label: "Palestrante", value: totals.gustavoAmount, className: "bg-clay" },
+    { label: "Agendista", value: totals.agentAmount, className: "bg-gold" },
+  ];
+  const done = checks.filter((c) => c.ok).length;
+  return (
+    <div className="grid gap-4 rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-elegant)] lg:grid-cols-[1fr_1.2fr]">
+      <div>
+        <div className="text-[12px] font-medium text-clay">Pronto para fechar?</div>
+        <div className="mt-1 font-display text-xl">
+          {done} de {checks.length} itens conferidos
+        </div>
+        <ul className="mt-3 space-y-2">
+          {checks.map((c) => (
+            <li key={c.label} className="flex items-start gap-2 text-sm">
+              <span
+                className={cn(
+                  "mt-0.5 grid h-4 w-4 shrink-0 place-items-center rounded-full text-[10px] text-white",
+                  c.ok ? "bg-emerald-500" : c.soft ? "bg-amber-500" : "bg-destructive",
+                )}
+              >
+                {c.ok ? "✓" : "!"}
+              </span>
+              <span>
+                <span className="font-medium">{c.label}</span>
+                <span className="block text-[11px] text-muted-foreground">{c.hint}</span>
+              </span>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <div>
+        <div className="text-[12px] font-medium text-muted-foreground">Para onde vai a receita</div>
+        <div className="mt-1 font-display text-2xl">{formatCurrency(gross)}</div>
+        <div className="mt-3 flex h-3 overflow-hidden rounded-full bg-muted">
+          {parts.map((p) => (
+            <div
+              key={p.label}
+              className={cn("h-full transition-[width] duration-700", p.className)}
+              style={{ width: `${gross > 0 ? Math.max(0, (p.value / gross) * 100) : 0}%` }}
+            />
+          ))}
+        </div>
+        <ul className="mt-3 grid grid-cols-3 gap-2 text-xs">
+          {parts.map((p) => (
+            <li key={p.label}>
+              <span className="flex items-center gap-1.5 text-muted-foreground">
+                <span className={cn("h-2 w-2 rounded-full", p.className)} /> {p.label}
+              </span>
+              <span className="mt-0.5 block font-medium tabular-nums">
+                {formatCurrency(p.value)}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 }
