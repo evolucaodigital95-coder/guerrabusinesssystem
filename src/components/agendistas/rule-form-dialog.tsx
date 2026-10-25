@@ -76,7 +76,7 @@ export function RuleFormDialog({
       const gShare = Number(f.gustavo_share || 0);
       const aShare = Number(f.agent_share || 0);
       if (Math.abs(gShare + aShare - 1) > 0.01) {
-        throw new Error("A soma dos percentuais Gustavo + Agendista deve ser 100%.");
+        throw new Error("A soma dos percentuais Palestrante + Agendista deve ser 100%.");
       }
       const payload = {
         organization_id: organizationId,
@@ -177,7 +177,7 @@ export function RuleFormDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label>% Gustavo</Label>
+            <Label>% Palestrante</Label>
             <Input
               type="number"
               step="0.01"

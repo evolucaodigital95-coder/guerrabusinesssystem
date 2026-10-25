@@ -283,7 +283,7 @@ export function PainelDiretorPage() {
         <PageHeader
           eyebrow="Executivo"
           title="Painel do Diretor"
-          description="Consolidando indicadores do Grupo Guerra…"
+          description="Consolidando indicadores…"
         />
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => (
@@ -361,10 +361,12 @@ export function PainelDiretorPage() {
             <p className="mt-4 text-sm opacity-70">após taxas, materiais e despesas.</p>
           </div>
           <div>
-            <div className="text-[11px] uppercase tracking-[0.12em] opacity-70">Split 50/50</div>
+            <div className="text-[11px] uppercase tracking-[0.12em] opacity-70">
+              Divisão do resultado
+            </div>
             <div className="mt-5 space-y-2 text-sm">
               <div className="flex justify-between">
-                <span className="opacity-70">Gustavo</span>
+                <span className="opacity-70">Palestrante</span>
                 <span className="font-display text-xl">{BRL.format(totals.gustavo)}</span>
               </div>
               <div className="flex justify-between">
@@ -527,8 +529,8 @@ export function PainelDiretorPage() {
       {/* Atalhos executivos */}
       <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {[
-          { to: "/app/indicadores", icon: TrendingUp, label: "Indicadores" },
-          { to: "/app/performance", icon: Trophy, label: "Performance" },
+          { to: "/app/financeiro", icon: TrendingUp, label: "Financeiro" },
+          { to: "/app/centro-palestrante", icon: Trophy, label: "Área do palestrante" },
           { to: "/app/palestras", icon: Mic, label: "Palestras" },
           { to: "/app/crm", icon: Building2, label: "Empresas" },
         ].map((s) => (

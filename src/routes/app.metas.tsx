@@ -16,8 +16,7 @@ export const Route = createFileRoute("/app/metas")({
       { title: "Metas — GBS" },
       {
         name: "description",
-        content:
-          "Metas anuais do Grupo Guerra: Receita, Lucro, Palestras, Empresas, Pessoas e Livros.",
+        content: "Metas anuais: Receita, Lucro, Palestras, Empresas, Pessoas e Livros.",
       },
     ],
   }),

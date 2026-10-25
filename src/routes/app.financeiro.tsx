@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AuditHistory } from "@/components/shared/audit-history";
+import { FinanceOverview } from "@/components/finance/finance-overview";
 import {
   Select,
   SelectContent,
@@ -459,12 +460,17 @@ function FinancePage() {
         }
       />
 
-      <Tabs defaultValue="ledger" className="space-y-6">
+      <Tabs defaultValue="overview" className="space-y-6">
         <TabsList className="bg-card/40">
+          <TabsTrigger value="overview">Visão geral</TabsTrigger>
           <TabsTrigger value="ledger">Movimentos</TabsTrigger>
           <TabsTrigger value="accounts">Contas</TabsTrigger>
           <TabsTrigger value="lectures">Palestras</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="overview">
+          {organizationId && <FinanceOverview organizationId={organizationId} />}
+        </TabsContent>
 
         <TabsContent value="ledger" className="space-y-6">
           {/* Totals */}

@@ -170,7 +170,7 @@ export function SettlementFormDialog({
               required
               value={supplier}
               onChange={(e) => setSupplier(e.target.value)}
-              placeholder="Ex.: Editora Guerra"
+              placeholder="Ex.: Editora Exemplo"
             />
           </div>
 

@@ -166,7 +166,7 @@ export function IndicadoresPage() {
       <PageHeader
         eyebrow="Gestão"
         title="Indicadores"
-        description="Painel executivo com KPIs reais do Grupo Guerra."
+        description="Painel executivo com os KPIs reais da organização."
       />
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">

@@ -41,7 +41,7 @@ export const Route = createFileRoute("/app/biblioteca")({
       { property: "og:title", content: "Central de Conteúdo — GBS" },
       {
         property: "og:description",
-        content: "Slides, livros, propostas, contratos, mídia e treinamentos do Grupo Guerra.",
+        content: "Slides, livros, propostas, contratos, mídia e treinamentos.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -198,7 +198,7 @@ function CentralConteudoPage() {
       <PageHeader
         eyebrow="Inteligência"
         title="Central de Conteúdo"
-        description="Repositório único de slides, livros, propostas, contratos, mídia e treinamentos do Grupo Guerra."
+        description="Repositório único de slides, livros, propostas, contratos, mídia e treinamentos da sua organização."
         actions={
           <Button variant="brand" onClick={() => setOpen(true)} disabled={!organizationId}>
             <Plus className="mr-1.5 h-4 w-4" /> Adicionar conteúdo
