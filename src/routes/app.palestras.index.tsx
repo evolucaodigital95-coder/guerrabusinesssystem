@@ -15,6 +15,7 @@ import {
 import { PageHeader } from "@/components/page-shell";
 import { ListSkeleton } from "@/components/shared/list-skeleton";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchAll } from "@/lib/fetch-all";
 import { useSession } from "@/hooks/use-session";
 import { useCurrentOrg } from "@/hooks/use-current-org";
 import { formatDate } from "@/lib/crm";
@@ -24,6 +25,8 @@ import { LectureWizardDialog } from "@/components/palestras/lecture-wizard-dialo
 import { Sparkles } from "lucide-react";
 
 import { useQuickAction } from "@/lib/quick-actions";
+import { LecturesDashboard } from "@/components/palestras/lectures-dashboard";
+import { NUM } from "@/lib/format";
 export const Route = createFileRoute("/app/palestras/")({
   head: () => ({
     meta: [
@@ -50,6 +53,7 @@ type Lecture = {
   expected_audience: number | null;
   actual_audience: number | null;
   gross_revenue: number | null;
+  closed_at: string | null;
   companies: { id: string; legal_name: string } | null;
   agents: { id: string; full_name: string } | null;
   seasons: { id: string; name: string } | null;
@@ -70,21 +74,23 @@ function PalestrasPage() {
     queryKey: ["lectures", organizationId],
     enabled: !!organizationId,
     queryFn: async (): Promise<Lecture[]> => {
-      const { data, error } = await supabase
-        .from("lectures")
-        .select(
-          `
+      const { data, error } = await fetchAll(() =>
+        supabase
+          .from("lectures")
+          .select(
+            `
           id, title, theme, status, scheduled_at, scheduled_time, city, state,
-          expected_audience, actual_audience, gross_revenue,
+          expected_audience, actual_audience, gross_revenue, closed_at,
           companies:company_id ( id, legal_name ),
           agents:agent_id ( id, full_name ),
           seasons:season_id ( id, name )
         `,
-        )
-        .eq("organization_id", organizationId!)
-        .is("archived_at", null)
-        .order("scheduled_at", { ascending: false, nullsFirst: false })
-        .order("created_at", { ascending: false });
+          )
+          .eq("organization_id", organizationId!)
+          .is("archived_at", null)
+          .order("scheduled_at", { ascending: false, nullsFirst: false })
+          .order("created_at", { ascending: false }),
+      );
       if (error) throw error;
       return (data ?? []) as unknown as Lecture[];
     },
@@ -126,8 +132,8 @@ function PalestrasPage() {
     <div className="space-y-8">
       <PageHeader
         eyebrow="Palestras"
-        title="Hub central"
-        description="Cada palestra conecta empresa, contato, agendista, temporada, projeto, financeiro, estoque, timeline e auditoria."
+        title="Palestras"
+        description="Ritmo, funil, faturamento e agenda — e cada palestra conectada a empresa, agendista, financeiro e estoque."
         actions={
           <div className="flex flex-wrap gap-2">
             <Button variant="brand" onClick={() => setWizardOpen(true)} disabled={!organizationId}>
@@ -140,11 +146,13 @@ function PalestrasPage() {
         }
       />
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Summary label="Palestras" value={totals.total} />
-        <Summary label="Pessoas impactadas" value={totals.impacted} />
-        <Summary label="Público previsto" value={totals.expected} muted />
-        <Summary label="Encerradas" value={totals.closed} muted />
+      {lectures.data && lectures.data.length > 0 && <LecturesDashboard lectures={lectures.data} />}
+
+      <div className="flex items-end justify-between gap-3 pt-4">
+        <h2 className="font-display text-2xl">Todas as palestras</h2>
+        <span className="text-xs text-muted-foreground">
+          {totals.total} no total · {NUM.format(totals.impacted)} pessoas impactadas
+        </span>
       </div>
 
       <div className="rounded-2xl border border-border bg-card/40 p-4">
@@ -256,21 +264,6 @@ function PalestrasPage() {
           />
         </>
       )}
-    </div>
-  );
-}
-
-function Summary({ label, value, muted }: { label: string; value: number; muted?: boolean }) {
-  return (
-    <div className="rounded-2xl border border-border bg-card/40 p-5">
-      <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
-        {label}
-      </p>
-      <p
-        className={`mt-3 font-serif text-2xl tabular-nums ${muted ? "text-muted-foreground" : "text-foreground"}`}
-      >
-        {new Intl.NumberFormat("pt-BR").format(value)}
-      </p>
     </div>
   );
 }

@@ -1,7 +1,19 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import {
+  ArrowUpRight,
+  FileSignature,
+  Mic,
+  PackageX,
+  PhoneCall,
+  Target,
+  Wallet,
+  type LucideIcon,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
 import { useMemo, type CSSProperties, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchAll } from "@/lib/fetch-all";
 import { useCurrentOrg } from "@/hooks/use-current-org";
 import { useSession } from "@/hooks/use-session";
 import { BRL, NUM, toLocalDate } from "@/lib/format";
@@ -88,14 +100,16 @@ function useToday(orgId: string | null) {
           todayISO,
         ),
         // Recebimentos previstos no mês
-        supabase
-          .from("financial_movements")
-          .select("amount, expected_amount, status")
-          .eq("organization_id", org)
-          .is("archived_at", null)
-          .eq("direction", "in")
-          .gte("occurs_on", monthStart.slice(0, 10))
-          .lte("occurs_on", monthEnd.slice(0, 10)),
+        fetchAll(() =>
+          supabase
+            .from("financial_movements")
+            .select("amount, expected_amount, status")
+            .eq("organization_id", org)
+            .is("archived_at", null)
+            .eq("direction", "in")
+            .gte("occurs_on", monthStart.slice(0, 10))
+            .lte("occurs_on", monthEnd.slice(0, 10)),
+        ),
         // Contratos pendentes — palestras confirmadas sem contrato assinado
         orgEq(supabase.from("lectures").select("id", { count: "exact", head: true })).in("status", [
           "proposta",
@@ -106,15 +120,17 @@ function useToday(orgId: string | null) {
           .gte("scheduled_at", todayStart)
           .lte("scheduled_at", in30),
         // Receita realizada no mês
-        supabase
-          .from("financial_movements")
-          .select("amount")
-          .eq("organization_id", org)
-          .is("archived_at", null)
-          .eq("direction", "in")
-          .eq("status", "liquidado")
-          .gte("occurs_on", monthStart.slice(0, 10))
-          .lte("occurs_on", monthEnd.slice(0, 10)),
+        fetchAll(() =>
+          supabase
+            .from("financial_movements")
+            .select("amount")
+            .eq("organization_id", org)
+            .is("archived_at", null)
+            .eq("direction", "in")
+            .eq("status", "liquidado")
+            .gte("occurs_on", monthStart.slice(0, 10))
+            .lte("occurs_on", monthEnd.slice(0, 10)),
+        ),
         // Estoque (usa min_quantity)
         supabase
           .from("stock_items")
@@ -122,20 +138,24 @@ function useToday(orgId: string | null) {
           .eq("organization_id", org)
           .is("archived_at", null),
         // A receber (não liquidado, in)
-        supabase
-          .from("financial_movements")
-          .select("expected_amount, amount, status")
-          .eq("organization_id", org)
-          .is("archived_at", null)
-          .eq("direction", "in")
-          .neq("status", "liquidado"),
+        fetchAll(() =>
+          supabase
+            .from("financial_movements")
+            .select("expected_amount, amount, status")
+            .eq("organization_id", org)
+            .is("archived_at", null)
+            .eq("direction", "in")
+            .neq("status", "liquidado"),
+        ),
         // Vidas impactadas
-        supabase
-          .from("lectures")
-          .select("actual_audience")
-          .eq("organization_id", org)
-          .is("archived_at", null)
-          .eq("status", "realizada"),
+        fetchAll(() =>
+          supabase
+            .from("lectures")
+            .select("actual_audience")
+            .eq("organization_id", org)
+            .is("archived_at", null)
+            .eq("status", "realizada"),
+        ),
         // Temporada ativa
         supabase
           .from("seasons")
@@ -250,26 +270,54 @@ function HeroStat({
 }
 
 function TodayCard({
+  icon: Icon,
   label,
   value,
   hint,
   to,
+  attention,
+  progress,
 }: {
+  icon: LucideIcon;
   label: string;
   value: ReactNode;
   hint?: string;
   to: string;
+  attention?: boolean;
+  progress?: number;
 }) {
   return (
     <Link
       to={to}
-      className="hover-lift block rounded-2xl border border-border bg-card p-6 transition-colors hover:border-foreground/20"
+      className={cn(
+        "hover-lift group relative flex flex-col rounded-2xl border bg-card p-5 shadow-[var(--shadow-elegant)] transition-colors",
+        attention ? "border-clay/40" : "border-border hover:border-foreground/20",
+      )}
     >
-      <div className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
-        {label}
+      <div className="flex items-center justify-between">
+        <span
+          className={cn(
+            "grid h-9 w-9 place-items-center rounded-xl transition-colors",
+            attention
+              ? "bg-clay text-clay-foreground"
+              : "bg-muted text-muted-foreground group-hover:bg-clay/10 group-hover:text-clay",
+          )}
+        >
+          <Icon className="h-4 w-4" />
+        </span>
+        <ArrowUpRight className="h-4 w-4 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
       </div>
-      <div className="mt-4 font-display text-2xl leading-none">{value}</div>
-      {hint && <div className="mt-2 text-xs text-muted-foreground">{hint}</div>}
+      <div className="mt-4 text-[12px] font-medium text-muted-foreground">{label}</div>
+      <div className="mt-1 font-display text-2xl leading-none">{value}</div>
+      {progress !== undefined && (
+        <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-muted">
+          <div
+            className="h-full rounded-full bg-clay transition-[width] duration-700"
+            style={{ width: `${Math.min(100, Math.max(0, progress))}%` }}
+          />
+        </div>
+      )}
+      {hint && <div className="mt-2 truncate text-[11px] text-muted-foreground">{hint}</div>}
     </Link>
   );
 }
@@ -293,6 +341,26 @@ function HojePage() {
   const loading = q.isLoading || !d;
 
   const fmtInt = (n: number | undefined) => (n == null ? "—" : NUM.format(n));
+
+  // Resumo do dia em uma frase — o que realmente importa ao abrir o sistema.
+  const brief = useMemo(() => {
+    if (!d) return "Preparando o resumo do seu dia…";
+    const parts: string[] = [];
+    parts.push(
+      d.lecturesTodayCount === 0
+        ? "Nenhuma palestra hoje"
+        : `${d.lecturesTodayCount} ${d.lecturesTodayCount === 1 ? "palestra" : "palestras"} hoje`,
+    );
+    if (d.pagamentosPrevistos > 0)
+      parts.push(`${BRL.format(d.pagamentosPrevistos)} previstos para entrar no mês`);
+    const attention = d.followUpsPending + d.contractsPending + d.lowStockCount;
+    parts.push(
+      attention === 0
+        ? "nada pendente pedindo sua atenção"
+        : `${attention} ${attention === 1 ? "ponto pede" : "pontos pedem"} sua atenção`,
+    );
+    return parts.join(" · ") + ".";
+  }, [d]);
   const fmtBRL = (n: number | undefined) => (n == null ? "—" : BRL.format(n));
 
   const metaHint = useMemo(() => {
@@ -340,7 +408,7 @@ function HojePage() {
               className="reveal mt-4 max-w-lg text-[15px] leading-relaxed text-ink-foreground/70"
               style={{ "--i": 2 } as CSSProperties}
             >
-              Resultados extraordinários começam com pessoas extraordinárias.
+              {brief}
             </p>
           </div>
 
@@ -368,42 +436,58 @@ function HojePage() {
         </div>
       </section>
 
-      {/* Hoje — quick view */}
+      {/* Seu dia */}
       <section className="mb-14">
-        <div className="mb-6 flex items-center gap-3 text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
-          <span aria-hidden className="h-px w-6" style={{ background: "var(--gold)" }} />
-          Hoje
+        <div className="mb-5 flex items-end justify-between">
+          <h2 className="font-display text-2xl">Seu dia</h2>
+          <span className="text-xs text-muted-foreground">toque em um cartão para abrir</span>
         </div>
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
           <TodayCard
-            label="Palestras de hoje"
+            icon={Mic}
+            label="Palestras hoje"
             value={loading ? "—" : fmtInt(d?.lecturesTodayCount)}
-            hint="Próximas 24h"
-            to="/app/palestras"
+            hint={loading ? "" : `${fmtInt(d?.upcoming30Days)} nos próximos 30 dias`}
+            to="/app/agenda"
           />
           <TodayCard
-            label="Follow-ups pendentes"
-            value={loading ? "—" : fmtInt(d?.followUpsPending)}
-            hint="CRM"
-            to="/app/crm"
-          />
-          <TodayCard
-            label="Pagamentos previstos"
+            icon={Wallet}
+            label="A receber no mês"
             value={loading ? "—" : fmtBRL(d?.pagamentosPrevistos)}
-            hint="A receber no mês"
+            hint={loading ? "" : `${fmtBRL(d?.receitaRealizada)} já recebidos`}
             to="/app/financeiro"
           />
           <TodayCard
-            label="Contratos pendentes"
-            value={loading ? "—" : fmtInt(d?.contractsPending)}
-            hint="Aguardando confirmação"
-            to="/app/palestras"
+            icon={PhoneCall}
+            label="Follow-ups"
+            value={loading ? "—" : fmtInt(d?.followUpsPending)}
+            hint="contatos para retomar"
+            to="/app/crm"
+            attention={!loading && (d?.followUpsPending ?? 0) > 0}
           />
           <TodayCard
-            label="Meta mensal"
+            icon={FileSignature}
+            label="Contratos pendentes"
+            value={loading ? "—" : fmtInt(d?.contractsPending)}
+            hint="aguardando confirmação"
+            to="/app/palestras"
+            attention={!loading && (d?.contractsPending ?? 0) > 0}
+          />
+          <TodayCard
+            icon={PackageX}
+            label="Estoque baixo"
+            value={loading ? "—" : fmtInt(d?.lowStockCount)}
+            hint="materiais para repor"
+            to="/app/estoque"
+            attention={!loading && (d?.lowStockCount ?? 0) > 0}
+          />
+          <TodayCard
+            icon={Target}
+            label="Meta do mês"
             value={loading ? "—" : `${d?.metaPct ?? 0}%`}
             hint={loading ? "" : metaHint}
-            to="/app/temporadas"
+            to="/app/metas"
+            progress={loading ? undefined : (d?.metaPct ?? 0)}
           />
         </div>
       </section>

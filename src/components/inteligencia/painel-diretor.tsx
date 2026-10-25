@@ -27,6 +27,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchAll } from "@/lib/fetch-all";
 import { useCurrentOrg } from "@/hooks/use-current-org";
 import { PageHeader } from "@/components/page-shell";
 import { BRL, NUM } from "@/lib/format";
@@ -55,25 +56,31 @@ function useDirector(orgId: string | null) {
 
       const [snapshots, lectures, movements, companies, agents, seasons, lowStock, pendFin] =
         await Promise.all([
-          supabase
-            .from("lecture_financial_snapshots")
-            .select(
-              "gross_revenue, net_profit, gustavo_amount, agent_amount, total_expenses, total_stock_cost, total_card_fees, total_advances, closed_at, agent_id, lecture_id",
-            )
-            .eq("organization_id", org)
-            .is("archived_at", null),
-          supabase
-            .from("lectures")
-            .select(
-              "id, title, status, scheduled_at, actual_audience, expected_audience, gross_revenue, city, state, company_id, agent_id, companies:company_id(legal_name), agents:agent_id(full_name)",
-            )
-            .eq("organization_id", org)
-            .is("archived_at", null),
-          supabase
-            .from("financial_movements")
-            .select("direction, amount, occurs_on, status, category")
-            .eq("organization_id", org)
-            .is("archived_at", null),
+          fetchAll(() =>
+            supabase
+              .from("lecture_financial_snapshots")
+              .select(
+                "gross_revenue, net_profit, gustavo_amount, agent_amount, total_expenses, total_stock_cost, total_card_fees, total_advances, closed_at, agent_id, lecture_id",
+              )
+              .eq("organization_id", org)
+              .is("archived_at", null),
+          ),
+          fetchAll(() =>
+            supabase
+              .from("lectures")
+              .select(
+                "id, title, status, scheduled_at, actual_audience, expected_audience, gross_revenue, city, state, company_id, agent_id, companies:company_id(legal_name), agents:agent_id(full_name)",
+              )
+              .eq("organization_id", org)
+              .is("archived_at", null),
+          ),
+          fetchAll(() =>
+            supabase
+              .from("financial_movements")
+              .select("direction, amount, occurs_on, status, category")
+              .eq("organization_id", org)
+              .is("archived_at", null),
+          ),
           orgIs(supabase.from("companies").select("id", { count: "exact", head: true })),
           orgIs(supabase.from("agents").select("id, full_name")),
           orgIs(supabase.from("seasons").select("id, name, status")),

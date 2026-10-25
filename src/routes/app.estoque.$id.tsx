@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/table";
 import { PageHeader } from "@/components/page-shell";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchAll } from "@/lib/fetch-all";
 import { useSession } from "@/hooks/use-session";
 import { useCurrentOrg } from "@/hooks/use-current-org";
 import { formatCurrency, formatDate } from "@/lib/crm";
@@ -126,22 +127,24 @@ function ItemDetail() {
     queryKey: ["stock-movements", id],
     enabled: !!id,
     queryFn: async (): Promise<Movement[]> => {
-      const { data, error } = await supabase
-        .from("stock_movements")
-        .select(
-          `
+      const { data, error } = await fetchAll(() =>
+        supabase
+          .from("stock_movements")
+          .select(
+            `
           id, kind, direction, status, quantity, unit_cost, total_cost,
           occurs_on, occurs_at, reason, notes,
           batch_id, lecture_id, season_id, project_id,
           reversed_at, reversal_reason,
           lectures:lecture_id ( id, title )
         `,
-        )
+          )
 
-        .eq("stock_item_id", id)
-        .is("archived_at", null)
-        .order("occurs_at", { ascending: false, nullsFirst: false })
-        .order("created_at", { ascending: false });
+          .eq("stock_item_id", id)
+          .is("archived_at", null)
+          .order("occurs_at", { ascending: false, nullsFirst: false })
+          .order("created_at", { ascending: false }),
+      );
       if (error) throw error;
       return (data ?? []) as unknown as Movement[];
     },
@@ -151,14 +154,16 @@ function ItemDetail() {
     queryKey: ["stock-batches", id],
     enabled: !!id,
     queryFn: async (): Promise<Batch[]> => {
-      const { data, error } = await supabase
-        .from("inventory_batches")
-        .select(
-          "id, code, initial_quantity, quantity, unit_cost, received_on, supplier, proof_url, notes, created_at",
-        )
-        .eq("stock_item_id", id)
-        .is("archived_at", null)
-        .order("received_on", { ascending: false, nullsFirst: false });
+      const { data, error } = await fetchAll(() =>
+        supabase
+          .from("inventory_batches")
+          .select(
+            "id, code, initial_quantity, quantity, unit_cost, received_on, supplier, proof_url, notes, created_at",
+          )
+          .eq("stock_item_id", id)
+          .is("archived_at", null)
+          .order("received_on", { ascending: false, nullsFirst: false }),
+      );
       if (error) throw error;
       return (data ?? []) as Batch[];
     },

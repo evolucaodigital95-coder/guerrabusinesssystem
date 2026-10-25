@@ -51,6 +51,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchAll } from "@/lib/fetch-all";
 import { useCurrentOrg } from "@/hooks/use-current-org";
 import { useSession } from "@/hooks/use-session";
 import { SpeakerAdvanceDialog } from "@/components/palestrante/speaker-advance-dialog";
@@ -171,10 +172,11 @@ function CentroPalestrante() {
     enabled: !!organizationId,
     refetchOnWindowFocus: true,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("lecture_financial_snapshots")
-        .select(
-          `
+      const { data, error } = await fetchAll(() =>
+        supabase
+          .from("lecture_financial_snapshots")
+          .select(
+            `
           id, lecture_id, agent_id, gustavo_amount, agent_amount, gross_revenue, net_profit,
           total_expenses, total_card_fees, total_stock_cost, closed_at, breakdown,
           lectures:lecture_id (
@@ -187,10 +189,11 @@ function CentroPalestrante() {
           ),
           agents:agent_id ( id, full_name )
         `,
-        )
-        .eq("organization_id", organizationId!)
-        .is("archived_at", null)
-        .order("closed_at", { ascending: false });
+          )
+          .eq("organization_id", organizationId!)
+          .is("archived_at", null)
+          .order("closed_at", { ascending: false }),
+      );
       if (error) throw error;
       return (data ?? []) as unknown as SnapshotRow[];
     },
@@ -200,16 +203,18 @@ function CentroPalestrante() {
     queryKey: ["cfp-pending", organizationId],
     enabled: !!organizationId,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("lectures")
-        .select(
-          "id, title, scheduled_at, gross_revenue, status, companies:company_id ( legal_name )",
-        )
-        .eq("organization_id", organizationId!)
-        .is("archived_at", null)
-        .in("status", ["agendada", "confirmada", "realizada"])
-        .is("closed_at", null)
-        .order("scheduled_at", { ascending: true, nullsFirst: false });
+      const { data, error } = await fetchAll(() =>
+        supabase
+          .from("lectures")
+          .select(
+            "id, title, scheduled_at, gross_revenue, status, companies:company_id ( legal_name )",
+          )
+          .eq("organization_id", organizationId!)
+          .is("archived_at", null)
+          .in("status", ["agendada", "confirmada", "realizada"])
+          .is("closed_at", null)
+          .order("scheduled_at", { ascending: true, nullsFirst: false }),
+      );
       if (error) throw error;
       return (data ?? []) as unknown as PendingLecture[];
     },
@@ -219,18 +224,20 @@ function CentroPalestrante() {
     queryKey: ["cfp-speaker-payouts", organizationId],
     enabled: !!organizationId,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("financial_movements")
-        .select(
-          "id, amount, occurs_on, description, status, payment_method, category, direction, accounts:account_id ( name )",
-        )
-        .eq("organization_id", organizationId!)
-        .eq("direction", "out")
-        .in("status", ["paga", "parcial"])
-        .in("category", ["Pró-labore", "Palestrante"])
-        .is("agent_id", null)
-        .is("archived_at", null)
-        .order("occurs_on", { ascending: false });
+      const { data, error } = await fetchAll(() =>
+        supabase
+          .from("financial_movements")
+          .select(
+            "id, amount, occurs_on, description, status, payment_method, category, direction, accounts:account_id ( name )",
+          )
+          .eq("organization_id", organizationId!)
+          .eq("direction", "out")
+          .in("status", ["paga", "parcial"])
+          .in("category", ["Pró-labore", "Palestrante"])
+          .is("agent_id", null)
+          .is("archived_at", null)
+          .order("occurs_on", { ascending: false }),
+      );
       if (error) throw error;
       return data ?? [];
     },
@@ -240,15 +247,17 @@ function CentroPalestrante() {
     queryKey: ["cfp-speaker-advances", organizationId],
     enabled: !!organizationId,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("advances")
-        .select(
-          "id, amount, amount_amortized, granted_on, source, paid_by_label, status, notes, receipt_url",
-        )
-        .eq("organization_id", organizationId!)
-        .is("agent_id", null)
-        .is("archived_at", null)
-        .order("granted_on", { ascending: false });
+      const { data, error } = await fetchAll(() =>
+        supabase
+          .from("advances")
+          .select(
+            "id, amount, amount_amortized, granted_on, source, paid_by_label, status, notes, receipt_url",
+          )
+          .eq("organization_id", organizationId!)
+          .is("agent_id", null)
+          .is("archived_at", null)
+          .order("granted_on", { ascending: false }),
+      );
       if (error) throw error;
       return data ?? [];
     },

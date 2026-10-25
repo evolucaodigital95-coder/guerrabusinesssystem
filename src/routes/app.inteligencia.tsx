@@ -16,6 +16,7 @@ import {
 import { Download, Printer, FileSpreadsheet, RefreshCw } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
+import { fetchAll } from "@/lib/fetch-all";
 import { useCurrentOrg } from "@/hooks/use-current-org";
 import { PageHeader, EmptyState, NestedPageHeaders } from "@/components/page-shell";
 import { Button } from "@/components/ui/button";
@@ -175,20 +176,24 @@ function useIntelData(orgId: string | null) {
         stockMov,
         snapshots,
       ] = await Promise.all([
-        supabase
-          .from("financial_movements")
-          .select(
-            "id, amount, direction, status, occurs_on, season_id, project_id, company_id, agent_id, lecture_id, category, description",
-          )
-          .eq("organization_id", org)
-          .is("archived_at", null),
-        supabase
-          .from("lectures")
-          .select(
-            "id, status, scheduled_at, actual_audience, expected_audience, gross_revenue, season_id, company_id, agent_id, campaign_id, project_id, title",
-          )
-          .eq("organization_id", org)
-          .is("archived_at", null),
+        fetchAll(() =>
+          supabase
+            .from("financial_movements")
+            .select(
+              "id, amount, direction, status, occurs_on, season_id, project_id, company_id, agent_id, lecture_id, category, description",
+            )
+            .eq("organization_id", org)
+            .is("archived_at", null),
+        ),
+        fetchAll(() =>
+          supabase
+            .from("lectures")
+            .select(
+              "id, status, scheduled_at, actual_audience, expected_audience, gross_revenue, season_id, company_id, agent_id, campaign_id, project_id, title",
+            )
+            .eq("organization_id", org)
+            .is("archived_at", null),
+        ),
         supabase
           .from("companies")
           .select("id, trade_name, legal_name, status, created_at")
@@ -219,18 +224,22 @@ function useIntelData(orgId: string | null) {
           .select("id, name, min_quantity, average_cost")
           .eq("organization_id", org)
           .is("archived_at", null),
-        supabase
-          .from("stock_movements")
-          .select(
-            "id, stock_item_id, direction, quantity, occurs_on, lecture_id, total_cost, unit_cost",
-          )
-          .eq("organization_id", org)
-          .is("archived_at", null),
-        supabase
-          .from("lecture_financial_snapshots")
-          .select("id, lecture_id, gross_revenue, total_expenses, net_profit, closed_at")
-          .eq("organization_id", org)
-          .is("archived_at", null),
+        fetchAll(() =>
+          supabase
+            .from("stock_movements")
+            .select(
+              "id, stock_item_id, direction, quantity, occurs_on, lecture_id, total_cost, unit_cost",
+            )
+            .eq("organization_id", org)
+            .is("archived_at", null),
+        ),
+        fetchAll(() =>
+          supabase
+            .from("lecture_financial_snapshots")
+            .select("id, lecture_id, gross_revenue, total_expenses, net_profit, closed_at")
+            .eq("organization_id", org)
+            .is("archived_at", null),
+        ),
       ]);
 
       return {

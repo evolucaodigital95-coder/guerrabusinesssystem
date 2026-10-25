@@ -24,6 +24,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchAll } from "@/lib/fetch-all";
 import { CountUp } from "@/components/count-up";
 import { BRL, toLocalDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -108,16 +109,18 @@ export function FinanceOverview({ organizationId }: { organizationId: string }) 
     queryFn: async () => {
       const since = ymd(new Date(new Date().getFullYear() - 1, new Date().getMonth() - 1, 1));
       const [movs, accs] = await Promise.all([
-        supabase
-          .from("financial_movements")
-          .select(
-            "id, direction, status, category, amount, expected_amount, expected_date, settled_at, occurs_on, account_id",
-          )
-          .eq("organization_id", organizationId)
-          .is("archived_at", null)
-          .or(
-            `occurs_on.gte.${since},expected_date.gte.${since},status.in.(previsto,prevista,parcial)`,
-          ),
+        fetchAll(() =>
+          supabase
+            .from("financial_movements")
+            .select(
+              "id, direction, status, category, amount, expected_amount, expected_date, settled_at, occurs_on, account_id",
+            )
+            .eq("organization_id", organizationId)
+            .is("archived_at", null)
+            .or(
+              `occurs_on.gte.${since},expected_date.gte.${since},status.in.(previsto,prevista,parcial)`,
+            ),
+        ),
         supabase
           .from("accounts")
           .select("id, name, kind")
@@ -135,12 +138,14 @@ export function FinanceOverview({ organizationId }: { organizationId: string }) 
   const balances = useQuery({
     queryKey: ["finance-overview-balances", organizationId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("financial_movements")
-        .select("direction, status, amount, account_id")
-        .eq("organization_id", organizationId)
-        .is("archived_at", null)
-        .in("status", ["recebido", "paga", "parcial"]);
+      const { data, error } = await fetchAll(() =>
+        supabase
+          .from("financial_movements")
+          .select("direction, status, amount, account_id")
+          .eq("organization_id", organizationId)
+          .is("archived_at", null)
+          .in("status", ["recebido", "paga", "parcial"]),
+      );
       if (error) throw error;
       return data ?? [];
     },

@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchAll } from "@/lib/fetch-all";
 import { useCurrentOrg } from "@/hooks/use-current-org";
 import { PageHeader } from "@/components/page-shell";
 import { BRL, NUM } from "@/lib/format";
@@ -45,33 +46,41 @@ function useKpis(org: string | null) {
           monthStart,
         ),
         orgIs(supabase.from("lectures").select("id", { count: "exact", head: true })),
-        supabase
-          .from("lectures")
-          .select("id, actual_audience, status")
-          .eq("organization_id", orgId)
-          .is("archived_at", null)
-          .eq("status", "realizada"),
+        fetchAll(() =>
+          supabase
+            .from("lectures")
+            .select("id, actual_audience, status")
+            .eq("organization_id", orgId)
+            .is("archived_at", null)
+            .eq("status", "realizada"),
+        ),
         orgIs(supabase.from("agents").select("id", { count: "exact", head: true })),
-        supabase
-          .from("lecture_financial_snapshots")
-          .select("gross_revenue, net_profit, total_stock_cost")
-          .eq("organization_id", orgId)
-          .is("archived_at", null),
+        fetchAll(() =>
+          supabase
+            .from("lecture_financial_snapshots")
+            .select("gross_revenue, net_profit, total_stock_cost")
+            .eq("organization_id", orgId)
+            .is("archived_at", null),
+        ),
         supabase
           .from("stock_items")
           .select("id")
           .eq("organization_id", orgId)
           .is("archived_at", null),
-        supabase
-          .from("stock_movements")
-          .select("total_cost, kind, direction")
-          .eq("organization_id", orgId)
-          .is("archived_at", null),
-        supabase
-          .from("stock_movements")
-          .select("total_cost")
-          .eq("organization_id", orgId)
-          .is("archived_at", null),
+        fetchAll(() =>
+          supabase
+            .from("stock_movements")
+            .select("total_cost, kind, direction")
+            .eq("organization_id", orgId)
+            .is("archived_at", null),
+        ),
+        fetchAll(() =>
+          supabase
+            .from("stock_movements")
+            .select("total_cost")
+            .eq("organization_id", orgId)
+            .is("archived_at", null),
+        ),
         supabase.from("supplier_settlements").select("amount_paid").eq("organization_id", orgId),
       ]);
 

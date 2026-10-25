@@ -22,6 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchAll } from "@/lib/fetch-all";
 import { useAutomation } from "@/hooks/use-automation";
 import { calcOnHand, type MovementKind } from "@/lib/stock";
 
@@ -173,11 +174,13 @@ export function MovementFormDialog({
     queryKey: ["stock-movements-all-form", organizationId],
     enabled: open && !!organizationId,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("stock_movements")
-        .select("stock_item_id, kind, direction, quantity, status")
-        .eq("organization_id", organizationId)
-        .is("archived_at", null);
+      const { data, error } = await fetchAll(() =>
+        supabase
+          .from("stock_movements")
+          .select("stock_item_id, kind, direction, quantity, status")
+          .eq("organization_id", organizationId)
+          .is("archived_at", null),
+      );
       if (error) throw error;
       return data ?? [];
     },
@@ -187,12 +190,14 @@ export function MovementFormDialog({
     queryKey: ["stock-lectures-select", organizationId],
     enabled: !!organizationId,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("lectures")
-        .select("id, title, scheduled_at")
-        .eq("organization_id", organizationId)
-        .is("archived_at", null)
-        .order("scheduled_at", { ascending: false, nullsFirst: false });
+      const { data, error } = await fetchAll(() =>
+        supabase
+          .from("lectures")
+          .select("id, title, scheduled_at")
+          .eq("organization_id", organizationId)
+          .is("archived_at", null)
+          .order("scheduled_at", { ascending: false, nullsFirst: false }),
+      );
       if (error) throw error;
       return data ?? [];
     },

@@ -16,10 +16,11 @@ import {
 import { PageHeader } from "@/components/page-shell";
 import { ListSkeleton } from "@/components/shared/list-skeleton";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchAll } from "@/lib/fetch-all";
 import { useSession } from "@/hooks/use-session";
 import { useCurrentOrg } from "@/hooks/use-current-org";
 import { formatCurrency } from "@/lib/crm";
-import { STOCK_CATEGORIES, STOCK_ITEM_STATUS, calcOnHand } from "@/lib/stock";
+import { STOCK_CATEGORIES, STOCK_ITEM_STATUS, balancesByItem, calcOnHand } from "@/lib/stock";
 import { ItemFormDialog } from "@/components/estoque/item-form-dialog";
 import { MovementFormDialog } from "@/components/estoque/movement-form-dialog";
 import { SupplierAccountsTab } from "@/components/estoque/supplier-accounts-tab";
@@ -28,6 +29,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQuickAction } from "@/lib/quick-actions";
 import { toLocalDate } from "@/lib/format";
 import { TopMovers } from "@/components/estoque/top-movers";
+import { StockHealth } from "@/components/estoque/stock-health";
+import { StockCountDialog } from "@/components/estoque/stock-count-dialog";
 export const Route = createFileRoute("/app/estoque/")({
   head: () => ({
     meta: [
@@ -74,6 +77,7 @@ function EstoquePage() {
   const { organizationId, loading: orgLoading } = useCurrentOrg();
   const [itemOpen, setItemOpen] = useState(false);
   const [mvtOpen, setMvtOpen] = useState(false);
+  const [countOpen, setCountOpen] = useState(false);
   const [mvtType, setMvtType] = useState<MvtType>("entrada");
   const [search, setSearch] = useState("");
   const [fCat, setFCat] = useState(ALL);
@@ -85,6 +89,7 @@ function EstoquePage() {
   }
   useQuickAction("entrada-estoque", () => openMovement("entrada"));
   useQuickAction("saida-estoque", () => openMovement("saida_palestra"));
+  useQuickAction("inventario", () => setCountOpen(true));
 
   const items = useQuery({
     queryKey: ["stock-items", organizationId],
@@ -107,24 +112,33 @@ function EstoquePage() {
     queryKey: ["stock-movements", organizationId],
     enabled: !!organizationId,
     queryFn: async (): Promise<Mvt[]> => {
-      const { data, error } = await supabase
-        .from("stock_movements")
-        .select("stock_item_id, kind, direction, status, quantity")
-        .eq("organization_id", organizationId!)
-        .is("archived_at", null);
+      const { data, error } = await fetchAll(() =>
+        supabase
+          .from("stock_movements")
+          .select("stock_item_id, kind, direction, status, quantity")
+          .eq("organization_id", organizationId!)
+          .is("archived_at", null),
+      );
       if (error) throw error;
       return (data ?? []) as Mvt[];
     },
   });
 
   const balances = useMemo(() => {
+    // Agrupa uma vez só: com milhares de movimentações, filtrar por item fica lento.
+    const byItem = balancesByItem(movements.data ?? []);
     const map = new Map<string, ReturnType<typeof calcOnHand>>();
-    const list = movements.data ?? [];
     for (const it of items.data ?? []) {
-      map.set(it.id, calcOnHand(list.filter((m) => m.stock_item_id === it.id)));
+      map.set(it.id, byItem.get(it.id) ?? { onHand: 0, reserved: 0, available: 0 });
     }
     return map;
   }, [items.data, movements.data]);
+
+  const onHandById = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const [id, b] of balances) map.set(id, b.onHand);
+    return map;
+  }, [balances]);
 
   const availableById = useMemo(() => {
     const map = new Map<string, number>();
@@ -251,6 +265,14 @@ function EstoquePage() {
               }
             />
           </div>
+
+          {organizationId && (
+            <StockHealth
+              organizationId={organizationId}
+              items={items.data ?? []}
+              onStartCount={() => setCountOpen(true)}
+            />
+          )}
 
           {organizationId && (
             <TopMovers
@@ -406,6 +428,14 @@ function EstoquePage() {
             onOpenChange={setItemOpen}
             organizationId={organizationId}
             userId={user.id}
+          />
+          <StockCountDialog
+            open={countOpen}
+            onOpenChange={setCountOpen}
+            organizationId={organizationId}
+            userId={user.id}
+            items={items.data ?? []}
+            onHandById={onHandById}
           />
           <MovementFormDialog
             key={mvtType}

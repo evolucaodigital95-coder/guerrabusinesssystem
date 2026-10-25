@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/page-shell";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchAll } from "@/lib/fetch-all";
 import { useCurrentOrg } from "@/hooks/use-current-org";
 import { formatCurrency, formatDate } from "@/lib/crm";
 import { openDoc } from "@/lib/doc-links";
@@ -60,13 +61,15 @@ function PendenciasPage() {
     queryKey: ["pend-lectures", organizationId],
     enabled: !!organizationId,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("lectures")
-        .select(
-          "id, title, scheduled_at, status, financial_status, gross_revenue, company_id, agent_id, speaker_id, season_id",
-        )
-        .eq("organization_id", organizationId!)
-        .is("archived_at", null);
+      const { data, error } = await fetchAll(() =>
+        supabase
+          .from("lectures")
+          .select(
+            "id, title, scheduled_at, status, financial_status, gross_revenue, company_id, agent_id, speaker_id, season_id",
+          )
+          .eq("organization_id", organizationId!)
+          .is("archived_at", null),
+      );
       if (error) throw error;
       return data ?? [];
     },
@@ -76,13 +79,15 @@ function PendenciasPage() {
     queryKey: ["pend-movements", organizationId],
     enabled: !!organizationId,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("financial_movements")
-        .select(
-          "id, description, direction, status, amount, expected_amount, occurs_on, lecture_id, payment_method, card_brand_id, card_fee_amount, card_fee_percent",
-        )
-        .eq("organization_id", organizationId!)
-        .is("archived_at", null);
+      const { data, error } = await fetchAll(() =>
+        supabase
+          .from("financial_movements")
+          .select(
+            "id, description, direction, status, amount, expected_amount, occurs_on, lecture_id, payment_method, card_brand_id, card_fee_amount, card_fee_percent",
+          )
+          .eq("organization_id", organizationId!)
+          .is("archived_at", null),
+      );
       if (error) throw error;
       return data ?? [];
     },
@@ -92,13 +97,15 @@ function PendenciasPage() {
     queryKey: ["pend-stock", organizationId],
     enabled: !!organizationId,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("stock_movements")
-        .select(
-          "id, kind, direction, status, quantity, unit_cost, total_cost, occurs_on, lecture_id, reason, stock_item_id, stock_items:stock_item_id ( id, name )",
-        )
-        .eq("organization_id", organizationId!)
-        .is("archived_at", null);
+      const { data, error } = await fetchAll(() =>
+        supabase
+          .from("stock_movements")
+          .select(
+            "id, kind, direction, status, quantity, unit_cost, total_cost, occurs_on, lecture_id, reason, stock_item_id, stock_items:stock_item_id ( id, name )",
+          )
+          .eq("organization_id", organizationId!)
+          .is("archived_at", null),
+      );
       if (error) throw error;
       return data ?? [];
     },

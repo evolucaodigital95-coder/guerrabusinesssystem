@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchAll } from "@/lib/fetch-all";
 import { useCurrentOrg } from "@/hooks/use-current-org";
 import { PageHeader } from "@/components/page-shell";
 import { Button } from "@/components/ui/button";
@@ -65,21 +66,25 @@ function useRealized(org: string | null, year: number) {
       const start = new Date(year, 0, 1).toISOString();
       const end = new Date(year + 1, 0, 1).toISOString();
       const [snapshots, lectures, companies, stockOut] = await Promise.all([
-        supabase
-          .from("lecture_financial_snapshots")
-          .select("gross_revenue, net_profit, closed_at")
-          .eq("organization_id", orgId)
-          .is("archived_at", null)
-          .gte("closed_at", start)
-          .lt("closed_at", end),
-        supabase
-          .from("lectures")
-          .select("id, actual_audience, scheduled_at")
-          .eq("organization_id", orgId)
-          .is("archived_at", null)
-          .eq("status", "realizada")
-          .gte("scheduled_at", start)
-          .lt("scheduled_at", end),
+        fetchAll(() =>
+          supabase
+            .from("lecture_financial_snapshots")
+            .select("gross_revenue, net_profit, closed_at")
+            .eq("organization_id", orgId)
+            .is("archived_at", null)
+            .gte("closed_at", start)
+            .lt("closed_at", end),
+        ),
+        fetchAll(() =>
+          supabase
+            .from("lectures")
+            .select("id, actual_audience, scheduled_at")
+            .eq("organization_id", orgId)
+            .is("archived_at", null)
+            .eq("status", "realizada")
+            .gte("scheduled_at", start)
+            .lt("scheduled_at", end),
+        ),
         supabase
           .from("companies")
           .select("id", { count: "exact", head: true })
@@ -87,14 +92,16 @@ function useRealized(org: string | null, year: number) {
           .is("archived_at", null)
           .gte("created_at", start)
           .lt("created_at", end),
-        supabase
-          .from("stock_movements")
-          .select("quantity")
-          .eq("organization_id", orgId)
-          .is("archived_at", null)
-          .eq("direction", "out")
-          .gte("occurs_at", start)
-          .lt("occurs_at", end),
+        fetchAll(() =>
+          supabase
+            .from("stock_movements")
+            .select("quantity")
+            .eq("organization_id", orgId)
+            .is("archived_at", null)
+            .eq("direction", "out")
+            .gte("occurs_at", start)
+            .lt("occurs_at", end),
+        ),
       ]);
       const sumN = (rows: any[] | null, key: string) =>
         (rows ?? []).reduce((a, r) => a + Number(r?.[key] ?? 0), 0);

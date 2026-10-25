@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { TrendingDown, TrendingUp, Flame } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchAll } from "@/lib/fetch-all";
 import { isVoidMovement } from "@/lib/stock";
 import { NUM } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -39,14 +40,16 @@ export function TopMovers({
   const outs = useQuery({
     queryKey: ["stock-top-movers", organizationId, days],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("stock_movements")
-        .select("stock_item_id, kind, direction, status, quantity, occurs_on")
-        .eq("organization_id", organizationId)
-        .eq("direction", "out")
-        .in("kind", ["saida", "baixa"])
-        .gte("occurs_on", isoDaysAgo(days * 2))
-        .is("archived_at", null);
+      const { data, error } = await fetchAll(() =>
+        supabase
+          .from("stock_movements")
+          .select("stock_item_id, kind, direction, status, quantity, occurs_on")
+          .eq("organization_id", organizationId)
+          .eq("direction", "out")
+          .in("kind", ["saida", "baixa"])
+          .gte("occurs_on", isoDaysAgo(days * 2))
+          .is("archived_at", null),
+      );
       if (error) throw error;
       return data ?? [];
     },

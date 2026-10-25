@@ -15,18 +15,7 @@ export const STOCK_CATEGORIES = [
   "Outros",
 ] as const;
 
-export const STOCK_UNITS = [
-  "un",
-  "cx",
-  "pct",
-  "kit",
-  "kg",
-  "g",
-  "m",
-  "cm",
-  "L",
-  "mL",
-] as const;
+export const STOCK_UNITS = ["un", "cx", "pct", "kit", "kg", "g", "m", "cm", "L", "mL"] as const;
 
 export const STOCK_ITEM_STATUS = [
   { key: "ativo", label: "Ativo" },
@@ -74,7 +63,9 @@ export type ReservationStatus = (typeof RESERVATION_STATUS)[number]["key"];
 export const VOID_STATUSES = ["cancelado", "estornado"] as const;
 
 export function isVoidMovement(status?: string | null, kind?: string | null) {
-  return !!status && (VOID_STATUSES as readonly string[]).includes(status) || kind === "cancelamento";
+  return (
+    (!!status && (VOID_STATUSES as readonly string[]).includes(status)) || kind === "cancelamento"
+  );
 }
 
 export function reservationStatusLabel(key: string | null | undefined) {
@@ -84,7 +75,12 @@ export function reservationStatusLabel(key: string | null | undefined) {
 
 /** Calcula o saldo de um item a partir das movimentações. */
 export function calcOnHand(
-  movements: Array<{ kind?: string | null; direction?: string | null; quantity?: number | string | null; status?: string | null }>,
+  movements: Array<{
+    kind?: string | null;
+    direction?: string | null;
+    quantity?: number | string | null;
+    status?: string | null;
+  }>,
 ) {
   let onHand = 0;
   let reserved = 0;
@@ -113,3 +109,24 @@ export function movementCost(m: {
   return Number(m.quantity ?? 0) * Number(m.unit_cost ?? 0);
 }
 
+/** Saldos de todos os itens de uma vez (mesma regra de `calcOnHand`). */
+export function balancesByItem(
+  movements: Array<{
+    stock_item_id?: string | null;
+    kind?: string | null;
+    direction?: string | null;
+    quantity?: number | string | null;
+    status?: string | null;
+  }>,
+) {
+  const grouped = new Map<string, typeof movements>();
+  for (const m of movements) {
+    if (!m.stock_item_id) continue;
+    const list = grouped.get(m.stock_item_id) ?? [];
+    list.push(m);
+    grouped.set(m.stock_item_id, list);
+  }
+  const out = new Map<string, ReturnType<typeof calcOnHand>>();
+  for (const [id, list] of grouped) out.set(id, calcOnHand(list));
+  return out;
+}

@@ -8,6 +8,7 @@
  */
 
 import { BRL, NUM } from "@/lib/format";
+import { balancesByItem } from "@/lib/stock";
 
 export type Priority = "critico" | "alto" | "medio" | "baixo";
 
@@ -221,11 +222,7 @@ export function buildAssistant(
     m.lecture_id ? lectureMatches(lectureById.get(m.lecture_id)) : !filters.campaignId,
   );
   const balance = new Map<string, number>();
-  for (const m of data.stockMovs) {
-    if (m.status === "cancelado" || !m.stock_item_id) continue;
-    const sign = m.kind === "saida" || m.kind === "baixa" || m.kind === "reserva" ? -1 : 1;
-    balance.set(m.stock_item_id, (balance.get(m.stock_item_id) ?? 0) + sign * N(m.quantity));
-  }
+  for (const [id, b] of balancesByItem(data.stockMovs)) balance.set(id, b.onHand);
   const lowStock = data.items
     .filter((i) => N(i.min_quantity) > 0 && (balance.get(i.id) ?? 0) <= N(i.min_quantity))
     .map((i) => ({
