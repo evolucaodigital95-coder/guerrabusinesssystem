@@ -500,7 +500,7 @@ function PalestraDetail() {
                   value={formatCurrency(Number(snapshot.data.total_stock_cost ?? 0))}
                 />
                 <Field
-                  label="Gustavo"
+                  label="Palestrante"
                   value={formatCurrency(Number(snapshot.data.gustavo_amount))}
                 />
                 <Field
@@ -1440,7 +1440,7 @@ function FechamentoFinanceiroTab({
             {isClosed ? "Fechamento concluído" : "Fechamento em aberto"}
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
-            Regra: <span className="text-foreground">{ruleInUse.name ?? "—"}</span> · Gustavo{" "}
+            Regra: <span className="text-foreground">{ruleInUse.name ?? "—"}</span> · Palestrante{" "}
             {pctStr(ruleInUse.gustavo_share)} · Agendista {pctStr(ruleInUse.agent_share)}
             {ruleInUse.fee_percent || ruleInUse.fee_fixed
               ? ` · Taxa ${pctStr(ruleInUse.fee_percent)}${ruleInUse.fee_fixed ? ` + ${formatCurrency(ruleInUse.fee_fixed)}` : ""}`

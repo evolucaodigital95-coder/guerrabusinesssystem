@@ -200,7 +200,7 @@ export function AdvanceFormDialog({
             <Input
               value={f.paid_by_label ?? ""}
               onChange={(e) => set("paid_by_label", e.target.value)}
-              placeholder="Ex.: Gustavo"
+              placeholder="Ex.: palestrante, financeiro"
             />
           </div>
           <div className="space-y-1.5">

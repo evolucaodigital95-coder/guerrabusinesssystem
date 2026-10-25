@@ -45,7 +45,7 @@ export const Route = createFileRoute("/app/inteligencia")({
           "Painel do diretor, indicadores, análises, rankings e relatórios em uma única central.",
       },
       { property: "og:title", content: "Inteligência — GBS" },
-      { property: "og:description", content: "Central única de inteligência do Grupo Guerra." },
+      { property: "og:description", content: "Central única de inteligência do GBS." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],

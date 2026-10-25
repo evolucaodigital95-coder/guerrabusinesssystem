@@ -12,9 +12,9 @@ export type RuleSnapshot = {
   id?: string;
   name?: string | null;
   gustavo_share: number; // 0..1
-  agent_share: number;   // 0..1
-  fee_percent: number;   // 0..1
-  fee_fixed: number;     // BRL
+  agent_share: number; // 0..1
+  fee_percent: number; // 0..1
+  fee_fixed: number; // BRL
   effective_from?: string | null;
   effective_to?: string | null;
   scope?: string | null;
@@ -56,13 +56,13 @@ export type CardFeeLine = {
   brand?: string | null;
   installments?: number | null;
   percent?: number | null;
-  amount: number;          // valor da taxa (positivo)
+  amount: number; // valor da taxa (positivo)
   date?: string | null;
 };
 
 export type LectureCalcInput = {
   grossRevenue: number;
-  cardFees?: CardFeeLine[];   // taxa do cartão por movimento (automática)
+  cardFees?: CardFeeLine[]; // taxa do cartão por movimento (automática)
   expenses: LectureExpenseInput[];
   advances: { id: string; amount: number; granted_on?: string | null; source?: string | null }[];
   rule: RuleSnapshot;
@@ -104,7 +104,10 @@ export function calculateLecture(input: LectureCalcInput): LectureCalcResult {
   const titheRate = input.titheRate ?? 0.1;
 
   const byBucket: Record<ExpenseBucket, LectureExpenseInput[]> = {
-    tax: [], cost: [], stock: [], expense: [],
+    tax: [],
+    cost: [],
+    stock: [],
+    expense: [],
   };
   for (const e of expenses) {
     byBucket[e.bucket ?? "expense"].push(e);
@@ -130,9 +133,7 @@ export function calculateLecture(input: LectureCalcInput): LectureCalcResult {
   const agentTithe = round(agentAmount * titheRate);
   const agentAfterAdvances = round(agentAmount - totalAdvances);
 
-  const lines: CalcLine[] = [
-    { label: "Receita bruta", amount: grossRevenue, kind: "in" as const },
-  ];
+  const lines: CalcLine[] = [{ label: "Receita bruta", amount: grossRevenue, kind: "in" as const }];
   // Materiais (estoque) primeiro conforme regra
   if (totalStock) {
     lines.push(...bucketLines("stock", byBucket.stock, totalStock));
@@ -143,7 +144,9 @@ export function calculateLecture(input: LectureCalcInput): LectureCalcResult {
         f.brand ?? "Cartão",
         f.installments && f.installments > 1 ? `${f.installments}x` : null,
         f.percent != null ? `${pct((f.percent || 0) / 100)}` : null,
-      ].filter(Boolean).join(" · ");
+      ]
+        .filter(Boolean)
+        .join(" · ");
       lines.push({
         label: `Juros / taxa de cartão · ${parts}`,
         amount: -Math.abs(Number(f.amount || 0)),
@@ -151,12 +154,17 @@ export function calculateLecture(input: LectureCalcInput): LectureCalcResult {
         hint: f.date ?? undefined,
       });
     }
-    lines.push({ label: "Subtotal juros/taxa cartão", amount: -totalCardFees, kind: "subtotal" as const });
+    lines.push({
+      label: "Subtotal juros/taxa cartão",
+      amount: -totalCardFees,
+      kind: "subtotal" as const,
+    });
   }
   if (fee) {
     lines.push({
       label: `Taxa de regra (${pct(rule.fee_percent)}${rule.fee_fixed ? ` + ${money(rule.fee_fixed)}` : ""})`,
-      amount: -fee, kind: "out" as const,
+      amount: -fee,
+      kind: "out" as const,
     });
   }
   lines.push(
@@ -166,10 +174,24 @@ export function calculateLecture(input: LectureCalcInput): LectureCalcResult {
   );
   lines.push(
     { label: "Lucro líquido operacional", amount: netProfit, kind: "subtotal" as const },
-    { label: `Palestrante (${pct(rule.gustavo_share)})`, amount: gustavoAmount, kind: "split" as const },
-    { label: `Dízimo sugerido do palestrante (${pct(titheRate)}, informativo)`, amount: gustavoTithe, kind: "split" as const, hint: "Não é abatido do saldo — apenas indicativo." },
+    {
+      label: `Palestrante (${pct(rule.gustavo_share)})`,
+      amount: gustavoAmount,
+      kind: "split" as const,
+    },
+    {
+      label: `Dízimo sugerido do palestrante (${pct(titheRate)}, informativo)`,
+      amount: gustavoTithe,
+      kind: "split" as const,
+      hint: "Não é abatido do saldo — apenas indicativo.",
+    },
     { label: `Agendista (${pct(rule.agent_share)})`, amount: agentAmount, kind: "split" as const },
-    { label: `Dízimo sugerido do agendista (${pct(titheRate)}, informativo)`, amount: agentTithe, kind: "split" as const, hint: "Não é abatido do saldo — apenas indicativo." },
+    {
+      label: `Dízimo sugerido do agendista (${pct(titheRate)}, informativo)`,
+      amount: agentTithe,
+      kind: "split" as const,
+      hint: "Não é abatido do saldo — apenas indicativo.",
+    },
   );
   if (totalAdvances > 0) {
     for (const a of advances) {
@@ -180,23 +202,42 @@ export function calculateLecture(input: LectureCalcInput): LectureCalcResult {
         hint: a.granted_on ?? undefined,
       });
     }
-    lines.push({ label: "Saldo do agendista após adiantamentos", amount: agentAfterAdvances, kind: "subtotal" as const });
+    lines.push({
+      label: "Saldo do agendista após adiantamentos",
+      amount: agentAfterAdvances,
+      kind: "subtotal" as const,
+    });
   }
-
 
   return {
     rule,
     lines,
     totals: {
-      grossRevenue, fee, totalCardFees,
-      totalTaxes, totalCosts, totalStock, totalOtherExpenses,
-      totalExpenses, totalAdvances, netProfit, gustavoAmount, agentAmount,
-      titheRate, gustavoTithe, agentTithe, agentAfterAdvances,
+      grossRevenue,
+      fee,
+      totalCardFees,
+      totalTaxes,
+      totalCosts,
+      totalStock,
+      totalOtherExpenses,
+      totalExpenses,
+      totalAdvances,
+      netProfit,
+      gustavoAmount,
+      agentAmount,
+      titheRate,
+      gustavoTithe,
+      agentTithe,
+      agentAfterAdvances,
     },
   };
 }
 
-function bucketLines(bucket: ExpenseBucket, items: LectureExpenseInput[], subtotal: number): CalcLine[] {
+function bucketLines(
+  bucket: ExpenseBucket,
+  items: LectureExpenseInput[],
+  subtotal: number,
+): CalcLine[] {
   if (items.length === 0) return [];
   const rows: CalcLine[] = items.map((e) => ({
     label: e.description || BUCKET_LABEL[bucket],
@@ -204,16 +245,25 @@ function bucketLines(bucket: ExpenseBucket, items: LectureExpenseInput[], subtot
     kind: "out" as const,
     hint: e.date ?? undefined,
   }));
-  rows.push({ label: `Subtotal ${BUCKET_LABEL[bucket]}`, amount: -subtotal, kind: "subtotal" as const });
+  rows.push({
+    label: `Subtotal ${BUCKET_LABEL[bucket]}`,
+    amount: -subtotal,
+    kind: "subtotal" as const,
+  });
   return rows;
 }
-
-
 
 /** Conta corrente do agendista — derivada de snapshots e adiantamentos. */
 export type AgentStatementInput = {
   closedShares: { lectureId: string; lectureTitle: string; date: string | null; amount: number }[];
-  advances: { id: string; granted_on: string | null; amount: number; amount_amortized: number; source?: string | null; status?: string | null }[];
+  advances: {
+    id: string;
+    granted_on: string | null;
+    amount: number;
+    amount_amortized: number;
+    source?: string | null;
+    status?: string | null;
+  }[];
   payouts: { id: string; occurs_on: string | null; amount: number; description?: string | null }[];
 };
 
@@ -221,7 +271,7 @@ export type AgentStatementLine = {
   id: string;
   date: string | null;
   description: string;
-  amount: number;     // signed
+  amount: number; // signed
   kind: "share" | "advance" | "payout";
   ref?: string;
 };
@@ -229,16 +279,18 @@ export type AgentStatementLine = {
 export type AgentStatement = {
   lines: AgentStatementLine[];
   totals: {
-    earned: number;        // soma dos splits do agendista
-    advancesOpen: number;  // adiantamentos ainda não totalmente amortizados
+    earned: number; // soma dos splits do agendista
+    advancesOpen: number; // adiantamentos ainda não totalmente amortizados
     advancesTotal: number; // total já entregue como adiantamento
-    payoutsTotal: number;  // pagamentos efetuados ao agendista
-    balance: number;       // earned - advancesTotal - payoutsTotal
+    payoutsTotal: number; // pagamentos efetuados ao agendista
+    balance: number; // earned - advancesTotal - payoutsTotal
     titheAccumulated: number; // 10% acumulado sobre comissões fechadas (informativo)
   };
 };
 
-export function buildAgentStatement(input: AgentStatementInput & { titheRate?: number }): AgentStatement {
+export function buildAgentStatement(
+  input: AgentStatementInput & { titheRate?: number },
+): AgentStatement {
   const titheRate = input.titheRate ?? 0.1;
   const lines: AgentStatementLine[] = [];
 
@@ -311,7 +363,14 @@ export type SpeakerStatement = AgentStatement;
 
 /** Encontra a regra vigente para um agendista numa data — sem nada fixo no código. */
 export function selectRule(opts: {
-  rules: Array<RuleSnapshot & { agent_id?: string | null; season_id?: string | null; is_default?: boolean | null; archived_at?: string | null }>;
+  rules: Array<
+    RuleSnapshot & {
+      agent_id?: string | null;
+      season_id?: string | null;
+      is_default?: boolean | null;
+      archived_at?: string | null;
+    }
+  >;
   agentId?: string | null;
   seasonId?: string | null;
   date?: string;
@@ -335,7 +394,7 @@ export function selectRule(opts: {
   return DEFAULT_RULE;
 }
 
-export const ADVANCE_SOURCES = ["Gustavo", "Caixa", "Sels", "Banco", "PIX", "Outro"] as const;
+export const ADVANCE_SOURCES = ["Palestrante", "Caixa", "Banco", "PIX", "Outro"] as const;
 export const ADVANCE_STATUS = [
   { key: "aberto", label: "Aberto" },
   { key: "abatido_parcial", label: "Abatido parcialmente" },

@@ -1068,14 +1068,14 @@ function AgentDetail() {
     return {
       agentId: id,
       agentName: agent.data?.full_name ?? "Agendista",
-      organizationName: organizationName ?? "Grupo Guerra",
+      organizationName: organizationName ?? "Organização",
       seasonId: fSeason !== "__all__" ? fSeason : null,
       seasonName:
         fSeason !== "__all__" ? (seasonOptions.find((s) => s.id === fSeason)?.name ?? null) : null,
       periodLabel,
       periodStart: fStart || null,
       periodEnd: fEnd || null,
-      responsible: user?.email ?? "Grupo Guerra",
+      responsible: user?.email ?? organizationName ?? "Organização",
       totals: {
         companies: new Set(comp.map((c) => c.company)).size,
         lectures: comp.length,
@@ -2196,8 +2196,8 @@ function AgentDetail() {
               </p>
               <p className="mt-1 font-serif text-xl text-foreground">{activeRule.name ?? "—"}</p>
               <p className="mt-0.5 text-xs text-muted-foreground">
-                {pct(activeRule.gustavo_share)} Gustavo · {pct(activeRule.agent_share)} Agendista ·
-                Taxa {pct(activeRule.fee_percent)}
+                {pct(activeRule.gustavo_share)} Palestrante · {pct(activeRule.agent_share)}{" "}
+                Agendista · Taxa {pct(activeRule.fee_percent)}
                 {activeRule.fee_fixed ? ` + ${formatCurrency(activeRule.fee_fixed)}` : ""}
               </p>
             </div>
@@ -2223,7 +2223,7 @@ function AgentDetail() {
                   <tr>
                     <th className="px-4 py-3 text-left font-medium">Nome</th>
                     <th className="px-4 py-3 text-left font-medium">Escopo</th>
-                    <th className="px-4 py-3 text-right font-medium">Gustavo</th>
+                    <th className="px-4 py-3 text-right font-medium">Palestrante</th>
                     <th className="px-4 py-3 text-right font-medium">Agendista</th>
                     <th className="px-4 py-3 text-right font-medium">Taxa</th>
                     <th className="px-4 py-3 text-left font-medium">Vigência</th>

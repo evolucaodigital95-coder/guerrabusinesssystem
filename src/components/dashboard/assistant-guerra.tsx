@@ -98,7 +98,7 @@ export function AssistantGuerra({
         <div>
           <div className="flex items-center gap-3 text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
             <span aria-hidden className="h-px w-6" style={{ background: "var(--gold)" }} />
-            Assistente Guerra
+            Assistente GBS
           </div>
           <h2 className="mt-3 flex items-center gap-2 font-display text-2xl">
             <Sparkles className="h-5 w-5" style={{ color: "var(--gold)" }} />

@@ -57,7 +57,7 @@ export const MODULES: ModuleDef[] = [
   },
   {
     to: "/app/centro-palestrante",
-    label: "Centro do Palestrante",
+    label: "Área do Palestrante",
     icon: Presentation,
     section: "inteligência",
   },

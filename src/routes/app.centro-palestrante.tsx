@@ -65,6 +65,7 @@ import {
 } from "@/lib/speaker-report-export";
 import { buildSpeakerStatement } from "@/lib/finance-engine";
 import { useDocBrand } from "@/hooks/use-doc-brand";
+import { SpeakerHero } from "@/components/palestrante/speaker-hero";
 
 export const Route = createFileRoute("/app/centro-palestrante")({
   head: () => ({
@@ -127,8 +128,32 @@ type PendingLecture = {
 
 const TITHE = 0.1;
 
+const iso = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+const PERIOD_PRESETS = [
+  {
+    label: "Este mês",
+    range: () => {
+      const n = new Date();
+      return { start: iso(new Date(n.getFullYear(), n.getMonth(), 1)), end: "" };
+    },
+  },
+  {
+    label: "Últimos 3 meses",
+    range: () => {
+      const n = new Date();
+      return { start: iso(new Date(n.getFullYear(), n.getMonth() - 2, 1)), end: "" };
+    },
+  },
+  {
+    label: "Este ano",
+    range: () => ({ start: `${new Date().getFullYear()}-01-01`, end: "" }),
+  },
+  { label: "Tudo", range: () => ({ start: "", end: "" }) },
+];
+
 function CentroPalestrante() {
-  const { organizationId } = useCurrentOrg();
+  const { organizationId, organizationName } = useCurrentOrg();
   const { user } = useSession();
   const userId = user?.id ?? "";
   const [advanceOpen, setAdvanceOpen] = useState(false);
@@ -287,7 +312,8 @@ function CentroPalestrante() {
     return Array.from(m.entries()).map(([id, name]) => ({ id, name }));
   }, [snapshots.data]);
 
-  const speakerName = "Gustavo Guerra"; // Único palestrante — deriva no futuro se houver speaker_id
+  // Cada organização tem um palestrante principal; o nome dele é o da organização.
+  const speakerName = organizationName ?? "Palestrante";
   const now = new Date();
   const thisMonth = now.toISOString().slice(0, 7); // YYYY-MM
   const thisYear = now.getFullYear();
@@ -318,8 +344,15 @@ function CentroPalestrante() {
       .filter((r) => (r.closed_at ?? "").slice(0, 4) === String(thisYear))
       .reduce((s, r) => s + Number(r.gustavo_amount ?? 0), 0);
 
+    // Estimativa do que ainda vai entrar para o palestrante nas palestras não
+    // fechadas: usa a proporção real (parte do palestrante ÷ receita bruta)
+    // das palestras já fechadas; sem histórico, assume metade.
+    const allSnaps = snapshots.data ?? [];
+    const histGross = allSnaps.reduce((s, r) => s + Number(r.gross_revenue ?? 0), 0);
+    const histSpeaker = allSnaps.reduce((s, r) => s + Number(r.gustavo_amount ?? 0), 0);
+    const speakerRatio = histGross > 0 ? histSpeaker / histGross : 0.5;
     const aReceber = (pending.data ?? []).reduce(
-      (s, p) => s + Number(p.gross_revenue ?? 0) * 0.5,
+      (s, p) => s + Number(p.gross_revenue ?? 0) * speakerRatio,
       0,
     );
 
@@ -351,7 +384,15 @@ function CentroPalestrante() {
       totalPalestras: filtered.length,
       pessoasImpactadas: audience,
     };
-  }, [filtered, speakerPayouts.data, advances.data, pending.data, thisMonth, thisYear]);
+  }, [
+    filtered,
+    snapshots.data,
+    speakerPayouts.data,
+    advances.data,
+    pending.data,
+    thisMonth,
+    thisYear,
+  ]);
 
   // Conta corrente do palestrante (créditos, adiantamentos e retiradas)
   const account = useMemo(
@@ -594,6 +635,7 @@ function CentroPalestrante() {
         month: string;
         gross: number;
         netProfit: number;
+        speaker: number;
         lectures: number;
         companies: Set<string>;
         audience: number;
@@ -605,12 +647,14 @@ function CentroPalestrante() {
         month: key,
         gross: 0,
         netProfit: 0,
+        speaker: 0,
         lectures: 0,
         companies: new Set<string>(),
         audience: 0,
       };
       cur.gross += Number(r.gross_revenue ?? 0);
       cur.netProfit += Number(r.net_profit ?? 0);
+      cur.speaker += Number(r.gustavo_amount ?? 0);
       cur.lectures += 1;
       if (r.lectures?.company_id) cur.companies.add(r.lectures.company_id);
       cur.audience += Number(
@@ -626,6 +670,7 @@ function CentroPalestrante() {
         month: x.month,
         gross: x.gross,
         netProfit: x.netProfit,
+        speaker: x.speaker,
         lectures: x.lectures,
         companies: x.companies.size,
         audience: x.audience,
@@ -691,9 +736,9 @@ function CentroPalestrante() {
   return (
     <div className="mx-auto max-w-[1400px] px-4 sm:px-6 py-6 sm:py-8 space-y-6">
       <PageHeader
-        eyebrow="Financeiro"
-        title="Centro Financeiro do Palestrante"
-        description="Painel executivo com indicadores, rentabilidade, resultados e projeções — 100% baseado nos snapshots congelados."
+        eyebrow="Palestrante"
+        title="Área do Palestrante"
+        description="Quanto você ganhou, quanto ainda vai entrar e para onde vai o seu dinheiro — calculado a partir das palestras fechadas."
         actions={
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -728,14 +773,35 @@ function CentroPalestrante() {
         }
       />
 
-      {/* Filtros */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-            Filtros
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
+      {/* Período e filtros */}
+      <div className="flex flex-wrap items-center gap-2">
+        {PERIOD_PRESETS.map((p) => {
+          const r = p.range();
+          const active = fStart === r.start && fEnd === r.end;
+          return (
+            <button
+              key={p.label}
+              onClick={() => {
+                setFStart(r.start);
+                setFEnd(r.end);
+              }}
+              className={cn(
+                "rounded-full border px-3.5 py-1.5 text-xs font-medium transition-colors",
+                active
+                  ? "border-clay bg-clay text-clay-foreground"
+                  : "border-border bg-card text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {p.label}
+            </button>
+          );
+        })}
+      </div>
+      <details className="group rounded-2xl border border-border bg-card/60 px-4 py-3">
+        <summary className="cursor-pointer list-none text-xs font-medium text-muted-foreground select-none group-open:text-foreground">
+          Mais filtros (datas, empresa, cidade, temporada, campanha)
+        </summary>
+        <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-7">
           <div>
             <Label className="text-xs">Início</Label>
             <Input type="date" value={fStart} onChange={(e) => setFStart(e.target.value)} />
@@ -774,8 +840,8 @@ function CentroPalestrante() {
             onChange={setFCampaign}
             options={optCampaigns.map((c) => ({ value: c.id, label: c.name }))}
           />
-        </CardContent>
-      </Card>
+        </div>
+      </details>
 
       {isLoading ? (
         <div className="text-center py-12 text-muted-foreground">
@@ -783,66 +849,15 @@ function CentroPalestrante() {
         </div>
       ) : (
         <>
-          {/* Dashboard KPIs */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
-            <Kpi
-              label="Saldo Atual"
-              value={formatCurrency(kpis.saldoAtual)}
-              highlight
-              tone={kpis.saldoAtual >= 0 ? "positive" : "negative"}
-            />
-            <Kpi label="A Receber" value={formatCurrency(kpis.aReceber)} tone="neutral" />
-            <Kpi label="Recebido" value={formatCurrency(kpis.recebido)} tone="positive" />
-            <Kpi
-              label="Adiantamentos"
-              value={formatCurrency(kpis.adiantamentosAbertos)}
-              tone="negative"
-            />
-            <Kpi label="Lucro — Mês" value={formatCurrency(kpis.lucroMes)} />
-            <Kpi label="Lucro — Ano" value={formatCurrency(kpis.lucroAno)} />
-            <Kpi label="Receita Bruta" value={formatCurrency(kpis.receitaBruta)} />
-            <Kpi label="Custos Totais" value={formatCurrency(kpis.custosTotais)} tone="negative" />
-            <Kpi
-              label="Margem"
-              value={`${(kpis.margem * 100).toFixed(1)}%`}
-              tone={kpis.margem >= 0.4 ? "positive" : kpis.margem >= 0.2 ? "neutral" : "negative"}
-            />
-            <Kpi
-              label="Dízimo Sugerido"
-              value={formatCurrency(kpis.dizimoSugerido)}
-              icon={<Info className="h-3 w-3" />}
-            />
-            <Kpi
-              label="Empresas"
-              value={String(kpis.totalEmpresas)}
-              icon={<Building2 className="h-3 w-3" />}
-            />
-            <Kpi
-              label="Palestras"
-              value={String(kpis.totalPalestras)}
-              icon={<Mic className="h-3 w-3" />}
-            />
-          </div>
-          <div>
-            <Kpi
-              label="Pessoas Impactadas"
-              value={kpis.pessoasImpactadas.toLocaleString("pt-BR")}
-              icon={<Users className="h-3 w-3" />}
-              fullWidth
-            />
-          </div>
+          <SpeakerHero k={kpis} series={monthly} />
 
           {/* Tabs */}
           <Tabs defaultValue="extrato" className="mt-4">
-            <TabsList className="flex flex-wrap h-auto">
+            <TabsList className="flex h-auto flex-wrap">
               <TabsTrigger value="extrato">Extrato</TabsTrigger>
-              <TabsTrigger value="conta">Conta Corrente</TabsTrigger>
-              <TabsTrigger value="resultados">Resultados</TabsTrigger>
-              <TabsTrigger value="evolucao">Evolução Mensal</TabsTrigger>
-              <TabsTrigger value="rentabilidade">Rentabilidade</TabsTrigger>
-              <TabsTrigger value="adiantamentos">Adiantamentos & Pagamentos</TabsTrigger>
-              <TabsTrigger value="dizimo">Dízimo</TabsTrigger>
-              <TabsTrigger value="metas">Metas & Previsão</TabsTrigger>
+              <TabsTrigger value="conta">Conta corrente</TabsTrigger>
+              <TabsTrigger value="desempenho">Desempenho</TabsTrigger>
+              <TabsTrigger value="metas">Metas e dízimo</TabsTrigger>
             </TabsList>
 
             {/* Extrato */}
@@ -909,7 +924,7 @@ function CentroPalestrante() {
             </TabsContent>
 
             {/* Resultados */}
-            <TabsContent value="resultados" className="mt-4">
+            <TabsContent value="desempenho" className="mt-4">
               <Tabs defaultValue="empresa">
                 <TabsList>
                   <TabsTrigger value="empresa">
@@ -1014,7 +1029,7 @@ function CentroPalestrante() {
             </TabsContent>
 
             {/* Evolução Mensal */}
-            <TabsContent value="evolucao" className="mt-4 space-y-4">
+            <TabsContent value="desempenho" className="mt-4 space-y-4">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <ChartCard title="Receita bruta × Lucro líquido">
                   <ResponsiveContainer width="100%" height={260}>
@@ -1086,7 +1101,7 @@ function CentroPalestrante() {
             </TabsContent>
 
             {/* Rentabilidade */}
-            <TabsContent value="rentabilidade" className="mt-4">
+            <TabsContent value="desempenho" className="mt-4">
               <Card>
                 <CardHeader>
                   <CardTitle className="text-base flex items-center gap-2">
@@ -1148,10 +1163,7 @@ function CentroPalestrante() {
             </TabsContent>
 
             {/* Adiantamentos & Pagamentos */}
-            <TabsContent
-              value="adiantamentos"
-              className="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-4"
-            >
+            <TabsContent value="conta" className="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
               <Card>
                 <CardHeader className="flex-row items-center justify-between space-y-0">
                   <CardTitle className="text-base flex items-center gap-2">
@@ -1356,7 +1368,7 @@ function CentroPalestrante() {
             </TabsContent>
 
             {/* Dízimo */}
-            <TabsContent value="dizimo" className="mt-4 space-y-4">
+            <TabsContent value="metas" className="mt-4 space-y-4">
               <div className="rounded-lg border border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-900/50 p-4 text-sm">
                 <div className="flex items-start gap-2">
                   <Info className="h-4 w-4 mt-0.5 flex-shrink-0 text-amber-700" />
