@@ -31,6 +31,9 @@ export const Route = createFileRoute("/")({
           "Plataforma premium do Grupo Guerra que unifica operação, estratégia e inteligência em um único ambiente.",
       },
       { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+      { property: "og:image", content: heroSrc(HERO_IMAGES.login, 1920) },
+      { name: "twitter:image", content: heroSrc(HERO_IMAGES.login, 1920) },
       { property: "og:url", content: "https://guerrabusinesssystem.lovable.app/" },
       {
         name: "twitter:title",
