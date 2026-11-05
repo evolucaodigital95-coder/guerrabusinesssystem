@@ -53,7 +53,7 @@ import { AccountClosing, type ClosingSource } from "@/components/agendistas/acco
 import { LectureFormDialog, type LectureRow } from "@/components/palestras/lecture-form-dialog";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 
-import { AttachmentsTab } from "@/components/crm/attachments-tab";
+import { AttachmentsTab } from "@/components/shared/attachments-tab";
 import { TimelineTab } from "@/components/shared/timeline-tab";
 import { ArchiveButton } from "@/components/shared/archive-button";
 import { CalcBreakdown } from "@/components/finance/calc-breakdown";
