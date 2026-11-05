@@ -14,7 +14,6 @@ import {
   Menu,
   Moon,
   Search,
-  Settings,
   Sun,
   UserRound,
   X,
@@ -245,11 +244,6 @@ function AppLayout() {
               <DropdownMenuItem asChild>
                 <Link to="/app/minha-conta">
                   <UserRound /> Minha conta
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link to="/app/configuracoes">
-                  <Settings /> Configurações
                 </Link>
               </DropdownMenuItem>
               <InstallAppMenuItem />
