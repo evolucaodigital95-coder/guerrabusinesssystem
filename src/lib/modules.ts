@@ -11,7 +11,7 @@ import {
   Mic,
   Package,
   Presentation,
-  Settings,
+  MessageSquare,
   ShieldAlert,
   Building,
   Target,
@@ -66,8 +66,8 @@ export const MODULES: ModuleDef[] = [
   // SISTEMA
   { to: "/app/automacoes", label: "Automações", icon: Bot, section: "sistema" },
   { to: "/app/organizacao", label: "Organização", icon: Building, section: "sistema" },
-  { to: "/app/planos", label: "Plano e cobrança", icon: CreditCard, section: "sistema" },
-  { to: "/app/configuracoes", label: "Configurações", icon: Settings, section: "sistema" },
+  { to: "/app/planos", label: "Minha assinatura", icon: CreditCard, section: "sistema" },
+  { to: "/app/configuracoes", label: "Sobre e feedback", icon: MessageSquare, section: "sistema" },
 ];
 
 /** Rota → chave de módulo escolhida em Organização → Preferências. */

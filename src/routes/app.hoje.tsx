@@ -1,22 +1,11 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import {
-  ArrowUpRight,
-  FileSignature,
-  Mic,
-  PackageX,
-  PhoneCall,
-  Target,
-  Wallet,
-  type LucideIcon,
-} from "lucide-react";
-import { cn } from "@/lib/utils";
-import { useMemo, type CSSProperties, type ReactNode } from "react";
+import { createFileRoute } from "@tanstack/react-router";
+import { useMemo, type CSSProperties } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchAll } from "@/lib/fetch-all";
 import { useCurrentOrg } from "@/hooks/use-current-org";
 import { useSession } from "@/hooks/use-session";
-import { BRL, NUM, toLocalDate } from "@/lib/format";
+import { BRL, NUM } from "@/lib/format";
 import { HERO_IMAGES, heroSrc, heroSrcSet } from "@/lib/hero-images";
 import { CountUp } from "@/components/count-up";
 import { OperationsDashboard } from "@/components/dashboard/operations-dashboard";
@@ -27,6 +16,12 @@ export const Route = createFileRoute("/app/hoje")({
     meta: [
       { title: "Início — GBS" },
       { name: "description", content: "Sua visão executiva do dia no Guerra Business System." },
+      { property: "og:title", content: "Início — GBS" },
+      { property: "og:description", content: "Agenda, prioridades e resumo operacional da sua organização no GBS." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+      { property: "og:image", content: heroSrc(HERO_IMAGES.today, 1920) },
+      { name: "twitter:image", content: heroSrc(HERO_IMAGES.today, 1920) },
     ],
   }),
   component: HojePage,
@@ -65,176 +60,35 @@ function useToday(orgId: string | null) {
     staleTime: 30_000,
     refetchOnWindowFocus: true,
     queryFn: async () => {
-      const org = orgId!;
+      if (!orgId) throw new Error("Organização não selecionada.");
       const now = new Date();
       const todayStart = startOfDay(now).toISOString();
       const todayEnd = endOfDay(now).toISOString();
-      const monthStart = startOfMonth(now).toISOString();
-      const monthEnd = endOfMonth(now).toISOString();
+      const monthStart = startOfMonth(now).toISOString().slice(0, 10);
+      const monthEnd = endOfMonth(now).toISOString().slice(0, 10);
       const in30 = new Date(now.getTime() + 30 * 86400000).toISOString();
-      const todayISO = now.toISOString().slice(0, 10);
-
-      const orgEq = <T extends { eq: any; is: any }>(q: T): T =>
-        q.eq("organization_id", org).is("archived_at", null);
-
-      const [
-        lecturesToday,
-        followUps,
-        movInMonth,
-        contractsPending,
-        upcoming30,
-        recentInMonth,
-        lowStock,
-        pendingReceive,
-        audienceAll,
-        seasonActive,
-        monthlyTargetSum,
-        lecturesMonthCount,
-      ] = await Promise.all([
-        // Palestras de hoje
-        orgEq(supabase.from("lectures").select("id", { count: "exact", head: true }))
-          .gte("scheduled_at", todayStart)
-          .lte("scheduled_at", todayEnd),
-        // Follow-ups vencendo (contatos com next_action_on <= hoje)
-        orgEq(supabase.from("contacts").select("id", { count: "exact", head: true })).lte(
-          "next_action_on",
-          todayISO,
-        ),
-        // Recebimentos previstos no mês
-        fetchAll(() =>
-          supabase
-            .from("financial_movements")
-            .select("amount, expected_amount, status")
-            .eq("organization_id", org)
-            .is("archived_at", null)
-            .eq("direction", "in")
-            .gte("occurs_on", monthStart.slice(0, 10))
-            .lte("occurs_on", monthEnd.slice(0, 10)),
-        ),
-        // Contratos pendentes — palestras confirmadas sem contrato assinado
-        orgEq(supabase.from("lectures").select("id", { count: "exact", head: true })).in("status", [
-          "proposta",
-          "confirmada",
-        ]),
-        // Próximas 30 dias
-        orgEq(supabase.from("lectures").select("id", { count: "exact", head: true }))
-          .gte("scheduled_at", todayStart)
-          .lte("scheduled_at", in30),
-        // Receita realizada no mês
-        fetchAll(() =>
-          supabase
-            .from("financial_movements")
-            .select("amount")
-            .eq("organization_id", org)
-            .is("archived_at", null)
-            .eq("direction", "in")
-            .eq("status", "liquidado")
-            .gte("occurs_on", monthStart.slice(0, 10))
-            .lte("occurs_on", monthEnd.slice(0, 10)),
-        ),
-        // Estoque (usa min_quantity)
-        supabase
-          .from("stock_items")
-          .select("id, min_quantity")
-          .eq("organization_id", org)
-          .is("archived_at", null),
-        // A receber (não liquidado, in)
-        fetchAll(() =>
-          supabase
-            .from("financial_movements")
-            .select("expected_amount, amount, status")
-            .eq("organization_id", org)
-            .is("archived_at", null)
-            .eq("direction", "in")
-            .neq("status", "liquidado"),
-        ),
-        // Vidas impactadas
-        fetchAll(() =>
-          supabase
-            .from("lectures")
-            .select("actual_audience")
-            .eq("organization_id", org)
-            .is("archived_at", null)
-            .eq("status", "realizada"),
-        ),
-        // Temporada ativa
-        supabase
-          .from("seasons")
-          .select("id, name, starts_on, ends_on")
-          .eq("organization_id", org)
-          .is("archived_at", null)
-          .eq("status", "ativa")
-          .order("starts_on", { ascending: false })
-          .limit(1)
-          .maybeSingle(),
-        // Placeholder para futuras metas — mantém compatibilidade estrutural
-        supabase
-          .from("seasons")
-          .select("starts_on, ends_on")
-          .eq("organization_id", org)
-          .is("archived_at", null)
-          .eq("status", "ativa"),
-        // Palestras no mês
-        orgEq(supabase.from("lectures").select("id", { count: "exact", head: true }))
-          .gte("scheduled_at", monthStart)
-          .lte("scheduled_at", monthEnd),
+      const [lecturesToday, upcoming30, recentInMonth, audienceAll] = await Promise.all([
+        supabase.from("lectures").select("id", { count: "exact", head: true })
+          .eq("organization_id", orgId).is("archived_at", null)
+          .gte("scheduled_at", todayStart).lte("scheduled_at", todayEnd),
+        supabase.from("lectures").select("id", { count: "exact", head: true })
+          .eq("organization_id", orgId).is("archived_at", null)
+          .gte("scheduled_at", todayStart).lte("scheduled_at", in30),
+        fetchAll(() => supabase.from("financial_movements").select("amount")
+          .eq("organization_id", orgId).is("archived_at", null)
+          .eq("direction", "in").eq("status", "liquidado")
+          .gte("occurs_on", monthStart).lte("occurs_on", monthEnd)),
+        fetchAll(() => supabase.from("lectures").select("actual_audience")
+          .eq("organization_id", orgId).is("archived_at", null).eq("status", "realizada")),
       ]);
-
-      const receitaPrevista = (movInMonth.data ?? []).reduce(
-        (s, r) => s + Number(r.expected_amount ?? r.amount ?? 0),
-        0,
-      );
-      const receitaRealizada = (recentInMonth.data ?? []).reduce(
-        (s, r) => s + Number(r.amount ?? 0),
-        0,
-      );
-
-      // "Estoque baixo" = itens com min_quantity > 0 (visualização simplificada — saldo real depende de movimentos)
-      const lowStockCount = (lowStock.data ?? []).filter(
-        (it) => Number(it.min_quantity ?? 0) > 0,
-      ).length;
-
-      const aReceber = (pendingReceive.data ?? []).reduce(
-        (s, r) => s + Number(r.expected_amount ?? r.amount ?? 0),
-        0,
-      );
-
-      const audienceTotal = (audienceAll.data ?? []).reduce(
-        (s, r) => s + Number(r.actual_audience ?? 0),
-        0,
-      );
-
-      const season = seasonActive.data as {
-        name?: string;
-        starts_on?: string;
-        ends_on?: string;
-      } | null;
-      const seasonLabel = season?.name ?? "—";
-      const seasonRange =
-        season && season.starts_on && season.ends_on
-          ? `${toLocalDate(season.starts_on).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })} – ${toLocalDate(season.ends_on).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })}`
-          : "";
-
-      // Sem coluna de meta configurada — meta mensal indisponível
-      const mensalTarget = 0;
-      const metaPct = 0;
-
+      for (const result of [lecturesToday, upcoming30, recentInMonth, audienceAll]) {
+        if (result.error) throw result.error;
+      }
       return {
         lecturesTodayCount: lecturesToday.count ?? 0,
-        followUpsPending: followUps.count ?? 0,
-        pagamentosPrevistos: receitaPrevista,
-        contractsPending: contractsPending.count ?? 0,
         upcoming30Days: upcoming30.count ?? 0,
-        lecturesMonth: lecturesMonthCount.count ?? 0,
-        receitaPrevista,
-        receitaRealizada,
-        lowStockCount,
-        aReceber,
-        audienceTotal,
-        seasonLabel,
-        seasonRange,
-        mensalTarget,
-        metaPct,
+        receitaRealizada: (recentInMonth.data ?? []).reduce((sum, row) => sum + Number(row.amount ?? 0), 0),
+        audienceTotal: (audienceAll.data ?? []).reduce((sum, row) => sum + (row.actual_audience ?? 0), 0),
       };
     },
   });
@@ -270,59 +124,6 @@ function HeroStat({
   );
 }
 
-function TodayCard({
-  icon: Icon,
-  label,
-  value,
-  hint,
-  to,
-  attention,
-  progress,
-}: {
-  icon: LucideIcon;
-  label: string;
-  value: ReactNode;
-  hint?: string;
-  to: string;
-  attention?: boolean;
-  progress?: number;
-}) {
-  return (
-    <Link
-      to={to}
-      className={cn(
-        "hover-lift group relative flex flex-col rounded-2xl border bg-card p-5 shadow-[var(--shadow-elegant)] transition-colors",
-        attention ? "border-clay/40" : "border-border hover:border-foreground/20",
-      )}
-    >
-      <div className="flex items-center justify-between">
-        <span
-          className={cn(
-            "grid h-9 w-9 place-items-center rounded-xl transition-colors",
-            attention
-              ? "bg-clay text-clay-foreground"
-              : "bg-muted text-muted-foreground group-hover:bg-clay/10 group-hover:text-clay",
-          )}
-        >
-          <Icon className="h-4 w-4" />
-        </span>
-        <ArrowUpRight className="h-4 w-4 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
-      </div>
-      <div className="mt-4 text-[12px] font-medium text-muted-foreground">{label}</div>
-      <div className="mt-1 font-display text-2xl leading-none">{value}</div>
-      {progress !== undefined && (
-        <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-muted">
-          <div
-            className="h-full rounded-full bg-clay transition-[width] duration-700"
-            style={{ width: `${Math.min(100, Math.max(0, progress))}%` }}
-          />
-        </div>
-      )}
-      {hint && <div className="mt-2 truncate text-[11px] text-muted-foreground">{hint}</div>}
-    </Link>
-  );
-}
-
 function HojePage() {
   const { organizationId } = useCurrentOrg();
   const { user } = useSession();
@@ -341,8 +142,6 @@ function HojePage() {
   const today = todayRaw.charAt(0).toUpperCase() + todayRaw.slice(1);
   const loading = q.isLoading || !d;
 
-  const fmtInt = (n: number | undefined) => (n == null ? "—" : NUM.format(n));
-
   // Resumo do dia em uma frase — o que realmente importa ao abrir o sistema.
   const brief = useMemo(() => {
     if (!d) return "Preparando o resumo do seu dia…";
@@ -352,22 +151,9 @@ function HojePage() {
         ? "Nenhuma palestra hoje"
         : `${d.lecturesTodayCount} ${d.lecturesTodayCount === 1 ? "palestra" : "palestras"} hoje`,
     );
-    if (d.pagamentosPrevistos > 0)
-      parts.push(`${BRL.format(d.pagamentosPrevistos)} previstos para entrar no mês`);
-    const attention = d.followUpsPending + d.contractsPending + d.lowStockCount;
-    parts.push(
-      attention === 0
-        ? "nada pendente pedindo sua atenção"
-        : `${attention} ${attention === 1 ? "ponto pede" : "pontos pedem"} sua atenção`,
-    );
+    if (d.receitaRealizada > 0)
+      parts.push(`${BRL.format(d.receitaRealizada)} recebidos no mês`);
     return parts.join(" · ") + ".";
-  }, [d]);
-  const fmtBRL = (n: number | undefined) => (n == null ? "—" : BRL.format(n));
-
-  const metaHint = useMemo(() => {
-    if (!d) return "";
-    if (!d.mensalTarget) return "Sem meta definida";
-    return `${BRL.format(d.receitaRealizada)} de ${BRL.format(d.mensalTarget)}`;
   }, [d]);
 
   return (
@@ -438,62 +224,6 @@ function HojePage() {
       </section>
 
       <FirstSteps />
-
-      {/* Seu dia */}
-      <section className="mb-14">
-        <div className="mb-5 flex items-end justify-between">
-          <h2 className="font-display text-2xl">Seu dia</h2>
-          <span className="text-xs text-muted-foreground">toque em um cartão para abrir</span>
-        </div>
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
-          <TodayCard
-            icon={Mic}
-            label="Palestras hoje"
-            value={loading ? "—" : fmtInt(d?.lecturesTodayCount)}
-            hint={loading ? "" : `${fmtInt(d?.upcoming30Days)} nos próximos 30 dias`}
-            to="/app/agenda"
-          />
-          <TodayCard
-            icon={Wallet}
-            label="A receber no mês"
-            value={loading ? "—" : fmtBRL(d?.pagamentosPrevistos)}
-            hint={loading ? "" : `${fmtBRL(d?.receitaRealizada)} já recebidos`}
-            to="/app/financeiro"
-          />
-          <TodayCard
-            icon={PhoneCall}
-            label="Follow-ups"
-            value={loading ? "—" : fmtInt(d?.followUpsPending)}
-            hint="contatos para retomar"
-            to="/app/crm"
-            attention={!loading && (d?.followUpsPending ?? 0) > 0}
-          />
-          <TodayCard
-            icon={FileSignature}
-            label="Contratos pendentes"
-            value={loading ? "—" : fmtInt(d?.contractsPending)}
-            hint="aguardando confirmação"
-            to="/app/palestras"
-            attention={!loading && (d?.contractsPending ?? 0) > 0}
-          />
-          <TodayCard
-            icon={PackageX}
-            label="Estoque baixo"
-            value={loading ? "—" : fmtInt(d?.lowStockCount)}
-            hint="materiais para repor"
-            to="/app/estoque"
-            attention={!loading && (d?.lowStockCount ?? 0) > 0}
-          />
-          <TodayCard
-            icon={Target}
-            label="Meta do mês"
-            value={loading ? "—" : `${d?.metaPct ?? 0}%`}
-            hint={loading ? "" : metaHint}
-            to="/app/metas"
-            progress={loading ? undefined : (d?.metaPct ?? 0)}
-          />
-        </div>
-      </section>
 
       {/* Operação: prioridades, temporada, agenda e o mês em números */}
       <OperationsDashboard view="overview" />

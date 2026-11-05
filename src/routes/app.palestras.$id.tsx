@@ -57,7 +57,7 @@ import {
   lectureTimelineLabel,
 } from "@/lib/lectures";
 import { LectureFormDialog, type LectureRow } from "@/components/palestras/lecture-form-dialog";
-import { AttachmentsTab } from "@/components/crm/attachments-tab";
+import { AttachmentsTab } from "@/components/shared/attachments-tab";
 import { NotesTab } from "@/components/shared/notes-tab";
 import { ArchiveButton } from "@/components/shared/archive-button";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";

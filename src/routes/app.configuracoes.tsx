@@ -6,7 +6,7 @@ import {
   Bug,
   Lightbulb,
   Sparkles,
-  Settings as SettingsIcon,
+  MessageSquare,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -28,11 +28,15 @@ import { RequirePermission } from "@/components/require-permission";
 export const Route = createFileRoute("/app/configuracoes")({
   head: () => ({
     meta: [
-      { title: "Configurações — GBS" },
+      { title: "Sobre e feedback — GBS" },
       {
         name: "description",
-        content: "Informações da versão, novidades e canal de feedback do GBS.",
+        content: "Informações sobre o Guerra Business System e canal de feedback.",
       },
+      { property: "og:title", content: "Sobre e feedback — GBS" },
+      { property: "og:description", content: "Informações sobre o GBS e sugestões para a equipe." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: () => (
@@ -56,27 +60,6 @@ const FEEDBACK_OPTIONS: {
   { kind: "ideia", label: "Ideia", icon: Lightbulb, tone: "text-yellow-600" },
   { kind: "melhoria", label: "Melhoria", icon: Sparkles, tone: "text-sky-600" },
 ];
-
-const NOVIDADES = [
-  "Novo CRM",
-  "Novo Financeiro",
-  "Conta Corrente do Agendista",
-  "Dashboard Executivo Real",
-  "Estoque com lotes e reservas",
-  "Fechamento Financeiro de Palestra",
-  "Centro de Inteligência (BI)",
-];
-
-function Info({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-2xl border border-border bg-card p-6">
-      <div className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
-        {label}
-      </div>
-      <div className="mt-3 font-display text-xl leading-none">{value}</div>
-    </div>
-  );
-}
 
 function ConfigPage() {
   const { session } = useSession();
@@ -108,77 +91,21 @@ function ConfigPage() {
     setMessage("");
   }
 
-  const lastUpdate = new Date().toLocaleDateString("pt-BR", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-  });
-
   return (
     <div className="mx-auto max-w-5xl">
       {/* Hero */}
       <section className="mb-12">
         <div className="flex items-center gap-3 text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
           <span aria-hidden className="h-px w-6" style={{ background: "var(--gold)" }} />
-          Configurações
+          Sobre e feedback
         </div>
         <h1 className="mt-6 flex items-center gap-4 font-display text-5xl leading-[1.05]">
-          <SettingsIcon className="h-10 w-10 text-muted-foreground" />
+          <MessageSquare className="h-10 w-10 text-muted-foreground" />
           GBS
         </h1>
         <p className="mt-6 max-w-xl text-base leading-relaxed text-muted-foreground">
           Guerra Business System — plataforma operacional e de inteligência do Grupo Guerra.
         </p>
-      </section>
-
-      {/* Versão */}
-      <section className="mb-14">
-        <div className="mb-6 text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
-          Sobre esta versão
-        </div>
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
-          <Info label="Versão" value="1.0.0" />
-          <Info label="Build" value="2026.06" />
-          <Info label="Arquitetura" value="V1" />
-          <Info label="Desenvolvido para" value="Grupo Guerra" />
-          <Info label="Powered by" value="Grupo Guerra" />
-          <Info label="Última atualização" value={lastUpdate} />
-        </div>
-      </section>
-
-      {/* Novidades */}
-      <section className="mb-14">
-        <div
-          className="relative overflow-hidden rounded-3xl p-10"
-          style={{ background: "var(--ink)", color: "var(--ink-foreground)" }}
-        >
-          <div
-            aria-hidden
-            className="pointer-events-none absolute -top-24 -right-24 h-72 w-72 rounded-full opacity-20 blur-3xl"
-            style={{ background: "radial-gradient(closest-side, var(--clay), transparent)" }}
-          />
-          <div className="relative">
-            <div className="flex items-center gap-3 text-[11px] uppercase tracking-[0.12em] text-[var(--ink-foreground)]/65">
-              <span aria-hidden className="h-px w-6" style={{ background: "var(--gold)" }} />
-              Versão 1.0
-            </div>
-            <h2 className="mt-6 font-display text-3xl">O que há de novo</h2>
-            <ul className="mt-8 grid gap-3 sm:grid-cols-2">
-              {NOVIDADES.map((n) => (
-                <li
-                  key={n}
-                  className="flex items-center gap-3 text-sm text-[var(--ink-foreground)]/90"
-                >
-                  <span
-                    className="h-1.5 w-1.5 rounded-full"
-                    style={{ background: "var(--gold)" }}
-                  />
-                  {n}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
       </section>
 
       {/* Feedback */}

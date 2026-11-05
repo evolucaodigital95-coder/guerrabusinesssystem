@@ -51,7 +51,7 @@ import {
 } from "@/lib/finance";
 import { MovementFormDialog, type MovementRow } from "@/components/finance/movement-form-dialog";
 import { AccountFormDialog, type AccountRow } from "@/components/finance/account-form-dialog";
-import { AttachmentsTab } from "@/components/crm/attachments-tab";
+import { AttachmentsTab } from "@/components/shared/attachments-tab";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { FinanceLecturesTab } from "@/components/finance/lectures-tab";
 import { cn } from "@/lib/utils";

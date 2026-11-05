@@ -1,3 +1,6 @@
 - Commercial rules (plan features, limits, subscription status) are enforced only in the database via private.assert_can_create triggers and private.can_write; why: frontend must never be the only barrier and web/iOS/Android share one rule.
 - Subscriptions are changed only through admin_* RPCs (direct writes revoked); why: history and audit are written by trigger and payload manipulation must be impossible.
 - No payment gateway is integrated; provider/external_* columns on subscriptions are the neutral hook for a future one.
+- All entity attachment views import the canonical shared AttachmentsTab; why: one implementation avoids divergence between modules.
+- The home page uses OperationsDashboard for operational summaries and priorities; why: parallel summary panels produced duplicate and contradictory indicators.
+- Keep legacy URLs as compatibility routes when relabeling navigation; why: saved links must continue to work.
